@@ -1,0 +1,44 @@
+use {
+    core::fmt::{Display, Error as fmtError, Formatter},
+    rhizome_crate::error::Error as rhizomeError,
+    std::{borrow::Cow, error::Error as stdError},
+};
+
+#[derive(Debug)]
+pub struct ExtractableResolutionError {
+    pub component: &'static str,
+    pub dependency: &'static str,
+    pub source: rhizomeError,
+}
+impl stdError for ExtractableResolutionError {
+    fn source(&self) -> Option<&(dyn stdError + 'static)> {
+        Some(&self.source)
+    }
+}
+
+impl Display for ExtractableResolutionError {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), fmtError> {
+        write!(
+            fmt,
+            "Missing runtime dependency for component:
+{}
+-> {}{}",
+            self.component,
+            self.dependency,
+            {
+                //UGLY (kinda)
+                use rhizomeError::*;
+                match &self.source {
+                    NoDefault => Cow::from(" (No default provision.)"),
+                    NoTagMatched => Cow::from(" (Could not find matching tag to provide at.)"),
+                    source @ Other(_) => Cow::from(format!(
+                        "
+-> {:#}",
+                        source,
+                    )),
+                }
+            }
+        )?;
+        Ok(())
+    }
+}

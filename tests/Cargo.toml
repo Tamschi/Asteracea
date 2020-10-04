@@ -1,0 +1,11 @@
+[package]
+name = "asteracea_tests"
+version = "0.0.0"
+authors = ["Tamme Schichler <tamme@schichler.dev>"]
+edition = "2018"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+asteracea = { path = ".." }

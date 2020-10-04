@@ -1,0 +1,39 @@
+[package]
+name = "asteracea"
+version = "0.0.0"
+authors = ["Tamme Schichler <tamme@schichler.dev>"]
+edition = "2018"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+asteracea_proc-macro-definitions = { path = "proc-macro-definitions" }
+lazy_static = "1.4.0"
+lignin-schema = { version = "0.0.1", features = ["bumpalo-collections"] }
+rhizome_crate = { package = "rhizome", version = "0.0.1", optional = true }
+topiary_crate = { package = "topiary", version = "0.0.1", optional = true }
+
+#TODO?: Explicit bump variable passing via feature?
+
+# TODO: Make sure these actually build on nightly.
+[features]
+# Enables dependency extraction with component!.
+rhizome = ["rhizome_crate", "asteracea_proc-macro-definitions/rhizome"]
+# Enables "rhizome/macros".
+rhizome_macros = ["rhizome", "rhizome_crate/macros"]
+services = ["rhizome"]
+styles = []
+topiary = [
+    "styles",
+    "topiary_crate",
+    "asteracea_proc-macro-definitions/rhizome",
+    "asteracea_proc-macro-definitions/styles",
+]
+# Changes certain errors into warnings.
+warnings = ["asteracea_proc-macro-definitions/warnings"]
+
+nightly = [
+    "warnings",
+    "asteracea_proc-macro-definitions/nightly",
+]
