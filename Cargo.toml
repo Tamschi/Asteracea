@@ -34,7 +34,7 @@ rhizome = ["rhizome_crate", "asteracea_proc-macro-definitions/rhizome"]
 # Enables "rhizome/macros".
 rhizome_macros = ["rhizome", "rhizome_crate/macros"]
 services = ["rhizome_macros"]
-styles = []
+styles = ["rhizome_macros"]
 topiary = [
     "styles",
     "topiary_crate",
