@@ -30,21 +30,22 @@ impl dyn Styles {
     }
 }
 
-pub struct StylesTempImpl {
+pub struct TempImpl {
     bump: &'static Bump,
     styles: Mutex<HashMap<String, Node<'static>>>,
 }
 
-impl StylesTempImpl {
-    pub fn new() -> Self {
+impl TempImpl {
+	#[must_use]
+	pub fn new() -> Self {
         Self {
-            bump: Box::leak(Default::default()),
-            styles: Default::default(),
+            bump: Box::leak(Box::default()),
+            styles: Mutex::default(),
         }
     }
 }
 
-impl Default for StylesTempImpl {
+impl Default for TempImpl {
     fn default() -> Self {
         Self::new()
     }
@@ -56,7 +57,7 @@ lazy_static! {
         value: "display: none;"
     }];
 }
-impl Styles for StylesTempImpl {
+impl Styles for TempImpl {
     fn add_boxed(&self, key: &str, factory: Box<dyn FnOnce(&'static Bump) -> Node<'static>>) {
         let mut styles = self.styles.lock().unwrap();
         if !styles.contains_key(key) {

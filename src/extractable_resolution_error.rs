@@ -26,12 +26,11 @@ impl Display for ExtractableResolutionError {
             self.component,
             self.dependency,
             {
-                //UGLY (kinda)
-                use rhizomeError::*;
+                // Not ideal.
                 match &self.source {
-                    NoDefault => Cow::from(" (No default provision.)"),
-                    NoTagMatched => Cow::from(" (Could not find matching tag to provide at.)"),
-                    source @ Other(_) => Cow::from(format!(
+                    rhizomeError::NoDefault => Cow::from(" (No default provision.)"),
+                    rhizomeError::NoTagMatched => Cow::from(" (Could not find matching tag to provide at.)"),
+                    source @ rhizomeError::Other(_) => Cow::from(format!(
                         "
 -> {:#}",
                         source,
