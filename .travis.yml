@@ -34,6 +34,8 @@ jobs:
       script:
         - rustup toolchain install nightly --profile minimal --component rustfmt
         - cargo +nightly fmt -- --check
+        - cd proc-macro-definitions
+        - cargo +nightly fmt -- --check
 #    - stage: deny warnings
 #      if: branch = develop
 #      script:
