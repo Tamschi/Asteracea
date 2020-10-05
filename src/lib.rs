@@ -1,4 +1,4 @@
-#![cfg_attr(not(feature = "topiary"), no_std)]
+#![cfg_attr(not(any(feature = "topiary", feature = "rhizome")), no_std)]
 #![doc(html_root_url = "https://docs.rs/asteracea/0.0.1")]
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
