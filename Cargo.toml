@@ -22,23 +22,12 @@ include = [
 ]
 publish = false
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-asteracea_proc-macro-definitions = { path = "proc-macro-definitions" }
-lazy_static = "1.4.0"
-lignin-schema = { version = "0.0.1", features = ["bumpalo-collections"] }
-rhizome_crate = { package = "rhizome", version = "0.0.1", optional = true }
-topiary_crate = { package = "topiary", version = "0.0.1", optional = true }
-
-#TODO?: Explicit bump variable passing via feature?
 [badges]
 travis-ci = { repository = "Tamschi/Asteracea", branch = "develop" }
 is-it-maintained-issue-resolution = { repository = "Tamschi/Asteracea" }
 is-it-maintained-open-issues = { repository = "Tamschi/Asteracea" }
 maintenance = { status = "experimental" }
 
-# TODO: Make sure these actually build on nightly.
 [features]
 # Enables dependency extraction with component!.
 rhizome = ["rhizome_crate", "asteracea_proc-macro-definitions/rhizome"]
@@ -53,8 +42,16 @@ topiary = [
     "asteracea_proc-macro-definitions/styles",
 ]
 
+[dependencies]
+asteracea_proc-macro-definitions = { path = "proc-macro-definitions" }
+lazy_static = "1.4.0"
+lignin-schema = { version = "0.0.1", features = ["bumpalo-collections"] }
+rhizome_crate = { package = "rhizome", version = "0.0.1", optional = true }
+topiary_crate = { package = "topiary", version = "0.0.1", optional = true }
+
 [dev-dependencies]
 cargo-husky = "1.5.0"
 doc-comment = "0.3.3"
 git_info = "0.1.2"
 version-sync = "0.9.1"
+lignin = "0.0.1"
