@@ -6,7 +6,8 @@ rust:
   - nightly
 stages:
   - ensure format
-  - deny warnings
+#TODO: Disallow warnings again once features are simplified.
+#  - deny warnings
   - test
 script:
   - cargo +$TRAVIS_RUST_VERSION test --verbose
@@ -33,11 +34,11 @@ jobs:
       script:
         - rustup toolchain install nightly --profile minimal --component rustfmt
         - cargo +nightly fmt -- --check
-    - stage: deny warnings
-      if: branch = develop
-      script:
-        - rustup component add clippy
-        - RUSTFLAGS='-D warnings' cargo build --all-targets
+#    - stage: deny warnings
+#      if: branch = develop
+#      script:
+#        - rustup component add clippy
+#        - RUSTFLAGS='-D warnings' cargo build --all-targets
   allow_failures:
     - rust: nightly
   fast_finish: true
