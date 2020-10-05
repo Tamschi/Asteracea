@@ -2,6 +2,6 @@
 
 ## 0.0.1
 
-TODO_YEAR-TODO_MONTH-TODO_DAY
+2020-10-05
 
 Initial unstable release
