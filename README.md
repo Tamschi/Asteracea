@@ -5,7 +5,7 @@
 [![Docs.rs](https://docs.rs/asteracea/badge.svg)](https://docs.rs/crates/asteracea)
 
 ![Rust 1.45.0](https://img.shields.io/static/v1?logo=Rust&label=&message=1.45.0&color=grey)
-[![Build Status](https://travis-ci.com/Tamschi/Asteracea.svg?branch=develop)](https://travis-ci.com/Tamschi/Asteracea/branches)
+[![Build Status](https://travis-ci.com/Tamschi/Asteracea.svg?branch=unstable)](https://travis-ci.com/Tamschi/Asteracea/branches)
 ![Crates.io - License](https://img.shields.io/crates/l/asteracea/0.0.1)
 
 [![GitHub](https://img.shields.io/static/v1?logo=GitHub&label=&message=%20&color=grey)](https://github.com/Tamschi/Asteracea)

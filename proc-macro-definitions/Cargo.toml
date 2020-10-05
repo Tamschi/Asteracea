@@ -19,7 +19,6 @@ include = [
 	"LICENSE-*",
 	"README.md",
 ]
-publish = false
 
 [lib]
 proc-macro = true
