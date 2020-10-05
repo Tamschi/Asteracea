@@ -1,13 +1,9 @@
 # Asteracea
 
-TODO: Rewrite the following points into a nice README.
 [![Lib.rs](https://img.shields.io/badge/Lib.rs-*-84f)](https://lib.rs/crates/asteracea)
 [![Crates.io](https://img.shields.io/crates/v/asteracea)](https://crates.io/crates/asteracea)
 [![Docs.rs](https://docs.rs/asteracea/badge.svg)](https://docs.rs/crates/asteracea)
 
-* Co-location! You don't have to hunt down logic elsewhere, it's ideally consilely in one place.
-* Unspecific errors (i.e. ones that happen on internal tokens and colour the entire macro invocation) are always bugs!
-  * Seriously, please report them, ideally with a reproducible sample. I'll fix them to be much more specific if I can reproduce them.
 ![Rust 1.40.0](https://img.shields.io/static/v1?logo=Rust&label=&message=1.40.0&color=grey)
 [![Build Status](https://travis-ci.com/Tamschi/Asteracea.svg?branch=develop)](https://travis-ci.com/Tamschi/Asteracea/branches)
 ![Crates.io - License](https://img.shields.io/crates/l/asteracea/0.0.1)
@@ -18,6 +14,11 @@ TODO: Rewrite the following points into a nice README.
 [![crev reviews](https://web.crev.dev/rust-reviews/badge/crev_count/asteracea.svg)](https://web.crev.dev/rust-reviews/crate/asteracea/)
 
 TODO_README_DESCRIPTION
+TODO: Rewrite the following points into a nice README.
+
+* Co-location! You don't have to hunt down logic elsewhere, it's ideally consilely in one place.
+* Unspecific errors (i.e. ones that happen on internal tokens and colour the entire macro invocation) are always bugs!
+  * Seriously, please report them, ideally with a reproducible sample. I'll fix them to be much more specific if I can reproduce them.
 
 ## Installation
 
