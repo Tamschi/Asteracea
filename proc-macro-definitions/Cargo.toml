@@ -29,7 +29,3 @@ features = ["derive", "full", "parsing", "printing", "visit-mut"]
 rhizome = []
 # Enables style scoping with component!.
 styles = ["rand"]
-# Changes certain errors into warnings.
-warnings = []
-
-nightly = ["warnings"]

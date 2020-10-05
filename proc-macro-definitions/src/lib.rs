@@ -1,4 +1,3 @@
-#![cfg_attr(feature = "warnings", feature(proc_macro_diagnostic))]
 #![forbid(unsafe_code)]
 #![allow(clippy::unneeded_field_pattern)]
 
@@ -30,7 +29,6 @@ use {
     },
 };
 
-#[cfg(not(feature = "warnings"))]
 use syn::Error;
 
 #[proc_macro]
@@ -117,21 +115,6 @@ mod workaround_module {
 }
 use workaround_module::Configuration;
 
-#[cfg(feature = "warnings")]
-//SEE: <https://github.com/rust-lang/rust/issues/54140>
 fn warn(location: Span, message: &str) -> Result<()> {
-    location.unwrap().warning(message).emit();
-    Ok(())
-}
-
-#[cfg(not(feature = "warnings"))]
-fn warn(location: Span, message: &str) -> Result<()> {
-    Err(Error::new(
-        location,
-        message.to_string()
-            + concat!(
-                "\n",
-                r#"(Nightly-only: This is a warning with feature = "warnings".)"#
-            ),
-    ))
+    Err(Error::new(location, message.to_string()))
 }

@@ -1,10 +1,17 @@
 #![cfg_attr(not(feature = "topiary"), no_std)]
+#![doc(html_root_url = "https://docs.rs/asteracea/0.0.1")]
 #![forbid(unsafe_code)]
+#![warn(clippy::pedantic)]
 
 pub use {
-    asteracea_proc_macro_definitions::{bump_format, component, fragment},
-    lazy_static, lignin_schema,
+	asteracea_proc_macro_definitions::{bump_format, component, fragment},
+	lazy_static, lignin_schema,
 };
+
+#[cfg(doctest)]
+pub mod readme {
+	doc_comment::doctest!("../README.md");
+}
 
 #[cfg(feature = "rhizome")]
 pub use rhizome_crate as rhizome;

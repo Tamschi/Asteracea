@@ -1,0 +1,44 @@
+language: rust
+rust:
+  - 1.40.0
+  - stable
+  - beta
+  - nightly
+stages:
+  - ensure format
+  - deny warnings
+  - test
+script:
+  - cargo +$TRAVIS_RUST_VERSION test --verbose
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features rhizome
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features rhizome_macros
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features services
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features topiary
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "rhizome rhizome_macros"
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "rhizome services"
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "rhizome topiary"
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "rhizome_macros services"
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "rhizome_macros topiary"
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "services topiary"
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "rhizome rhizome_macros services"
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "rhizome rhizome_macros topiary"
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "rhizome services topiary"
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "rhizome_macros services topiary"
+  - cargo +$TRAVIS_RUST_VERSION test --verbose --features "rhizome rhizome_macros services topiary"
+  - cd proc-macro-definitions && cargo +$TRAVIS_RUST_VERSION test --verbose && cd ..
+jobs:
+  include:
+    - stage: ensure format
+      if: branch = develop
+      script:
+        - rustup toolchain install nightly --profile minimal --component rustfmt
+        - cargo +nightly fmt -- --check
+    - stage: deny warnings
+      if: branch = develop
+      script:
+        - rustup component add clippy
+        - RUSTFLAGS='-D warnings' cargo build --all-targets
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+cache: cargo

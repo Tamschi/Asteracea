@@ -280,7 +280,7 @@ impl Parse for ComponentDeclaration {
             #[cfg(not(feature = "rhizome"))]
             {
                 return Err(Error::new_spanned(
-                    ref_token.span,
+                    ref_token,
                     "Dependency extraction is only available with the asteracea feature \"rhizome\"."
                 ));
             }

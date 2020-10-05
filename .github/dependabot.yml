@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    assignees:
+      - "Tamschi"
+    reviewers:
+      - "Tamschi"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    assignees:
+      - "Tamschi"
+    reviewers:
+      - "Tamschi"
