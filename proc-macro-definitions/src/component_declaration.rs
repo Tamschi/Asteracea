@@ -275,6 +275,8 @@ impl Parse for ComponentDeclaration {
                 let #scope_ident = #scope_ident.as_ref().unwrap();
             });
         }
+
+        #[cfg_attr(not(feature = "rhizome"), allow(clippy::never_loop))]
         while let Some(ref_token) = input.parse::<Token![ref]>().ok() {
             rhizome_transform = true;
             #[cfg(not(feature = "rhizome"))]
