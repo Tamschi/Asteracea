@@ -33,7 +33,7 @@ maintenance = { status = "experimental" }
 rhizome = ["rhizome_crate", "asteracea_proc-macro-definitions/rhizome"]
 # Enables "rhizome/macros".
 rhizome_macros = ["rhizome", "rhizome_crate/macros"]
-services = ["rhizome"]
+services = ["rhizome_macros"]
 styles = []
 topiary = [
     "styles",
