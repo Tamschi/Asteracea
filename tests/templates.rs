@@ -1,176 +1,174 @@
-use {
-    asteracea::{
-        bump_format, component, fragment,
-        lignin_schema::lignin::{Attribute, Node},
-    },
-    std::fmt::Display,
+use asteracea::{
+	bump_format, component, fragment,
+	lignin_schema::lignin::{Attribute, Node},
 };
+use std::fmt::Display;
 
 // Just for illustration purposes:
 fn do_anything_here() {}
 trait Select: Sized {
-    fn select<R, S: FnOnce(Self) -> R>(self, selector: S) -> R;
+	fn select<R, S: FnOnce(Self) -> R>(self, selector: S) -> R;
 }
 impl<T> Select for T {
-    fn select<R, S: FnOnce(Self) -> R>(self, selector: S) -> R {
-        selector(self)
-    }
+	fn select<R, S: FnOnce(Self) -> R>(self, selector: S) -> R {
+		selector(self)
+	}
 }
 
 component! {
-    /// This is a maximal example for what Asteracea can currently do. A lot of the syntax here is optional.
-    pub AVeryComplexComponent<A>
+	/// This is a maximal example for what Asteracea can currently do. A lot of the syntax here is optional.
+	pub AVeryComplexComponent<A>
 
-    // This where clause is applied to the component struct definition.
-    where A: Display,
+	// This where clause is applied to the component struct definition.
+	where A: Display,
 
-    /// After the struct itself, you define the constructor.
-    /// Documentation and other attributes added here are applied to the generated `new` function.
-    <D: Into<usize>>(a: A, d: D)
+	/// After the struct itself, you define the constructor.
+	/// Documentation and other attributes added here are applied to the generated `new` function.
+	<D: Into<usize>>(a: A, d: D)
 
-    /// Attributes defined here are applied to the `render` method.
-    // What follows is the `render` method signature:
-    <B> // #'bump is implicit if any HTML elements are present.
-    (
-        // &#self, is implicit.
-        // #bump: &#'bump #asteracea::lignin_schema::lignin::bumpalo::Bump, is implicit if any HTML elements are present. Needed for any bump-allocated elements, i.e. HTML elements and formatted text.
-        _b: B,
-    ) // Default: `-> #asteracea::lignin_schema::lignin::Node<#'bump>`
+	/// Attributes defined here are applied to the `render` method.
+	// What follows is the `render` method signature:
+	<B> // #'bump is implicit if any HTML elements are present.
+	(
+		// &#self, is implicit.
+		// #bump: &#'bump #asteracea::lignin_schema::lignin::bumpalo::Bump, is implicit if any HTML elements are present. Needed for any bump-allocated elements, i.e. HTML elements and formatted text.
+		_b: B,
+	) // Default: `-> #asteracea::lignin_schema::lignin::Node<#'bump>`
 
-    //TODO: Inversion of control/"DI".
-    /*ref for 'NEW, 'RENDER (
-        a_extractable: AExtractable,
-        b_extractable: BExtractable,
-    )*/
+	//TODO: Inversion of control/"DI".
+	/*ref for 'NEW, 'RENDER (
+		a_extractable: AExtractable,
+		b_extractable: BExtractable,
+	)*/
 
-    do for 'NEW static {
-        let binding_for_static_initializers = "This is a static value.";
-    }
-    do for 'RENDER static {
-        // Can use 'NEW static captures, but not bindings, implicitly.
-    }
-    do for 'NEW {
-        // Can use 'NEW static captures.
-    }
-    do for 'RENDER {
-        // Can use 'RENDER static captures.
+	do for 'NEW static {
+		let binding_for_static_initializers = "This is a static value.";
+	}
+	do for 'RENDER static {
+		// Can use 'NEW static captures, but not bindings, implicitly.
+	}
+	do for 'NEW {
+		// Can use 'NEW static captures.
+	}
+	do for 'RENDER {
+		// Can use 'RENDER static captures.
 
-        // This is a render procedure block.
-        // It's pasted near - but not quite at - the beginning of the `render` method's body, so you can't use inner documentation here.
-        // You should prefer outer documentation as shown above anyway, though.
+		// This is a render procedure block.
+		// It's pasted near - but not quite at - the beginning of the `render` method's body, so you can't use inner documentation here.
+		// You should prefer outer documentation as shown above anyway, though.
 
-        // The main use is to prepare some variables you need for rendering (but those calculations should be lightweight!).
-        let scope_attribute = Attribute{
-            name: "scope-attribute",
-            value: static_attribute_value,
-        }; // Available in 'RENDER (see below).
-    }
+		// The main use is to prepare some variables you need for rendering (but those calculations should be lightweight!).
+		let scope_attribute = Attribute{
+			name: "scope-attribute",
+			value: static_attribute_value,
+		}; // Available in 'RENDER (see below).
+	}
 
-    // This is a top-level capture expression.
-    // `c` is a field on the final struct, A its type (which can't be inferred) and a its value (which currently must be braced).
-    |c: A = {a}|;
+	// This is a top-level capture expression.
+	// `c` is a field on the final struct, A its type (which can't be inferred) and a its value (which currently must be braced).
+	|c: A = {a}|;
 
-    /// You can use any number of top-level captures, which may be public and documented.
-    /// The documentation is pasted above the resulting field declaration, which means it works as normal.
-    /// (Outer documentation is a series of outer attributes, which means any outer attributes work here.)
-    |null: usize = {d.into()}|;
+	/// You can use any number of top-level captures, which may be public and documented.
+	/// The documentation is pasted above the resulting field declaration, which means it works as normal.
+	/// (Outer documentation is a series of outer attributes, which means any outer attributes work here.)
+	|null: usize = {d.into()}|;
 
-    // You can bind static values that are valid in multiple contexts via a static capture:
-    |'NEW 'RENDER static static_attribute_value: &'static str = {binding_for_static_initializers}|;
-    |'RENDER static static_attribute: Attribute<'static> = {Attribute{name: "static-attribute", value: static_attribute_value}}|; // Implicit availability of 'NEW static captures in 'RENDER static! Doesn't cause a warning when absent.
-    |_captured_attribute: Attribute<'static> = {Attribute{name: "captured-attribute", value: static_attribute_value}}|; // Available in 'NEW.
-    // TODO: static mut, rc, rc mut
-    // TODO: `mut` should appear either behind `static` (use Mutex) or behind applicable keywords (use RwLock). Ideally warn if many different locks are used?
-    // TODO: Add option to specify `!Send` to create thread-keyed statics with single-threaded access primitives.
-    // TODO: On exclusive locks, find a way to specify they should allow reentrance from the same thread.
+	// You can bind static values that are valid in multiple contexts via a static capture:
+	|'NEW 'RENDER static static_attribute_value: &'static str = {binding_for_static_initializers}|;
+	|'RENDER static static_attribute: Attribute<'static> = {Attribute{name: "static-attribute", value: static_attribute_value}}|; // Implicit availability of 'NEW static captures in 'RENDER static! Doesn't cause a warning when absent.
+	|_captured_attribute: Attribute<'static> = {Attribute{name: "captured-attribute", value: static_attribute_value}}|; // Available in 'NEW.
+	// TODO: static mut, rc, rc mut
+	// TODO: `mut` should appear either behind `static` (use Mutex) or behind applicable keywords (use RwLock). Ideally warn if many different locks are used?
+	// TODO: Add option to specify `!Send` to create thread-keyed statics with single-threaded access primitives.
+	// TODO: On exclusive locks, find a way to specify they should allow reentrance from the same thread.
 
-    // Any node-producing part is valid here, but you need only one.
-    // (This is pretty lenient. Any nodes that produce a value matching the render return type will work.)
-    <div
+	// Any node-producing part is valid here, but you need only one.
+	// (This is pretty lenient. Any nodes that produce a value matching the render return type will work.)
+	<div
 
-        // Scope attributes can be added like this:
-        with scope attribute "literal-attribute-name"
-        with scope attribute {scope_attribute}
-        // Scope attributes are rendered on the current element and its transitive children,
-        // but not outside the current macro expansion.
+		// Scope attributes can be added like this:
+		with scope attribute "literal-attribute-name"
+		with scope attribute {scope_attribute}
+		// Scope attributes are rendered on the current element and its transitive children,
+		// but not outside the current macro expansion.
 
-        ."Attributes-are-written"="like this." // This must appear directly inside HTML elements, above all children.
+		."Attributes-are-written"="like this." // This must appear directly inside HTML elements, above all children.
 
-        //TODO: Support capturing directly in an attribute expression like so: .|...|
-        .{*static_attribute} // You can use Rust expressions here, too.
-        // Attached access expressions work on attributes, but it's not necessary to clone this anymore.
+		//TODO: Support capturing directly in an attribute expression like so: .|...|
+		.{*static_attribute} // You can use Rust expressions here, too.
+		// Attached access expressions work on attributes, but it's not necessary to clone this anymore.
 
-        "You can add verbatim text like so."
-        "This doesn't require direct `bump`, since text nodes are created by value."
-        "Multiple strings aren't concatenated and will turn into distinct text nodes."
+		"You can add verbatim text like so."
+		"This doesn't require direct `bump`, since text nodes are created by value."
+		"Multiple strings aren't concatenated and will turn into distinct text nodes."
 
-        {bump_format!("There's a handy macro for formatting text: {} {}", self.null, self.c)}
+		{bump_format!("There's a handy macro for formatting text: {} {}", self.null, self.c)}
 
-        {
-            // Braces open a Rust child expression.
-            // The contents are transcluded verbatim, and there's already a block so you can use statements like below.
-            do_anything_here();
+		{
+			// Braces open a Rust child expression.
+			// The contents are transcluded verbatim, and there's already a block so you can use statements like below.
+			do_anything_here();
 
-            // You can use the fragment! macro whenever you'd like to use an element outside a component! macro.
-            // Note that captures aren't available here!
-            fragment!{
-                <span
-                    // Scopes must be reiterated in each fragement to apply there.
-                    with scope attribute {scope_attribute}
+			// You can use the fragment! macro whenever you'd like to use an element outside a component! macro.
+			// Note that captures aren't available here!
+			fragment!{
+				<span
+					// Scopes must be reiterated in each fragement to apply there.
+					with scope attribute {scope_attribute}
 
-                    // | // Error: Captures are unavailable in this context: fragment!
-                >.select(|x| x) // Attached access expressions also work on HTML elements.
-            }
-         }.select(|x| x) // Attached access expressions work on Rust blocks too.
+					// | // Error: Captures are unavailable in this context: fragment!
+				>.select(|x| x) // Attached access expressions also work on HTML elements.
+			}
+		 }.select(|x| x) // Attached access expressions work on Rust blocks too.
 
-        /// Inner captures also exist.
-        |
-            //! Inner attributes are supported for all captures.
-            //! This may be useful if the capture is very long.
-            /// Inner attributes can be followed by outer ones here (but not the other way around, as per usual).
-            /// It's really all pasted as a sequence of outer ones on the field declaration, though, so it's just cosmetic.
-            #[allow(clippy::type_complexity)]
-            _d: Vec<Vec<Vec<Vec<Vec<Vec<Vec<Vec<Vec<()>>>>>>>>>
-            = {vec![vec![vec![vec![vec![vec![vec![vec![vec![()]]]]]]]]]}
-        |;
+		/// Inner captures also exist.
+		|
+			//! Inner attributes are supported for all captures.
+			//! This may be useful if the capture is very long.
+			/// Inner attributes can be followed by outer ones here (but not the other way around, as per usual).
+			/// It's really all pasted as a sequence of outer ones on the field declaration, though, so it's just cosmetic.
+			#[allow(clippy::type_complexity)]
+			_d: Vec<Vec<Vec<Vec<Vec<Vec<Vec<Vec<Vec<()>>>>>>>>>
+			= {vec![vec![vec![vec![vec![vec![vec![vec![vec![()]]]]]]]]]}
+		|;
 
-        // Inner captures are perfect for child components.
-        // Here you can see a shorthand for constructed captures (with the caveat that field type type parameters can't be inferred).
-        // The general syntax is: |#field_name = #type::#constructor(#parameters)|
-        |very_simple = VerySimple::new()|.render()
-        |very_simple_qualified = self::VerySimple::new()|.render()
-        // Note that the above lines end with .render() instead of ;.
-        // This expands to the following call: self.#field_name.render().
+		// Inner captures are perfect for child components.
+		// Here you can see a shorthand for constructed captures (with the caveat that field type type parameters can't be inferred).
+		// The general syntax is: |#field_name = #type::#constructor(#parameters)|
+		|very_simple = VerySimple::new()|.render()
+		|very_simple_qualified = self::VerySimple::new()|.render()
+		// Note that the above lines end with .render() instead of ;.
+		// This expands to the following call: self.#field_name.render().
 
-        //TODO: static Part hoisting shorthand, probably needs to be
-        //TODO: static mut Part for any Nodes though because those aren't Sync.
+		//TODO: static Part hoisting shorthand, probably needs to be
+		//TODO: static mut Part for any Nodes though because those aren't Sync.
 
-        // It's possible to:
-        // - use or call the reference directly and/or
-        // - call or access a differently named member and/or
-        // - chain member access expressions as below:
-        |very_simple_chained = VerySimple::new()|
-            .render() // TODO: It should be possible to insert direct calls, that is `()` without leading `.identifier`, anywhere in this chain.
-            .select(|x| x)
+		// It's possible to:
+		// - use or call the reference directly and/or
+		// - call or access a differently named member and/or
+		// - chain member access expressions as below:
+		|very_simple_chained = VerySimple::new()|
+			.render() // TODO: It should be possible to insert direct calls, that is `()` without leading `.identifier`, anywhere in this chain.
+			.select(|x| x)
 
-        // TODO: if {expression} Part [else Part], defaulting to nothing using an Into, returning a 'static empty Multi as Node<'_>.
-        // TODO: for {} in {} Part via lignin::Node::Multi.
-    >
+		// TODO: if {expression} Part [else Part], defaulting to nothing using an Into, returning a 'static empty Multi as Node<'_>.
+		// TODO: for {} in {} Part via lignin::Node::Multi.
+	>
 }
 
 component! {
-    VerySimple()() -> Node<'static>
-    "Just text"
+	VerySimple()() -> Node<'static>
+	"Just text"
 }
 
 //TODO: This should show a warning for an unused struct. Reasearch why that doesn't happen.
 component! {
-    Unused()() // The render return type defaults to () if bump isn't implicit.
-    {}
+	Unused()() // The render return type defaults to () if bump isn't implicit.
+	{}
 }
 
 #[test]
 fn test() {
-    use asteracea::lignin_schema::lignin::bumpalo::Bump;
-    AVeryComplexComponent::new(0, 0usize).render(&Bump::new(), 1);
+	use asteracea::lignin_schema::lignin::bumpalo::Bump;
+	AVeryComplexComponent::new(0, 0usize).render(&Bump::new(), 1);
 }

@@ -3,10 +3,9 @@
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
 
-pub use {
-	asteracea_proc_macro_definitions::{bump_format, component, fragment},
-	lazy_static, lignin_schema,
-};
+pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
+pub use lazy_static;
+pub use lignin_schema;
 
 #[cfg(doctest)]
 pub mod readme {
