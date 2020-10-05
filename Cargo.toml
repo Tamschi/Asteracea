@@ -1,9 +1,3 @@
-[workspace]
-members = [
-	".",
-	"proc-macro-definitions"
-]
-
 [package]
 name = "asteracea"
 version = "0.0.1"
