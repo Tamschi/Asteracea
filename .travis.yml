@@ -10,6 +10,7 @@ stages:
 #  - deny warnings
   - test
 script:
+  - cat CI.toml >> Cargo.toml
   - cargo +$TRAVIS_RUST_VERSION test
   - cargo +$TRAVIS_RUST_VERSION test --features rhizome
   - cargo +$TRAVIS_RUST_VERSION test --features rhizome_macros

@@ -1,0 +1,2 @@
+[patch.crates-io]
+asteracea_proc-macro-definitions = { path = "proc-macro-definitions" }
