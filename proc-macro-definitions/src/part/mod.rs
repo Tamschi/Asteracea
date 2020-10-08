@@ -1,4 +1,5 @@
 mod attached_access_expression;
+mod bump_format_shorthand;
 mod capture_definition;
 mod event_binding;
 mod html_definition;
@@ -138,6 +139,8 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 			Some(EventBinding(EventBindingDefinition::parse_with_context(
 				input, cx,
 			)?))
+		} else if bump_format_shorthand::peek_from(input) {
+			bump_format_shorthand::parse_with_context(input, cx)?
 		} else {
 			return Err(Error::new(
 				lookahead.error().span(),

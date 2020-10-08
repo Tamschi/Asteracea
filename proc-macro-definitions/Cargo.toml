@@ -38,6 +38,7 @@ quote = "1.0.2"
 proc-macro-crate = "0.1.4"
 proc-macro2 = "1.0.7"
 rand = { version = "0.7.3", optional = true }
+syn-mid = "0.5.0"
 take_mut = "0.2.2"
 unzip-n = "0.1.1"
 

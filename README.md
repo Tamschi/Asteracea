@@ -114,7 +114,7 @@ assert_eq!(Offset::new(2).render(3), 5);
 For a relatively complex example, see this parametrised counter:
 
 ```rust
-use asteracea::{bump_format, component};
+use asteracea::component;
 use std::cell::RefCell;
 
 fn schedule_render() { /* ... */ }
@@ -126,12 +126,10 @@ component! {
   |step: i32 = {step}|; // long form capture, ²
 
   <div
-    "The current value is: "
-    {bump_format!("{}", *self.value.borrow())} // ¹
-    <br>
+    "The current value is: " !{*self.value.borrow()} <br>
 
     <button
-      {bump_format!("{}", self.step)}
+      !{self.step} // shorthand bump_format call
       +"click" {
         *self.value.borrow_mut() += self.step;
         schedule_render();
@@ -151,7 +149,6 @@ impl Counter {
 }
 ```
 
-¹ <https://github.com/Tamschi/Asteracea/issues/1>  
 ² <https://github.com/Tamschi/Asteracea/issues/2>
 
 ## License
