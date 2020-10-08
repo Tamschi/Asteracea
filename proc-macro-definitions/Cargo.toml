@@ -24,6 +24,12 @@ publish = false
 [lib]
 proc-macro = true
 
+[features]
+# Enables dependency extraction with component!.
+rhizome = []
+# Enables style scoping with component!.
+styles = ["rand"]
+
 [dependencies]
 call2-for-syn = "1.0.0"
 heck = "0.3.1"
@@ -39,9 +45,3 @@ unzip-n = "0.1.1"
 version = "1.0.13"
 default-features = false
 features = ["derive", "full", "parsing", "printing", "visit-mut"]
-
-[features]
-# Enables dependency extraction with component!.
-rhizome = []
-# Enables style scoping with component!.
-styles = ["rand"]
