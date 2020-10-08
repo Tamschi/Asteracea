@@ -8,6 +8,14 @@ updates:
       - "Tamschi"
     reviewers:
       - "Tamschi"
+  - package-ecosystem: "cargo"
+    directory: "/proc-macro-definitions/"
+    schedule:
+      interval: "daily"
+    assignees:
+      - "Tamschi"
+    reviewers:
+      - "Tamschi"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

@@ -10,6 +10,7 @@ stages:
 #  - deny warnings
   - test
 script:
+  - cat CI.toml >> Cargo.toml
   - cargo +$TRAVIS_RUST_VERSION test
   - cargo +$TRAVIS_RUST_VERSION test --features rhizome
   - cargo +$TRAVIS_RUST_VERSION test --features rhizome_macros
@@ -33,6 +34,8 @@ jobs:
       if: branch = develop
       script:
         - rustup toolchain install nightly --profile minimal --component rustfmt
+        - cargo +nightly fmt -- --check
+        - cd proc-macro-definitions
         - cargo +nightly fmt -- --check
 #    - stage: deny warnings
 #      if: branch = develop
