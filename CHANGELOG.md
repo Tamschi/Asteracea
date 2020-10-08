@@ -1,8 +1,8 @@
 # Asteracea Changelog
 
-## next
+## 0.0.2
 
-TODO: Date
+2020-10-08
 
 * Added shorthand formatting syntax:
 
