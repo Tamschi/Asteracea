@@ -115,23 +115,23 @@ For a relatively complex example, see this parametrised counter:
 
 ```rust
 use asteracea::component;
-use std::cell::RefCell;
+use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
 
 component! {
   pub Counter(initial: i32, step: i32)()
 
-  |value = RefCell::<i32>::new(initial)|; // shorthand capture
+  |value = Cell::<i32>::new(initial)|; // shorthand capture
   |step: i32 = {step}|; // long form capture, ²
 
   <div
-    "The current value is: " !{*self.value.borrow()} <br>
+    "The current value is: " !{self.value.get()} <br>
 
     <button
       !{self.step} // shorthand bump_format call
       +"click" {
-        *self.value.borrow_mut() += self.step;
+        self.value.set(self.value.get() + self.step);
         schedule_render();
       }
     >
@@ -140,7 +140,7 @@ component! {
 
 impl Counter {
   pub fn value(&self) -> i32 {
-    *self.value.borrow()
+    self.value.get()
   }
 
   pub fn set_value(&self, value: i32) {
