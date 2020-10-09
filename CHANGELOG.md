@@ -2,6 +2,10 @@
 
 ## next
 
+* **Breaking:**
+
+  * Increased minimum supported Rust version from 1.45.0 to 1.46.0.
+
 * The bump format shorthand now does not imply `'a: 'bump` anymore, where `'a` is the component's lifetime.
 
 * Improved `Counter` example in the README.
