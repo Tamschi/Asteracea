@@ -10,7 +10,7 @@
 
 * Improved `Counter` example in the README.
 
-* You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to cature them as component instance fields.
+* You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.
 
 ## 0.0.2
 
