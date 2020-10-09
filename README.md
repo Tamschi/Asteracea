@@ -154,7 +154,7 @@ impl Counter {
 }
 ```
 
-⁵ <https://github.com/Tamschi/Asteracea/issues/5>
+⁵ <https://github.com/Tamschi/Asteracea/issues/5>  
 ⁶ <https://github.com/Tamschi/Asteracea/issues/6>
 
 ## License
