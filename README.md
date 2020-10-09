@@ -127,7 +127,7 @@ component! {
     pub class: &'static str, // ⁵
   )()
 
-  |value = RefCell::<i32>::new(initial)|; // shorthand capture
+  |value = Cell::<i32>::new(initial)|; // shorthand capture
 
   <div
     ."class" = {self.class} // ⁶
