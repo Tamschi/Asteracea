@@ -131,12 +131,12 @@ component! {
 
   <div
     ."class" = {self.class} // ⁶
-    "The current value is: " !{self.value.get()} <br>
+    "The current value is: " !{self.value()} <br> // Anything within curlies is plain Rust.
 
     <button
       !{self.step} // shorthand bump_format call
       +"click" {
-        self.value.set(self.value.get() + self.step);
+        self.value.set(self.value() + self.step);
         schedule_render();
       }
     >
@@ -149,7 +149,7 @@ impl Counter {
   }
 
   pub fn set_value(&self, value: i32) {
-    self.value.replace(value);
+    self.value.set(value);
   }
 }
 ```
