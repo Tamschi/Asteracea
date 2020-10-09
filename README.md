@@ -120,12 +120,17 @@ use std::cell::RefCell;
 fn schedule_render() { /* ... */ }
 
 component! {
-  pub Counter(initial: i32, step: i32)()
+  pub Counter(
+    initial: i32,
+    priv step: i32,
+    /// This component's class attribute value.
+    pub class: &'static str, // ⁵
+  )()
 
   |value = RefCell::<i32>::new(initial)|; // shorthand capture
-  |step: i32 = {step}|; // long form capture, ²
 
   <div
+    ."class" = {self.class} // ⁶
     "The current value is: " !{*self.value.borrow()} <br>
 
     <button
@@ -149,7 +154,8 @@ impl Counter {
 }
 ```
 
-² <https://github.com/Tamschi/Asteracea/issues/2>
+⁵ <https://github.com/Tamschi/Asteracea/issues/5>
+⁶ <https://github.com/Tamschi/Asteracea/issues/6>
 
 ## License
 

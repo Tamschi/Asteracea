@@ -4,6 +4,8 @@
 
 * The bump format shorthand now does not imply `'a: 'bump` anymore, where `'a` is the component's lifetime.
 
+* You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to cature them as component instance fields.
+
 ## 0.0.2
 
 2020-10-08
