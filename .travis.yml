@@ -45,4 +45,4 @@ jobs:
   allow_failures:
     - rust: nightly
   fast_finish: true
-cache: cargo
+# cache: cargo # The build currently hangs on cache restore. Might fix itself once the features are simplified.
