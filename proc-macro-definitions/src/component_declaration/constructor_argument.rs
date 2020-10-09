@@ -1,6 +1,7 @@
 use quote::quote;
 use syn::{
-	parse::Parse, parse::ParseStream, Attribute, Error, FnArg, PatType, Result, Token, Visibility,
+	parse::{Parse, ParseStream},
+	Attribute, Error, FnArg, PatType, Result, Token, Visibility,
 };
 
 pub struct ConstructorArgument {
