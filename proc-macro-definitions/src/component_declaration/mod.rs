@@ -1,3 +1,4 @@
+use self::constructor_argument::ConstructorArgument;
 use crate::{
 	asteracea_ident,
 	parse_with_context::{ParseContext, ParseWithContext},
@@ -5,6 +6,7 @@ use crate::{
 	warn, Configuration, MapMessage, Part, YankAny,
 };
 use call2_for_syn::call2;
+use debugless_unwrap::DebuglessUnwrapNone as _;
 use heck::KebabCase;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
@@ -15,10 +17,12 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, FnArg, Generics, Ident, Lifetime, LitStr, ReturnType, Token, Type,
+	Attribute, Error, FnArg, Generics, Ident, Lifetime, LitStr, PatType, ReturnType, Token, Type,
 	Visibility, WherePredicate,
 };
 use unzip_n::unzip_n;
+
+mod constructor_argument;
 
 unzip_n!(5);
 unzip_n!(6);
@@ -32,7 +36,7 @@ pub struct ComponentDeclaration {
 	component_wheres: Vec<WherePredicate>,
 	constructor_attributes: Vec<Attribute>,
 	constructor_generics: Option<Generics>,
-	constructor_args: Vec<FnArg>,
+	constructor_args: Vec<ConstructorArgument>,
 	render_attributes: Vec<Attribute>,
 	render_generics: Option<Generics>,
 	render_paren: Paren,
@@ -172,7 +176,7 @@ impl Parse for ComponentDeclaration {
 		let constructor_args;
 		parenthesized!(constructor_args in input);
 		let constructor_args = Punctuated::<_, Token![,]>::parse_terminated(&constructor_args)?;
-		let constructor_args = constructor_args.into_iter().collect();
+		let constructor_args: Vec<ConstructorArgument> = constructor_args.into_iter().collect();
 
 		let render_attributes = input.call(Attribute::parse_outer)?;
 
@@ -383,6 +387,35 @@ impl Parse for ComponentDeclaration {
 				Some(body) => break body,
 			}
 		};
+
+		// These captures are put at the very end of the constructor since they always move their value.
+		for constructor_argument in constructor_args.iter() {
+			if let ConstructorArgument {
+				capture: constructor_argument::Capture::Yes(visibility),
+				fn_arg,
+			} = constructor_argument
+			{
+				let span = match visibility {
+					Visibility::Inherited => fn_arg.span(),
+					visibility => visibility.span(),
+				};
+				let attrs = &fn_arg.attrs;
+				let pat = &fn_arg.pat;
+				let arg = {
+					let PatType {
+						colon_token, ty, ..
+					} = fn_arg;
+					quote!(#pat#colon_token #ty)
+				};
+				call2(
+					quote_spanned!(span=> |#(#attrs)* #visibility #arg = {#pat}|;),
+					|input| {
+						Part::<ComponentRenderConfiguration>::parse_with_context(input, &mut cx)
+					},
+				)?
+				.debugless_unwrap_none()
+			}
+		}
 
 		if !input.is_empty() {
 			return Err(input.error(
@@ -747,6 +780,12 @@ impl ComponentDeclaration {
 		};
 
 		let body = body.part_tokens(&GenerateContext::default())?;
+
+		let constructor_args = constructor_args.into_iter().map(|arg| {
+			let mut fn_arg = arg.fn_arg;
+			fn_arg.attrs.clear();
+			fn_arg
+		});
 
 		Ok(quote! {
 			#new_statics

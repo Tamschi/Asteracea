@@ -4,7 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/asteracea)](https://crates.io/crates/asteracea)
 [![Docs.rs](https://docs.rs/asteracea/badge.svg)](https://docs.rs/crates/asteracea)
 
-![Rust 1.45.0](https://img.shields.io/static/v1?logo=Rust&label=&message=1.45.0&color=grey)
+![Rust 1.46.0](https://img.shields.io/static/v1?logo=Rust&label=&message=1.46.0&color=grey)
 [![Build Status](https://travis-ci.com/Tamschi/Asteracea.svg?branch=develop)](https://travis-ci.com/Tamschi/Asteracea/branches)
 ![Crates.io - License](https://img.shields.io/crates/l/asteracea/0.0.2)
 
@@ -120,12 +120,17 @@ use std::cell::Cell;
 fn schedule_render() { /* ... */ }
 
 component! {
-  pub Counter(initial: i32, step: i32)()
+  pub Counter(
+    initial: i32,
+    priv step: i32,
+    /// This component's class attribute value.
+    pub class: &'static str, // ⁵
+  )()
 
   |value = Cell::<i32>::new(initial)|; // shorthand capture
-  |step: i32 = {step}|; // long form capture, ²
 
   <div
+    ."class" = {self.class} // ⁶
     "The current value is: " !{self.value.get()} <br>
 
     <button
@@ -149,7 +154,8 @@ impl Counter {
 }
 ```
 
-² <https://github.com/Tamschi/Asteracea/issues/2>
+⁵ <https://github.com/Tamschi/Asteracea/issues/5>
+⁶ <https://github.com/Tamschi/Asteracea/issues/6>
 
 ## License
 

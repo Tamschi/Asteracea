@@ -32,6 +32,7 @@ styles = ["rand"]
 
 [dependencies]
 call2-for-syn = "1.0.0"
+debugless-unwrap = "0.0.3"
 heck = "0.3.1"
 lazy_static = "1.4.0"
 quote = "1.0.2"
