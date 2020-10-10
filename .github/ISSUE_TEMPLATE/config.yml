@@ -1,0 +1,4 @@
+contact_links:
+  - name: Vulnerability Report
+    url: https://schichler.dev
+    about: "Do you have a security issue to report? Please contact me privately first.\nYou can reach me via email or XMPP at tamme@schichler.dev."
