@@ -11,7 +11,7 @@ macro_rules! just_plain {
 
 macro_rules! nested {
 	($name:ident => $($contents:tt)*) => {
-		just_plain!($name => $($contents)*);
+		just_plain!($name => <div $($contents)*>);
 	}
 }
 
