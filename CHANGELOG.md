@@ -12,6 +12,8 @@
 
 * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.
 
+* `bump` resolution is now more reliable in cases where the macro input is constructed in multiple macro contexts.
+
 ## 0.0.2
 
 2020-10-08

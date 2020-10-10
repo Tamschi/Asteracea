@@ -131,7 +131,7 @@ impl<C> HtmlDefinition<C> {
 
 		let asteracea = asteracea_ident(name.span());
 
-		let bump = Ident::new("bump", name.span());
+		let bump = Ident::new("bump", lt.span().resolved_at(Span::call_site()));
 
 		let cx = GenerateContext {
 			scope_definitions: if !scope_definitions.is_empty() {
