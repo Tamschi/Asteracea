@@ -21,7 +21,7 @@ use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
 	token::{Add, Brace, Bracket},
-	Error, LitStr, Token,
+	Error, Ident, LitStr, Token,
 };
 
 pub struct Part<C> {
@@ -180,8 +180,9 @@ impl<C> PartBody<C> {
 					.iter()
 					.map(|part| part.part_tokens(cx))
 					.collect::<coreResult<Vec<_>, _>>()?;
+				let bump = Ident::new("bump", bracket.span.resolved_at(Span::call_site()));
 				quote_spanned! {bracket.span=>
-					#asteracea::lignin_schema::lignin::Node::Multi(&*bump.alloc_with(|| [
+					#asteracea::lignin_schema::lignin::Node::Multi(&*#bump.alloc_with(|| [
 						#(#m,)*
 					]))
 				}

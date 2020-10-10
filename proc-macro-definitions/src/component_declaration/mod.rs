@@ -753,7 +753,7 @@ impl ComponentDeclaration {
 
 		let render_args = {
 			let implied_bump = if imply_bump {
-				quote_spanned! {render_paren.span=>
+				quote_spanned! {render_paren.span.resolved_at(Span::call_site())=>
 					bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
 				}
 			} else {
@@ -773,7 +773,7 @@ impl ComponentDeclaration {
 
 		let render_type = match render_type {
 			ReturnType::Default if imply_bump => {
-				let bump = Lifetime::new("'bump", render_paren.span);
+				let bump = Lifetime::new("'bump", render_paren.span.resolved_at(Span::call_site()));
 				parse_quote!(-> #asteracea::lignin_schema::lignin::Node<#bump>)
 			}
 			render_type => render_type,
