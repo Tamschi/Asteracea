@@ -1,22 +1,22 @@
-# Chapter 1: Hello Asteracea!
+# Chapter 1: Hello Asteracea
 
 ```rust
 asteracea::component! {
-  HelloWorld()()
-  <span "Hello World!">
+  HelloAsteracea()()
+  <span "Hello Asteracea!">
 }
 ```
 
 ```rust
 asteracea::component! {
-  HelloWorld()()
-  <div "Hello World!">
+  HelloAsteracea()()
+  <div "Hello Asteracea!">
 }
 ```
 
 ```rust
 asteracea::component! {
-  HelloWorld()()
-  "Hello Error!"
+  HelloAsteracea()()
+  "Hello Asteracea!"
 }
 ```
