@@ -1,18 +1,15 @@
 use line_col::LineColLookup;
-use pulldown_cmark::CodeBlockKind;
-use pulldown_cmark::Event;
-use pulldown_cmark::Parser;
-use pulldown_cmark::Tag;
-use std::io::Read;
+use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag};
 use std::{
 	env,
 	error::Error,
-	fs::{self, File},
+	fs::{self, File, FileType},
+	io,
+	io::{Read, Write},
 	iter,
 	ops::Range,
+	path::Path,
 };
-use std::{fs::FileType, io};
-use std::{io::Write, path::Path};
 use walkdir::WalkDir;
 
 fn main() -> Result<(), Box<dyn Error>> {
