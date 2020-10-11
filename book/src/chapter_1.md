@@ -1,6 +1,6 @@
 # Chapter 1: Hello Asteracea
 
-```rust
+```asteracea
 asteracea::component! {
   HelloAsteracea()()
   <span "Hello Asteracea!">

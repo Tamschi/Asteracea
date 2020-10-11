@@ -20,7 +20,10 @@ lignin-html = "0.0.1"
 version-sync = "0.9.1"
 
 [build-dependencies]
+asteracea = "0.0.2"
+mdbook = "0.4.3"
+lignin-html = "0.0.1"
 line-col = "0.2.1"
-pulldown-cmark = "0.8.0"
+pulldown-cmark = "0.7.0"
 pulldown-cmark-to-cmark = "5.0.0"
 walkdir = "2.3.1"

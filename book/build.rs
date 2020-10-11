@@ -1,4 +1,5 @@
 use line_col::LineColLookup;
+use mdbook::MDBook;
 use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag};
 use std::{
 	env,
@@ -10,7 +11,22 @@ use std::{
 };
 use walkdir::WalkDir;
 
+mod preprocess;
+
 fn main() -> Result<(), Box<dyn Error>> {
+	build_book()?;
+	generate_tests()?;
+	Ok(())
+}
+
+fn build_book() -> Result<(), Box<dyn Error>> {
+	let mut book = MDBook::load(".")?;
+	book.with_preprocessor(preprocess::AsteraceaExamples)
+		.build()?;
+	Ok(())
+}
+
+fn generate_tests() -> Result<(), Box<dyn Error>> {
 	println!(r#"cargo:rerun-if-changed="tests""#);
 
 	let out_dir = Path::new(&env::var_os("OUT_DIR").ok_or("Missing OUT_DIR.")?).to_owned();
