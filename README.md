@@ -86,13 +86,11 @@ assert!(matches!(
 
 ### Unit component
 
-If the component body isn't a `Node` expression, the component will return `()` by default and won't require a `Bump` reference to be rendered.
-
-A different return type can be specified after the render argument list.
+A return type other than `Node` can be specified after the render argument list, and components that don't output potentially dynamic `Node`s won't require a `Bump` reference to render:
 
 ```rust
 asteracea::component! {
-  Unit(/* ::new arguments */)(/* .render arguments */) /* -> () */
+  Unit(/* ::new arguments */)(/* .render arguments */) -> ()
   {} // Empty Rust block
 }
 
