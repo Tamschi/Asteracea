@@ -1,21 +1,23 @@
 [package]
 name = "asteracea-book"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Tamme Schichler <tamme@schichler.dev>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Tamschi/Asteracea"
 homepage = "https://github.com/Tamschi/Asteracea/tree/v0.0.2"
-documentation = "https://docs.rs/asteracea/0.0.2"
 publish = false
 
 [lib]
 path = "lib.rs"
 doc = false
 
-[dependencies]
+[dependencies] # Technically dev-dependencies, but used by book examples.
 asteracea = "0.0.2"
 lignin-html = "0.0.1"
+
+[dev-dependencies]
+version-sync = "0.9.1"
 
 [build-dependencies]
 line-col = "0.2.1"
