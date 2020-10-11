@@ -163,8 +163,8 @@ component! {
 
 //TODO: This should show a warning for an unused struct. Reasearch why that doesn't happen.
 component! {
-	Unused()() // The render return type defaults to () if bump isn't implicit.
-	{}
+	Unused()() // The render return type defaults to Node<'static> if bump isn't implicit.
+	""
 }
 
 #[test]

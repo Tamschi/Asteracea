@@ -776,6 +776,9 @@ impl ComponentDeclaration {
 				let bump = Lifetime::new("'bump", render_paren.span.resolved_at(Span::call_site()));
 				parse_quote!(-> #asteracea::lignin_schema::lignin::Node<#bump>)
 			}
+			ReturnType::Default if !imply_bump => {
+				parse_quote!(-> #asteracea::lignin_schema::lignin::Node<'static>)
+			}
 			render_type => render_type,
 		};
 
