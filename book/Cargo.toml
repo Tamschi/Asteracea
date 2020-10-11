@@ -1,0 +1,24 @@
+[package]
+name = "asteracea-book"
+version = "0.0.1"
+authors = ["Tamme Schichler <tamme@schichler.dev>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Tamschi/Asteracea"
+homepage = "https://github.com/Tamschi/Asteracea/tree/v0.0.2"
+documentation = "https://docs.rs/asteracea/0.0.2"
+publish = false
+
+[lib]
+path = "lib.rs"
+doc = false
+
+[dependencies]
+asteracea = "0.0.2"
+lignin-html = "0.0.1"
+
+[build-dependencies]
+line-col = "0.2.1"
+pulldown-cmark = "0.8.0"
+pulldown-cmark-to-cmark = "5.0.0"
+walkdir = "2.3.1"
