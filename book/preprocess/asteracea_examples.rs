@@ -178,25 +178,24 @@ impl Preprocessor for AsteraceaExamples {
 
 struct CodeState<'a> {
 	tags: Vec<String>,
-	component_ident: Ident,
+	instantiate: CowStr<'a>,
 	texts: Vec<CowStr<'a>>,
 }
 
 impl<'a> CodeState<'a> {
 	fn new(tag: CowStr) -> Option<Self> {
-		let tags: Vec<_> = tag.split(',').collect();
-		let mut component_ident: Option<Ident> = None;
+		let tags: Vec<_> = tag.split(' ').collect();
+		let mut instantiate: Option<CowStr> = None;
 		let tags: Vec<_> = tags
 			.into_iter()
 			.filter(|t| {
 				if t.starts_with("asteracea") {
-					component_ident = Ident::new(
+					instantiate = Some(
 						t.splitn(2, '=')
 							.nth(1)
-							.expect("Missing component name after asteracea"),
-						Span::call_site(),
-					)
-					.into();
+							.expect("Missing component name after asteracea")
+							.into(),
+					);
 					false
 				} else {
 					true
@@ -204,10 +203,10 @@ impl<'a> CodeState<'a> {
 			})
 			.map(|t| t.to_owned())
 			.collect();
-		if let Some(component_ident) = component_ident {
+		if let Some(instantiate) = instantiate {
 			Some(Self {
 				tags,
-				component_ident,
+				instantiate: CowStr::Boxed(Box::new(instantiate.to_string()).into_boxed_str()),
 				texts: Vec::new(),
 			})
 		} else {
@@ -229,7 +228,7 @@ impl<'a> CodeState<'a> {
 	) -> Result<()> {
 		*state = cmark(
 			iter::once(Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(
-				self.tags.join(",").into(),
+				self.tags.join(" ").into(),
 			))))
 			.chain(self.texts.into_iter().map(Event::Text))
 			.chain(iter::once(Event::End(Tag::CodeBlock(
@@ -260,7 +259,6 @@ impl<'a> CodeState<'a> {
 		asteracea_html: &mut impl Write,
 		key: &str,
 	) -> Result<()> {
-		let c_ident = self.component_ident;
 		writeln!(
 			asteracea_html,
 			r#""{key}" => {block}"#,
@@ -269,13 +267,15 @@ impl<'a> CodeState<'a> {
 				EXAMPLE_HERE
 
 				let mut bump = asteracea::lignin_schema::lignin::bumpalo::Bump::new();
-				let vdom = #c_ident::new().render(&mut bump);
+				let component = INSTANTIATE;
+				let vdom = component.render(&mut bump);
 				let mut html = String::new();
 				lignin_html::render(&mut html, &vdom).debugless_unwrap();
 				html
 			}}
 			.to_string()
 			.replace("EXAMPLE_HERE", &self.texts.join(""))
+			.replace("INSTANTIATE", self.instantiate.as_ref()) // TODO: Show the parametrisation somehow.
 		)?;
 		Ok(())
 	}
