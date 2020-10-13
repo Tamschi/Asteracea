@@ -1,16 +1,22 @@
 # Chapter 1: Hello Asteracea
 
-```asteracea
+```rust,asteracea=HelloAsteracea
 asteracea::component! {
   HelloAsteracea()()
   <span "Hello Asteracea!">
 }
 ```
 
-```rust
+```rust,asteracea=SlightlyComplex
 asteracea::component! {
-  HelloAsteracea()()
-  <div "Hello Asteracea!">
+  SlightlyComplex()()
+  [
+    "Hello Asteracea!"
+    <div
+      <button "Click me!">
+      <div "This is a slightly more complex example.">
+    >
+  ]
 }
 ```
 

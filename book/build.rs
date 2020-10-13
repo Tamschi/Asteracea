@@ -13,6 +13,12 @@ use walkdir::WalkDir;
 
 mod preprocess;
 
+mod asteracea_html {
+	pub fn get_html(key: &str) -> String {
+		unimplemented!("This is only available when building the book")
+	}
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
 	build_book()?;
 	generate_tests()?;
@@ -21,7 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn build_book() -> Result<(), Box<dyn Error>> {
 	let mut book = MDBook::load(".")?;
-	book.with_preprocessor(preprocess::AsteraceaExamples)
+	book.with_preprocessor(preprocess::AsteraceaExamplesBuild::new()?)
 		.build()?;
 	Ok(())
 }
@@ -35,7 +41,6 @@ fn generate_tests() -> Result<(), Box<dyn Error>> {
 
 	let entries: Result<Vec<_>, _> = WalkDir::new("src").into_iter().collect();
 	for entry in entries?.into_iter() {
-		dbg!(&entry);
 		println!(r#"cargo:rerun-if-changed="{}""#, entry.path().display());
 		if !entry.file_type().is_file()
 			|| entry.path().extension().and_then(|e| e.to_str()) != Some("md")

@@ -1,3 +1,3 @@
 mod asteracea_examples;
 
-pub use asteracea_examples::AsteraceaExamples;
+pub use asteracea_examples::{AsteraceaExamples, AsteraceaExamplesBuild};
