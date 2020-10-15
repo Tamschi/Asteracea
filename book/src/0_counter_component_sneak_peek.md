@@ -11,8 +11,8 @@ asteracea::component! {
   pub Counter(
     initial: i32,
     priv step: i32,
-    pub class: &'static str,
-  )()
+    pub class: &'static str, //TODO: `pub enabled` instead of `pub class`? It'd make more sense, but requires boolean attributes to be available.
+  )() // Take `class: &str` here instead.
 
   |value = Cell::<i32>::new(initial)|;
 
@@ -21,6 +21,7 @@ asteracea::component! {
   <div
     ."class" = {self.class}
     "The current value is: " !{self.value()} <br>
+
     <button
       "+" !{self.step}
       +"click" {self.step()}
