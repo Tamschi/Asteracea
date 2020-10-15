@@ -1,4 +1,4 @@
-# Chapter 0: `Counter` Component Sneak Peek
+# Chapter 0: Sneak Peek
 
 Before I begin to explain in earnest, here is a relatively complex dynamic component using many of Asteracea's features, along with its resulting HTML representation:
 

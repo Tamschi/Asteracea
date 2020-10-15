@@ -11,6 +11,10 @@ pub struct ConstructorArgument {
 
 pub enum Capture {
 	No,
+	//TODO: It's possible to redefine these quick captures in the constructor body right now,
+	// but that's potentially confusing since the data dependency order jumps down and back up.
+	// Assign captured parameters immediately to binding of the same name but mixed_site resolution to prevent manipulation.
+	// Types that are Copy will still be usable in the constructor regardless, and for anything else there are more explicit captures.
 	Yes(syn::Visibility),
 }
 
