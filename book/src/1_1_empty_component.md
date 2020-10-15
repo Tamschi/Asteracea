@@ -44,7 +44,7 @@ The parentheses around the body of render aren't strictly needed here... and you
 
 ## The breakdown
 
-There are five pieces of syntax that are pasted into the output here: `pub`, `Empty`, `()`, `()` and `[]`.
+There are five distinct pieces of syntax that are translated into the output here: `pub`, `Empty`, `()`, `()` and `[]`.
 
 ### `pub` (visibility)
 
@@ -87,7 +87,9 @@ Instead, its items are inserted at the end of `render`'s argument list above, af
 
 ### `[]` (body / empty Multi Node)
 
-The location of `[]` in this example component is called the **body** of the component, and `[]` itself is an **empty Multi Node**.
+The location of `[]` in this example component is called the **body** of the component.
+
+`[]` itself is an **empty Multi Node**, which expands to `Node::Multi(&*bump.alloc_with(|| []))`.
 
 The contents of this node are placed in the bump allocation arena which, in this case, is effectively no operation. Location and length of this list are stored in the containing [`Node`], which here is returned directly from `render`.
 
