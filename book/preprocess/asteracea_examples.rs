@@ -21,7 +21,6 @@ use std::{
 };
 
 pub struct AsteraceaExamplesBuild {
-	out_dir: PathBuf,
 	asteracea_html: RefCell<File>,
 }
 pub struct AsteraceaExamples;
@@ -49,7 +48,6 @@ impl AsteraceaExamplesBuild {
 				)?;
 				file.into()
 			},
-			out_dir,
 		})
 	}
 }
@@ -72,7 +70,7 @@ impl Preprocessor for AsteraceaExamplesBuild {
 		"Asteracea Example (Build)"
 	}
 
-	fn run(&self, ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
+	fn run(&self, _ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
 		book.for_each_mut(|item| {
 			if let BookItem::Chapter(chapter) = item {
 				let mut code_state: Option<CodeState> = None;
@@ -96,7 +94,6 @@ impl Preprocessor for AsteraceaExamplesBuild {
 								.unwrap()
 								.flush_build(
 									tag,
-									self.out_dir.as_path(),
 									&mut *self.asteracea_html.borrow_mut(),
 									&keygen(chapter_name, line_col.get(offset.start)),
 								)
@@ -179,6 +176,7 @@ impl Preprocessor for AsteraceaExamples {
 struct CodeState<'a> {
 	tags: Vec<String>,
 	instantiate: CowStr<'a>,
+	render: CowStr<'a>,
 	texts: Vec<CowStr<'a>>,
 }
 
@@ -186,10 +184,18 @@ impl<'a> CodeState<'a> {
 	fn new(tag: CowStr) -> Option<Self> {
 		let tags: Vec<_> = tag.split(' ').collect();
 		let mut instantiate: Option<CowStr> = None;
+		let mut render: CowStr = ".render(&mut bump)".into();
 		let tags: Vec<_> = tags
 			.into_iter()
 			.filter(|t| {
-				if t.starts_with("asteracea") {
+				if t.starts_with("asteracea::render") {
+					render = t
+						.splitn(2, '=')
+						.nth(1)
+						.expect("Missing render call after asteracea::render")
+						.into();
+					false
+				} else if t.starts_with("asteracea") {
 					instantiate = Some(
 						t.splitn(2, '=')
 							.nth(1)
@@ -207,6 +213,7 @@ impl<'a> CodeState<'a> {
 			Some(Self {
 				tags,
 				instantiate: CowStr::Boxed(Box::new(instantiate.to_string()).into_boxed_str()),
+				render: CowStr::Boxed(Box::new(render.to_string()).into_boxed_str()),
 				texts: Vec::new(),
 			})
 		} else {
@@ -254,8 +261,7 @@ impl<'a> CodeState<'a> {
 
 	fn flush_build(
 		self,
-		tag: CowStr<'a>,
-		out_dir: &Path,
+		_tag: CowStr<'a>,
 		asteracea_html: &mut impl Write,
 		key: &str,
 	) -> Result<()> {
@@ -268,7 +274,7 @@ impl<'a> CodeState<'a> {
 
 				let mut bump = asteracea::lignin_schema::lignin::bumpalo::Bump::new();
 				let component = INSTANTIATE;
-				let vdom = component.render(&mut bump);
+				let vdom = component RENDER;
 				let mut html = String::new();
 				lignin_html::render(&mut html, &vdom).debugless_unwrap();
 				html
@@ -276,6 +282,7 @@ impl<'a> CodeState<'a> {
 			.to_string()
 			.replace("EXAMPLE_HERE", &self.texts.join(""))
 			.replace("INSTANTIATE", self.instantiate.as_ref()) // TODO: Show the parametrisation somehow.
+			.replace("RENDER", self.render.as_ref())
 		)?;
 		Ok(())
 	}
