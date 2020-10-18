@@ -18,7 +18,7 @@ asteracea::component! {
 
 This component expands to the following Rust code, with `use` imports extracted by hand and a little manual formatting:
 
-```rust
+```rust no_run noplayground
 use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
 
 pub struct Empty {}

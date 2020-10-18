@@ -14,7 +14,7 @@ asteracea::component! {
 
 The macro output is largely the same as for the `Empty` component, but the `render` method has changed:
 
-```rust
+```rust no_run noplayground
 use asteracea::lignin_schema::lignin::Node;
 
 # pub struct Text {}
@@ -51,7 +51,7 @@ asteracea::component! {
 }
 ```
 
-```rust
+```rust no_run noplayground
 use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
 
 # pub struct TextMulti {}

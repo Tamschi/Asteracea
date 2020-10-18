@@ -131,7 +131,7 @@ impl Preprocessor for AsteraceaExamples {
 							if code_state.is_none() {
 								state = cmark(
 									iter::once(Event::Start(Tag::CodeBlock(
-										CodeBlockKind::Fenced(tag),
+										CodeBlockKind::Fenced(tag.replace(' ', ",").into()),
 									))),
 									&mut processed,
 									state,
@@ -157,6 +157,19 @@ impl Preprocessor for AsteraceaExamples {
 									line_col.get(offset.start),
 								)
 								.unwrap()
+						}
+						Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(tag)))
+							if code_state.is_none() =>
+						{
+							state = cmark(
+								iter::once(Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(
+									tag.replace(' ', ",").into(),
+								)))),
+								&mut processed,
+								state,
+							)
+							.unwrap()
+							.into()
 						}
 						event => {
 							state = cmark(iter::once(event), &mut processed, state)
@@ -210,6 +223,9 @@ impl<'a> CodeState<'a> {
 			.map(|t| t.to_owned())
 			.collect();
 		if let Some(instantiate) = instantiate {
+			let mut tags = tags;
+			tags.push("no_run".into());
+			tags.push("ro_playground".into());
 			Some(Self {
 				tags,
 				instantiate: CowStr::Boxed(Box::new(instantiate.to_string()).into_boxed_str()),
@@ -235,7 +251,7 @@ impl<'a> CodeState<'a> {
 	) -> Result<()> {
 		*state = cmark(
 			iter::once(Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(
-				self.tags.join(" ").into(),
+				self.tags.join(",").into(),
 			))))
 			.chain(self.texts.into_iter().map(Event::Text))
 			.chain(iter::once(Event::End(Tag::CodeBlock(

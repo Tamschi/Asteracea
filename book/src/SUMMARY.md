@@ -11,6 +11,7 @@
   - [Value Formatting]()
   - [Rust Blocks]()
 - [Chapter 2: Dynamic Components]()
+  - [Procedure Blocks]()
   - [Render Parameters]()
   - [Constructor Parameters]()
   - [Persistence 1: Constructor Parameter Captures]()
