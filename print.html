@@ -1,0 +1,614 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js ayu">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Asteracea</title>
+        
+        <meta name="robots" content="noindex" />
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+
+		<!-- Plausible analytics -->
+		<script async defer data-domain="schichler.dev" src="https://plausible.io/js/plausible.js"></script>
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "ayu";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="0_sneak_peek.html"><strong aria-hidden="true">2.</strong> Chapter 0: Sneak Peek</a></li><li class="chapter-item expanded "><a href="1_static_components.html"><strong aria-hidden="true">3.</strong> Chapter 1: Static Components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="1_1_empty_component.html"><strong aria-hidden="true">3.1.</strong> An Empty Component</a></li><li class="chapter-item expanded "><a href="1_2_comments.html"><strong aria-hidden="true">3.2.</strong> Comments</a></li><li class="chapter-item expanded "><a href="1_3_text.html"><strong aria-hidden="true">3.3.</strong> Text</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.4.</strong> Elements</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.5.</strong> Attributes</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.6.</strong> Value Formatting</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.7.</strong> Rust Blocks</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.</strong> Chapter 2: Dynamic Components</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">4.1.</strong> Procedure Blocks</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.2.</strong> Render Parameters</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.3.</strong> Constructor Parameters</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.4.</strong> Persistence 1: Constructor Parameter Captures</div></li><li class="chapter-item expanded "><a href="2_5_body_captures.html"><strong aria-hidden="true">4.5.</strong> Persistence 2: Body Captures</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.6.</strong> Event Handlers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.7.</strong> Fallible Components</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Chapter 3: Conditional Content</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">5.1.</strong> if Conditions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.2.</strong> else Branches</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.3.</strong> for Loops and Keys</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Chapter 4: Modifiers</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">6.1.</strong> Introduction to VDOM Modifiers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.2.</strong> CSS Scoping</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> Chapter 5: Miscellaneous</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">7.1.</strong> Embdedding JavaScript Components</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">8.</strong> Chapter 6: Integrating Asteracea</div></li><li class="chapter-item expanded "><a href="ex_hello_asteracea.html"><strong aria-hidden="true">9.</strong> EX: Hello Asteracea</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu (default)</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">
+						Asteracea
+						<span style="color: red;" aria-label="[WIP: Expect breaking and URL changes!]" title="Automatically generated from the develop branch. Expect breaking and URL changes!">[WIP]</span>
+					</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
+<p>Welcome to the Asteracea guide book!</p>
+<h2><a class="header" href="#audience" id="audience">Audience</a></h2>
+<p>While using Asteracea effectively requires knowledge of Rust, this book is written also with non-Rustaceans in mind.</p>
+<p>If you have experience with more traditional front-end frameworks like Angular or React, quite a few of the presented concepts should be familiar to you. I will also try to highlight these connections where they appear. By the end of the book, you should be able to read Asteracea's component templates and make modifications to them.</p>
+<p>If you are already familiar with Rust, you can use the samples from <a href="TK">Chapter 6: Integrating Asteracea</a> to create a complete web site or application including static-side generation, server-side rendering and/or a (primary or optional) client-side approach.</p>
+<h2><a class="header" href="#background" id="background">Background</a></h2>
+<p>When I started using Rust privately in 2019, I had worked as a consultant on multiple web projects, mainly as front-end developer using TypeScript, Angular and React. I had grown increasingly frustrated with the failure classes of this weakly typed ecosystem: Aside from (rare but in those cases often destructive) run-ins with outdated or wrong type definitions for external packages, it was too easy to accidentally turn off type checking. It was often easy to forget to handle certain failure cases. React was quick to prototype in, but would often spiral in complexity and unchecked definitions on larger projects. Angular applications were comparatively robust but required manual subscription management to prevent memory leaks and required a significant amount of boilerplate that couldn't be abstracted away due to compiler limitations.</p>
+<p>Meanwhile on the server side, Spring Boot was resource-hungry as a microservice platform, requiring powerful development systems to run a local test instance of the platform even without any data added to it. Using the documentation was also frustrating to me, since it was difficult to look up the various implicit behaviours. I wouldn't be able to work efficiently with such a system on my slower home computer that also needed to handle a considerable amount of browser tabs at the same time. To top it off, DTOs couldn't be easily shared through the various layers of the application.</p>
+<p>I originally got into Rust to have another go at game development. This didn't go well at the time due to lack of high-level frameworks I could prototype something in quickly, but I liked the language and ended up writing several smaller utility programs. Then I had to switch Android ROMs to still get updates and lost the data stored in the finance tracker app I was using. (Backups were only available by uploading my data to the manufacturer's servers, which I decided against.) I took this as an opportunity to write my own tracker, to be hosted on a Pi Zero W so I could make entries from my phone. In part to learn about technologies I had seen but not used myself at work, I decided to use a network of Docker containers, with Postgres for storage and Nginx to serve static files and act as reverse proxy.</p>
+<p>While this tracker project is currently stalled, with help from friends I still managed to create a successful prototype: With <a href="https://diesel.rs/">Diesel</a>, [Serde] and by <a href="https://www.rust-lang.org/what/wasm">targeting WebAssembly</a>, I could reuse a single DTO definition all the way from Diesel to the app's browser frontend. Resource usage was tiny, requiring only about 15MB of private RAM and less than 0.5% CPU for the entire idling prototype server! I was also looking forward to drop JSON from my stack when MsgPack and CBOR inspection was added to Firefox.</p>
+<p>However, here is where I hit a snag: I was used to relatively mature web frameworks that make it easy to write reusable components and test them in isolation via dependency injection. I was also looking for CSS scoping and to ideally <em>never</em> touch JavaScript myself (ideally skipping its build ecosystem entirely). I used version <code>0.1.0</code> of <a href="https://lib.rs/crates/dodrio"><code>dodrio</code></a> for a while, but as stated on its project page, it's not intended as complete GUI solution. <a href="https://github.com/hecrj/iced">Iced</a> wasn't a good fit due to being more high-level than what I was going for. <a href="https://github.com/bodil/typed-html"><code>typed-html</code></a> seemed close to what React does, but I was looking for more stateful component tooling. (<code>dodrio</code> inspired Asteracea's use of a bump allocator.)</p>
+<p>(<a href="https://github.com/extraymond/afterglow">Afterglow</a> did not exist at that point. You will probably want to look at it as an alternative before deciding what to go with. Its design goals seem different from Asteracea's, at a glance.)</p>
+<p>I decided to write my own solution to this problem, which is where things started to escalate.</p>
+<h2><a class="header" href="#asteraceas-design-goals" id="asteraceas-design-goals">Asteracea's Design Goals</a></h2>
+<p>Asteracea is, as of October 2020, still early in development and subject to change. However, there are a few main goals I want to enable with this framework that can be put into writing already:</p>
+<ul>
+<li>
+<p>Low boilerplate:</p>
+<p>Web components have a certain shape that's shared between each of them. Creating a new component shouldn't require a large amount of text to get started, so that the focus is on what the individual component does.</p>
+<p>A completely empty component, minus the outer macro call, can be written as concisely as [<code>E()()[]</code>]. This generates a (zero-size) model, a (practically empty) constructor and a render method that generates an empty element group - a VDOM node that results in no output. More complex components grow naturally from here.</p>
+<p>[<code>E()()[]</code>]: ./1_empty_component.md</p>
+<p>Formatting a value into the output can be as simple as [<code>!{value}</code>]. More on all this later.</p>
+</li>
+<li>
+<p>Straightforward macros:</p>
+<p>While Asteracea relies heavily on procedural macros, these macros aren't magic. By and large, Asteracea does a copy-and-paste source code transformation. (Some dynamic defaults exist. Criticism is welcome.)</p>
+<p>Code spans are preserved as much as possible, so if the input is valid to Asteracea but the output is invalid Rust, the relevant errors and warnings will appear in matching locations on the macro input.</p>
+</li>
+<li>
+<p>Inclusive runtime:</p>
+<p>At some point during development, Twitter made its new web interface mandatory for all users. As of October 2020, it is still quite heavy (topping <code>about:perfomance</code> in Firefox by a wide margin alongside YouTube), loads slowly, is next to impossible to style, occasionally glitchy and does not work whatsoever without JavaScript enabled.</p>
+<p>Asteracea can't take care of all of these things for you, but I'm proud to announce that serverside-rendering and static site generation are supported without specifically adjusting the application code. The clientside version of the app can then hydrate the existing DOM structure, whether seamlessly or with additional content not included in the static version.</p>
+<p>Asteracea has no signature pattern aside from capitalising element names (which saves on some runtime branching). Generated HTML and DOM are structured as if written by hand.</p>
+</li>
+<li>
+<p>Balancing safety, simplicity and generality:</p>
+<p>Asteracea inherits its safety and lifetime model from Rust, with the one part not validated by the compiler being the render loop, external to the core framework and main application code. This is due to interaction with the browser DOM at this point, though a different implementation using <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry"><code>FinalizationRegistry</code></a> may be possible there.</p>
+<p>The targeted application model is single-threaded, which means components and event handlers aren't required to be <a href="https://doc.rust-lang.org/stable/std/marker/trait.Send.html"><code>Send</code></a> or <a href="https://doc.rust-lang.org/stable/std/marker/trait.Sync.html"><code>Sync</code></a>.</p>
+<p>Event handlers are only required to be valid for one render cycle (though reusing closures is encouraged and done by the basic event handler syntax). Component instances are required to outlive event handlers, but their lifetime is otherwise unconstrained by default. In particular, you can usually drop component instances before their rendered VDOM iff they don't register event handlers.</p>
+<p>Any expression between curly brackets (<code>{}</code>) in the templates is plain old Rust: The code is always¹ pasted verbatim and you can use any and all Rust features in those locations.</p>
+<p>¹ This is technically only effectively true: A small but limited find-and-replace transformation is applied to event handlers to enable using <code>self</code> within them. It should match expected Rust behaviour under all circumstances, though.</p>
+<p>Asteracea is named after the family of <a href="https://en.wikipedia.org/w/index.php?title=Asteraceae&amp;oldid=982133740">Asteraceae</a>, which contains very spectacular as well as very inconspicuous, but generally quite practical flowers. My hope is that this set of libraries will eventually be used for a similarly wide range of applications.</p>
+</li>
+</ul>
+<h1><a class="header" href="#chapter-0-sneak-peek" id="chapter-0-sneak-peek">Chapter 0: Sneak Peek</a></h1>
+<p>Before I begin to explain in earnest, here is a relatively complex dynamic component using many of Asteracea's features, along with its resulting HTML representation:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::cell::Cell;
+
+fn schedule_render() { /* ... */ }
+
+asteracea::component! {
+  pub Counter(
+    initial: i32,
+    priv step: i32,
+    pub class: &amp;'static str, //TODO: `pub enabled` instead of `pub class`? It'd make more sense, but requires boolean attributes to be available.
+  )() // Take `class: &amp;str` here instead.
+
+  |value = Cell::&lt;i32&gt;::new(initial)|;
+
+  //
+
+  &lt;div
+    .&quot;class&quot; = {self.class}
+    &quot;The current value is: &quot; !{self.value()} &lt;br&gt;
+
+    &lt;button
+      &quot;+&quot; !{self.step}
+      +&quot;click&quot; {self.step()}
+    &gt;
+  &gt;
+}
+
+//
+
+impl Counter {
+  pub fn value(&amp;self) -&gt; i32 {
+    self.value.get()
+  }
+
+  pub fn set_value(&amp;self, value: i32) {
+    self.value.set(value);
+    schedule_render();
+  }
+
+  fn step(&amp;self) {
+    self.value.set(self.value() + self.step);
+    schedule_render();
+  }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">&lt;DIV class=&quot;&quot;&gt;The current value is: 0&lt;BR&gt;&lt;BUTTON&gt;+1&lt;/BUTTON&gt;&lt;/DIV&gt;
+</code></pre>
+<p>This guide assumes you have done some web development before, so some parts of the template should look familiar to you.</p>
+<p>Others probably look pretty unfamilar, even with both a web development and Rust background. I removed some redundant grammar and had to invent new syntax for some features that don't appear as such in either ecosystem.</p>
+<p>Overall, I like to call this an MVC lite approach: You can see the model, view and controller parts of the component, in this order, without them being separated into different files. I've marked the boundaries between parts with a Rust comment each (<code>//</code>).</p>
+<p>This actually isn't mandatory - Asteracea is quite flexible and lets you mix them when appropriate - but it's a good way to clean up larger components that atherwise wouldn't fit on the screen well.</p>
+<p>There's also syntax highlighting without extra tools! The version here in the book is simplified, but if you use <a href="https://rust-analyzer.github.io/">rust-analyzer</a>, then it's really quite smart.</p>
+<p>The following chapters will teach you how to read and write these components, though becoming fluent may require a little bit of practice.</p>
+<h1><a class="header" href="#chapter-1-static-components" id="chapter-1-static-components">Chapter 1: Static Components</a></h1>
+<p>Asteracea, <a href="https://reactjs.org/docs/components-and-props.html#function-and-class-components">unlike for example React</a>, does not have multiple ways to define a component depending on whether you'd like to use instance state or not¹. Instead, due to low syntactic overhead and Rust's efficiency, <code>struct</code> components are generated throughout.</p>
+<p>Stateless <code>struct</code> components have zero runtime overhead compared to functions equivalent <a href="TK"><code>fragment!</code></a> use. This, along with less boilerplate and for consistency, is why I generally recommend <a href="TK"><code>component!</code></a> for all reusable GUI elements.</p>
+<p>In this chapter, I will introduce the basics of generating various virtual DOM nodes in Asteracea, which can then be translated into (e.g.!) HTML or browser DOM elements.</p>
+<p>¹ The distinction has weakened in React recently. Asteracea's approach to stateful components is <a href="./2_5_body_captures.html">partially inspired</a> by React's Hooks in terms of UX, but is implemented very differently below the surface.</p>
+<h1><a class="header" href="#chapter-11-an-empty-component" id="chapter-11-an-empty-component">Chapter 1.1: An Empty Component</a></h1>
+<p>As mentioned in the introduction, the simplest Asteracea component is <code>E()()[]</code>.</p>
+<p>In context, and written more like what you'd see in the wild:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  pub Empty()()
+
+  []
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">
+</code></pre>
+<p>(All Asteracea component examples are followed by their output as rendered by <a href="https://github.com/Tamschi/lignin-html"><code>lignin-html</code></a>, but in this case it's an empty string.)</p>
+<p>This component expands to the following Rust code, with <code>use</code> imports extracted by hand and a little manual formatting:</p>
+<pre><code class="language-rust no_run noplayground">use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
+
+pub struct Empty {}
+
+impl Empty {
+    pub fn new() -&gt; Self {
+        Self {}
+    }
+
+    pub fn render&lt;'bump&gt;(&amp;self, bump: &amp;'bump Bump) -&gt; Node&lt;'bump&gt; {
+        (Node::Multi(&amp;*bump.alloc_with(|| [])))
+    }
+}
+</code></pre>
+<p>As you can see, the <code>component!</code> macro created one <code>struct</code> type, with one constructor called <code>new</code> and one method called <code>render</code>. The output of <code>component!</code>, as far as you're supposed to touch it, <strong>always</strong> has this shape. No exceptions.</p>
+<p>(The macro can currently, under certain circumstances, create colliding definitions of structs called <code>NewStatics</code> and <code>RenderStatics</code>. This is a bug and will be fixed prior to release.</p>
+<p>If this happens to you, place your components in different modules. These types are not part of the public interface, and strictly speaking not something you're supposed to touch explicitly, and won't interfere further than this.)</p>
+<p>The parentheses around the body of render aren't strictly needed here... and you may find small bits of similar useless syntax in other positions too. The most simple explanation is that they're leftovers that will be cleaned up eventually (when more tests exist), but sometimes these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet.</p>
+<h2><a class="header" href="#the-breakdown" id="the-breakdown">The breakdown</a></h2>
+<p>There are five distinct pieces of syntax that are translated into the output here: <code>pub</code>, <code>Empty</code>, <code>()</code>, <code>()</code> and <code>[]</code>.</p>
+<h3><a class="header" href="#pub-visibility" id="pub-visibility"><code>pub</code> (visibility)</a></h3>
+<p>This is a plain <a href="https://doc.rust-lang.org/stable/reference/visibility-and-privacy.html?highlight=pub#visibility-and-privacy">Rust visibility</a> and inserted just before the <code>struct</code> keyword in the macro output above, controlling where the component can be used directly. Leave it out to for current-module-only visibility.</p>
+<p><code>new</code> and <code>render</code> are always declared <code>pub</code>; They inherit their visibility from the component structure.</p>
+<h3><a class="header" href="#empty-component-name" id="empty-component-name"><code>Empty</code> (component name)</a></h3>
+<p>This identifier is inserted verbatim into the output as shown.</p>
+<p>There aren't any requirements regarding <em>which</em> identifier to use, but I encourage you to avoid generic suffixes like &quot;<code>…Component</code>&quot;.</p>
+<p>Consider e.g. &quot;<code>…ListItem</code>&quot;, &quot;<code>…Button</code>&quot; or, if nothing more specific applies, &quot;<code>…Panel</code>&quot; as more descriptive alternatives, or leave the suffix off entirefly if there's no confusion regarding which types are components and which are not.</p>
+<h3><a class="header" href="#-constructor-argument-list" id="-constructor-argument-list"><code>()</code> (constructor argument list)</a></h3>
+<p>This is the first pair of parenthese in the input and also appears before the other in the output. As you can see, it is inserted verbatim after <code>new</code> here.</p>
+<p>You can use any normal argument declaration here, with the exception of <code>self</code> parameters.</p>
+<p>The constructor argument list also supports a shorthand to declare and assign fields on the component instance, but more on that [later].</p>
+<h3><a class="header" href="#-render-argument-list" id="-render-argument-list"><code>()</code> (render argument list)</a></h3>
+<p>The second pair of parentheses is used to declare <strong>additional</strong> render arguments.</p>
+<p>This one is never pasted verbatim into the resulting component, despite supporting only plain Rust argument declarations (with the exception of <code>self</code> parameters and, usually, <code>bump</code>).</p>
+<p>Instead, its items are inserted at the end of <code>render</code>'s argument list above, after the implicit arguments <code>&amp;self</code> and <code>bump: &amp;'bump Bump</code>. You can access instance fields through <code>self</code> in the component body (more on that later) and <code>bump</code> is a <a href="https://docs.rs/bumpalo/3/bumpalo/struct.Bump.html"><code>Bump</code></a> from <a href="https://github.com/fitzgen/bumpalo"><code>bumpalo</code></a>, a bump allocation arena that makes the VDOM more efficient.</p>
+<p><strong>Do not place anything into <code>bump</code> that needs to be dropped!</strong> Bump allocators are speedy, but this speed is bought by not running any logic before the memory is reused. Some workarounds for common use cases exist, but for the most part Asteracea handles this for you. See <a href="https://github.com/fitzgen/bumpalo"><code>bumpalo</code></a>'s documentation for more information.</p>
+<h3><a class="header" href="#-body--empty-multi-node" id="-body--empty-multi-node"><code>[]</code> (body / empty Multi Node)</a></h3>
+<p>The location of <code>[]</code> in this example component is called the <strong>body</strong> of the component.</p>
+<p><code>[]</code> itself is an <strong>empty Multi Node</strong>, which expands to <code>Node::Multi(&amp;*bump.alloc_with(|| []))</code>.</p>
+<p>The contents of this node are placed in the bump allocation arena which, in this case, is effectively no operation. Location and length of this list are stored in the containing [<code>Node</code>], which here is returned directly from <code>render</code>.</p>
+<p>It's legal to reuse [<code>Node</code>] instances in multiple places in the VDOM tree. You can also cache long-lived [<code>Node</code>]s and then refer to them across multiple render cycles, to avoid re-rendering part of the VDOM.</p>
+<p><strong>Multi Nodes</strong> are a VDOM concept that doesn't translate into DOM: Their contents are replicated without nesting in the surrounding DOM structure. You can use them, for example, to return multiple elements at the top level of a component.</p>
+<p>Another use is to represent a variable number of elements, including none. The diffing algorithm in <a href="https://github.com/Tamschi/lignin-dom"><code>lignin-dom</code></a> advances by a single VDOM sibling when processing a multi node. This means that you can avoid shifting any following sibling nodes, which can avoid expensively recreating their DOM representation or confusing the user by moving their selection to an unexpected place.</p>
+<h1><a class="header" href="#chapter-12-comments" id="chapter-12-comments">Chapter 1.2: Comments</a></h1>
+<p>You can use three distinct types of comments in Asteracea macros, all serving different purposes:</p>
+<p>First, standard Rust comments can be placed anywhere in Asteracea components (or any other place in a Rust program), and are not included in the compiled binary:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  pub Commented()()
+
+  [
+    // This is a one-line comment.
+    /*
+    /* These are *nested* multiline comments. */
+    */
+  ]
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">
+</code></pre>
+<p>Additionally, Rust documentation is supported in many places:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  /// This is a documented component.  
+  /// Running `cargo doc` will pick up on its documentation.
+  pub Documented()()
+
+  []
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">
+</code></pre>
+<p>These <code>///</code> (or <code>//!</code>) annotations are not included in the compiled binary either¹, but can be picked up by standard Rust tooling like <a href="https://rust-analyzer.github.io/">rust-analyzer</a>.</p>
+<p>¹ Rare exceptions in combination with other macros apply.</p>
+<p>The third kind of comment is specific to Asteracea and does affect program output:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  pub HtmlCommented()()
+
+  &lt;!-- &quot;This is an HTML comment.&quot; --&gt;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">&lt;!--This is an HTML comment.--&gt;
+</code></pre>
+<p>The double quotes are a Rust limitation: Since Rust tokenises macro input, a string literal is required to extract raw text.</p>
+<p>You can use a multiline string to easily write a multiline HTML comment:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  pub HtmlCommented()()
+
+  &lt;!-- &quot;
+    This comment spans mul-
+    tiple lines, I hope it is
+    not too annoying.
+  &quot; --&gt;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">&lt;!--
+    This comment spans mul-
+    tiple lines, I hope it is
+    not too annoying.
+  --&gt;
+</code></pre>
+<h1><a class="header" href="#chapter-13-text" id="chapter-13-text">Chapter 1.3: Text</a></h1>
+<p>To output a static plain <a href="https://developer.mozilla.org/en-US/docs/Web/API/Text"><code>Text</code></a> element in Asteracea, simply use a text literal in your component's body:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  pub Text()()
+
+  &quot;This is text.&quot;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">This is text.
+</code></pre>
+<p>The macro output is largely the same as for the <code>Empty</code> component, but the <code>render</code> method has changed:</p>
+<pre><code class="language-rust no_run noplayground">use asteracea::lignin_schema::lignin::Node;
+
+<span class="boring">pub struct Text {}
+</span><span class="boring">impl Text {
+</span><span class="boring">pub fn new() -&gt; Self {
+</span><span class="boring">  Self {}
+</span><span class="boring">}
+</span>// …
+pub fn render(&amp;self) -&gt; Node&lt;'static&gt; {
+  (Node::Text(&quot;This is text.&quot;))
+}
+// …
+<span class="boring">}
+</span></code></pre>
+<p>(Click the eye icon to view the rest of the macro output. Note that this also displays a hidden <code>main</code> method inserted by mdBook which isn't part of <code>component!</code>'s output.)</p>
+<p>Most notably, the method now doesn't take a <code>bump</code> parameter and returns <code>Node&lt;'static&gt;</code> instead of <code>Node&lt;'bump&gt;</code>. This is because rendering static text doesn't require an allocation, because the returned [<code>Node</code>] can simply refer to the <code>str</code> embedded in the executable's data section.</p>
+<p>The method consequently also lost its generic lifetime parameter.</p>
+<h2><a class="header" href="#multiple-text-elements" id="multiple-text-elements">Multiple <code>Text</code> elements</a></h2>
+<p>Text nodes can be used as children of other nodes, for example a Multi Node:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  pub TextMulti()()
+
+  [
+    &quot;This is text.&quot;
+    &quot;This is also text.&quot;
+  ]
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">This is text.This is also text.
+</code></pre>
+<pre><code class="language-rust no_run noplayground">use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
+
+<span class="boring">pub struct TextMulti {}
+</span><span class="boring">impl TextMulti {
+</span><span class="boring">    pub fn new() -&gt; Self {
+</span><span class="boring">        Self {}
+</span><span class="boring">    }
+</span>// …
+pub fn render&lt;'bump&gt;(
+    &amp;self,
+    bump: &amp;'bump Bump,
+) -&gt; Node&lt;'bump&gt; {
+    (Node::Multi(&amp;*bump.alloc_with(|| {
+        [
+            Node::Text(&quot;This is text.&quot;),
+            Node::Text(&quot;This is also text.&quot;),
+        ]
+    })))
+}
+// …
+<span class="boring">}
+</span></code></pre>
+<p>Two observations:</p>
+<ul>
+<li>
+<p>There is no space between the sentences in the HTML output.</p>
+</li>
+<li>
+<p><code>render</code> has returned to its previous signature and allocates inside <code>bump</code> again.</p>
+</li>
+</ul>
+<p>Asteracea gives you fairly precise control over the output, but that also means it won't make changes to the document's whitespace for you. If there's no whitespace in the literal in the input, then there won't be whitespace in the content of the output (when rendering with <a href="https://github.com/Tamschi/lignin-html">lignin-html</a> or <a href="https://github.com/Tamschi/lignin-dom">lignin-dom</a>).</p>
+<p>There is one important difference between the HTML and DOM output of adjacent sibling Text nodes: In HTML, it is impossible to distinguish them and browsers will parse them as single DOM node. When manipulating the DOM directly, the distinct text nodes will be preserved.</p>
+<p>This is one of the reasons that a client-side renderer must once parse the existing DOM into a VDOM when hydrating an app. Another good reason is that user-supplied browser extensions may have made changes to the DOM tree.</p>
+<p>(Please don't render into <code>&lt;body&gt;</code> directly! Many browser extensions insert their own scripts or overlays as child elements here.</p>
+<p>While it's not too likely that these additions will make your app crash, the GUI may glitch and appear for example duplicated. Rendering into, for example, a <code>&lt;div id=app&gt;</code> instead is more reliable.)</p>
+<p>Multi Nodes generated by Asteracea macros always place their contents in the bump allocation arena, even if those contents are theoretically immutable.</p>
+<h1><a class="header" href="#chapter-25-persistence-2-body-captures" id="chapter-25-persistence-2-body-captures">Chapter 2.5: Persistence 2: Body Captures</a></h1>
+<h1><a class="header" href="#chapter-1-hello-asteracea" id="chapter-1-hello-asteracea">Chapter 1: Hello Asteracea</a></h1>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  HelloAsteracea()()
+  &lt;span &quot;Hello Asteracea!&quot;&gt;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">&lt;SPAN&gt;Hello Asteracea!&lt;/SPAN&gt;
+</code></pre>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use asteracea::component;
+use std::cell::Cell;
+
+fn schedule_render() { /* ... */ }
+
+component! {
+  pub Counter(
+    initial: i32,
+    priv step: i32,
+    /// This component's class attribute value.
+    pub class: &amp;'static str, // ⁵
+  )()
+
+  |value = Cell::&lt;i32&gt;::new(initial)|; // shorthand capture
+
+  &lt;div
+    .&quot;class&quot; = {self.class} // ⁶
+    &quot;The current value is: &quot; !{self.value()} &lt;br&gt; // Anything within curlies is plain Rust.
+
+    &lt;button
+      &quot;+&quot; !{self.step} // shorthand bump_format call
+      +&quot;click&quot; {
+        self.value.set(self.value() + self.step);
+        schedule_render();
+      }
+    &gt;
+  &gt;
+}
+
+impl Counter {
+  pub fn value(&amp;self) -&gt; i32 {
+    self.value.get()
+  }
+
+  pub fn set_value(&amp;self, value: i32) {
+    self.value.set(value);
+  }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">&lt;DIV class=&quot;&quot;&gt;The current value is: 0&lt;BR&gt;&lt;BUTTON&gt;+1&lt;/BUTTON&gt;&lt;/DIV&gt;
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
+        
+
+    </body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js ayu">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>An Empty Component - Asteracea</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+
+		<!-- Plausible analytics -->
+		<script async defer data-domain="schichler.dev" src="https://plausible.io/js/plausible.js"></script>
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "ayu";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="0_sneak_peek.html"><strong aria-hidden="true">2.</strong> Chapter 0: Sneak Peek</a></li><li class="chapter-item expanded "><a href="1_static_components.html"><strong aria-hidden="true">3.</strong> Chapter 1: Static Components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="1_1_empty_component.html" class="active"><strong aria-hidden="true">3.1.</strong> An Empty Component</a></li><li class="chapter-item expanded "><a href="1_2_comments.html"><strong aria-hidden="true">3.2.</strong> Comments</a></li><li class="chapter-item expanded "><a href="1_3_text.html"><strong aria-hidden="true">3.3.</strong> Text</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.4.</strong> Elements</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.5.</strong> Attributes</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.6.</strong> Value Formatting</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.7.</strong> Rust Blocks</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.</strong> Chapter 2: Dynamic Components</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">4.1.</strong> Procedure Blocks</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.2.</strong> Render Parameters</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.3.</strong> Constructor Parameters</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.4.</strong> Persistence 1: Constructor Parameter Captures</div></li><li class="chapter-item expanded "><a href="2_5_body_captures.html"><strong aria-hidden="true">4.5.</strong> Persistence 2: Body Captures</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.6.</strong> Event Handlers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.7.</strong> Fallible Components</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Chapter 3: Conditional Content</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">5.1.</strong> if Conditions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.2.</strong> else Branches</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.3.</strong> for Loops and Keys</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Chapter 4: Modifiers</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">6.1.</strong> Introduction to VDOM Modifiers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.2.</strong> CSS Scoping</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> Chapter 5: Miscellaneous</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">7.1.</strong> Embdedding JavaScript Components</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">8.</strong> Chapter 6: Integrating Asteracea</div></li><li class="chapter-item expanded "><a href="ex_hello_asteracea.html"><strong aria-hidden="true">9.</strong> EX: Hello Asteracea</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu (default)</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">
+						Asteracea
+						<span style="color: red;" aria-label="[WIP: Expect breaking and URL changes!]" title="Automatically generated from the develop branch. Expect breaking and URL changes!">[WIP]</span>
+					</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#chapter-11-an-empty-component" id="chapter-11-an-empty-component">Chapter 1.1: An Empty Component</a></h1>
+<p>As mentioned in the introduction, the simplest Asteracea component is <code>E()()[]</code>.</p>
+<p>In context, and written more like what you'd see in the wild:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  pub Empty()()
+
+  []
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">
+</code></pre>
+<p>(All Asteracea component examples are followed by their output as rendered by <a href="https://github.com/Tamschi/lignin-html"><code>lignin-html</code></a>, but in this case it's an empty string.)</p>
+<p>This component expands to the following Rust code, with <code>use</code> imports extracted by hand and a little manual formatting:</p>
+<pre><code class="language-rust no_run noplayground">use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
+
+pub struct Empty {}
+
+impl Empty {
+    pub fn new() -&gt; Self {
+        Self {}
+    }
+
+    pub fn render&lt;'bump&gt;(&amp;self, bump: &amp;'bump Bump) -&gt; Node&lt;'bump&gt; {
+        (Node::Multi(&amp;*bump.alloc_with(|| [])))
+    }
+}
+</code></pre>
+<p>As you can see, the <code>component!</code> macro created one <code>struct</code> type, with one constructor called <code>new</code> and one method called <code>render</code>. The output of <code>component!</code>, as far as you're supposed to touch it, <strong>always</strong> has this shape. No exceptions.</p>
+<p>(The macro can currently, under certain circumstances, create colliding definitions of structs called <code>NewStatics</code> and <code>RenderStatics</code>. This is a bug and will be fixed prior to release.</p>
+<p>If this happens to you, place your components in different modules. These types are not part of the public interface, and strictly speaking not something you're supposed to touch explicitly, and won't interfere further than this.)</p>
+<p>The parentheses around the body of render aren't strictly needed here... and you may find small bits of similar useless syntax in other positions too. The most simple explanation is that they're leftovers that will be cleaned up eventually (when more tests exist), but sometimes these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet.</p>
+<h2><a class="header" href="#the-breakdown" id="the-breakdown">The breakdown</a></h2>
+<p>There are five distinct pieces of syntax that are translated into the output here: <code>pub</code>, <code>Empty</code>, <code>()</code>, <code>()</code> and <code>[]</code>.</p>
+<h3><a class="header" href="#pub-visibility" id="pub-visibility"><code>pub</code> (visibility)</a></h3>
+<p>This is a plain <a href="https://doc.rust-lang.org/stable/reference/visibility-and-privacy.html?highlight=pub#visibility-and-privacy">Rust visibility</a> and inserted just before the <code>struct</code> keyword in the macro output above, controlling where the component can be used directly. Leave it out to for current-module-only visibility.</p>
+<p><code>new</code> and <code>render</code> are always declared <code>pub</code>; They inherit their visibility from the component structure.</p>
+<h3><a class="header" href="#empty-component-name" id="empty-component-name"><code>Empty</code> (component name)</a></h3>
+<p>This identifier is inserted verbatim into the output as shown.</p>
+<p>There aren't any requirements regarding <em>which</em> identifier to use, but I encourage you to avoid generic suffixes like &quot;<code>…Component</code>&quot;.</p>
+<p>Consider e.g. &quot;<code>…ListItem</code>&quot;, &quot;<code>…Button</code>&quot; or, if nothing more specific applies, &quot;<code>…Panel</code>&quot; as more descriptive alternatives, or leave the suffix off entirefly if there's no confusion regarding which types are components and which are not.</p>
+<h3><a class="header" href="#-constructor-argument-list" id="-constructor-argument-list"><code>()</code> (constructor argument list)</a></h3>
+<p>This is the first pair of parenthese in the input and also appears before the other in the output. As you can see, it is inserted verbatim after <code>new</code> here.</p>
+<p>You can use any normal argument declaration here, with the exception of <code>self</code> parameters.</p>
+<p>The constructor argument list also supports a shorthand to declare and assign fields on the component instance, but more on that [later].</p>
+<h3><a class="header" href="#-render-argument-list" id="-render-argument-list"><code>()</code> (render argument list)</a></h3>
+<p>The second pair of parentheses is used to declare <strong>additional</strong> render arguments.</p>
+<p>This one is never pasted verbatim into the resulting component, despite supporting only plain Rust argument declarations (with the exception of <code>self</code> parameters and, usually, <code>bump</code>).</p>
+<p>Instead, its items are inserted at the end of <code>render</code>'s argument list above, after the implicit arguments <code>&amp;self</code> and <code>bump: &amp;'bump Bump</code>. You can access instance fields through <code>self</code> in the component body (more on that later) and <code>bump</code> is a <a href="https://docs.rs/bumpalo/3/bumpalo/struct.Bump.html"><code>Bump</code></a> from <a href="https://github.com/fitzgen/bumpalo"><code>bumpalo</code></a>, a bump allocation arena that makes the VDOM more efficient.</p>
+<p><strong>Do not place anything into <code>bump</code> that needs to be dropped!</strong> Bump allocators are speedy, but this speed is bought by not running any logic before the memory is reused. Some workarounds for common use cases exist, but for the most part Asteracea handles this for you. See <a href="https://github.com/fitzgen/bumpalo"><code>bumpalo</code></a>'s documentation for more information.</p>
+<h3><a class="header" href="#-body--empty-multi-node" id="-body--empty-multi-node"><code>[]</code> (body / empty Multi Node)</a></h3>
+<p>The location of <code>[]</code> in this example component is called the <strong>body</strong> of the component.</p>
+<p><code>[]</code> itself is an <strong>empty Multi Node</strong>, which expands to <code>Node::Multi(&amp;*bump.alloc_with(|| []))</code>.</p>
+<p>The contents of this node are placed in the bump allocation arena which, in this case, is effectively no operation. Location and length of this list are stored in the containing [<code>Node</code>], which here is returned directly from <code>render</code>.</p>
+<p>It's legal to reuse [<code>Node</code>] instances in multiple places in the VDOM tree. You can also cache long-lived [<code>Node</code>]s and then refer to them across multiple render cycles, to avoid re-rendering part of the VDOM.</p>
+<p><strong>Multi Nodes</strong> are a VDOM concept that doesn't translate into DOM: Their contents are replicated without nesting in the surrounding DOM structure. You can use them, for example, to return multiple elements at the top level of a component.</p>
+<p>Another use is to represent a variable number of elements, including none. The diffing algorithm in <a href="https://github.com/Tamschi/lignin-dom"><code>lignin-dom</code></a> advances by a single VDOM sibling when processing a multi node. This means that you can avoid shifting any following sibling nodes, which can avoid expensively recreating their DOM representation or confusing the user by moving their selection to an unexpected place.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="1_static_components.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="1_2_comments.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="1_static_components.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="1_2_comments.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

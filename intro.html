@@ -1,0 +1,273 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js ayu">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Introduction - Asteracea</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+
+		<!-- Plausible analytics -->
+		<script async defer data-domain="schichler.dev" src="https://plausible.io/js/plausible.js"></script>
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "ayu";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html" class="active"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="0_sneak_peek.html"><strong aria-hidden="true">2.</strong> Chapter 0: Sneak Peek</a></li><li class="chapter-item expanded "><a href="1_static_components.html"><strong aria-hidden="true">3.</strong> Chapter 1: Static Components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="1_1_empty_component.html"><strong aria-hidden="true">3.1.</strong> An Empty Component</a></li><li class="chapter-item expanded "><a href="1_2_comments.html"><strong aria-hidden="true">3.2.</strong> Comments</a></li><li class="chapter-item expanded "><a href="1_3_text.html"><strong aria-hidden="true">3.3.</strong> Text</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.4.</strong> Elements</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.5.</strong> Attributes</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.6.</strong> Value Formatting</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.7.</strong> Rust Blocks</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.</strong> Chapter 2: Dynamic Components</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">4.1.</strong> Procedure Blocks</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.2.</strong> Render Parameters</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.3.</strong> Constructor Parameters</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.4.</strong> Persistence 1: Constructor Parameter Captures</div></li><li class="chapter-item expanded "><a href="2_5_body_captures.html"><strong aria-hidden="true">4.5.</strong> Persistence 2: Body Captures</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.6.</strong> Event Handlers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.7.</strong> Fallible Components</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Chapter 3: Conditional Content</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">5.1.</strong> if Conditions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.2.</strong> else Branches</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.3.</strong> for Loops and Keys</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Chapter 4: Modifiers</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">6.1.</strong> Introduction to VDOM Modifiers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.2.</strong> CSS Scoping</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> Chapter 5: Miscellaneous</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">7.1.</strong> Embdedding JavaScript Components</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">8.</strong> Chapter 6: Integrating Asteracea</div></li><li class="chapter-item expanded "><a href="ex_hello_asteracea.html"><strong aria-hidden="true">9.</strong> EX: Hello Asteracea</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu (default)</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">
+						Asteracea
+						<span style="color: red;" aria-label="[WIP: Expect breaking and URL changes!]" title="Automatically generated from the develop branch. Expect breaking and URL changes!">[WIP]</span>
+					</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
+<p>Welcome to the Asteracea guide book!</p>
+<h2><a class="header" href="#audience" id="audience">Audience</a></h2>
+<p>While using Asteracea effectively requires knowledge of Rust, this book is written also with non-Rustaceans in mind.</p>
+<p>If you have experience with more traditional front-end frameworks like Angular or React, quite a few of the presented concepts should be familiar to you. I will also try to highlight these connections where they appear. By the end of the book, you should be able to read Asteracea's component templates and make modifications to them.</p>
+<p>If you are already familiar with Rust, you can use the samples from <a href="TK">Chapter 6: Integrating Asteracea</a> to create a complete web site or application including static-side generation, server-side rendering and/or a (primary or optional) client-side approach.</p>
+<h2><a class="header" href="#background" id="background">Background</a></h2>
+<p>When I started using Rust privately in 2019, I had worked as a consultant on multiple web projects, mainly as front-end developer using TypeScript, Angular and React. I had grown increasingly frustrated with the failure classes of this weakly typed ecosystem: Aside from (rare but in those cases often destructive) run-ins with outdated or wrong type definitions for external packages, it was too easy to accidentally turn off type checking. It was often easy to forget to handle certain failure cases. React was quick to prototype in, but would often spiral in complexity and unchecked definitions on larger projects. Angular applications were comparatively robust but required manual subscription management to prevent memory leaks and required a significant amount of boilerplate that couldn't be abstracted away due to compiler limitations.</p>
+<p>Meanwhile on the server side, Spring Boot was resource-hungry as a microservice platform, requiring powerful development systems to run a local test instance of the platform even without any data added to it. Using the documentation was also frustrating to me, since it was difficult to look up the various implicit behaviours. I wouldn't be able to work efficiently with such a system on my slower home computer that also needed to handle a considerable amount of browser tabs at the same time. To top it off, DTOs couldn't be easily shared through the various layers of the application.</p>
+<p>I originally got into Rust to have another go at game development. This didn't go well at the time due to lack of high-level frameworks I could prototype something in quickly, but I liked the language and ended up writing several smaller utility programs. Then I had to switch Android ROMs to still get updates and lost the data stored in the finance tracker app I was using. (Backups were only available by uploading my data to the manufacturer's servers, which I decided against.) I took this as an opportunity to write my own tracker, to be hosted on a Pi Zero W so I could make entries from my phone. In part to learn about technologies I had seen but not used myself at work, I decided to use a network of Docker containers, with Postgres for storage and Nginx to serve static files and act as reverse proxy.</p>
+<p>While this tracker project is currently stalled, with help from friends I still managed to create a successful prototype: With <a href="https://diesel.rs/">Diesel</a>, [Serde] and by <a href="https://www.rust-lang.org/what/wasm">targeting WebAssembly</a>, I could reuse a single DTO definition all the way from Diesel to the app's browser frontend. Resource usage was tiny, requiring only about 15MB of private RAM and less than 0.5% CPU for the entire idling prototype server! I was also looking forward to drop JSON from my stack when MsgPack and CBOR inspection was added to Firefox.</p>
+<p>However, here is where I hit a snag: I was used to relatively mature web frameworks that make it easy to write reusable components and test them in isolation via dependency injection. I was also looking for CSS scoping and to ideally <em>never</em> touch JavaScript myself (ideally skipping its build ecosystem entirely). I used version <code>0.1.0</code> of <a href="https://lib.rs/crates/dodrio"><code>dodrio</code></a> for a while, but as stated on its project page, it's not intended as complete GUI solution. <a href="https://github.com/hecrj/iced">Iced</a> wasn't a good fit due to being more high-level than what I was going for. <a href="https://github.com/bodil/typed-html"><code>typed-html</code></a> seemed close to what React does, but I was looking for more stateful component tooling. (<code>dodrio</code> inspired Asteracea's use of a bump allocator.)</p>
+<p>(<a href="https://github.com/extraymond/afterglow">Afterglow</a> did not exist at that point. You will probably want to look at it as an alternative before deciding what to go with. Its design goals seem different from Asteracea's, at a glance.)</p>
+<p>I decided to write my own solution to this problem, which is where things started to escalate.</p>
+<h2><a class="header" href="#asteraceas-design-goals" id="asteraceas-design-goals">Asteracea's Design Goals</a></h2>
+<p>Asteracea is, as of October 2020, still early in development and subject to change. However, there are a few main goals I want to enable with this framework that can be put into writing already:</p>
+<ul>
+<li>
+<p>Low boilerplate:</p>
+<p>Web components have a certain shape that's shared between each of them. Creating a new component shouldn't require a large amount of text to get started, so that the focus is on what the individual component does.</p>
+<p>A completely empty component, minus the outer macro call, can be written as concisely as [<code>E()()[]</code>]. This generates a (zero-size) model, a (practically empty) constructor and a render method that generates an empty element group - a VDOM node that results in no output. More complex components grow naturally from here.</p>
+<p>[<code>E()()[]</code>]: ./1_empty_component.md</p>
+<p>Formatting a value into the output can be as simple as [<code>!{value}</code>]. More on all this later.</p>
+</li>
+<li>
+<p>Straightforward macros:</p>
+<p>While Asteracea relies heavily on procedural macros, these macros aren't magic. By and large, Asteracea does a copy-and-paste source code transformation. (Some dynamic defaults exist. Criticism is welcome.)</p>
+<p>Code spans are preserved as much as possible, so if the input is valid to Asteracea but the output is invalid Rust, the relevant errors and warnings will appear in matching locations on the macro input.</p>
+</li>
+<li>
+<p>Inclusive runtime:</p>
+<p>At some point during development, Twitter made its new web interface mandatory for all users. As of October 2020, it is still quite heavy (topping <code>about:perfomance</code> in Firefox by a wide margin alongside YouTube), loads slowly, is next to impossible to style, occasionally glitchy and does not work whatsoever without JavaScript enabled.</p>
+<p>Asteracea can't take care of all of these things for you, but I'm proud to announce that serverside-rendering and static site generation are supported without specifically adjusting the application code. The clientside version of the app can then hydrate the existing DOM structure, whether seamlessly or with additional content not included in the static version.</p>
+<p>Asteracea has no signature pattern aside from capitalising element names (which saves on some runtime branching). Generated HTML and DOM are structured as if written by hand.</p>
+</li>
+<li>
+<p>Balancing safety, simplicity and generality:</p>
+<p>Asteracea inherits its safety and lifetime model from Rust, with the one part not validated by the compiler being the render loop, external to the core framework and main application code. This is due to interaction with the browser DOM at this point, though a different implementation using <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry"><code>FinalizationRegistry</code></a> may be possible there.</p>
+<p>The targeted application model is single-threaded, which means components and event handlers aren't required to be <a href="https://doc.rust-lang.org/stable/std/marker/trait.Send.html"><code>Send</code></a> or <a href="https://doc.rust-lang.org/stable/std/marker/trait.Sync.html"><code>Sync</code></a>.</p>
+<p>Event handlers are only required to be valid for one render cycle (though reusing closures is encouraged and done by the basic event handler syntax). Component instances are required to outlive event handlers, but their lifetime is otherwise unconstrained by default. In particular, you can usually drop component instances before their rendered VDOM iff they don't register event handlers.</p>
+<p>Any expression between curly brackets (<code>{}</code>) in the templates is plain old Rust: The code is always¹ pasted verbatim and you can use any and all Rust features in those locations.</p>
+<p>¹ This is technically only effectively true: A small but limited find-and-replace transformation is applied to event handlers to enable using <code>self</code> within them. It should match expected Rust behaviour under all circumstances, though.</p>
+<p>Asteracea is named after the family of <a href="https://en.wikipedia.org/w/index.php?title=Asteraceae&amp;oldid=982133740">Asteraceae</a>, which contains very spectacular as well as very inconspicuous, but generally quite practical flowers. My hope is that this set of libraries will eventually be used for a similarly wide range of applications.</p>
+</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+                            <a rel="next" href="0_sneak_peek.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+                    <a rel="next" href="0_sneak_peek.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
