@@ -2,12 +2,13 @@ mod attached_access_expression;
 mod bump_format_shorthand;
 mod capture_definition;
 mod event_binding;
+mod html_comment;
 mod html_definition;
 
-use self::html_definition::HtmlDefinition;
 pub use self::{
 	attached_access_expression::AttachedAccessExpression, capture_definition::CaptureDefinition,
 };
+use self::{html_comment::HtmlComment, html_definition::HtmlDefinition};
 use crate::{
 	asteracea_ident,
 	parse_with_context::{ParseContext, ParseWithContext},
@@ -20,6 +21,7 @@ use quote::{quote, quote_spanned};
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
+	token::Bang,
 	token::{Add, Brace, Bracket},
 	Error, Ident, LitStr, Token,
 };
@@ -38,11 +40,12 @@ enum PartKind {
 impl<C> Part<C> {
 	fn kind(&self) -> PartKind {
 		match self.body {
-			PartBody::Text(_)
-			| PartBody::Html(_)
+			PartBody::Capture(_)
+			| PartBody::Comment(_)
 			| PartBody::Expression(_, _)
-			| PartBody::Capture(_)
-			| PartBody::Multi(_, _) => PartKind::Child,
+			| PartBody::Html(_)
+			| PartBody::Multi(_, _)
+			| PartBody::Text(_) => PartKind::Child,
 			PartBody::EventBinding(_) => PartKind::EventBinding,
 		}
 	}
@@ -73,6 +76,7 @@ impl<C> Part<C> {
 
 #[allow(clippy::large_enum_variant)]
 pub enum PartBody<C> {
+	Comment(HtmlComment),
 	Text(LitStr),
 	Html(HtmlDefinition<C>),
 	Expression(Brace, TokenStream),
@@ -107,7 +111,14 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 		Ok(if lookahead.peek(LitStr) {
 			Some(Text(input.parse()?))
 		} else if lookahead.peek(Token![<]) {
-			Some(Html(HtmlDefinition::<C>::parse_with_context(input, cx)?))
+			match {
+				let input = input.fork();
+				input.parse::<Token![<]>().unwrap();
+				input.parse::<Token![!]>().ok()
+			} {
+				Some(Bang { .. }) => Some(Comment(HtmlComment::parse_with_context(input, cx)?)),
+				None => Some(Html(HtmlDefinition::<C>::parse_with_context(input, cx)?)),
+			}
 		} else if lookahead.peek(Brace) {
 			let expression;
 			#[allow(clippy::eval_order_dependence)]
@@ -165,6 +176,7 @@ impl<C> PartBody<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		use PartBody::*;
 		Ok(match self {
+			Comment(html_comment) => html_comment.part_tokens(cx)?,
 			Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span()=>

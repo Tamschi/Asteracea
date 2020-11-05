@@ -2,6 +2,16 @@
 
 Welcome to the Asteracea guide book!
 
+## Audience
+
+While using Asteracea effectively requires knowledge of Rust, this book is written also with non-Rustaceans in mind.
+
+If you have experience with more traditional front-end frameworks like Angular or React, quite a few of the presented concepts should be familiar to you. I will also try to highlight these connections where they appear.
+
+By the end of the book, you should be able to read Asteracea's component templates and make modifications to them.
+
+If you are already familiar with Rust, you can use the samples from Chapter&nbsp;6: Integrating Asteracea to create a complete web site or application including static-side generation, server-side rendering and/or a (primary or optional) client-side approach.
+
 ## Background
 
 When I started using Rust privately in 2019, I had worked as a consultant on multiple web projects, mainly as front-end developer using TypeScript, Angular and React. I had grown increasingly frustrated with the failure classes of this weakly typed ecosystem: Aside from (rare but in those cases often destructive) run-ins with outdated or wrong type definitions for external packages, it was too easy to accidentally turn off type checking. It was often easy to forget to handle certain failure cases. React was quick to prototype in, but would often spiral in complexity and unchecked definitions on larger projects. Angular applications were comparatively robust but required manual subscription management to prevent memory leaks and required a significant amount of boilerplate that couldn't be abstracted away due to compiler limitations.
