@@ -8,7 +8,7 @@ While using Asteracea effectively requires knowledge of Rust, this book is writt
 
 If you have experience with more traditional front-end frameworks like Angular or React, quite a few of the presented concepts should be familiar to you. I will also try to highlight these connections where they appear. By the end of the book, you should be able to read Asteracea's component templates and make modifications to them.
 
-If you are already familiar with Rust, you can use the samples from [Chapter&nbsp;6: Integrating Asteracea] to create a complete web site or application including static-side generation, server-side rendering and/or a (primary or optional) client-side approach.
+If you are already familiar with Rust, you can use the samples from [Chapter&nbsp;6: Integrating Asteracea] to create a complete web site or application including static site generation, server-side rendering and/or a (primary or optional) client-side approach.
 
 [Chapter&nbsp;6: Integrating Asteracea]: TK
 
