@@ -1,4 +1,4 @@
-# Chapter 1.3: Text
+# Chapter 1.4: Text
 
 To output a static plain [`Text`] element in Asteracea, simply use a text literal in your component's body:
 
