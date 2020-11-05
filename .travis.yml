@@ -30,7 +30,7 @@ script:
   - cd proc-macro-definitions && cargo +$TRAVIS_RUST_VERSION test && cd ..
   - cd book && cargo +$TRAVIS_RUST_VERSION test && cd ..
   - cd book && cargo +$TRAVIS_RUST_VERSION run && cd ..
-  jobs:
+jobs:
   include:
     - stage: ensure format
       if: branch = develop
