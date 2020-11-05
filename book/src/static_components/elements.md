@@ -1,6 +1,6 @@
 # Elements
 
-To define elements and their contents, Asteracea uses a syntax similar to HTML:
+To define elements and their contents, Asteracea provides a syntax similar to HTML:
 
 ```rust asteracea=Div::new()
 asteracea::component! {
@@ -22,17 +22,20 @@ asteracea::component! {
 }
 ```
 
-Elements can contain text:
+Elements can contain any number of valid Asteracea component bodies, which are rendered as the element's children:
 
 ```rust asteracea=Span::new()
 asteracea::component! {
   pub Span()()
 
-  <span "This is text within a <span>.">
+  <span
+    "This is text within a <span>."
+    <!-- "This is a comment within a <span>." -->
+  >
 }
 ```
 
-Elements can be nested:
+This includes other elements:
 
 ```rust asteracea=DivSpan::new()
 asteracea::component! {
