@@ -9,6 +9,7 @@ stages:
 #TODO: Disallow warnings again once features are simplified.
 #  - deny warnings
   - test
+  - deploy book
 script:
   - cat CI.toml >> Cargo.toml
   - cargo +$TRAVIS_RUST_VERSION test
@@ -29,7 +30,6 @@ script:
   - cargo +$TRAVIS_RUST_VERSION test --features "rhizome rhizome_macros services topiary"
   - cd proc-macro-definitions && cargo +$TRAVIS_RUST_VERSION test && cd ..
   - cd book && cargo +$TRAVIS_RUST_VERSION test && cd ..
-  - cd book && cargo +$TRAVIS_RUST_VERSION run && cd ..
 jobs:
   include:
     - stage: ensure format
@@ -46,16 +46,18 @@ jobs:
 #      script:
 #        - rustup component add clippy
 #        - RUSTFLAGS='-D warnings' cargo build --all-targets
+    - stage: deploy book
+      if: branch = develop
+      script:
+        - cat CI.toml >> Cargo.toml
+        - cd book && cargo +$TRAVIS_RUST_VERSION run && cd ..
+      deploy:
+        provider: pages
+        skip-cleanup: true
+        github-token: $GITHUB_TOKEN
+        local-dir: book/book
+        keep-history: false
   allow_failures:
     - rust: nightly
   fast_finish: true
 # cache: cargo # The build currently hangs on cache restore. Might fix itself once the features are simplified.
-
-deploy:
-  provider: pages
-  skip-cleanup: true
-  github-token: $GITHUB_TOKEN
-  local-dir: book/book
-  keep-history: false
-  on:
-    branch: develop
