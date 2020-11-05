@@ -48,7 +48,7 @@ Element names are statically validated against [`lignin-schema`] by default, but
 
 [`lignin-schema`]: TK
 
-To use custom element names, quote them like this:
+To use custom element names without validation, quote them like this:
 
 ```rust asteracea=Custom::new()
 asteracea::component! {
