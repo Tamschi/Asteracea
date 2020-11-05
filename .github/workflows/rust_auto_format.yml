@@ -19,7 +19,7 @@ jobs:
         # github.ref is useless on pull requests.
         # github.head_ref only exists on pull requests.
         ref: ${{ github.head_ref || github.ref }}
-      
+
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly
@@ -28,7 +28,9 @@ jobs:
     - run: cargo +nightly fmt
     - run: cd proc-macro-definitions
     - run: cargo +nightly fmt
-      
+    - run: cd ../book
+    - run: cargo +nightly fmt
+
     - uses: stefanzweifel/git-auto-commit-action@v4.7.2
       with:
         commit_message: Automatic formatting commit (cargo +nightly fmt)
