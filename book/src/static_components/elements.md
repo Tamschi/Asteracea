@@ -47,9 +47,9 @@ asteracea::component! {
 }
 ```
 
-Element names are statically validated against [`lignin-schema`] by default, but this can be amended by importing additional schema functions. <!-- TODO: Example! -->
+Elements are statically validated against [`lignin-schema`].
 
-[Empty elements] like `<br>` are written like any other element but don't accept children and won't render a closing tag to HTML when using [lignin-html]:
+[Empty elements] like `<br>` are written like any other element, but don't accept children and won't render a closing tag to HTML when using [lignin-html]:
 
 [Empty elements]: https://developer.mozilla.org/en-US/docs/Glossary/empty_element
 [lignin-html]: TK
