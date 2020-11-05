@@ -21,8 +21,7 @@ use quote::{quote, quote_spanned};
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
-	token::Bang,
-	token::{Add, Brace, Bracket},
+	token::{Add, Bang, Brace, Bracket},
 	Error, Ident, LitStr, Token,
 };
 
