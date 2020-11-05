@@ -7,7 +7,7 @@
   - [Rust Comments](./1_2_rust_comments.md)
   - [HTML Comments](./1_3_html_comments.md)
   - [Text](./1_4_text.md)
-  - [Elements]()
+  - [Elements](./static_components/elements.md)
   - [Attributes]()
   - [Value Formatting]()
   - [Rust Blocks]()

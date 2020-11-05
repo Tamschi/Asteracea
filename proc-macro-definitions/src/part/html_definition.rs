@@ -11,7 +11,7 @@ use syn::{
 	parse::{ParseStream, Result},
 	spanned::Spanned,
 	token::{Brace, Dot},
-	Ident, LitStr, Token,
+	Error, Ident, LitStr, Token,
 };
 
 mod kw {
@@ -41,7 +41,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 		let asteracea = asteracea_ident(Span::call_site());
 
 		let lt = input.parse::<Token![<]>()?;
-		let name = input.parse()?;
+		let name: Ident = input.parse()?;
 
 		cx.imply_bump = true;
 
@@ -101,12 +101,22 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 		};
 
 		let mut parts = Vec::new();
-		while !input.peek(Token![>]) {
+		while !input.peek(Token![>]) && !input.peek(Token![/]) {
 			if let Some(part) = Part::parse_with_context(input, cx)? {
 				parts.push(part);
 			}
 		}
 
+		if input.parse::<Token![/]>().is_ok() {
+			// Named close.
+			let ident: Ident = input.parse()?;
+			if ident.to_string() != name.to_string() {
+				return Err(Error::new_spanned(
+					ident,
+					format_args!("Expected `{}`", name),
+				));
+			}
+		}
 		input.parse::<Token![>]>()?;
 
 		Ok(Self {
