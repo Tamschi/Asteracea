@@ -26,10 +26,8 @@ jobs:
         profile: minimal
         components: rustfmt
     - run: cargo +nightly fmt
-    - run: cd proc-macro-definitions
-    - run: cargo +nightly fmt
-    - run: cd ../book
-    - run: cargo +nightly fmt
+    - run: cd proc-macro-definitions && cargo +nightly fmt
+    - run: cd book && cargo +nightly fmt
 
     - uses: stefanzweifel/git-auto-commit-action@v4.7.2
       with:
