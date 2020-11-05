@@ -27,9 +27,14 @@ enum AttributeDefinition {
 	Expression(TokenStream),
 }
 
+enum ElementName {
+	Custom(LitStr),
+	Known(Ident),
+}
+
 pub struct HtmlDefinition<C> {
 	lt: Token![<],
-	name: Ident,
+	name: ElementName,
 	scope_definitions: Vec<TokenStream>,
 	attributes: Vec<AttributeDefinition>,
 	pub parts: Vec<Part<C>>,
@@ -41,7 +46,22 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 		let asteracea = asteracea_ident(Span::call_site());
 
 		let lt = input.parse::<Token![<]>()?;
-		let name: Ident = input.parse()?;
+		let name = if let Ok(name @ LitStr { .. }) = input.parse() {
+			if name.value().contains(' ') {
+				return Err(Error::new_spanned(
+					name,
+					"Element names must not contain spaces",
+				));
+			}
+			ElementName::Custom(name)
+		} else if let Ok(name) = input.parse() {
+			ElementName::Known(name)
+		} else {
+			return Err(Error::new(
+				input.cursor().span(),
+				"Expected identifier or string literal (element name)",
+			));
+		};
 
 		cx.imply_bump = true;
 
@@ -108,13 +128,27 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 		}
 
 		if input.parse::<Token![/]>().is_ok() {
-			// Named close.
-			let ident: Ident = input.parse()?;
-			if ident.to_string() != name.to_string() {
-				return Err(Error::new_spanned(
-					ident,
-					format_args!("Expected `{}`", name),
-				));
+			match &name {
+				ElementName::Custom(name) => {
+					let close_name: LitStr = input.parse()?;
+					// Named close.
+					if close_name.value() != name.value() {
+						return Err(Error::new_spanned(
+							close_name,
+							format_args!("Expected {:?}", name),
+						));
+					}
+				}
+				ElementName::Known(name) => {
+					let close_name: Ident = input.parse()?;
+					// Named close.
+					if close_name != *name {
+						return Err(Error::new_spanned(
+							close_name,
+							format_args!("Expected `{}`", name),
+						));
+					}
+				}
 			}
 		}
 		input.parse::<Token![>]>()?;
@@ -139,7 +173,7 @@ impl<C> HtmlDefinition<C> {
 			parts,
 		} = self;
 
-		let asteracea = asteracea_ident(name.span());
+		let asteracea = asteracea_ident(lt.span());
 
 		let bump = Ident::new("bump", lt.span().resolved_at(Span::call_site()));
 
@@ -216,16 +250,30 @@ impl<C> HtmlDefinition<C> {
 		};
 
 		assert_eq!(parts.len(), 0);
-		Ok(quote_spanned! {lt.span=>
-			#asteracea::lignin_schema::lignin::Node::Element(
-				#bump.alloc_with(||
-					#asteracea::lignin_schema::#name(
-						&*#bump.alloc_with(|| [#attributes_stream]),
-						#children,
-						#event_bindings,
+		Ok(match name {
+			ElementName::Custom(name) => quote_spanned! {lt.span=>
+				#asteracea::lignin_schema::lignin::Node::Element(
+					#bump.alloc_with(||
+						#asteracea::lignin_schema::lignin::Element {
+							name: #name,
+							attributes: &*#bump.alloc_with(|| [#attributes_stream]),
+							content: #children,
+							event_bindings: #event_bindings,
+						}
 					)
 				)
-			)
+			},
+			ElementName::Known(name) => quote_spanned! {lt.span=>
+				#asteracea::lignin_schema::lignin::Node::Element(
+					#bump.alloc_with(||
+						#asteracea::lignin_schema::#name(
+							&*#bump.alloc_with(|| [#attributes_stream]),
+							#children,
+							#event_bindings,
+						)
+					)
+				)
+			},
 		})
 	}
 }
