@@ -449,6 +449,7 @@ impl Parse for ComponentDeclaration {
 	}
 }
 
+//TODO: Make sure NewStatics and RenderStatics are properly hidden so that they can't collide.
 impl ComponentDeclaration {
 	#[allow(clippy::cognitive_complexity)]
 	pub fn into_tokens(self) -> Result<TokenStream> {

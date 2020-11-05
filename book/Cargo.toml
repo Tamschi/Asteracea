@@ -1,0 +1,44 @@
+[package]
+name = "asteracea-book"
+version = "0.0.2"
+authors = ["Tamme Schichler <tamme@schichler.dev>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Tamschi/Asteracea"
+homepage = "https://github.com/Tamschi/Asteracea/tree/v0.0.2"
+publish = false
+
+[[bin]]
+name = "asteracea-book"
+doc = false
+path = "main.rs"
+
+[lib]
+path = "lib.rs"
+doc = false
+
+#TODO: This can be cleaned up a lot with better code organisation.
+[dependencies]
+asteracea = "0.0.2"
+debugless-unwrap = "0.0.3"
+lignin-html = "0.0.1"
+line-col = "0.2.1"
+quote = "1.0.7"
+proc-macro2 = "1.0.24" #TODO
+mdbook = "0.4.3" #TODO
+pulldown-cmark = "0.7.0" #TODO
+pulldown-cmark-to-cmark = "5.0.0" #TODO
+
+[dev-dependencies]
+version-sync = "0.9.1"
+
+[build-dependencies]
+asteracea = "0.0.2"
+mdbook = "0.4.3"
+lignin-html = "0.0.1"
+line-col = "0.2.1"
+pulldown-cmark = "0.7.0"
+pulldown-cmark-to-cmark = "5.0.0"
+walkdir = "2.3.1"
+quote = "1.0.7"
+proc-macro2 = "1.0.24"

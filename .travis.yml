@@ -28,6 +28,7 @@ script:
   - cargo +$TRAVIS_RUST_VERSION test --features "rhizome_macros services topiary"
   - cargo +$TRAVIS_RUST_VERSION test --features "rhizome rhizome_macros services topiary"
   - cd proc-macro-definitions && cargo +$TRAVIS_RUST_VERSION test && cd ..
+  - cd book && cargo +$TRAVIS_RUST_VERSION test && cd ..
 jobs:
   include:
     - stage: ensure format
@@ -36,6 +37,8 @@ jobs:
         - rustup toolchain install nightly --profile minimal --component rustfmt
         - cargo +nightly fmt -- --check
         - cd proc-macro-definitions
+        - cargo +nightly fmt -- --check
+        - cd ../book
         - cargo +nightly fmt -- --check
 #    - stage: deny warnings
 #      if: branch = develop

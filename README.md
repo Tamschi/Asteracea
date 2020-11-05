@@ -132,7 +132,7 @@ component! {
     "The current value is: " !{self.value()} <br> // Anything within curlies is plain Rust.
 
     <button
-      !{self.step} // shorthand bump_format call
+      "+" !{self.step} // shorthand bump_format call
       +"click" {
         self.value.set(self.value() + self.step);
         schedule_render();
