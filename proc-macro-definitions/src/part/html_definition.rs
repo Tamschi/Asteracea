@@ -135,7 +135,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 					if close_name.value() != name.value() {
 						return Err(Error::new_spanned(
 							close_name,
-							format_args!("Expected {:?}", name),
+							format_args!("Expected {:?}", name.value()),
 						));
 					}
 				}
