@@ -56,7 +56,7 @@ jobs:
         skip-cleanup: true
         github-token: $GITHUB_TOKEN
         local-dir: book/book
-        keep-history: false
+        keep-history: true
         on:
           branch: develop
   allow_failures:
