@@ -2,12 +2,11 @@ use self::constructor_argument::ConstructorArgument;
 use crate::{
 	asteracea_ident,
 	parse_with_context::{ParseContext, ParseWithContext},
-	part::{CaptureDefinition, GenerateContext},
+	part::GenerateContext,
 	warn, Configuration, MapMessage, Part, YankAny,
 };
 use call2_for_syn::call2;
 use debugless_unwrap::DebuglessUnwrapNone as _;
-use heck::KebabCase;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
@@ -17,7 +16,7 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, FnArg, Generics, Ident, Lifetime, LitStr, PatType, ReturnType, Token, Type,
+	Attribute, Error, FnArg, Generics, Ident, Lifetime, PatType, ReturnType, Token, Type,
 	Visibility, WherePredicate,
 };
 use unzip_n::unzip_n;

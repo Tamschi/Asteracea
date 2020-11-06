@@ -15,7 +15,6 @@ use super::GenerateContext;
 pub struct HtmlComment {
 	opening: TokenStream,
 	text: LitStr,
-	closing: TokenStream,
 }
 
 impl ParseWithContext for HtmlComment {
@@ -25,6 +24,7 @@ impl ParseWithContext for HtmlComment {
 		input: ParseStream<'_>,
 		_cx: &mut ParseContext,
 	) -> syn::Result<Self::Output> {
+		// <!--
 		let opening = {
 			let lt = input.parse::<Token![<]>()?;
 			let bang = input.parse::<Token![!]>()?;
@@ -35,28 +35,18 @@ impl ParseWithContext for HtmlComment {
 
 		let text = input.parse()?;
 
-		let closing = {
-			let dash_1 = input.parse::<Token![-]>()?;
-			let dash_2 = input.parse::<Token![-]>()?;
-			let gt = input.parse::<Token![>]>()?;
-			quote! (#dash_1 #dash_2 #gt)
-		};
+		// -->
+		input.parse::<Token![-]>()?;
+		input.parse::<Token![-]>()?;
+		input.parse::<Token![>]>()?;
 
-		Ok(Self {
-			opening,
-			text,
-			closing,
-		})
+		Ok(Self { opening, text })
 	}
 }
 
 impl HtmlComment {
-	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
-		let Self {
-			opening,
-			text,
-			closing: _,
-		} = self;
+	pub fn part_tokens(&self, _cx: &GenerateContext) -> Result<TokenStream> {
+		let Self { opening, text } = self;
 
 		let asteracea = asteracea_ident(opening.span());
 

@@ -5,20 +5,10 @@ use mdbook::{
 	preprocess::{Preprocessor, PreprocessorContext},
 	BookItem,
 };
-use proc_macro2::{Ident, Span};
 use pulldown_cmark::{CodeBlockKind, CowStr, Event, Parser, Tag};
 use pulldown_cmark_to_cmark::{cmark, State};
 use quote::quote;
-use std::{
-	cell::RefCell,
-	env,
-	error::Error,
-	fmt,
-	fs::File,
-	io::Write,
-	iter,
-	path::{Path, PathBuf},
-};
+use std::{cell::RefCell, env, error::Error, fmt, fs::File, io::Write, iter, path::Path};
 
 pub struct AsteraceaExamplesBuild {
 	asteracea_html: RefCell<File>,
