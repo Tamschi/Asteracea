@@ -197,86 +197,11 @@ impl Parse for ComponentDeclaration {
 		let mut rhizome_extractions = Vec::new();
 
 		let mut cx = ParseContext {
-			component_name: Some(component_name.clone()),
+			component_name: Some(component_name),
 			..Default::default()
 		};
+
 		let mut render_procedure = Vec::default();
-		#[cfg(feature = "styles")]
-		while let Some(use_token) = input.parse::<Token![use]>().ok() {
-			let css_path: LitStr = input.parse()?;
-			if !css_path.value().ends_with(".css") {
-				let message = format!(
-					"Expected path to .css file, found \"{}\".",
-					css_path.value()
-				);
-				return Err(Error::new_spanned(css_path, message));
-			}
-			let as_token: Token![as] = input.parse()?;
-			let scope_ident: Ident = input.parse()?;
-
-			rhizome_transform = true;
-
-			let use_statement_span = quote!(#use_token #css_path #as_token #scope_ident).span();
-
-			let scope_name_lit = {
-				use rand::Rng;
-				LitStr::new(
-					&format!(
-						"data--asteracea--scope-{}-{}",
-						format!("{}", component_name).to_kebab_case(),
-						rand::thread_rng().gen::<u32>() //TODO: Make this deterministic.
-					),
-					use_statement_span,
-				)
-			};
-
-			// This is going to be a bit dirty, but it should work for now.
-			let asteracea = asteracea_ident(use_statement_span);
-			rhizome_extractions.push(quote_spanned! {use_statement_span=>
-				let styles = #asteracea::styles::Styles::extract_from(&node)
-					.map_err(|error| #asteracea::extractable_resolution_error::ExtractableResolutionError{
-						component: core::any::type_name::<Self>(),
-						dependency: core::any::type_name::<dyn #asteracea::styles::Styles>(),
-						source: error,
-					})?;
-				let mut #scope_ident = #scope_ident.lock().unwrap();
-				if #scope_ident.is_none() {
-					let scope_name = #scope_name_lit;
-					*#scope_ident = Some(#asteracea::lignin_schema::lignin::Attribute{
-						name: scope_name,
-						value: "", //TODO: Use a fixed name and target individually by value.
-					});
-				}
-				let scope_name = #scope_ident.unwrap().name;
-				styles.add(#scope_name_lit, move |bump| {
-					let selector = ::std::format!("[{}]", scope_name);
-					let raw_css = ::core::include_str!(#css_path);
-					let css = #asteracea::topiary::scope_css(raw_css, &selector);
-					let content = #asteracea::bump_format!("{}", css);
-					#asteracea::fragment!(<style {content}>)
-				});
-			});
-
-			call2(
-				quote_spanned! {use_statement_span=>
-					//TODO: static mut or better yet only mutable in 'NEW
-					|'NEW 'RENDER static #scope_ident: std::sync::Mutex<Option<#asteracea::lignin_schema::lignin::Attribute<'static>>> = {std::sync::Mutex::default()}|;
-				},
-				|input| match CaptureDefinition::<ComponentRenderConfiguration>::parse_with_context(
-					input, &mut cx,
-				)
-				.expect("Error parsing internal scope static capture.")
-				{
-					None => (),
-					Some(_) => unreachable!(),
-				},
-			);
-
-			render_procedure.push(quote_spanned! {use_statement_span=>
-				let #scope_ident = #scope_ident.lock().unwrap();
-				let #scope_ident = #scope_ident.as_ref().unwrap();
-			});
-		}
 
 		// Dependency extraction:
 		while let Some(ref_token) = input.parse::<Token![ref]>().ok() {

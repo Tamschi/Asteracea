@@ -8,6 +8,8 @@
 
   * Removed "rhizome" features (always enabled now)
 
+  * Removed "styles" and "topiary" features. CSS scoping will be enabled through more general means.
+
 * The bump format shorthand now does not imply `'a: 'bump` anymore, where `'a` is the component's lifetime.
 
 * Improved `Counter` example in the README.

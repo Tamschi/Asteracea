@@ -24,10 +24,6 @@ publish = false
 [lib]
 proc-macro = true
 
-[features]
-# Enables style scoping with component!.
-styles = ["rand"]
-
 [dependencies]
 call2-for-syn = "1.0.0"
 debugless-unwrap = "0.0.4"
@@ -36,7 +32,6 @@ lazy_static = "1.4.0"
 quote = "1.0.2"
 proc-macro-crate = "0.1.4"
 proc-macro2 = "1.0.7"
-rand = { version = "0.7.3", optional = true }
 syn-mid = "0.5.0"
 take_mut = "0.2.2"
 unzip-n = "0.1.1"

@@ -11,6 +11,7 @@
   - [Attributes]()
   - [Value Formatting]()
   - [Rust Blocks]()
+  - [CSS Scoping]()
 - [2: Dynamic Components]()
   - [Procedure Blocks]()
   - [Render Parameters]()

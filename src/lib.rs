@@ -17,9 +17,3 @@ pub mod extractable_resolution_error;
 
 #[cfg(feature = "services")]
 pub mod services;
-
-#[cfg(feature = "styles")]
-pub mod styles;
-
-#[cfg(feature = "topiary")]
-pub use topiary_crate as topiary;
