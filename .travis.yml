@@ -13,21 +13,9 @@ stages:
 script:
   - cat CI.toml >> Cargo.toml
   - cargo +$TRAVIS_RUST_VERSION test
-  - cargo +$TRAVIS_RUST_VERSION test --features rhizome
-  - cargo +$TRAVIS_RUST_VERSION test --features rhizome_macros
   - cargo +$TRAVIS_RUST_VERSION test --features services
   - cargo +$TRAVIS_RUST_VERSION test --features topiary
-  - cargo +$TRAVIS_RUST_VERSION test --features "rhizome rhizome_macros"
-  - cargo +$TRAVIS_RUST_VERSION test --features "rhizome services"
-  - cargo +$TRAVIS_RUST_VERSION test --features "rhizome topiary"
-  - cargo +$TRAVIS_RUST_VERSION test --features "rhizome_macros services"
-  - cargo +$TRAVIS_RUST_VERSION test --features "rhizome_macros topiary"
   - cargo +$TRAVIS_RUST_VERSION test --features "services topiary"
-  - cargo +$TRAVIS_RUST_VERSION test --features "rhizome rhizome_macros services"
-  - cargo +$TRAVIS_RUST_VERSION test --features "rhizome rhizome_macros topiary"
-  - cargo +$TRAVIS_RUST_VERSION test --features "rhizome services topiary"
-  - cargo +$TRAVIS_RUST_VERSION test --features "rhizome_macros services topiary"
-  - cargo +$TRAVIS_RUST_VERSION test --features "rhizome rhizome_macros services topiary"
   - cd proc-macro-definitions && cargo +$TRAVIS_RUST_VERSION test && cd ..
   - cd book && cargo +$TRAVIS_RUST_VERSION test && cd ..
 jobs:

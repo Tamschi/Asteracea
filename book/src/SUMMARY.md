@@ -17,6 +17,7 @@
   - [Constructor Parameters]()
   - [Persistence 1: Constructor Parameter Captures]()
   - [Persistence 2: Body Captures](./2_5_body_captures.md)
+  - [Dependency Extraction](./dynamic_components/dependency_extraction.md)
   - [Event Handlers]()
   - [Fallible Components]()
 - [3: Conditional Content]()

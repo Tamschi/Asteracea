@@ -1,5 +1,5 @@
 use core::future::Future;
-use rhizome_crate::extractable;
+use rhizome::extractable;
 
 extractable! {
 	pub abstract trait Scheduler

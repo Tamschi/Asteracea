@@ -278,56 +278,46 @@ impl Parse for ComponentDeclaration {
 			});
 		}
 
-		#[cfg_attr(not(feature = "rhizome"), allow(clippy::never_loop))]
+		// Dependency extraction:
 		while let Some(ref_token) = input.parse::<Token![ref]>().ok() {
 			rhizome_transform = true;
-			#[cfg(not(feature = "rhizome"))]
-			{
-				return Err(Error::new_spanned(
-                    ref_token,
-                    "Dependency extraction is only available with the asteracea feature \"rhizome\"."
-                ));
-			}
 
-			#[cfg(feature = "rhizome")]
-			{
-				let rhizome_lookahead = input.lookahead1();
-				if rhizome_lookahead.peek(Token![;]) {
-					input.parse::<Token![;]>()?;
-					//TODO: Warn if this is unnecessary!
-					continue;
-				} else if rhizome_lookahead.peek(Token![for]) {
-					let extracted_for = input.parse::<Token![for]>()?;
-					let scope: Lifetime = input.parse()?;
-					if scope.ident != "NEW" {
-						return Err(Error::new_spanned(scope, "Expected 'NEW."));
-					}
-
-					let extracted_let = quote_spanned!(ref_token.span=> let);
-					let extracted_name: Ident = input.parse()?;
-					let extracted_colon: Token![:] = input.parse()?;
-					let extracted_type: Type = input.parse()?;
-					let extracted_question: Token![?] = input.parse()?;
-					let extracted_semi = quote_spanned!(extracted_question.span=> ;);
-
-					//TODO: Is there a way to write this span more nicely?
-					let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type #extracted_question).span();
-					rhizome_extractions.push({
-						let asteracea = asteracea_ident(ref_statement_span);
-						quote_spanned! {
-							ref_statement_span=>
-							#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
-							= <#extracted_type>::extract_from(&node)
-								.map_err(|error| #asteracea::extractable_resolution_error::ExtractableResolutionError{
-									component: core::any::type_name::<Self>(),
-									dependency: core::any::type_name::<#extracted_type>(),
-									source: error,
-								})#extracted_question#extracted_semi
-						}
-					})
-				} else {
-					return Err(rhizome_lookahead.error());
+			let rhizome_lookahead = input.lookahead1();
+			if rhizome_lookahead.peek(Token![;]) {
+				input.parse::<Token![;]>()?;
+				//TODO: Warn if this is unnecessary!
+				continue;
+			} else if rhizome_lookahead.peek(Token![for]) {
+				let extracted_for = input.parse::<Token![for]>()?;
+				let scope: Lifetime = input.parse()?;
+				if scope.ident != "NEW" {
+					return Err(Error::new_spanned(scope, "Expected 'NEW."));
 				}
+
+				let extracted_let = quote_spanned!(ref_token.span=> let);
+				let extracted_name: Ident = input.parse()?;
+				let extracted_colon: Token![:] = input.parse()?;
+				let extracted_type: Type = input.parse()?;
+				let extracted_question: Token![?] = input.parse()?;
+				let extracted_semi = quote_spanned!(extracted_question.span=> ;);
+
+				//TODO: Is there a way to write this span more nicely?
+				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type #extracted_question).span();
+				rhizome_extractions.push({
+					let asteracea = asteracea_ident(ref_statement_span);
+					quote_spanned! {
+						ref_statement_span=>
+						#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
+						= <#extracted_type>::extract_from(&node)
+							.map_err(|error| #asteracea::extractable_resolution_error::ExtractableResolutionError{
+								component: core::any::type_name::<Self>(),
+								dependency: core::any::type_name::<#extracted_type>(),
+								source: error,
+							})#extracted_question#extracted_semi
+					}
+				})
+			} else {
+				return Err(rhizome_lookahead.error());
 			}
 		}
 

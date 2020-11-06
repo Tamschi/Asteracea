@@ -19,7 +19,7 @@ doc = false
 
 #TODO: This can be cleaned up a lot with better code organisation.
 [dependencies]
-asteracea = "0.0.2"
+asteracea = { path = ".." }
 debugless-unwrap = "0.0.3"
 lignin-html = "0.0.1"
 line-col = "0.2.1"
@@ -33,7 +33,7 @@ pulldown-cmark-to-cmark = "5.0.0" #TODO
 version-sync = "0.9.1"
 
 [build-dependencies]
-asteracea = "0.0.2"
+asteracea = { path = ".." }
 mdbook = "0.4.3"
 lignin-html = "0.0.1"
 line-col = "0.2.1"

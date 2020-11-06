@@ -6,6 +6,8 @@
 
   * Increased minimum supported Rust version from 1.45.0 to 1.46.0.
 
+  * Removed "rhizome" features (always enabled now)
+
 * The bump format shorthand now does not imply `'a: 'bump` anymore, where `'a` is the component's lifetime.
 
 * Improved `Counter` example in the README.
@@ -13,6 +15,12 @@
 * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.
 
 * `bump` resolution is now more reliable in cases where the macro input is constructed in multiple macro contexts.
+
+* Added constructor parameter captures
+
+* Allow restating element names when closing them
+
+* Added support for unvalidated (custom) HTML element names
 
 ## 0.0.2
 

@@ -1,5 +1,5 @@
 use core::fmt::{Display, Error as fmtError, Formatter};
-use rhizome_crate::error::Error as rhizomeError;
+use rhizome::error::Error as rhizomeError;
 use std::{borrow::Cow, error::Error as stdError};
 
 #[derive(Debug)]

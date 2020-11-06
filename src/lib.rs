@@ -1,4 +1,3 @@
-#![cfg_attr(not(any(feature = "topiary", feature = "rhizome")), no_std)]
 #![doc(html_root_url = "https://docs.rs/asteracea/0.0.2")]
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
@@ -12,10 +11,8 @@ pub mod readme {
 	doc_comment::doctest!("../README.md");
 }
 
-#[cfg(feature = "rhizome")]
-pub use rhizome_crate as rhizome;
+pub use rhizome;
 
-#[cfg(feature = "rhizome")]
 pub mod extractable_resolution_error;
 
 #[cfg(feature = "services")]

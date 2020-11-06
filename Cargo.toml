@@ -29,24 +29,19 @@ is-it-maintained-open-issues = { repository = "Tamschi/Asteracea" }
 maintenance = { status = "experimental" }
 
 [features]
-# Enables dependency extraction with component!.
-rhizome = ["rhizome_crate", "asteracea_proc-macro-definitions/rhizome"]
-# Enables "rhizome/macros".
-rhizome_macros = ["rhizome", "rhizome_crate/macros"]
-services = ["rhizome_macros"]
-styles = ["rhizome_macros"]
+services = []
+styles = []
 topiary = [
     "styles",
     "topiary_crate",
-    "asteracea_proc-macro-definitions/rhizome",
     "asteracea_proc-macro-definitions/styles",
 ]
 
 [dependencies]
-asteracea_proc-macro-definitions = "0.0.2"
+asteracea_proc-macro-definitions = { path = "./proc-macro-definitions" }
 lazy_static = "1.4.0"
 lignin-schema = { version = "0.0.1", features = ["bumpalo-collections"] }
-rhizome_crate = { package = "rhizome", version = "0.0.1", optional = true }
+rhizome = { version = "0.0.1", features = ["macros"] }
 topiary_crate = { package = "topiary", version = "0.0.1", optional = true }
 
 [dev-dependencies]
