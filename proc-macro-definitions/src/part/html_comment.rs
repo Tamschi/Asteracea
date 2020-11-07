@@ -1,19 +1,17 @@
+use super::GenerateContext;
 use crate::{
 	asteracea_ident,
 	parse_with_context::{ParseContext, ParseWithContext},
 };
 use proc_macro2::TokenStream;
-use quote::{quote, quote_spanned};
+use quote::quote_spanned;
 use syn::{
 	parse::{ParseStream, Result},
-	spanned::Spanned as _,
-	LitStr, Token,
+	LitStr,
 };
-
-use super::GenerateContext;
+use unquote::unquote;
 
 pub struct HtmlComment {
-	opening: TokenStream,
 	text: LitStr,
 }
 
@@ -24,33 +22,19 @@ impl ParseWithContext for HtmlComment {
 		input: ParseStream<'_>,
 		_cx: &mut ParseContext,
 	) -> syn::Result<Self::Output> {
-		// <!--
-		let opening = {
-			let lt = input.parse::<Token![<]>()?;
-			let bang = input.parse::<Token![!]>()?;
-			let dash_1 = input.parse::<Token![-]>()?;
-			let dash_2 = input.parse::<Token![-]>()?;
-			quote!(#lt #bang #dash_1 #dash_2)
-		};
-
-		let text = input.parse()?;
-
-		// -->
-		input.parse::<Token![-]>()?;
-		input.parse::<Token![-]>()?;
-		input.parse::<Token![>]>()?;
-
-		Ok(Self { opening, text })
+		let text;
+		unquote!(input, <!-- #text -->);
+		Ok(Self { text })
 	}
 }
 
 impl HtmlComment {
 	pub fn part_tokens(&self, _cx: &GenerateContext) -> Result<TokenStream> {
-		let Self { opening, text } = self;
+		let Self { text } = self;
 
-		let asteracea = asteracea_ident(opening.span());
+		let asteracea = asteracea_ident(text.span());
 
-		Ok(quote_spanned! {opening.span()=>
+		Ok(quote_spanned! {text.span()=>
 			#asteracea::lignin_schema::lignin::Node::Comment(
 				#text
 			)
