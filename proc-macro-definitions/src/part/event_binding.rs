@@ -4,7 +4,7 @@ use crate::{
 	parse_with_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
 };
-use call2_for_syn::call2;
+use call2_for_syn::call2_strict;
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
 use syn::{
@@ -98,7 +98,7 @@ impl EventBindingDefinition {
 		cx.event_binding_count += 1;
 
 		cx.allow_non_snake_case_on_structure_workaround = true;
-		call2(
+		call2_strict(
 			quote_spanned! {prefix.span=>
 				#[allow(non_snake_case)] // This currently has no effect, hence `allow_non_snake_case_on_structure_workaround`.
 				|#field_name: Box<dyn Fn(&dyn ::core::any::Any)> = { Box::new(#handler) }|;
@@ -116,7 +116,8 @@ impl EventBindingDefinition {
 					Some(_) => unreachable!(),
 				}
 			},
-		);
+		)
+		.unwrap();
 
 		Ok(EventBindingDefinition {
 			prefix,

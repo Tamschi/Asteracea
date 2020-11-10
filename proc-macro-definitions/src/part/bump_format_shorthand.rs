@@ -3,7 +3,8 @@ use crate::{
 	parse_with_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
 };
-use call2_for_syn::call2;
+use call2_for_syn::call2_strict;
+use debugless_unwrap::DebuglessUnwrap as _;
 use quote::quote_spanned;
 use syn::{parse::ParseStream, LitStr, Result, Token};
 use syn_mid::Block;
@@ -30,6 +31,9 @@ pub fn parse_with_context<C: Configuration>(
 	let formatted_args = arg_block.stmts;
 	let args = quote_spanned!(arg_block.brace_token.span=> {#format_string, #formatted_args});
 	let asteracea = asteracea_ident(bang.span);
-	let part = quote_spanned!(bang.span=> {#asteracea::bump_format!#args});
-	call2(part, |input| PartBody::<C>::parse_with_context(input, cx))
+	call2_strict(
+		quote_spanned!(bang.span=> {#asteracea::bump_format!#args}),
+		|input| PartBody::<C>::parse_with_context(input, cx),
+	)
+	.debugless_unwrap()
 }
