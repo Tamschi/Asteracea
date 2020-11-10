@@ -5,8 +5,8 @@ use crate::{
 	part::GenerateContext,
 	warn, Configuration, MapMessage, Part, YankAny,
 };
-use call2_for_syn::call2;
-use debugless_unwrap::DebuglessUnwrapNone as _;
+use call2_for_syn::call2_strict;
+use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapNone as _};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
@@ -321,12 +321,13 @@ impl Parse for ComponentDeclaration {
 					} = fn_arg;
 					quote!(#pat#colon_token #ty)
 				};
-				call2(
+				call2_strict(
 					quote_spanned!(span=> |#(#attrs)* #visibility #arg = {#pat}|;),
 					|input| {
 						Part::<ComponentRenderConfiguration>::parse_with_context(input, &mut cx)
 					},
-				)?
+				)
+				.debugless_unwrap()?
 				.debugless_unwrap_none()
 			}
 		}
