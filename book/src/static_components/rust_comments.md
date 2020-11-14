@@ -1,4 +1,4 @@
-# Chapter 1.2: Rust Comments
+# Rust Comments
 
 You can use three distinct types of comments in Asteracea macros, all serving different purposes:
 

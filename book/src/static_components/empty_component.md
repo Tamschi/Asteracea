@@ -1,4 +1,4 @@
-# Chapter 1.1: An Empty Component
+# An Empty Component
 
 As mentioned in the introduction, the simplest Asteracea component is `E()()[]`.
 

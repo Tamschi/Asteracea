@@ -1,4 +1,4 @@
-# Chapter 1.3: HTML comments
+# HTML comments
 
 The third kind of comment is specific to Asteracea and does affect program output:
 
