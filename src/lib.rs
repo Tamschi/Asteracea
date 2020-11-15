@@ -2,18 +2,43 @@
 #![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
 
+use std::sync::Arc;
+
 pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
+use error::ExtractableResolutionError;
 pub use lazy_static;
 pub use lignin_schema;
+use lignin_schema::lignin::bumpalo::Bump;
+pub use rhizome;
+pub use typed_builder;
 
 #[cfg(doctest)]
 pub mod readme {
 	doc_comment::doctest!("../README.md");
 }
 
-pub use rhizome;
-
-pub mod extractable_resolution_error;
+pub mod error;
 
 #[cfg(feature = "services")]
 pub mod services;
+
+pub trait Component: Sized {
+	type NewArgs;
+	type RenderArgs;
+
+	/// Initialises an instance of this component.
+	///
+	/// # Errors
+	///
+	/// Iff not all runtime dependencies for this component can be resolved appropriately.
+	fn new(
+		parent_node: &Arc<rhizome::Node>,
+		args: Self::NewArgs,
+	) -> Result<Self, ExtractableResolutionError>;
+
+	fn render<'bump>(
+		&self,
+		bump: &'bump Bump,
+		args: Self::RenderArgs,
+	) -> lignin_schema::lignin::Node<'bump>;
+}

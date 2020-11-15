@@ -169,6 +169,24 @@ component! {
 
 #[test]
 fn test() {
-	use asteracea::lignin_schema::lignin::bumpalo::Bump;
-	AVeryComplexComponent::new(0, 0usize).render(&Bump::new(), 1);
+	use asteracea::{lignin_schema::lignin::bumpalo::Bump, Component};
+	use std::sync::Arc;
+
+	enum RootTag {}
+	let parent_node = Arc::new(rhizome::Node::new_for::<RootTag>());
+
+	AVeryComplexComponent::<i32>::new(
+		&parent_node,
+		<AVeryComplexComponent<i32> as Component>::NewArgs::builder()
+			.a(0)
+			.d(0usize)
+			.build(),
+	)
+	.unwrap()
+	.render(
+		&Bump::new(),
+		<AVeryComplexComponent<i32> as Component>::RenderArgs::builder()
+			._b(1)
+			.build(),
+	);
 }

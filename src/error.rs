@@ -2,6 +2,7 @@ use core::fmt::{Display, Error as fmtError, Formatter};
 use rhizome::error::Error as rhizomeError;
 use std::{borrow::Cow, error::Error as stdError};
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct ExtractableResolutionError {
 	pub component: &'static str,

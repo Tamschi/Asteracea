@@ -233,7 +233,7 @@ impl Parse for ComponentDeclaration {
 						ref_statement_span=>
 						#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
 						= <#extracted_type>::extract_from(&node)
-							.map_err(|error| #asteracea::extractable_resolution_error::ExtractableResolutionError{
+							.map_err(|error| #asteracea::error::ExtractableResolutionError{
 								component: core::any::type_name::<Self>(),
 								dependency: core::any::type_name::<#extracted_type>(),
 								source: error,
@@ -399,6 +399,8 @@ impl ComponentDeclaration {
 			rhizome_transform,
 			rhizome_extractions,
 		} = self;
+
+		let component_name = component_name.unwrap();
 
 		let asteracea = asteracea_ident(Span::call_site());
 
@@ -595,12 +597,6 @@ impl ComponentDeclaration {
 			);
 		}
 
-		let constructor_type = if rhizome_transform {
-			quote!(Result<Self, #asteracea::extractable_resolution_error::ExtractableResolutionError>)
-		} else {
-			quote!(Self)
-		};
-
 		if rhizome_transform {
 			new_procedure.insert(
 				0,
@@ -667,6 +663,10 @@ impl ComponentDeclaration {
 			quote!()
 		};
 
+		let bump = quote_spanned! (render_paren.span.resolved_at(Span::call_site())=>
+			bump
+		);
+
 		let render_args = {
 			let implied_bump = if imply_bump {
 				quote_spanned! {render_paren.span.resolved_at(Span::call_site())=>
@@ -687,17 +687,6 @@ impl ComponentDeclaration {
 			}
 		};
 
-		let render_type = match render_type {
-			ReturnType::Default if imply_bump => {
-				let bump = Lifetime::new("'bump", render_paren.span.resolved_at(Span::call_site()));
-				parse_quote!(-> #asteracea::lignin_schema::lignin::Node<#bump>)
-			}
-			ReturnType::Default if !imply_bump => {
-				parse_quote!(-> #asteracea::lignin_schema::lignin::Node<'static>)
-			}
-			render_type => render_type,
-		};
-
 		let body = body.part_tokens(&GenerateContext::default())?;
 
 		let constructor_args = constructor_args.into_iter().map(|arg| {
@@ -706,9 +695,31 @@ impl ComponentDeclaration {
 			fn_arg
 		});
 
+		// These can't be fully hygienic with current technology.
+		let new_args_name = Ident::new(
+			&format!("{}__Asteracea__NewArgs", component_name.to_string()),
+			component_name.span().resolved_at(Span::mixed_site()),
+		);
+		let render_args_name = Ident::new(
+			&format!("{}__Asteracea__RenderArgs", component_name.to_string()),
+			component_name.span().resolved_at(Span::mixed_site()),
+		);
+
 		Ok(quote! {
 			#new_statics
 			#render_statics
+
+			//TODO: Doc comment referring to associated type.
+			#[derive(#asteracea::typed_builder::TypedBuilder)]
+			pub struct #new_args_name {
+				// TODO
+			}
+
+			//TODO: Doc comment referring to associated type.
+			#[derive(#asteracea::typed_builder::TypedBuilder)]
+			pub struct #render_args_name {
+				// TODO
+			}
 
 			#allow_non_snake_case_on_structure_workaround
 			#(#attributes)*
@@ -721,25 +732,48 @@ impl ComponentDeclaration {
 				)*
 			}
 
-			impl#component_generics #component_name#component_generics
+			impl#component_generics #asteracea::Component for #component_name#component_generics
 			#component_wheres
 			{
-				#(#constructor_attributes)*
-				pub fn new#constructor_generics(#(#constructor_args),*) -> #constructor_type {
-					#borrow_new_statics_for_render_statics_or_in_new
-					#(#new_procedure)*
-					#constructor_result
+				type NewArgs = #new_args_name;
+				type RenderArgs = #render_args_name;
+
+				fn new(
+					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
+					args: Self::NewArgs,
+				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> {
+					todo!()
 				}
 
-				#(#render_attributes)*
-				pub fn render#render_generics#render_args #render_type {
-					//TODO: Captures with overlapping visibility should have their names collide.
-					#borrow_new_statics_in_render
-					#borrow_render_statics_in_render
-					#(#render_procedure)*
-					(#body)
+				fn render<'bump>(
+					&self,
+					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
+					args: Self::RenderArgs,
+				) -> #asteracea::lignin_schema::lignin::Node<'bump> {
+					todo!()
 				}
 			}
+
+			//TODO: Remove this impl.
+			// impl#component_generics #component_name#component_generics
+			// #component_wheres
+			// {
+			// 	#(#constructor_attributes)*
+			// 	pub fn new#constructor_generics(#(#constructor_args),*) -> Self {
+			// 		#borrow_new_statics_for_render_statics_or_in_new
+			// 		#(#new_procedure)*
+			// 		#constructor_result
+			// 	}
+
+			// 	#(#render_attributes)*
+			// 	pub fn render#render_generics#render_args -> #render_type {
+			// 		//TODO: Captures with overlapping visibility should have their names collide.
+			// 		#borrow_new_statics_in_render
+			// 		#borrow_render_statics_in_render
+			// 		#(#render_procedure)*
+			// 		(#body)
+			// 	}
+			// }
 		})
 	}
 }

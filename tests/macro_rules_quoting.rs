@@ -1,5 +1,7 @@
-use asteracea::component;
+//  use asteracea::component;
 
+//TODO: Reactivate!
+/*
 macro_rules! just_plain {
 	($name:ident => $($contents:tt)*) => {
 		component! {
@@ -17,3 +19,4 @@ macro_rules! nested {
 
 just_plain!(JustPlain => <br>);
 nested!(Nested => <br>);
+*/
