@@ -27,9 +27,6 @@ impl EventBindingDefinition {
 		input: ParseStream<'_>,
 		cx: &mut ParseContext,
 	) -> Result<EventBindingDefinition> {
-		cx.imply_bump = true;
-		cx.imply_self_outlives_bump = true;
-
 		let prefix: Add = input.parse()?;
 		let name: LitStr = input.parse()?;
 		let move_token: Option<Move> = input.parse().ok();

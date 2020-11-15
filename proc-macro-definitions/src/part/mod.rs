@@ -135,7 +135,6 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 				));
 			}
 		} else if lookahead.peek(Bracket) {
-			cx.imply_bump = true;
 			let content;
 			let bracket = bracketed!(content in input);
 			let mut inner_parts = Vec::new();

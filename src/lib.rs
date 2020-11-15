@@ -21,24 +21,3 @@ pub mod error;
 
 #[cfg(feature = "services")]
 pub mod services;
-
-pub trait Component: Sized {
-	type NewArgs;
-	type RenderArgs;
-
-	/// Initialises an instance of this component.
-	///
-	/// # Errors
-	///
-	/// Iff not all runtime dependencies for this component can be resolved appropriately.
-	fn new(
-		parent_node: &Arc<rhizome::Node>,
-		args: Self::NewArgs,
-	) -> Result<Self, ExtractableResolutionError>;
-
-	fn render<'bump>(
-		&self,
-		bump: &'bump Bump,
-		args: Self::RenderArgs,
-	) -> lignin_schema::lignin::Node<'bump>;
-}

@@ -86,12 +86,6 @@ component! {
 	// (This is pretty lenient. Any nodes that produce a value matching the render return type will work.)
 	<div
 
-		// Scope attributes can be added like this:
-		with scope attribute "literal-attribute-name"
-		with scope attribute {scope_attribute}
-		// Scope attributes are rendered on the current element and its transitive children,
-		// but not outside the current macro expansion.
-
 		."Attributes-are-written"="like this." // This must appear directly inside HTML elements, above all children.
 
 		//TODO: Support capturing directly in an attribute expression like so: .|...|
@@ -135,8 +129,8 @@ component! {
 		// Inner captures are perfect for child components.
 		// Here you can see a shorthand for constructed captures (with the caveat that field type type parameters can't be inferred).
 		// The general syntax is: |#field_name = #type::#constructor(#parameters)|
-		|very_simple = VerySimple::new()|.render()
-		|very_simple_qualified = self::VerySimple::new()|.render()
+		|very_simple = VerySimple::new(&node, VerySimpleNewArgs {})?|.render()
+		|very_simple_qualified = self::VerySimple::new(&node, VerySimpleNewArgs {})?|.render()
 		// Note that the above lines end with .render() instead of ;.
 		// This expands to the following call: self.#field_name.render().
 
@@ -147,7 +141,7 @@ component! {
 		// - use or call the reference directly and/or
 		// - call or access a differently named member and/or
 		// - chain member access expressions as below:
-		|very_simple_chained = VerySimple::new()|
+		|very_simple_chained = VerySimple::new(&node, VerySimpleNewArgs {})?|
 			.render() // TODO: It should be possible to insert direct calls, that is `()` without leading `.identifier`, anywhere in this chain.
 			.select(|x| x)
 
@@ -169,7 +163,7 @@ component! {
 
 #[test]
 fn test() {
-	use asteracea::{lignin_schema::lignin::bumpalo::Bump, Component};
+	use asteracea::lignin_schema::lignin::bumpalo::Bump;
 	use std::sync::Arc;
 
 	enum RootTag {}
@@ -177,7 +171,7 @@ fn test() {
 
 	AVeryComplexComponent::<i32>::new(
 		&parent_node,
-		<AVeryComplexComponent<i32> as Component>::NewArgs::builder()
+		AVeryComplexComponentNewArgs::builder()
 			.a(0)
 			.d(0usize)
 			.build(),
@@ -185,8 +179,6 @@ fn test() {
 	.unwrap()
 	.render(
 		&Bump::new(),
-		<AVeryComplexComponent<i32> as Component>::RenderArgs::builder()
-			._b(1)
-			.build(),
+		AVeryComplexComponentRenderArgs::builder()._b(1).build(),
 	);
 }

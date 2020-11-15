@@ -35,7 +35,6 @@ enum ElementName {
 pub struct HtmlDefinition<C> {
 	lt: Token![<],
 	name: ElementName,
-	scope_definitions: Vec<TokenStream>,
 	attributes: Vec<AttributeDefinition>,
 	pub parts: Vec<Part<C>>,
 }
@@ -62,33 +61,6 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 				"Expected identifier or string literal (element name)",
 			));
 		};
-
-		cx.imply_bump = true;
-
-		let mut scope_definitions = Vec::new();
-		while input.peek(kw::with) {
-			input.parse::<kw::with>()?;
-			input.parse::<kw::scope>()?;
-			input.parse::<kw::attribute>()?;
-
-			let scope_lookahead = input.lookahead1();
-			if scope_lookahead.peek(LitStr) {
-				let name: LitStr = input.parse()?;
-				scope_definitions.push(quote!(
-					#asteracea::lignin_schema::lignin::Attribute{
-						name: #name,
-						value: "",
-					}
-				))
-			} else if scope_lookahead.peek(Brace) {
-				let block_contents;
-				let brace = braced!(block_contents in input);
-				let block_contents: TokenStream = block_contents.parse()?;
-				scope_definitions.push(quote_spanned!(brace.span=> {#block_contents}))
-			} else {
-				return Err(scope_lookahead.error());
-			}
-		}
 
 		let attributes = {
 			let mut attributes = Vec::new();
@@ -156,7 +128,6 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 		Ok(Self {
 			lt,
 			name,
-			scope_definitions,
 			attributes,
 			parts,
 		})
@@ -168,7 +139,6 @@ impl<C> HtmlDefinition<C> {
 		let Self {
 			lt,
 			name,
-			scope_definitions,
 			attributes,
 			parts,
 		} = self;
@@ -178,15 +148,7 @@ impl<C> HtmlDefinition<C> {
 		let bump = Ident::new("bump", lt.span().resolved_at(Span::call_site()));
 
 		let cx = GenerateContext {
-			scope_definitions: if !scope_definitions.is_empty() {
-				cx.scope_definitions
-					.iter()
-					.copied()
-					.chain(scope_definitions.iter())
-					.collect()
-			} else {
-				cx.scope_definitions.clone()
-			},
+			scope_definitions: cx.scope_definitions.clone(),
 		};
 
 		let mut attributes_stream = TokenStream::new();

@@ -7,8 +7,6 @@ pub struct ParseContext {
 	pub static_shared: Vec<TypeLevelFieldDefinition>,
 	pub allow_non_snake_case_on_structure_workaround: bool, // Workaround since the attribute isn't respected on specific fields.
 	pub field_definitions: Vec<FieldDefinition>,
-	pub imply_bump: bool,
-	pub imply_self_outlives_bump: bool,
 	pub event_binding_count: usize,
 }
 

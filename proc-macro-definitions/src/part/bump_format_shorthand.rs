@@ -19,8 +19,6 @@ pub fn parse_with_context<C: Configuration>(
 	input: ParseStream<'_>,
 	cx: &mut ParseContext,
 ) -> Result<<PartBody<C> as ParseWithContext>::Output> {
-	cx.imply_bump = true;
-
 	let bang: Token![!] = input.parse()?;
 	let format_string: LitStr = if input.peek(LitStr) {
 		input.parse().unwrap()

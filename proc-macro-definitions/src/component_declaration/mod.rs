@@ -46,7 +46,6 @@ pub struct ComponentDeclaration {
 	new_procedure: Vec<TokenStream>,
 	render_procedure: Vec<TokenStream>,
 	body: Part<ComponentRenderConfiguration>,
-	rhizome_transform: bool,
 	rhizome_extractions: Vec<TokenStream>,
 }
 
@@ -192,7 +191,6 @@ impl Parse for ComponentDeclaration {
 
 		let render_type = input.parse()?;
 
-		let mut rhizome_transform = false;
 		let mut rhizome_extractions = Vec::new();
 
 		let mut cx = ParseContext {
@@ -204,8 +202,6 @@ impl Parse for ComponentDeclaration {
 
 		// Dependency extraction:
 		while let Some(ref_token) = input.parse::<Token![ref]>().ok() {
-			rhizome_transform = true;
-
 			let rhizome_lookahead = input.lookahead1();
 			if rhizome_lookahead.peek(Token![;]) {
 				input.parse::<Token![;]>()?;
@@ -227,12 +223,14 @@ impl Parse for ComponentDeclaration {
 
 				//TODO: Is there a way to write this span more nicely?
 				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type #extracted_question).span();
+				let call_site_node =
+					Ident::new("node", ref_statement_span.resolved_at(Span::call_site()));
 				rhizome_extractions.push({
 					let asteracea = asteracea_ident(ref_statement_span);
 					quote_spanned! {
 						ref_statement_span=>
 						#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
-						= <#extracted_type>::extract_from(&node)
+						= <#extracted_type>::extract_from(&#call_site_node)
 							.map_err(|error| #asteracea::error::ExtractableResolutionError{
 								component: core::any::type_name::<Self>(),
 								dependency: core::any::type_name::<#extracted_type>(),
@@ -358,7 +356,6 @@ impl Parse for ComponentDeclaration {
 			new_procedure,
 			render_procedure,
 			body,
-			rhizome_transform,
 			rhizome_extractions,
 		})
 	}
@@ -375,8 +372,6 @@ impl ComponentDeclaration {
 					static_shared,
 					allow_non_snake_case_on_structure_workaround,
 					field_definitions,
-					imply_bump,
-					imply_self_outlives_bump,
 					event_binding_count: _,
 				},
 			attributes,
@@ -396,7 +391,6 @@ impl ComponentDeclaration {
 			mut new_procedure,
 			render_procedure,
 			body,
-			rhizome_transform,
 			rhizome_extractions,
 		} = self;
 
@@ -590,46 +584,11 @@ impl ComponentDeclaration {
 				})
 				.unzip_n_vec();
 
-		if rhizome_transform {
-			constructor_args.insert(
-				0,
-				parse_quote!(parent_node: &std::sync::Arc<#asteracea::rhizome::Node>),
-			);
-		}
-
-		if rhizome_transform {
-			new_procedure.insert(
-				0,
-				quote! {
-					let node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
-					#(#rhizome_extractions)*
-					let mut node = node;
-				},
-			);
-			new_procedure.push(quote! {
-				let node = node.into_arc();
-			})
-		}
-
 		let field_initializers = quote! {
 			#(#field_names: (#field_values),)* // The parentheses around #field_values stop the grammar from breaking as much if no value is provided.
 		};
 
-		let constructor_result = if rhizome_transform {
-			quote! {
-				Ok(Self {
-					#field_initializers
-				})
-			}
-		} else {
-			quote! {
-				Self {
-					#field_initializers
-				}
-			}
-		};
-
-		let render_generics = if imply_bump || render_generics.is_some() {
+		let render_generics = {
 			let (render_generics_lt, render_generics_params, render_generics_gt) =
 				match render_generics {
 					Some(Generics {
@@ -649,43 +608,12 @@ impl ComponentDeclaration {
 						parse2(quote_spanned!(render_paren.span=> >)).unwrap(),
 					),
 				};
-			let mut implied = if imply_bump {
-				quote_spanned!(render_generics_lt.span=> 'bump,)
-			} else {
-				quote!()
-			};
-			if imply_self_outlives_bump {
-				assert!(imply_bump);
-				implied = quote_spanned! (render_generics_lt.span=> 'a: 'bump, #implied);
-			}
-			quote!(#render_generics_lt #implied #render_generics_params #render_generics_gt)
-		} else {
-			quote!()
+			quote_spanned!(render_generics_lt.span()=> #render_generics_lt 'a: 'bump, 'bump, #render_generics_params #render_generics_gt)
 		};
 
 		let bump = quote_spanned! (render_paren.span.resolved_at(Span::call_site())=>
 			bump
 		);
-
-		let render_args = {
-			let implied_bump = if imply_bump {
-				quote_spanned! {render_paren.span.resolved_at(Span::call_site())=>
-					bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
-				}
-			} else {
-				quote!()
-			};
-			let implied_self_lifetime = if imply_self_outlives_bump {
-				quote_spanned! {render_paren.span=>
-					'a
-				}
-			} else {
-				quote!()
-			};
-			quote_spanned! {render_paren.span=>
-				(&#implied_self_lifetime self, #implied_bump #(#render_args),*)
-			}
-		};
 
 		let body = body.part_tokens(&GenerateContext::default())?;
 
@@ -697,15 +625,17 @@ impl ComponentDeclaration {
 
 		// These can't be fully hygienic with current technology.
 		let new_args_name = Ident::new(
-			&format!("{}__Asteracea__NewArgs", component_name.to_string()),
-			component_name.span().resolved_at(Span::mixed_site()),
+			&format!("{}NewArgs", component_name.to_string()),
+			component_name.span(),
 		);
 		let render_args_name = Ident::new(
-			&format!("{}__Asteracea__RenderArgs", component_name.to_string()),
-			component_name.span().resolved_at(Span::mixed_site()),
+			&format!("{}RenderArgs", component_name.to_string()),
+			component_name.span(),
 		);
 
-		Ok(quote! {
+		let call_site_node = Ident::new("node", Span::call_site());
+
+		Ok(quote_spanned! {Span::mixed_site()=>
 			#new_statics
 			#render_statics
 
@@ -732,23 +662,34 @@ impl ComponentDeclaration {
 				)*
 			}
 
-			impl#component_generics #asteracea::Component for #component_name#component_generics
+			impl#component_generics #component_name#component_generics
 			#component_wheres
 			{
-				type NewArgs = #new_args_name;
-				type RenderArgs = #render_args_name;
-
+				#(#constructor_attributes)*
 				fn new(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
-					args: Self::NewArgs,
+					args: #new_args_name,
 				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> {
-					todo!()
+					#borrow_new_statics_for_render_statics_or_in_new
+
+					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
+					#(#rhizome_extractions)*
+					let mut #call_site_node = #call_site_node;
+
+					#(#new_procedure)*
+
+					let #call_site_node = #call_site_node.into_arc();
+
+					Ok(Self {
+						#field_initializers
+					})
 				}
 
+				#(#render_attributes)*
 				fn render<'bump>(
 					&self,
 					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
-					args: Self::RenderArgs,
+					args: #render_args_name,
 				) -> #asteracea::lignin_schema::lignin::Node<'bump> {
 					todo!()
 				}
