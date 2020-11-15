@@ -39,7 +39,7 @@ pub struct ComponentDeclaration {
 	render_attributes: Vec<Attribute>,
 	render_generics: Option<Generics>,
 	render_paren: Paren,
-	render_args: Vec<FnArg>,
+	render_args: Vec<PatType>,
 	render_type: ReturnType,
 	static_shared_new_procedure: Vec<TokenStream>,
 	static_shared_render_procedure: Vec<TokenStream>,
@@ -187,7 +187,13 @@ impl Parse for ComponentDeclaration {
 		let render_args;
 		let render_paren = parenthesized!(render_args in input); //TODO: Map message.
 		let render_args: Punctuated<FnArg, Token![,]> = Punctuated::parse_terminated(&render_args)?;
-		let render_args = render_args.into_iter().collect();
+		let render_args = render_args
+			.into_iter()
+			.map(|arg| match arg {
+				FnArg::Receiver(_) => Err(Error::new_spanned(arg, "Expected typed argument")),
+				FnArg::Typed(typed) => Ok(typed),
+			})
+			.collect::<Result<_>>()?;
 
 		let render_type = input.parse()?;
 
@@ -617,11 +623,22 @@ impl ComponentDeclaration {
 
 		let body = body.part_tokens(&GenerateContext::default())?;
 
-		let constructor_args = constructor_args.into_iter().map(|arg| {
-			let mut fn_arg = arg.fn_arg;
-			fn_arg.attrs.clear();
-			fn_arg
-		});
+		let constructor_arg_declarations: Vec<_> = constructor_args
+			.iter()
+			.map(|arg| arg.fn_arg.clone())
+			.collect();
+
+		let constructor_arg_patterns: Vec<_> = constructor_args
+			.iter()
+			.map(|arg| arg.fn_arg.pat.clone())
+			.collect();
+
+		let render_arg_declarations: Vec<_> = render_args.to_vec();
+
+		let render_arg_patterns: Vec<_> = render_args.iter().map(|arg| arg.pat.clone()).collect();
+
+		let new_args_generics: Option<Generics> = todo!("new_args_generics");
+		let render_args_generics: Option<Generics> = todo!("render_args_generics");
 
 		// These can't be fully hygienic with current technology.
 		let new_args_name = Ident::new(
@@ -641,14 +658,14 @@ impl ComponentDeclaration {
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::typed_builder::TypedBuilder)]
-			pub struct #new_args_name {
-				// TODO
+			pub struct #new_args_name#new_args_generics {
+				#(#constructor_arg_declarations,)*
 			}
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::typed_builder::TypedBuilder)]
-			pub struct #render_args_name {
-				// TODO
+			pub struct #render_args_name#render_args_generics {
+				#(#render_arg_declarations,)*
 			}
 
 			#allow_non_snake_case_on_structure_workaround
@@ -666,9 +683,9 @@ impl ComponentDeclaration {
 			#component_wheres
 			{
 				#(#constructor_attributes)*
-				fn new(
+				fn new#constructor_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
-					args: #new_args_name,
+					#new_args_name { #(#constructor_arg_patterns,)* }: #new_args_name,
 				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> {
 					#borrow_new_statics_for_render_statics_or_in_new
 
@@ -689,7 +706,7 @@ impl ComponentDeclaration {
 				fn render<'bump>(
 					&self,
 					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
-					args: #render_args_name,
+					#render_args_name { #(#render_arg_patterns,)* }: #render_args_name,
 				) -> #asteracea::lignin_schema::lignin::Node<'bump> {
 					todo!()
 				}

@@ -42,8 +42,6 @@ pub struct HtmlDefinition<C> {
 impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 	type Output = Self;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self> {
-		let asteracea = asteracea_ident(Span::call_site());
-
 		let lt = input.parse::<Token![<]>()?;
 		let name = if let Ok(name @ LitStr { .. }) = input.parse() {
 			if name.value().contains(' ') {
