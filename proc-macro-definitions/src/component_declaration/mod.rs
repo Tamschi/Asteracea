@@ -19,8 +19,8 @@ use syn::{
 	AngleBracketedGenericArguments, Attribute, Binding, Constraint, Error, FnArg, GenericArgument,
 	GenericParam, Generics, Ident, Lifetime, ParenthesizedGenericArguments, PatType, Path,
 	PathArguments, PathSegment, ReturnType, Token, TraitBound, Type, TypeArray, TypeGroup,
-	TypeImplTrait, TypeParamBound, TypeParen, TypePath, TypeReference, Visibility, WhereClause,
-	WherePredicate,
+	TypeImplTrait, TypeParamBound, TypeParen, TypePath, TypeReference, TypeSlice, TypeTraitObject,
+	TypeTuple, Visibility, WhereClause, WherePredicate,
 };
 use unzip_n::unzip_n;
 
@@ -719,7 +719,8 @@ impl ComponentDeclaration {
 			match ty {
 				Type::Array(TypeArray { elem, .. })
 				| Type::Paren(TypeParen { elem, .. })
-				| Type::Group(TypeGroup { elem, .. }) => apply_explicit_implicit_lifetime_type(elem, lifetime),
+				| Type::Group(TypeGroup { elem, .. })
+				| Type::Slice(TypeSlice { elem, .. }) => apply_explicit_implicit_lifetime_type(elem, lifetime),
 				Type::BareFn(_) => todo!("Type::BareFn"),
 				Type::ImplTrait(TypeImplTrait { bounds, .. }) => {
 					apply_explicit_implicit_lifetime_type_param_bounds(bounds.iter_mut(), lifetime)
@@ -745,9 +746,14 @@ impl ComponentDeclaration {
 						false
 					}) | apply_explicit_implicit_lifetime_type(&mut *elem, lifetime)
 				}
-				Type::Slice(_) => todo!("Type::Slice"),
-				Type::TraitObject(_) => todo!("Type::TraitObject"),
-				Type::Tuple(_) => todo!("Type::Tuple"),
+				Type::TraitObject(TypeTraitObject { bounds, .. }) => {
+					apply_explicit_implicit_lifetime_type_param_bounds(bounds.iter_mut(), lifetime)
+				}
+				Type::Tuple(TypeTuple { elems, .. }) => {
+					elems.iter_mut().fold(false, |acc, elem| {
+						acc | apply_explicit_implicit_lifetime_type(elem, lifetime)
+					})
+				}
 				Type::Verbatim(_) => todo!("Type::Verbatim"),
 				Type::Macro(_) | _ => {
 					// Do nothing and hope for the best.
