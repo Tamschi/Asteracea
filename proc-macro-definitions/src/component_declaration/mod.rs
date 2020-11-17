@@ -24,6 +24,7 @@ use syn::{
 };
 use unzip_n::unzip_n;
 
+mod apply_explicit_implicit_lifetime;
 mod constructor_argument;
 
 unzip_n!(5);
@@ -616,167 +617,18 @@ impl ComponentDeclaration {
 
 		let body = body.part_tokens(&GenerateContext::default())?;
 
-		fn apply_explicit_implicit_lifetime_lifetime(
-			existing_lifetime: &mut Lifetime,
-			lifetime: &Lifetime,
-		) -> bool {
-			if existing_lifetime.ident == "_" {
-				*existing_lifetime = lifetime.clone();
-				true
-			} else {
-				false
-			}
-		}
-
-		fn apply_explicit_implicit_lifetime_path_segments<'a>(
-			segments: impl IntoIterator<Item = &'a mut PathSegment>,
-			lifetime: &Lifetime,
-		) -> bool {
-			segments.into_iter().fold(false, |acc, segment| {
-				acc | match &mut segment.arguments {
-					PathArguments::None => false,
-					PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-						args, ..
-					}) => {
-						args.iter_mut().fold(false, |acc, arg| {
-							acc | match arg {
-								GenericArgument::Lifetime(l) => {
-									if l.ident == "_" {
-										*l = lifetime.clone();
-										true
-									} else {
-										false
-									}
-								}
-								GenericArgument::Type(ty)
-								| GenericArgument::Binding(Binding { ty, .. }) => {
-									apply_explicit_implicit_lifetime_type(ty, lifetime)
-								}
-								GenericArgument::Constraint(Constraint { bounds, .. }) => {
-									apply_explicit_implicit_lifetime_type_param_bounds(
-										bounds.iter_mut(),
-										lifetime,
-									)
-								}
-								GenericArgument::Const(_) => {
-									// Do nothing and hope for the best.
-									false
-								}
-							}
-						})
-					}
-					PathArguments::Parenthesized(ParenthesizedGenericArguments {
-						inputs,
-						output,
-						..
-					}) => {
-						inputs.iter_mut().fold(false, |acc, input| {
-							acc | apply_explicit_implicit_lifetime_type(input, lifetime)
-						}) | match output {
-							ReturnType::Default => false,
-							ReturnType::Type(_, ty) => {
-								apply_explicit_implicit_lifetime_type(&mut *ty, lifetime)
-							}
-						}
-					}
-				}
-			})
-		}
-
-		fn apply_explicit_implicit_lifetime_type_param_bounds<'a>(
-			bounds: impl IntoIterator<Item = &'a mut TypeParamBound>,
-			lifetime: &Lifetime,
-		) -> bool {
-			bounds.into_iter().fold(false, |acc, b| {
-				acc | (match b {
-					TypeParamBound::Trait(TraitBound {
-						lifetimes, path, ..
-					}) => {
-						lifetimes.as_mut().map_or(false, |l| {
-							l.lifetimes.iter_mut().fold(false, |acc, l| {
-								acc | l.bounds.iter_mut().fold(false, |acc, l| {
-									acc | apply_explicit_implicit_lifetime_lifetime(l, lifetime)
-								})
-							})
-						}) | apply_explicit_implicit_lifetime_path_segments(
-							path.segments.iter_mut(),
-							lifetime,
-						)
-					}
-					TypeParamBound::Lifetime(l) => {
-						apply_explicit_implicit_lifetime_lifetime(l, lifetime)
-					}
-				})
-			})
-		}
-
-		/// # Why?
-		///
-		/// This is needed to generate function argument container types,
-		/// in order to use named arguments and argument defaults before they become a language feature.
-		fn apply_explicit_implicit_lifetime_type(ty: &mut Type, lifetime: &Lifetime) -> bool {
-			#[allow(clippy::wildcard_in_or_patterns)]
-			match ty {
-				Type::Array(TypeArray { elem, .. })
-				| Type::Paren(TypeParen { elem, .. })
-				| Type::Group(TypeGroup { elem, .. })
-				| Type::Slice(TypeSlice { elem, .. }) => apply_explicit_implicit_lifetime_type(elem, lifetime),
-				Type::BareFn(_) => todo!("Type::BareFn"),
-				Type::ImplTrait(TypeImplTrait { bounds, .. }) => {
-					apply_explicit_implicit_lifetime_type_param_bounds(bounds.iter_mut(), lifetime)
-				}
-				Type::Infer(_) => todo!("Type::Infer"),
-				Type::Never(_) => todo!("Type::Never"),
-				Type::Path(TypePath { qself, path }) => {
-					qself.as_mut().map_or(false, |qself| {
-						apply_explicit_implicit_lifetime_type(&mut *qself.ty, lifetime)
-					}) | apply_explicit_implicit_lifetime_path_segments(
-						path.segments.iter_mut(),
-						lifetime,
-					)
-				}
-				Type::Ptr(_) => todo!("Type::Ptr"),
-				Type::Reference(TypeReference {
-					lifetime: l, elem, ..
-				}) => {
-					(if l.as_ref().map_or(true, |l| l.ident == "_") {
-						*l = Some(lifetime.clone());
-						true
-					} else {
-						false
-					}) | apply_explicit_implicit_lifetime_type(&mut *elem, lifetime)
-				}
-				Type::TraitObject(TypeTraitObject { bounds, .. }) => {
-					apply_explicit_implicit_lifetime_type_param_bounds(bounds.iter_mut(), lifetime)
-				}
-				Type::Tuple(TypeTuple { elems, .. }) => {
-					elems.iter_mut().fold(false, |acc, elem| {
-						acc | apply_explicit_implicit_lifetime_type(elem, lifetime)
-					})
-				}
-				Type::Verbatim(_) => todo!("Type::Verbatim"),
-				Type::Macro(_) | _ => {
-					// Do nothing and hope for the best.
-					false
-				}
-			}
-		}
-
-		fn apply_explicit_implicit_lifetime_pat_type(
-			mut pat_type: PatType,
-			lifetime: &Lifetime,
-		) -> PatType {
-			apply_explicit_implicit_lifetime_type(&mut *pat_type.ty, lifetime); //TODO: Propagate usage flag.
-			pat_type
-		}
-
 		let new_lifetime: Lifetime = parse2(quote_spanned!(Span::mixed_site()=> 'NEW)).unwrap();
 		let render_lifetime: Lifetime =
 			parse2(quote_spanned!(Span::mixed_site()=> 'RENDER)).unwrap();
 
 		let constructor_arg_declarations: Vec<_> = constructor_args
 			.iter()
-			.map(|arg| apply_explicit_implicit_lifetime_pat_type(arg.fn_arg.clone(), &new_lifetime))
+			.map(|arg| {
+				apply_explicit_implicit_lifetime::apply_to_pat_type(
+					arg.fn_arg.clone(),
+					&new_lifetime,
+				)
+			})
 			.collect();
 
 		let constructor_arg_patterns: Vec<_> = constructor_args
@@ -786,7 +638,9 @@ impl ComponentDeclaration {
 
 		let render_arg_declarations: Vec<_> = render_args
 			.iter()
-			.map(|arg| apply_explicit_implicit_lifetime_pat_type(arg.clone(), &render_lifetime))
+			.map(|arg| {
+				apply_explicit_implicit_lifetime::apply_to_pat_type(arg.clone(), &render_lifetime)
+			})
 			.collect();
 
 		let render_arg_patterns: Vec<_> = render_args.iter().map(|arg| arg.pat.clone()).collect();
