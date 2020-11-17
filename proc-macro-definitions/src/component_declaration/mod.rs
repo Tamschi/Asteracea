@@ -16,8 +16,8 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, FnArg, GenericParam, Generics, Ident, Lifetime, PatType, ReturnType, Token,
-	Type, Visibility, WhereClause, WherePredicate,
+	Attribute, Error, FnArg, GenericArgument, GenericParam, Generics, Ident, Lifetime, PatType,
+	ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
 };
 use unzip_n::unzip_n;
 
@@ -36,6 +36,7 @@ pub struct ComponentDeclaration {
 	component_wheres: Vec<WherePredicate>,
 	constructor_attributes: Vec<Attribute>,
 	constructor_generics: Option<Generics>,
+	constructor_paren: Paren,
 	constructor_args: Vec<ConstructorArgument>,
 	render_attributes: Vec<Attribute>,
 	render_generics: Option<Generics>,
@@ -173,7 +174,7 @@ impl Parse for ComponentDeclaration {
 			));
 		}
 		let constructor_args;
-		parenthesized!(constructor_args in input);
+		let constructor_paren = parenthesized!(constructor_args in input);
 		let constructor_args = Punctuated::<_, Token![,]>::parse_terminated(&constructor_args)?;
 		let constructor_args: Vec<ConstructorArgument> = constructor_args.into_iter().collect();
 
@@ -352,6 +353,7 @@ impl Parse for ComponentDeclaration {
 			component_wheres,
 			constructor_attributes,
 			constructor_generics,
+			constructor_paren,
 			constructor_args,
 			render_attributes,
 			render_generics,
@@ -387,6 +389,7 @@ impl ComponentDeclaration {
 			component_wheres,
 			constructor_attributes,
 			constructor_generics,
+			constructor_paren,
 			mut constructor_args,
 			render_attributes,
 			render_generics,
@@ -708,21 +711,73 @@ impl ComponentDeclaration {
 		}
 
 		let new_args_generics = merge_optional_generics(
-			&Some(
-				parse2(quote_spanned!(render_paren.span=> <#new_lifetime#(, #new_impl_generics)*>))
-					.unwrap(),
+			&Some(parse2(quote_spanned!(constructor_paren.span=> <#new_lifetime>)).unwrap()),
+			&merge_optional_generics(
+				&component_generics,
+				&merge_optional_generics(
+					&constructor_generics,
+					&Some(
+						parse2(quote_spanned!(constructor_paren.span=> <#(#new_impl_generics),*>))
+							.unwrap(),
+					),
+				),
 			),
-			&merge_optional_generics(&component_generics, &constructor_generics),
 		);
+		let new_generics = new_args_generics
+			.as_ref()
+			.map(|generics| generics.params.iter().cloned().collect::<Vec<_>>());
+		let new_generics_names = new_generics
+			.iter()
+			.map(|params| {
+				params
+					.iter()
+					.map(|param| match param {
+						GenericParam::Type(ty) => {
+							GenericArgument::Type(parse2(ty.ident.to_token_stream()).unwrap())
+						}
+						GenericParam::Lifetime(l) => GenericArgument::Lifetime(l.lifetime.clone()),
+						GenericParam::Const(c) => {
+							GenericArgument::Const(parse2(c.ident.to_token_stream()).unwrap())
+						}
+					})
+					.collect::<Vec<_>>()
+			})
+			.collect::<Vec<_>>();
+
 		let render_args_generics = merge_optional_generics(
-			&Some(
-				parse2(
-					quote_spanned!(render_paren.span=> <#render_lifetime#(, #render_impl_generics)*>),
-				)
-				.unwrap(),
+			&Some(parse2(quote_spanned!(render_paren.span=> <#render_lifetime>)).unwrap()),
+			&merge_optional_generics(
+				&component_generics,
+				&merge_optional_generics(
+					&Some(render_generics),
+					&Some(
+						parse2(quote_spanned!(render_paren.span=> <#(#render_impl_generics),*>))
+							.unwrap(),
+					),
+				),
 			),
-			&merge_optional_generics(&component_generics, &Some(render_generics)),
 		);
+		let render_generics = render_args_generics
+			.iter()
+			.map(|generics| generics.params.iter().cloned().collect::<Vec<_>>())
+			.collect::<Vec<_>>();
+		let render_generics_names = render_generics
+			.iter()
+			.map(|params| {
+				params
+					.iter()
+					.map(|param| match param {
+						GenericParam::Type(ty) => {
+							GenericArgument::Type(parse2(ty.ident.to_token_stream()).unwrap())
+						}
+						GenericParam::Lifetime(l) => GenericArgument::Lifetime(l.lifetime.clone()),
+						GenericParam::Const(c) => {
+							GenericArgument::Const(parse2(c.ident.to_token_stream()).unwrap())
+						}
+					})
+					.collect::<Vec<_>>()
+			})
+			.collect::<Vec<_>>();
 
 		// These can't be fully hygienic with current technology.
 		let new_args_name = Ident::new(
@@ -769,7 +824,7 @@ impl ComponentDeclaration {
 				#(#constructor_attributes)*
 				fn new#constructor_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
-					#new_args_name { #(#constructor_arg_patterns,)* }: #new_args_name,
+					#new_args_name { #(#constructor_arg_patterns,)* }: #new_args_name#(<#(#new_generics_names),*>)*,
 				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> {
 					#borrow_new_statics_for_render_statics_or_in_new
 
@@ -787,10 +842,10 @@ impl ComponentDeclaration {
 				}
 
 				#(#render_attributes)*
-				fn render<'a: 'bump, 'bump>(
+				fn render<#(#(#render_generics),*)*>(
 					&self,
 					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
-					#render_args_name { #(#render_arg_patterns,)* }: #render_args_name,
+					#render_args_name { #(#render_arg_patterns,)* }: #render_args_name#(<#(#render_generics_names),*>)*,
 				) -> #asteracea::lignin_schema::lignin::Node<'bump> {
 					todo!()
 				}
