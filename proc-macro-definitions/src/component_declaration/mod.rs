@@ -12,20 +12,17 @@ use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	braced, parenthesized,
 	parse::{discouraged, Parse, ParseStream, Result},
-	parse2, parse_quote,
+	parse2,
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	AngleBracketedGenericArguments, Attribute, Binding, Constraint, Error, FnArg, GenericArgument,
-	GenericParam, Generics, Ident, Lifetime, ParenthesizedGenericArguments, PatType, Path,
-	PathArguments, PathSegment, ReturnType, Token, TraitBound, Type, TypeArray, TypeGroup,
-	TypeImplTrait, TypeParamBound, TypeParen, TypePath, TypeReference, TypeSlice, TypeTraitObject,
-	TypeTuple, Visibility, WhereClause, WherePredicate,
+	Attribute, Error, FnArg, GenericParam, Generics, Ident, Lifetime, PatType, ReturnType, Token,
+	Type, Visibility, WhereClause, WherePredicate,
 };
 use unzip_n::unzip_n;
 
-mod apply_explicit_implicit_lifetime;
 mod constructor_argument;
+mod transform_args;
 
 unzip_n!(5);
 unzip_n!(6);
@@ -623,12 +620,7 @@ impl ComponentDeclaration {
 
 		let constructor_arg_declarations: Vec<_> = constructor_args
 			.iter()
-			.map(|arg| {
-				apply_explicit_implicit_lifetime::apply_to_pat_type(
-					arg.fn_arg.clone(),
-					&new_lifetime,
-				)
-			})
+			.map(|arg| transform_args::transform_pat_type(arg.fn_arg.clone(), &new_lifetime))
 			.collect();
 
 		let constructor_arg_patterns: Vec<_> = constructor_args
@@ -638,9 +630,7 @@ impl ComponentDeclaration {
 
 		let render_arg_declarations: Vec<_> = render_args
 			.iter()
-			.map(|arg| {
-				apply_explicit_implicit_lifetime::apply_to_pat_type(arg.clone(), &render_lifetime)
-			})
+			.map(|arg| transform_args::transform_pat_type(arg.clone(), &render_lifetime))
 			.collect();
 
 		let render_arg_patterns: Vec<_> = render_args.iter().map(|arg| arg.pat.clone()).collect();
