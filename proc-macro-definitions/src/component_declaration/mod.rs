@@ -618,9 +618,17 @@ impl ComponentDeclaration {
 		let render_lifetime: Lifetime =
 			parse2(quote_spanned!(Span::mixed_site()=> 'RENDER)).unwrap();
 
+		let mut new_impl_generics = vec![];
+
 		let constructor_arg_declarations: Vec<_> = constructor_args
 			.iter()
-			.map(|arg| transform_args::transform_pat_type(arg.fn_arg.clone(), &new_lifetime))
+			.map(|arg| {
+				transform_args::transform_pat_type(
+					arg.fn_arg.clone(),
+					&new_lifetime,
+					&mut new_impl_generics,
+				)
+			})
 			.collect();
 
 		let constructor_arg_patterns: Vec<_> = constructor_args
@@ -628,9 +636,17 @@ impl ComponentDeclaration {
 			.map(|arg| arg.fn_arg.pat.clone())
 			.collect();
 
+		let mut render_impl_generics = vec![];
+
 		let render_arg_declarations: Vec<_> = render_args
 			.iter()
-			.map(|arg| transform_args::transform_pat_type(arg.clone(), &render_lifetime))
+			.map(|arg| {
+				transform_args::transform_pat_type(
+					arg.clone(),
+					&render_lifetime,
+					&mut render_impl_generics,
+				)
+			})
 			.collect();
 
 		let render_arg_patterns: Vec<_> = render_args.iter().map(|arg| arg.pat.clone()).collect();
@@ -692,11 +708,19 @@ impl ComponentDeclaration {
 		}
 
 		let new_args_generics = merge_optional_generics(
-			&Some(parse2(quote_spanned!(render_paren.span=> <#new_lifetime>)).unwrap()),
+			&Some(
+				parse2(quote_spanned!(render_paren.span=> <#new_lifetime#(, #new_impl_generics)*>))
+					.unwrap(),
+			),
 			&merge_optional_generics(&component_generics, &constructor_generics),
 		);
 		let render_args_generics = merge_optional_generics(
-			&Some(parse2(quote_spanned!(render_paren.span=> <#render_lifetime>)).unwrap()),
+			&Some(
+				parse2(
+					quote_spanned!(render_paren.span=> <#render_lifetime#(, #render_impl_generics)*>),
+				)
+				.unwrap(),
+			),
 			&merge_optional_generics(&component_generics, &Some(render_generics)),
 		);
 
