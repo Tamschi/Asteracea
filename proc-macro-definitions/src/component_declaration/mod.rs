@@ -17,9 +17,10 @@ use syn::{
 	spanned::Spanned,
 	token::Paren,
 	AngleBracketedGenericArguments, Attribute, Binding, Constraint, Error, FnArg, GenericArgument,
-	GenericParam, Generics, Ident, Lifetime, PatType, Path, PathSegment, ReturnType, Token,
-	TraitBound, Type, TypeArray, TypeGroup, TypeImplTrait, TypeParamBound, TypeParen, TypePath,
-	TypeReference, Visibility, WhereClause, WherePredicate,
+	GenericParam, Generics, Ident, Lifetime, ParenthesizedGenericArguments, PatType, Path,
+	PathArguments, PathSegment, ReturnType, Token, TraitBound, Type, TypeArray, TypeGroup,
+	TypeImplTrait, TypeParamBound, TypeParen, TypePath, TypeReference, Visibility, WhereClause,
+	WherePredicate,
 };
 use unzip_n::unzip_n;
 
@@ -633,10 +634,9 @@ impl ComponentDeclaration {
 		) -> bool {
 			segments.into_iter().fold(false, |acc, segment| {
 				acc | match &mut segment.arguments {
-					syn::PathArguments::None => false,
-					syn::PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-						args,
-						..
+					PathArguments::None => false,
+					PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+						args, ..
 					}) => {
 						args.iter_mut().fold(false, |acc, arg| {
 							acc | match arg {
@@ -665,7 +665,20 @@ impl ComponentDeclaration {
 							}
 						})
 					}
-					syn::PathArguments::Parenthesized(_) => todo!("PathArguments::Parenthesized"),
+					PathArguments::Parenthesized(ParenthesizedGenericArguments {
+						inputs,
+						output,
+						..
+					}) => {
+						inputs.iter_mut().fold(false, |acc, input| {
+							acc | apply_explicit_implicit_lifetime_type(input, lifetime)
+						}) | match output {
+							ReturnType::Default => false,
+							ReturnType::Type(_, ty) => {
+								apply_explicit_implicit_lifetime_type(&mut *ty, lifetime)
+							}
+						}
+					}
 				}
 			})
 		}
