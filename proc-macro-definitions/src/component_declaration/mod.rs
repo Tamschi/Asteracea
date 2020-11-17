@@ -641,7 +641,11 @@ impl ComponentDeclaration {
 
 		fn merge_generics(base: &Generics, addon: &Generics) -> Generics {
 			Generics {
-				lt_token: addon.lt_token.as_ref().or(base.lt_token.as_ref()).cloned(),
+				lt_token: addon
+					.lt_token
+					.as_ref()
+					.or_else(|| base.lt_token.as_ref())
+					.cloned(),
 				params: merging_iterator::MergeIter::with_custom_ordering(
 					base.params.iter(),
 					addon.params.iter(),
@@ -653,8 +657,13 @@ impl ComponentDeclaration {
 						(GenericParam::Const(_), GenericParam::Const(_)) => true,
 					},
 				)
-				.cloned(),
-				gt_token: addon.gt_token.as_ref().or(base.gt_token.as_ref()).cloned(),
+				.cloned()
+				.collect(),
+				gt_token: addon
+					.gt_token
+					.as_ref()
+					.or_else(|| base.gt_token.as_ref())
+					.cloned(),
 				where_clause: match (base.where_clause.as_ref(), addon.where_clause.as_ref()) {
 					(None, None) => None,
 					(None, Some(w)) | (Some(w), None) => Some(w.clone()),
@@ -674,9 +683,14 @@ impl ComponentDeclaration {
 			}
 		}
 
-		let new_args_generics = merge_optional_generics(&component_generics, &constructor_generics);
-		let render_args_generics =
-			merge_optional_generics(&component_generics, &Some(render_generics));
+		let new_args_generics = merge_optional_generics(
+			&Some(parse2(quote_spanned!(render_paren.span=> <'new>)).unwrap()),
+			&merge_optional_generics(&component_generics, &constructor_generics),
+		);
+		let render_args_generics = merge_optional_generics(
+			&Some(parse2(quote_spanned!(render_paren.span=> <'render>)).unwrap()),
+			&merge_optional_generics(&component_generics, &Some(render_generics)),
+		);
 
 		// These can't be fully hygienic with current technology.
 		let new_args_name = Ident::new(
@@ -741,7 +755,7 @@ impl ComponentDeclaration {
 				}
 
 				#(#render_attributes)*
-				fn render<'bump>(
+				fn render<'a: 'bump, 'bump>(
 					&self,
 					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
 					#render_args_name { #(#render_arg_patterns,)* }: #render_args_name,
