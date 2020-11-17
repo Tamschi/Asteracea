@@ -17,9 +17,9 @@ use syn::{
 	spanned::Spanned,
 	token::Paren,
 	AngleBracketedGenericArguments, Attribute, Binding, Constraint, Error, FnArg, GenericArgument,
-	GenericParam, Generics, Ident, Lifetime, PatType, ReturnType, Token, TraitBound, Type,
-	TypeArray, TypeGroup, TypeImplTrait, TypeParamBound, TypeParen, TypePath, TypeReference,
-	Visibility, WhereClause, WherePredicate,
+	GenericParam, Generics, Ident, Lifetime, PatType, Path, PathSegment, ReturnType, Token,
+	TraitBound, Type, TypeArray, TypeGroup, TypeImplTrait, TypeParamBound, TypeParen, TypePath,
+	TypeReference, Visibility, WhereClause, WherePredicate,
 };
 use unzip_n::unzip_n;
 
@@ -615,26 +615,85 @@ impl ComponentDeclaration {
 
 		let body = body.part_tokens(&GenerateContext::default())?;
 
+		fn apply_explicit_implicit_lifetime_lifetime(
+			existing_lifetime: &mut Lifetime,
+			lifetime: &Lifetime,
+		) -> bool {
+			if existing_lifetime.ident == "_" {
+				*existing_lifetime = lifetime.clone();
+				true
+			} else {
+				false
+			}
+		}
+
+		fn apply_explicit_implicit_lifetime_path_segments<'a>(
+			segments: impl IntoIterator<Item = &'a mut PathSegment>,
+			lifetime: &Lifetime,
+		) -> bool {
+			segments.into_iter().fold(false, |acc, segment| {
+				acc | match &mut segment.arguments {
+					syn::PathArguments::None => false,
+					syn::PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+						args,
+						..
+					}) => {
+						args.iter_mut().fold(false, |acc, arg| {
+							acc | match arg {
+								GenericArgument::Lifetime(l) => {
+									if l.ident == "_" {
+										*l = lifetime.clone();
+										true
+									} else {
+										false
+									}
+								}
+								GenericArgument::Type(ty)
+								| GenericArgument::Binding(Binding { ty, .. }) => {
+									apply_explicit_implicit_lifetime_type(ty, lifetime)
+								}
+								GenericArgument::Constraint(Constraint { bounds, .. }) => {
+									apply_explicit_implicit_lifetime_type_param_bounds(
+										bounds.iter_mut(),
+										lifetime,
+									)
+								}
+								GenericArgument::Const(_) => {
+									// Do nothing and hope for the best.
+									false
+								}
+							}
+						})
+					}
+					syn::PathArguments::Parenthesized(_) => todo!("PathArguments::Parenthesized"),
+				}
+			})
+		}
+
 		fn apply_explicit_implicit_lifetime_type_param_bounds<'a>(
 			bounds: impl IntoIterator<Item = &'a mut TypeParamBound>,
 			lifetime: &Lifetime,
 		) -> bool {
 			bounds.into_iter().fold(false, |acc, b| {
-				let result = (acc
-					| (match b {
-						TypeParamBound::Trait(TraitBound {
-							lifetimes, path, ..
-						}) => todo!("TraitBound"),
-						TypeParamBound::Lifetime(l) => {
-							(if l.ident == "_" {
-								*l = lifetime.clone();
-								true
-							} else {
-								false
+				acc | (match b {
+					TypeParamBound::Trait(TraitBound {
+						lifetimes, path, ..
+					}) => {
+						lifetimes.as_mut().map_or(false, |l| {
+							l.lifetimes.iter_mut().fold(false, |acc, l| {
+								acc | l.bounds.iter_mut().fold(false, |acc, l| {
+									acc | apply_explicit_implicit_lifetime_lifetime(l, lifetime)
+								})
 							})
-						}
-					}));
-				result
+						}) | apply_explicit_implicit_lifetime_path_segments(
+							path.segments.iter_mut(),
+							lifetime,
+						)
+					}
+					TypeParamBound::Lifetime(l) => {
+						apply_explicit_implicit_lifetime_lifetime(l, lifetime)
+					}
+				})
 			})
 		}
 
@@ -655,48 +714,12 @@ impl ComponentDeclaration {
 				Type::Infer(_) => todo!("Type::Infer"),
 				Type::Never(_) => todo!("Type::Never"),
 				Type::Path(TypePath { qself, path }) => {
-					let mut applied = qself.as_mut().map_or(false, |qself| {
+					qself.as_mut().map_or(false, |qself| {
 						apply_explicit_implicit_lifetime_type(&mut *qself.ty, lifetime)
-					});
-					for segment in path.segments.iter_mut() {
-						match &mut segment.arguments {
-							syn::PathArguments::None => {}
-							syn::PathArguments::AngleBracketed(
-								AngleBracketedGenericArguments { args, .. },
-							) => {
-								for arg in args.iter_mut() {
-									applied |= match arg {
-										GenericArgument::Lifetime(l) => {
-											if l.ident == "_" {
-												*l = lifetime.clone();
-												true
-											} else {
-												false
-											}
-										}
-										GenericArgument::Type(ty)
-										| GenericArgument::Binding(Binding { ty, .. }) => {
-											apply_explicit_implicit_lifetime_type(ty, lifetime)
-										}
-										GenericArgument::Constraint(Constraint {
-											bounds, ..
-										}) => apply_explicit_implicit_lifetime_type_param_bounds(
-											bounds.iter_mut(),
-											lifetime,
-										),
-										GenericArgument::Const(_) => {
-											// Do nothing and hope for the best.
-											false
-										}
-									}
-								}
-							}
-							syn::PathArguments::Parenthesized(_) => {
-								todo!("PathArguments::Parenthesized")
-							}
-						}
-					}
-					applied
+					}) | apply_explicit_implicit_lifetime_path_segments(
+						path.segments.iter_mut(),
+						lifetime,
+					)
 				}
 				Type::Ptr(_) => todo!("Type::Ptr"),
 				Type::Reference(TypeReference {
