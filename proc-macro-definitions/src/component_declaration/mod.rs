@@ -16,8 +16,8 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, FnArg, Generics, Ident, Lifetime, PatType, ReturnType, Token, Type,
-	Visibility, WherePredicate,
+	Attribute, Error, FnArg, GenericParam, Generics, Ident, Lifetime, PatType, ReturnType, Token,
+	Type, Visibility, WhereClause, WherePredicate,
 };
 use unzip_n::unzip_n;
 
@@ -594,28 +594,18 @@ impl ComponentDeclaration {
 			#(#field_names: (#field_values),)* // The parentheses around #field_values stop the grammar from breaking as much if no value is provided.
 		};
 
-		let render_generics = {
-			let (render_generics_lt, render_generics_params, render_generics_gt) =
-				match render_generics {
-					Some(Generics {
-						lt_token,
-						params,
-						gt_token,
-						where_clause,
-					}) => {
-						let lt_token = lt_token.unwrap();
-						let gt_token = gt_token.unwrap();
-						assert!(where_clause.is_none());
-						(lt_token, Some(params), gt_token)
-					}
-					None => (
-						parse2(quote_spanned!(render_paren.span=> <)).unwrap(),
-						None,
-						parse2(quote_spanned!(render_paren.span=> >)).unwrap(),
-					),
-				};
-			quote_spanned!(render_generics_lt.span()=> #render_generics_lt 'a: 'bump, 'bump, #render_generics_params #render_generics_gt)
-		};
+		let mut render_generics = render_generics
+			.map(Ok)
+			.unwrap_or_else(|| parse2(quote_spanned!(render_paren.span=> <>)))?;
+		render_generics.params.insert(
+			0,
+			parse2(quote_spanned!(render_generics.lt_token.span()=> 'a: 'bump)).unwrap(),
+		);
+		render_generics.params.insert(
+			1,
+			parse2(quote_spanned!(render_generics.lt_token.span()=> 'bump)).unwrap(),
+		);
+		let render_generics = render_generics;
 
 		let bump = quote_spanned! (render_paren.span.resolved_at(Span::call_site())=>
 			bump
@@ -637,8 +627,56 @@ impl ComponentDeclaration {
 
 		let render_arg_patterns: Vec<_> = render_args.iter().map(|arg| arg.pat.clone()).collect();
 
-		let new_args_generics: Option<Generics> = todo!("new_args_generics");
-		let render_args_generics: Option<Generics> = todo!("render_args_generics");
+		fn merge_where_clauses(base: &WhereClause, addon: &WhereClause) -> WhereClause {
+			WhereClause {
+				where_token: addon.where_token,
+				predicates: base
+					.predicates
+					.iter()
+					.chain(addon.predicates.iter())
+					.cloned()
+					.collect(),
+			}
+		}
+
+		fn merge_generics(base: &Generics, addon: &Generics) -> Generics {
+			Generics {
+				lt_token: addon.lt_token.as_ref().or(base.lt_token.as_ref()).cloned(),
+				params: merging_iterator::MergeIter::with_custom_ordering(
+					base.params.iter(),
+					addon.params.iter(),
+					|base, addon| match (base, addon) {
+						(GenericParam::Lifetime(_), _) => true,
+						(_, GenericParam::Lifetime(_)) => false,
+						(GenericParam::Type(_), _) => true,
+						(_, GenericParam::Type(_)) => false,
+						(GenericParam::Const(_), GenericParam::Const(_)) => true,
+					},
+				)
+				.cloned(),
+				gt_token: addon.gt_token.as_ref().or(base.gt_token.as_ref()).cloned(),
+				where_clause: match (base.where_clause.as_ref(), addon.where_clause.as_ref()) {
+					(None, None) => None,
+					(None, Some(w)) | (Some(w), None) => Some(w.clone()),
+					(Some(base), Some(addon)) => Some(merge_where_clauses(base, addon)),
+				},
+			}
+		}
+
+		fn merge_optional_generics(
+			base: &Option<Generics>,
+			addon: &Option<Generics>,
+		) -> Option<Generics> {
+			match (base.as_ref(), addon.as_ref()) {
+				(None, None) => None,
+				(None, Some(g)) | (Some(g), None) => Some(g.clone()),
+				(Some(base), Some(addon)) => Some(merge_generics(base, addon)),
+			}
+		}
+
+		let new_args_generics = merge_optional_generics(&component_generics, &constructor_generics);
+		let render_args_generics =
+			merge_optional_generics(&component_generics, &Some(render_generics));
 
 		// These can't be fully hygienic with current technology.
 		let new_args_name = Ident::new(
