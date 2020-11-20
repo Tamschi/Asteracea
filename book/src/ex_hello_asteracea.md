@@ -1,13 +1,13 @@
 # Chapter 1: Hello Asteracea
 
-```rust asteracea=HelloAsteracea::new()
+```rust asteracea=HelloAsteracea
 asteracea::component! {
   HelloAsteracea()()
   <span "Hello Asteracea!">
 }
 ```
 
-```rust asteracea=Counter::new(0,1,"")
+```rust asteracea=Counter
 use asteracea::component;
 use std::cell::Cell;
 

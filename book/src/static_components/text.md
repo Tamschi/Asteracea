@@ -4,7 +4,7 @@ To output a static plain [`Text`] element in Asteracea, simply use a text litera
 
 [`Text`]: https://developer.mozilla.org/en-US/docs/Web/API/Text
 
-```rust asteracea=Text::new() asteracea::render=.render()
+```rust asteracea=Text
 asteracea::component! {
   pub Text()()
 
@@ -40,7 +40,7 @@ The method consequently also lost its generic lifetime parameter.
 
 Text nodes can be used as children of other nodes, for example a Multi Node:
 
-```rust asteracea=TextMulti::new()
+```rust asteracea=TextMulti
 asteracea::component! {
   pub TextMulti()()
 

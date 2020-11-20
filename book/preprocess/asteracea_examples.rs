@@ -294,13 +294,15 @@ impl<'a> CodeState<'a> {
 				let component = NAME::new((), NAMENewArgs::builder()CONSTRUCTOR_BUILD.build()).unwrap();
 				let vdom = component.render(bump, NAMERenderArgs::builder()RENDER_BUILD.build());
 				let mut html = String::new();
-				lignin_html::render(&mut html, &vdom).debugless_unwrap();
+				lignin_html::render(&mut html, &vdom, &bump).debugless_unwrap();
 				html
 			}}
 			.to_string()
 			.replace("EXAMPLE_HERE", &self.texts.join(""))
-			.replace("NAME", self.name.as_ref()) // TODO: Show the parametrisation somehow.
-			.replace("RENDER", self.render_build.as_ref())
+			.replace("NAME", self.name.as_ref())
+			// TODO: Show the parametrisation somehow.
+			.replace("CONSTRUCTOR_BUILD", self.render_build.as_ref())
+			.replace("RENDER_BUILD", self.render_build.as_ref())
 		)?;
 		Ok(())
 	}

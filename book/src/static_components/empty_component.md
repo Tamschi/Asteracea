@@ -4,7 +4,7 @@ As mentioned in the introduction, the simplest Asteracea component is `E()()[]`.
 
 In context, and written more like what you'd see in the wild:
 
-```rust asteracea=Empty::new()
+```rust asteracea=Empty
 asteracea::component! {
   pub Empty()()
 

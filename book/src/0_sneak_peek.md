@@ -2,7 +2,7 @@
 
 Before I begin to explain in earnest, here is a relatively complex dynamic component using many of Asteracea's features, along with its resulting HTML representation:
 
-```rust asteracea=Counter::new(0,1,"")
+```rust asteracea=Counter
 use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
