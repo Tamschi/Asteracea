@@ -803,6 +803,16 @@ impl ComponentDeclaration {
 			component_name.span(),
 		);
 
+		let render_self: Token![self] = parse2(quote_spanned!(render_paren.span=> self)).unwrap();
+
+		let render_type: ReturnType = match &render_type {
+			ReturnType::Default => parse2(quote_spanned! {render_type.span()=>
+				-> #asteracea::lignin_schema::lignin::Node<'bump>
+			})
+			.unwrap(),
+			rt @ ReturnType::Type(_, _) => rt.clone(),
+		};
+
 		let call_site_node = Ident::new("node", Span::call_site());
 
 		Ok(quote_spanned! {Span::mixed_site()=>
@@ -840,7 +850,7 @@ impl ComponentDeclaration {
 			#component_wheres
 			{
 				#(#constructor_attributes)*
-				fn new#constructor_generics(
+				pub fn new#constructor_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
 					#new_args_name {
 						#(#constructor_arg_patterns,)*
@@ -863,15 +873,19 @@ impl ComponentDeclaration {
 				}
 
 				#(#render_attributes)*
-				fn render<#(#(#render_generics),*)*>(
-					&self,
+				pub fn render<#(#(#render_generics),*)*>(
+					&'a #render_self,
 					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
 					#render_args_name {
 						#(#render_arg_patterns,)*
 						__Asteracea_phantom: _,
 					}: #render_args_name#(<#(#render_generics_names),*>)*,
-				) -> #asteracea::lignin_schema::lignin::Node<'bump> {
-					todo!()
+				) #render_type {
+					//TODO: Captures with overlapping visibility should have their names collide.
+					#borrow_new_statics_in_render
+					#borrow_render_statics_in_render
+					#(#render_procedure)*
+					(#body)
 				}
 			}
 

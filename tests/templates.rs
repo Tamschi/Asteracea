@@ -107,9 +107,6 @@ component! {
 			// Note that captures aren't available here!
 			fragment!{
 				<span
-					// Scopes must be reiterated in each fragement to apply there.
-					with scope attribute {scope_attribute}
-
 					// | // Error: Captures are unavailable in this context: fragment!
 				>.select(|x| x) // Attached access expressions also work on HTML elements.
 			}

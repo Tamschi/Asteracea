@@ -299,7 +299,7 @@ impl<'a> CodeState<'a> {
 				let mut bump = asteracea::lignin_schema::lignin::bumpalo::Bump::new();
 				let vdom = component.render(&bump, NAMERenderArgs::builder()RENDER_BUILD.build());
 				let mut html = String::new();
-				lignin_html::render(&mut html, &vdom).debugless_unwrap();
+				lignin_html::render(&mut html, &vdom, &bump).debugless_unwrap();
 				html
 			}}
 			.to_string()
