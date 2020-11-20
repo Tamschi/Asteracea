@@ -7,7 +7,7 @@ asteracea::component! {
 }
 ```
 
-```rust asteracea=Counter
+```rust asteracea=Counter asteracea::new=.initial(0).step(1).class("")
 use asteracea::component;
 use std::cell::Cell;
 

@@ -290,18 +290,23 @@ impl<'a> CodeState<'a> {
 			block = quote! {{
 				EXAMPLE_HERE
 
+				let root = {
+					struct Root;
+					asteracea::rhizome::Node::new_for::<Root>().into()
+				};
+				let component = NAME::new(&root, NAMENewArgs::builder()CONSTRUCTOR_BUILD.build()).unwrap();
+
 				let mut bump = asteracea::lignin_schema::lignin::bumpalo::Bump::new();
-				let component = NAME::new((), NAMENewArgs::builder()CONSTRUCTOR_BUILD.build()).unwrap();
-				let vdom = component.render(bump, NAMERenderArgs::builder()RENDER_BUILD.build());
+				let vdom = component.render(&bump, NAMERenderArgs::builder()RENDER_BUILD.build());
 				let mut html = String::new();
-				lignin_html::render(&mut html, &vdom, &bump).debugless_unwrap();
+				lignin_html::render(&mut html, &vdom).debugless_unwrap();
 				html
 			}}
 			.to_string()
 			.replace("EXAMPLE_HERE", &self.texts.join(""))
 			.replace("NAME", self.name.as_ref())
 			// TODO: Show the parametrisation somehow.
-			.replace("CONSTRUCTOR_BUILD", self.render_build.as_ref())
+			.replace("CONSTRUCTOR_BUILD", self.constructor_build.as_ref())
 			.replace("RENDER_BUILD", self.render_build.as_ref())
 		)?;
 		Ok(())

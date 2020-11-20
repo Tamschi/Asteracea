@@ -36,7 +36,7 @@ asteracea_proc-macro-definitions = { path = "./proc-macro-definitions" } # publi
 lazy_static = "1.4.0" # public
 lignin-schema = { version = "0.0.1", features = ["bumpalo-collections"] } # public
 rhizome = { version = "0.0.1", features = ["macros"] } # public
-typed-builder = "0.7.0" # public
+typed-builder = { git = "https://github.com/Tamschi/rust-typed-builder", branch = "fix-lifetime-bounds-erroneously-preserved-in-phantom-generics" } # public
 
 [dev-dependencies]
 cargo-husky = "1.5.0"
