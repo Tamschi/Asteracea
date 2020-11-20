@@ -178,28 +178,37 @@ impl Preprocessor for AsteraceaExamples {
 
 struct CodeState<'a> {
 	tags: Vec<String>,
-	instantiate: CowStr<'a>,
-	render: CowStr<'a>,
+	name: CowStr<'a>,
+	constructor_build: CowStr<'a>,
+	render_build: CowStr<'a>,
 	texts: Vec<CowStr<'a>>,
 }
 
 impl<'a> CodeState<'a> {
 	fn new(tag: CowStr) -> Option<Self> {
 		let tags: Vec<_> = tag.split(' ').collect();
-		let mut instantiate: Option<CowStr> = None;
-		let mut render: CowStr = ".render(&mut bump)".into();
+		let mut name: Option<CowStr> = None;
+		let mut constructor_build: CowStr = "".into();
+		let mut render_build: CowStr = "".into();
 		let tags: Vec<_> = tags
 			.into_iter()
 			.filter(|t| {
-				if t.starts_with("asteracea::render") {
-					render = t
+				if t.starts_with("asteracea::new") {
+					constructor_build = t
 						.splitn(2, '=')
 						.nth(1)
-						.expect("Missing render call after asteracea::render")
+						.expect("Missing arg builder method calls after asteracea::new")
+						.into();
+					false
+				} else if t.starts_with("asteracea::render") {
+					render_build = t
+						.splitn(2, '=')
+						.nth(1)
+						.expect("Missing arg builder method calls after asteracea::render")
 						.into();
 					false
 				} else if t.starts_with("asteracea") {
-					instantiate = Some(
+					name = Some(
 						t.splitn(2, '=')
 							.nth(1)
 							.expect("Missing component name after asteracea")
@@ -212,14 +221,17 @@ impl<'a> CodeState<'a> {
 			})
 			.map(|t| t.to_owned())
 			.collect();
-		if let Some(instantiate) = instantiate {
+		if let Some(name) = name {
 			let mut tags = tags;
 			tags.push("no_run".into());
 			tags.push("ro_playground".into());
 			Some(Self {
 				tags,
-				instantiate: CowStr::Boxed(Box::new(instantiate.to_string()).into_boxed_str()),
-				render: CowStr::Boxed(Box::new(render.to_string()).into_boxed_str()),
+				name: CowStr::Boxed(Box::new(name.to_string()).into_boxed_str()),
+				constructor_build: CowStr::Boxed(
+					Box::new(constructor_build.to_string()).into_boxed_str(),
+				),
+				render_build: CowStr::Boxed(Box::new(render_build.to_string()).into_boxed_str()),
 				texts: Vec::new(),
 			})
 		} else {
@@ -279,16 +291,16 @@ impl<'a> CodeState<'a> {
 				EXAMPLE_HERE
 
 				let mut bump = asteracea::lignin_schema::lignin::bumpalo::Bump::new();
-				let component = INSTANTIATE;
-				let vdom = component RENDER;
+				let component = NAME::new((), NAMENewArgs::builder()CONSTRUCTOR_BUILD.build()).unwrap();
+				let vdom = component.render(bump, NAMERenderArgs::builder()RENDER_BUILD.build());
 				let mut html = String::new();
 				lignin_html::render(&mut html, &vdom).debugless_unwrap();
 				html
 			}}
 			.to_string()
 			.replace("EXAMPLE_HERE", &self.texts.join(""))
-			.replace("INSTANTIATE", self.instantiate.as_ref()) // TODO: Show the parametrisation somehow.
-			.replace("RENDER", self.render.as_ref())
+			.replace("NAME", self.name.as_ref()) // TODO: Show the parametrisation somehow.
+			.replace("RENDER", self.render_build.as_ref())
 		)?;
 		Ok(())
 	}

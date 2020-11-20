@@ -617,9 +617,9 @@ impl ComponentDeclaration {
 
 		let body = body.part_tokens(&GenerateContext::default())?;
 
-		let new_lifetime: Lifetime = parse2(quote_spanned!(Span::mixed_site()=> 'NEW)).unwrap();
+		let new_lifetime: Lifetime = parse2(quote_spanned!(Span::call_site()=> 'NEW)).unwrap();
 		let render_lifetime: Lifetime =
-			parse2(quote_spanned!(Span::mixed_site()=> 'RENDER)).unwrap();
+			parse2(quote_spanned!(Span::call_site()=> 'RENDER)).unwrap();
 
 		let mut new_impl_generics = vec![];
 
@@ -630,6 +630,7 @@ impl ComponentDeclaration {
 					arg.fn_arg.clone(),
 					&new_lifetime,
 					&mut new_impl_generics,
+					true,
 				)
 			})
 			.collect();
@@ -648,6 +649,7 @@ impl ComponentDeclaration {
 					arg.clone(),
 					&render_lifetime,
 					&mut render_impl_generics,
+					true,
 				)
 			})
 			.collect();
@@ -735,6 +737,12 @@ impl ComponentDeclaration {
 						GenericParam::Type(ty) => {
 							GenericArgument::Type(parse2(ty.ident.to_token_stream()).unwrap())
 						}
+						GenericParam::Lifetime(l) if l.lifetime == new_lifetime => {
+							GenericArgument::Lifetime(Lifetime {
+								ident: Ident::new("_", l.lifetime.ident.span()),
+								..l.lifetime.clone()
+							})
+						}
 						GenericParam::Lifetime(l) => GenericArgument::Lifetime(l.lifetime.clone()),
 						GenericParam::Const(c) => {
 							GenericArgument::Const(parse2(c.ident.to_token_stream()).unwrap())
@@ -770,6 +778,12 @@ impl ComponentDeclaration {
 						GenericParam::Type(ty) => {
 							GenericArgument::Type(parse2(ty.ident.to_token_stream()).unwrap())
 						}
+						GenericParam::Lifetime(l) if l.lifetime == render_lifetime => {
+							GenericArgument::Lifetime(Lifetime {
+								ident: Ident::new("_", l.lifetime.ident.span()),
+								..l.lifetime.clone()
+							})
+						}
 						GenericParam::Lifetime(l) => GenericArgument::Lifetime(l.lifetime.clone()),
 						GenericParam::Const(c) => {
 							GenericArgument::Const(parse2(c.ident.to_token_stream()).unwrap())
@@ -799,12 +813,16 @@ impl ComponentDeclaration {
 			#[derive(#asteracea::typed_builder::TypedBuilder)]
 			pub struct #new_args_name#new_args_generics {
 				#(#constructor_arg_declarations,)*
+				#[builder(default, setter(skip))]
+				__Asteracea_phantom: ::core::marker::PhantomData<&#new_lifetime ()>,
 			}
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::typed_builder::TypedBuilder)]
 			pub struct #render_args_name#render_args_generics {
 				#(#render_arg_declarations,)*
+				#[builder(default, setter(skip))]
+				__Asteracea_phantom: ::core::marker::PhantomData<(&'a (), &'bump (), &#render_lifetime ())>,
 			}
 
 			#allow_non_snake_case_on_structure_workaround
@@ -824,7 +842,10 @@ impl ComponentDeclaration {
 				#(#constructor_attributes)*
 				fn new#constructor_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
-					#new_args_name { #(#constructor_arg_patterns,)* }: #new_args_name#(<#(#new_generics_names),*>)*,
+					#new_args_name {
+						#(#constructor_arg_patterns,)*
+						__Asteracea_phantom: _,
+					}: #new_args_name#(<#(#new_generics_names),*>)*,
 				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> {
 					#borrow_new_statics_for_render_statics_or_in_new
 
@@ -845,7 +866,10 @@ impl ComponentDeclaration {
 				fn render<#(#(#render_generics),*)*>(
 					&self,
 					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
-					#render_args_name { #(#render_arg_patterns,)* }: #render_args_name#(<#(#render_generics_names),*>)*,
+					#render_args_name {
+						#(#render_arg_patterns,)*
+						__Asteracea_phantom: _,
+					}: #render_args_name#(<#(#render_generics_names),*>)*,
 				) -> #asteracea::lignin_schema::lignin::Node<'bump> {
 					todo!()
 				}
