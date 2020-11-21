@@ -15,6 +15,7 @@ use syn::{
 	braced, parenthesized,
 	parse::{discouraged, Parse, ParseStream, Result},
 	parse2,
+	punctuated::Pair,
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
@@ -749,6 +750,7 @@ impl ComponentDeclaration {
 			}
 		}
 
+		//FIXME: This entire section needs a rewrite, but the most glaring problem is that component generics are applied to the methods right now.
 		let new_args_generics = merge_optional_generics(
 			&Some(parse2(quote_spanned!(constructor_paren.span=> <#new_lifetime>)).unwrap()),
 			&merge_optional_generics(
@@ -791,10 +793,14 @@ impl ComponentDeclaration {
 		let new_args_builder_generics_names = merge_generic_arguments(
 			iter::once(GenericArgument::Type(Type::Tuple(TypeTuple {
 				elems: iter::repeat_with(|| {
-					Type::Tuple(TypeTuple {
-						elems: Default::default(),
-						paren_token: constructor_paren,
-					})
+					// Wrapped in a tuple => must have trailing punctuation.
+					Pair::Punctuated(
+						Type::Tuple(TypeTuple {
+							elems: Default::default(),
+							paren_token: constructor_paren,
+						}),
+						Token![,](constructor_paren.span),
+					)
 				})
 				.take(constructor_arg_patterns.len())
 				.collect(),
@@ -844,10 +850,14 @@ impl ComponentDeclaration {
 		let render_args_builder_generics_names = merge_generic_arguments(
 			iter::once(GenericArgument::Type(Type::Tuple(TypeTuple {
 				elems: iter::repeat_with(|| {
-					Type::Tuple(TypeTuple {
-						elems: Default::default(),
-						paren_token: render_paren,
-					})
+					// Wrapped in a tuple => must have trailing punctuation.
+					Pair::Punctuated(
+						Type::Tuple(TypeTuple {
+							elems: Default::default(),
+							paren_token: render_paren,
+						}),
+						Token![,](render_paren.span),
+					)
 				})
 				.take(render_arg_patterns.len())
 				.collect(),
