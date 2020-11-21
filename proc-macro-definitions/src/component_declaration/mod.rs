@@ -19,8 +19,9 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, Expr, ExprPath, FnArg, GenericArgument, GenericParam, Generics, Ident,
-	Lifetime, PatType, ReturnType, Token, Type, TypeTuple, Visibility, WhereClause, WherePredicate,
+	AngleBracketedGenericArguments, Attribute, Error, Expr, ExprPath, FieldsNamed, FnArg,
+	GenericArgument, GenericParam, Generics, Ident, Lifetime, PatType, ReturnType, Token, Type,
+	TypeTuple, Visibility, WhereClause, WherePredicate,
 };
 use unzip_n::unzip_n;
 
@@ -750,6 +751,31 @@ impl ComponentDeclaration {
 			}
 		}
 
+		struct ParameterHelperDefintions {
+			pub on_parameter_struct: Generics,
+			pub parameter_struct_body: FieldsNamed,
+			pub on_function: Generics,
+			pub for_function_args: AngleBracketedGenericArguments,
+			pub on_builder_function: Generics,
+			pub for_builder_function_return: AngleBracketedGenericArguments,
+		}
+
+		struct CustomParameter {
+			pat_type: PatType,
+			default: Option<Expr>,
+		}
+
+		impl ParameterHelperDefintions {
+			pub fn new(
+				component_generics: &Option<Generics>,
+				basic_function_generics: &Generics,
+				custom_function_generics: &Option<Generics>,
+				custom_parameters: &[CustomParameter]
+			) -> Self {
+				todo!("ParameterHelperGenerics::new")
+			}
+		}
+
 		//FIXME: This entire section needs a rewrite, but the most glaring problem is that component generics are applied to the methods right now.
 		let new_args_generics = merge_optional_generics(
 			&Some(parse2(quote_spanned!(constructor_paren.span=> <#new_lifetime>)).unwrap()),
@@ -995,27 +1021,6 @@ impl ComponentDeclaration {
 					#render_args_name::builder()
 				}
 			}
-
-			//TODO: Remove this impl.
-			// impl#component_generics #component_name#component_generics
-			// #component_wheres
-			// {
-			// 	#(#constructor_attributes)*
-			// 	pub fn new#constructor_generics(#(#constructor_args),*) -> Self {
-			// 		#borrow_new_statics_for_render_statics_or_in_new
-			// 		#(#new_procedure)*
-			// 		#constructor_result
-			// 	}
-
-			// 	#(#render_attributes)*
-			// 	pub fn render#render_generics#render_args -> #render_type {
-			// 		//TODO: Captures with overlapping visibility should have their names collide.
-			// 		#borrow_new_statics_in_render
-			// 		#borrow_render_statics_in_render
-			// 		#(#render_procedure)*
-			// 		(#body)
-			// 	}
-			// }
 		})
 	}
 }
