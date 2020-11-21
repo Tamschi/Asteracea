@@ -1,3 +1,5 @@
+use std::iter;
+
 use self::constructor_argument::ConstructorArgument;
 use crate::{
 	asteracea_ident,
@@ -16,8 +18,8 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, FnArg, GenericArgument, GenericParam, Generics, Ident, Lifetime, PatType,
-	ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
+	Attribute, Error, Expr, ExprPath, FnArg, GenericArgument, GenericParam, Generics, Ident,
+	Lifetime, PatType, ReturnType, Token, Type, TypeTuple, Visibility, WhereClause, WherePredicate,
 };
 use unzip_n::unzip_n;
 
@@ -712,6 +714,41 @@ impl ComponentDeclaration {
 			}
 		}
 
+		fn merge_generic_arguments(
+			left: impl IntoIterator<Item = GenericArgument>,
+			right: impl IntoIterator<Item = GenericArgument>,
+		) -> impl Iterator<Item = GenericArgument> {
+			merging_iterator::MergeIter::with_custom_ordering(left, right, |left, right| {
+				match (left, right) {
+					(GenericArgument::Lifetime(_), _) => true,
+					(_, GenericArgument::Lifetime(_)) => false,
+					(GenericArgument::Type(_), _) => true,
+					(_, GenericArgument::Type(_)) => false,
+					(GenericArgument::Binding(_), _) => true,
+					(_, GenericArgument::Binding(_)) => false,
+					(GenericArgument::Constraint(_), _) => true,
+					(_, GenericArgument::Constraint(_)) => false,
+					(GenericArgument::Const(_), GenericArgument::Const(_)) => true,
+				}
+			})
+		}
+
+		fn generic_param_to_argument(param: &GenericParam) -> GenericArgument {
+			match param {
+				GenericParam::Type(type_param) => {
+					let ty = &type_param.ident.clone();
+					GenericArgument::Type(parse2(quote!(#ty)).unwrap())
+				}
+				GenericParam::Lifetime(lifetime_def) => {
+					GenericArgument::Lifetime(lifetime_def.lifetime.clone())
+				}
+				GenericParam::Const(const_param) => {
+					let c = &const_param.ident;
+					GenericArgument::Const(parse2(quote!(#c)).unwrap())
+				}
+			}
+		}
+
 		let new_args_generics = merge_optional_generics(
 			&Some(parse2(quote_spanned!(constructor_paren.span=> <#new_lifetime>)).unwrap()),
 			&merge_optional_generics(
@@ -751,6 +788,21 @@ impl ComponentDeclaration {
 					.collect::<Vec<_>>()
 			})
 			.collect::<Vec<_>>();
+		let new_args_builder_generics_names = merge_generic_arguments(
+			iter::once(GenericArgument::Type(Type::Tuple(TypeTuple {
+				elems: iter::repeat_with(|| {
+					Type::Tuple(TypeTuple {
+						elems: Default::default(),
+						paren_token: constructor_paren,
+					})
+				})
+				.take(constructor_arg_patterns.len())
+				.collect(),
+				paren_token: constructor_paren,
+			}))),
+			new_generics.iter().flatten().map(generic_param_to_argument),
+		)
+		.collect::<Vec<_>>();
 
 		let render_args_generics = merge_optional_generics(
 			&Some(parse2(quote_spanned!(render_paren.span=> <#render_lifetime>)).unwrap()),
@@ -764,33 +816,51 @@ impl ComponentDeclaration {
 					),
 				),
 			),
-		);
+		)
+		.unwrap();
 		let render_generics = render_args_generics
+			.params
 			.iter()
-			.map(|generics| generics.params.iter().cloned().collect::<Vec<_>>())
+			.cloned()
 			.collect::<Vec<_>>();
 		let render_generics_names = render_generics
 			.iter()
-			.map(|params| {
-				params
-					.iter()
-					.map(|param| match param {
-						GenericParam::Type(ty) => {
-							GenericArgument::Type(parse2(ty.ident.to_token_stream()).unwrap())
-						}
-						GenericParam::Lifetime(l) if l.lifetime == render_lifetime => {
-							GenericArgument::Lifetime(Lifetime {
-								ident: Ident::new("_", l.lifetime.ident.span()),
-								..l.lifetime.clone()
-							})
-						}
-						GenericParam::Lifetime(l) => GenericArgument::Lifetime(l.lifetime.clone()),
-						GenericParam::Const(c) => {
-							GenericArgument::Const(parse2(c.ident.to_token_stream()).unwrap())
-						}
+			.map(|param| match param {
+				GenericParam::Type(ty) => {
+					GenericArgument::Type(parse2(ty.ident.to_token_stream()).unwrap())
+				}
+				GenericParam::Lifetime(l) if l.lifetime == render_lifetime => {
+					GenericArgument::Lifetime(Lifetime {
+						ident: Ident::new("_", l.lifetime.ident.span()),
+						..l.lifetime.clone()
 					})
-					.collect::<Vec<_>>()
+				}
+				GenericParam::Lifetime(l) => GenericArgument::Lifetime(l.lifetime.clone()),
+				GenericParam::Const(c) => {
+					GenericArgument::Const(parse2(c.ident.to_token_stream()).unwrap())
+				}
 			})
+			.collect::<Vec<_>>();
+		let render_args_builder_generics_names = merge_generic_arguments(
+			iter::once(GenericArgument::Type(Type::Tuple(TypeTuple {
+				elems: iter::repeat_with(|| {
+					Type::Tuple(TypeTuple {
+						elems: Default::default(),
+						paren_token: render_paren,
+					})
+				})
+				.take(render_arg_patterns.len())
+				.collect(),
+				paren_token: render_paren,
+			}))),
+			render_generics.iter().map(generic_param_to_argument),
+		)
+		.collect::<Vec<_>>();
+		let render_generics = render_generics
+			.into_iter()
+			.filter(
+				|param| !matches!(param, GenericParam::Lifetime(l) if l.lifetime == render_lifetime),
+			)
 			.collect::<Vec<_>>();
 
 		// These can't be fully hygienic with current technology.
@@ -800,6 +870,15 @@ impl ComponentDeclaration {
 		);
 		let render_args_name = Ident::new(
 			&format!("{}RenderArgs", component_name.to_string()),
+			component_name.span(),
+		);
+
+		let new_args_builder_name = Ident::new(
+			&format!("{}Builder", new_args_name.to_string()),
+			component_name.span(),
+		);
+		let render_args_builder_name = Ident::new(
+			&format!("{}Builder", render_args_name.to_string()),
 			component_name.span(),
 		);
 
@@ -814,6 +893,12 @@ impl ComponentDeclaration {
 		};
 
 		let call_site_node = Ident::new("node", Span::call_site());
+
+		let new_args_builder_generics = merge_optional_generics(
+			&Some(parse2(quote_spanned!(constructor_paren.span=> <#new_lifetime>)).unwrap()),
+			&constructor_generics,
+		)
+		.unwrap();
 
 		Ok(quote_spanned! {Span::mixed_site()=>
 			#new_statics
@@ -874,20 +959,30 @@ impl ComponentDeclaration {
 					})
 				}
 
+				pub fn new_args_builder#new_args_builder_generics()
+				-> #new_args_builder_name<#(#new_args_builder_generics_names,)*> {
+					#new_args_name::builder()
+				}
+
 				#(#render_attributes)*
-				pub fn render<#(#(#render_generics),*)*>(
+				pub fn render<#(#render_generics),*>(
 					&'a #render_self,
 					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
 					#render_args_name {
 						#(#render_arg_patterns,)*
 						__Asteracea_phantom: _,
-					}: #render_args_name#(<#(#render_generics_names),*>)*,
+					}: #render_args_name<#(#render_generics_names),*>,
 				) #render_type {
 					//TODO: Captures with overlapping visibility should have their names collide.
 					#borrow_new_statics_in_render
 					#borrow_render_statics_in_render
 					#(#render_procedure)*
 					(#body)
+				}
+
+				pub fn render_args_builder<#render_lifetime,#( #render_generics),*>()
+				-> #render_args_builder_name<#(#render_args_builder_generics_names,)*> {
+					#render_args_name::builder()
 				}
 			}
 
