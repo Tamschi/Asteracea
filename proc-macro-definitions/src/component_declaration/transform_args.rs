@@ -4,12 +4,11 @@
 //! in order to use named arguments and argument defaults before they become a language feature.
 
 use std::{iter, mem};
-use syn::{spanned::Spanned as _, Ident};
 use syn::{
-	AngleBracketedGenericArguments, Binding, Constraint, GenericArgument, Lifetime,
-	ParenthesizedGenericArguments, PatType, Path, PathArguments, PathSegment, ReturnType, Token,
-	TraitBound, Type, TypeArray, TypeGroup, TypeParam, TypeParamBound, TypeParen, TypePath,
-	TypeReference, TypeSlice, TypeTraitObject, TypeTuple,
+	spanned::Spanned as _, AngleBracketedGenericArguments, Binding, Constraint, GenericArgument,
+	Ident, Lifetime, ParenthesizedGenericArguments, PatType, Path, PathArguments, PathSegment,
+	ReturnType, Token, TraitBound, Type, TypeArray, TypeGroup, TypeParam, TypeParamBound,
+	TypeParen, TypePath, TypeReference, TypeSlice, TypeTraitObject, TypeTuple,
 };
 
 fn transform_lifetime(

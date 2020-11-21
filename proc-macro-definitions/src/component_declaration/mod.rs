@@ -821,6 +821,7 @@ impl ComponentDeclaration {
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::typed_builder::TypedBuilder)]
+			#[builder(doc)]
 			pub struct #new_args_name#new_args_generics {
 				#(#constructor_arg_declarations,)*
 				#[builder(default, setter(skip))]
@@ -829,6 +830,7 @@ impl ComponentDeclaration {
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::typed_builder::TypedBuilder)]
+			#[builder(doc)]
 			pub struct #render_args_name#render_args_generics {
 				#(#render_arg_declarations,)*
 				#[builder(default, setter(skip))]

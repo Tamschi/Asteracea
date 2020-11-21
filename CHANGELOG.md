@@ -8,6 +8,8 @@ TODO: Date
   * Increased minimum supported Rust version from 1.45.0 to 1.46.0.
   * Removed "rhizome" features (always enabled now)
   * Removed "styles" and "topiary" features. CSS scoping will be enabled through more general means.
+  * Reworked generated component interface
+  * Upgraded `lignin` dependency to 0.0.2
 * Features:
   * The bump format shorthand now does not imply `'a: 'bump` anymore, where `'a` is the component's lifetime.
   * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.
