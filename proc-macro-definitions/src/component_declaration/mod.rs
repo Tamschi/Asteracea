@@ -609,6 +609,7 @@ impl ComponentDeclaration {
 		let custom_new_args = constructor_args
 			.iter()
 			.map(|arg| Ok(CustomArgument {
+				attrs: arg.fn_arg.attrs.as_slice(),
 				ident: match &*arg.fn_arg.pat {
 				    Pat::Ident(PatIdent{ ident, .. }) => ident,
 				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
@@ -621,6 +622,7 @@ impl ComponentDeclaration {
 		let custom_render_args = render_args
 			.iter()
 			.map(|arg| Ok(CustomArgument {
+				attrs: arg.attrs.as_slice(),
 				ident: match &*arg.pat {
 				    Pat::Ident(PatIdent{ ident, .. }) => ident,
 				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
@@ -639,8 +641,8 @@ impl ComponentDeclaration {
 			for_builder_function_return: new_args_builder_generic_args,
 		} = ParameterHelperDefintions::new(
 			&component_generics,
-			&constructor_generics,
 			&parse2(quote_spanned!(constructor_paren.span=> <'a: 'bump, 'bump>)).unwrap(),
+			&constructor_generics,
 			custom_new_args.as_slice(),
 			&new_lifetime,
 		);
@@ -654,8 +656,8 @@ impl ComponentDeclaration {
 			for_builder_function_return: render_args_builder_generic_args,
 		} = ParameterHelperDefintions::new(
 			&component_generics,
-			&render_generics,
 			&parse2(quote_spanned!(render_paren.span=> <'a: 'bump, 'bump>)).unwrap(),
+			&render_generics,
 			custom_render_args.as_slice(),
 			&render_lifetime,
 		);

@@ -3,8 +3,8 @@ use merging_iterator::MergeIter;
 use std::borrow::Cow;
 use syn::{
 	punctuated::Punctuated, Error, Expr, ExprPath, FieldPat, GenericArgument, GenericParam,
-	Generics, Ident, Member, Pat, PatIdent, PatPath, Path, Result, Token, Type, TypePath,
-	WhereClause,
+	Generics, Ident, Member, Pat, PatIdent, PatPath, Path, Result, Token, Type, TypeParam,
+	TypePath, WhereClause,
 };
 
 pub trait AddOptionExt<'a, Other = Self, Output = Cow<'a, Self>> {
@@ -156,6 +156,13 @@ impl GenericParam {
 			GenericParam::Lifetime(l_def) => GenericArgument::Lifetime(l_def.lifetime.clone()),
 			GenericParam::Const(c_param) => GenericArgument::Const(c_param.ident.to_expr()),
 		}
+	}
+}
+
+#[ext]
+impl TypeParam {
+	pub fn to_argument(&self) -> GenericArgument {
+		GenericArgument::Type(self.ident.to_type())
 	}
 }
 

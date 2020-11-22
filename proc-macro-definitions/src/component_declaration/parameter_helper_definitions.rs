@@ -1,17 +1,16 @@
-//! # Why?
-//!
-//! This is needed to generate function argument container types,
-//! in order to use named arguments and argument defaults before they become a language feature.
-
+use crate::syn_ext::*;
+use proc_macro2::Span;
 use quote::quote;
 use std::{iter, mem};
 use syn::{
-	parse2, spanned::Spanned as _, AngleBracketedGenericArguments, Binding, Constraint, Expr,
-	FieldsNamed, GenericArgument, GenericParam, Generics, Ident, Lifetime,
-	ParenthesizedGenericArguments, PatType, Path, PathArguments, PathSegment, ReturnType, Token,
-	TraitBound, Type, TypeArray, TypeGroup, TypeParam, TypeParamBound, TypeParen, TypePath,
-	TypeReference, TypeSlice, TypeTraitObject, TypeTuple,
+	parse2, parse_quote, spanned::Spanned as _, token::Brace, AngleBracketedGenericArguments,
+	Attribute, Binding, Constraint, Expr, Field, FieldsNamed, GenericArgument, GenericParam,
+	Generics, Ident, Lifetime, ParenthesizedGenericArguments, PatType, Path, PathArguments,
+	PathSegment, ReturnType, Token, TraitBound, Type, TypeArray, TypeGroup, TypeParam,
+	TypeParamBound, TypeParen, TypePath, TypeReference, TypeSlice, TypeTraitObject, TypeTuple,
+	Visibility,
 };
+use unzip_n::unzip_n;
 
 fn transform_lifetime(
 	existing_lifetime: &mut Lifetime,
@@ -246,7 +245,9 @@ pub struct ParameterHelperDefintions {
 	pub for_builder_function_return: AngleBracketedGenericArguments,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct CustomArgument<'a> {
+	pub attrs: &'a [Attribute],
 	pub ident: &'a Ident,
 	pub ty: &'a Type,
 	pub default: Option<&'a Expr>,
@@ -260,6 +261,99 @@ impl ParameterHelperDefintions {
 		custom_arguments: &[CustomArgument],
 		transient_lifetime: &Lifetime,
 	) -> Self {
-		todo!("ParameterHelperGenerics::new")
+		let mut impl_generics = vec![];
+		let mut argument_types = vec![];
+		for arg in custom_arguments {
+			let mut ty = arg.ty.clone();
+			transform_type(&mut ty, transient_lifetime, &mut impl_generics, true);
+			argument_types.push(ty)
+		}
+
+		let transient_generics: Generics = parse_quote!(<#transient_lifetime>);
+
+		let phantom_args = AngleBracketedGenericArguments {
+			colon2_token: None,
+			lt_token: <Token![<]>::default(),
+			args: transient_generics
+				.params
+				.iter()
+				.chain(component_generics.params.iter())
+				.chain(basic_function_generics.params.iter())
+				.map(|param| param.to_argument())
+				.collect(),
+			gt_token: <Token![>]>::default(),
+		};
+
+		Self {
+			on_parameter_struct: transient_generics
+				.add(component_generics)
+				.add(basic_function_generics)
+				.add(custom_function_generics)
+				.add(&parse_quote!(<#(#impl_generics),*>))
+				.into_owned(),
+			parameter_struct_body: FieldsNamed {
+				brace_token: Brace::default(),
+				named: custom_arguments
+					.iter()
+					.zip(argument_types.into_iter())
+					.map(
+						|(
+							&CustomArgument {
+								attrs,
+								ident,
+								ty: _,
+								default,
+							},
+							ty,
+						)| {
+							Field {
+								//TODO: Builder docs.
+								attrs: attrs.to_vec(),
+								vis: Visibility::Inherited,
+								ident: Some(ident.clone()),
+								colon_token: Some(<Token![:]>::default()),
+								ty,
+							}
+						},
+					)
+					.chain(iter::once(Field {
+						attrs: vec![parse_quote!(#[builder(default, setter(skip))])],
+						vis: Visibility::Inherited,
+						ident: parse_quote!(__Asteracea__phantom),
+						colon_token: Some(<Token![:]>::default()),
+						ty: parse_quote!(::std::marker::PhantomData#phantom_args),
+					}))
+					.collect(),
+			},
+			on_function: basic_function_generics
+				.add(custom_function_generics)
+				.add(&parse_quote!(<#(#impl_generics),*>))
+				.into_owned(),
+			for_function_args: AngleBracketedGenericArguments {
+				colon2_token: None,
+				lt_token: <Token![<]>::default(),
+				args: iter::once(GenericArgument::Lifetime(Lifetime {
+					apostrophe: Span::mixed_site(),
+					ident: Ident::new("_", Span::mixed_site()),
+				}))
+				.chain(
+					component_generics
+						.add(basic_function_generics)
+						.add(custom_function_generics)
+						.params
+						.iter()
+						.map(|param| param.to_argument()),
+				)
+				.chain(
+					impl_generics
+						.iter()
+						.map(|type_param| type_param.to_argument()),
+				)
+				.collect(),
+				gt_token: <Token![>]>::default(),
+			},
+			on_builder_function: todo!("on_builder_function"),
+			for_builder_function_return: todo!("for_builder_function_return"),
+		}
 	}
 }
