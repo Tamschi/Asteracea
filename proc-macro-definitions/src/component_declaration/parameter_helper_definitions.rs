@@ -246,9 +246,10 @@ pub struct ParameterHelperDefintions {
 	pub for_builder_function_return: AngleBracketedGenericArguments,
 }
 
-pub struct CustomArgument {
-	pat_type: PatType,
-	default: Option<Expr>,
+pub struct CustomArgument<'a> {
+	pub ident: &'a Ident,
+	pub ty: &'a Type,
+	pub default: Option<&'a Expr>,
 }
 
 impl ParameterHelperDefintions {
@@ -257,6 +258,7 @@ impl ParameterHelperDefintions {
 		basic_function_generics: &Generics,
 		custom_function_generics: &Generics,
 		custom_arguments: &[CustomArgument],
+		transient_lifetime: &Lifetime,
 	) -> Self {
 		todo!("ParameterHelperGenerics::new")
 	}

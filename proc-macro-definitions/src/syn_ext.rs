@@ -2,8 +2,9 @@ use easy_ext::ext;
 use merging_iterator::MergeIter;
 use std::borrow::Cow;
 use syn::{
-	punctuated::Punctuated, Expr, ExprPath, GenericArgument, GenericParam, Generics, Ident, Path,
-	Type, TypePath, WhereClause,
+	punctuated::Punctuated, Error, Expr, ExprPath, FieldPat, GenericArgument, GenericParam,
+	Generics, Ident, Member, Pat, PatIdent, PatPath, Path, Result, Token, Type, TypePath,
+	WhereClause,
 };
 
 pub trait AddOptionExt<'a, Other = Self, Output = Cow<'a, Self>> {
@@ -139,7 +140,7 @@ impl<P: Default + Clone> AddExt for Punctuated<GenericArgument, P> {
 
 #[ext]
 impl<V, P: Default> Punctuated<V, P> {
-	pub fn into_with_trailing(self) -> Self {
+	pub fn into_with_trailing(mut self) -> Self {
 		if !self.trailing_punct() {
 			self.push_punct(P::default())
 		}
@@ -160,6 +161,22 @@ impl GenericParam {
 
 #[ext]
 impl Ident {
+	pub fn to_member(&self) -> Member {
+		Member::Named(self.clone())
+	}
+
+	pub fn to_pat(&self) -> Pat {
+		Pat::Path(self.to_pat_path())
+	}
+
+	pub fn to_pat_path(&self) -> PatPath {
+		PatPath {
+			attrs: vec![],
+			qself: None,
+			path: self.to_path(),
+		}
+	}
+
 	pub fn to_expr(&self) -> Expr {
 		self.to_expr_path().into_expr()
 	}
@@ -210,6 +227,60 @@ impl ExprPath {
 impl TypePath {
 	pub fn into_type(self) -> Type {
 		Type::Path(self)
+	}
+}
+
+#[ext]
+impl<T> Option<T> {
+	fn reduce(self, other: Self, reducer: impl FnOnce(T, T) -> T) -> Self {
+		match (self, other) {
+			(None, None) => None,
+			(None, one @ Some(_)) | (one @ Some(_), None) => one,
+			(Some(this), Some(other)) => Some(reducer(this, other)),
+		}
+	}
+}
+
+#[ext]
+impl PatIdent {
+	/// # Errors
+	///
+	/// Iff `self.subpat` is [`None`].
+	pub fn try_into_field_pat(self) -> Result<FieldPat> {
+		Ok(match self.subpat {
+			Some((at, subpat)) => {
+				let by_ref_err = self.by_ref.map(|by_ref| {
+					Error::new_spanned(
+						by_ref,
+						"`ref` is not yet supported in this position. Please nest the pattern.",
+					)
+				});
+				let mut_err = self.mutability.map(|mutability| {
+					Error::new_spanned(
+						mutability,
+						"`ref` is not yet supported in this position. Please nest the pattern.",
+					)
+				});
+				if let Some(err) = by_ref_err.reduce(mut_err, |mut a, b| {
+					a.combine(b);
+					a
+				}) {
+					return Err(err);
+				}
+				FieldPat {
+					attrs: self.attrs,
+					member: self.ident.to_member(),
+					colon_token: Some(Token![:](at.span)),
+					pat: subpat,
+				}
+			}
+			None => FieldPat {
+				attrs: self.attrs,
+				member: self.ident.clone().to_member(),
+				colon_token: None,
+				pat: self.ident.to_pat().into(),
+			},
+		})
 	}
 }
 
