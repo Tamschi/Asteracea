@@ -3,12 +3,14 @@
 //! This is needed to generate function argument container types,
 //! in order to use named arguments and argument defaults before they become a language feature.
 
+use quote::quote;
 use std::{iter, mem};
 use syn::{
-	spanned::Spanned as _, AngleBracketedGenericArguments, Binding, Constraint, GenericArgument,
-	Ident, Lifetime, ParenthesizedGenericArguments, PatType, Path, PathArguments, PathSegment,
-	ReturnType, Token, TraitBound, Type, TypeArray, TypeGroup, TypeParam, TypeParamBound,
-	TypeParen, TypePath, TypeReference, TypeSlice, TypeTraitObject, TypeTuple,
+	parse2, spanned::Spanned as _, AngleBracketedGenericArguments, Binding, Constraint, Expr,
+	FieldsNamed, GenericArgument, GenericParam, Generics, Ident, Lifetime,
+	ParenthesizedGenericArguments, PatType, Path, PathArguments, PathSegment, ReturnType, Token,
+	TraitBound, Type, TypeArray, TypeGroup, TypeParam, TypeParamBound, TypeParen, TypePath,
+	TypeReference, TypeSlice, TypeTraitObject, TypeTuple,
 };
 
 fn transform_lifetime(
@@ -209,7 +211,7 @@ fn transform_type(
 	}
 }
 
-pub fn transform_pat_type(
+fn transform_pat_type(
 	mut pat_type: PatType,
 	lifetime: &Lifetime,
 	impl_generics: &mut Vec<TypeParam>,
@@ -217,4 +219,45 @@ pub fn transform_pat_type(
 ) -> PatType {
 	transform_type(&mut *pat_type.ty, lifetime, impl_generics, adjust_lifetimes); //TODO: Propagate usage flag.
 	pat_type
+}
+
+fn generic_param_to_argument(param: &GenericParam) -> GenericArgument {
+	match param {
+		GenericParam::Type(type_param) => {
+			let ty = &type_param.ident.clone();
+			GenericArgument::Type(parse2(quote!(#ty)).unwrap())
+		}
+		GenericParam::Lifetime(lifetime_def) => {
+			GenericArgument::Lifetime(lifetime_def.lifetime.clone())
+		}
+		GenericParam::Const(const_param) => {
+			let c = &const_param.ident;
+			GenericArgument::Const(parse2(quote!(#c)).unwrap())
+		}
+	}
+}
+
+pub struct ParameterHelperDefintions {
+	pub on_parameter_struct: Generics,
+	pub parameter_struct_body: FieldsNamed,
+	pub on_function: Generics,
+	pub for_function_args: AngleBracketedGenericArguments,
+	pub on_builder_function: Generics,
+	pub for_builder_function_return: AngleBracketedGenericArguments,
+}
+
+pub struct CustomArgument {
+	pat_type: PatType,
+	default: Option<Expr>,
+}
+
+impl ParameterHelperDefintions {
+	pub fn new(
+		component_generics: &Generics,
+		basic_function_generics: &Generics,
+		custom_function_generics: &Generics,
+		custom_arguments: &[CustomArgument],
+	) -> Self {
+		todo!("ParameterHelperGenerics::new")
+	}
 }

@@ -1,10 +1,14 @@
-use std::iter;
+use std::{borrow::Cow, iter};
 
-use self::constructor_argument::ConstructorArgument;
+use self::{
+	constructor_argument::ConstructorArgument,
+	parameter_helper_definitions::{CustomArgument, ParameterHelperDefintions},
+};
 use crate::{
 	asteracea_ident,
 	parse_with_context::{ParseContext, ParseWithContext},
 	part::GenerateContext,
+	syn_ext::AddOptionExt,
 	warn, Configuration, MapMessage, Part, YankAny,
 };
 use call2_for_syn::call2_strict;
@@ -26,7 +30,7 @@ use syn::{
 use unzip_n::unzip_n;
 
 mod constructor_argument;
-mod transform_args;
+mod parameter_helper_definitions;
 
 unzip_n!(5);
 unzip_n!(6);
@@ -36,14 +40,13 @@ pub struct ComponentDeclaration {
 	cx: ParseContext,
 	attributes: Vec<Attribute>,
 	visibility: Visibility,
-	component_generics: Option<Generics>,
-	component_wheres: Vec<WherePredicate>,
+	component_generics: Generics,
 	constructor_attributes: Vec<Attribute>,
-	constructor_generics: Option<Generics>,
+	constructor_generics: Generics,
 	constructor_paren: Paren,
 	constructor_args: Vec<ConstructorArgument>,
 	render_attributes: Vec<Attribute>,
-	render_generics: Option<Generics>,
+	render_generics: Generics,
 	render_paren: Paren,
 	render_args: Vec<PatType>,
 	render_type: ReturnType,
@@ -119,14 +122,14 @@ impl Parse for ComponentDeclaration {
 			.map_message("Expected identifier (component name).")?;
 
 		let component_generics = if input.peek(Token![<]) {
-			Some(input.parse()?)
+			input.parse()?
 		} else {
-			None
+			Generics::default()
 		};
 
-		let mut component_wheres = Vec::new();
 		if input.peek(Token![where]) {
-			input.parse::<Token![where]>()?;
+			let where_token = input.parse::<Token![where]>()?;
+			let mut component_wheres = Vec::new();
 			loop {
 				let forked = input.fork();
 				if let Ok(predicate) = forked.parse() {
@@ -155,22 +158,33 @@ impl Parse for ComponentDeclaration {
 					"No where predicate found.
                     Did you forget to end it with a comma?",
 				)?;
+			} else {
+				component_generics.where_clause = component_generics
+					.where_clause
+					.add(&Some(WhereClause {
+						where_token,
+						predicates: component_wheres.into_iter().collect(),
+					}))
+					.as_deref()
+					.cloned()
 			}
 		}
 
 		let constructor_attributes = input.call(Attribute::parse_outer)?;
 
+		//TODO: Where clause, somehow.
 		let constructor_generics = if input.peek(Token![<]) {
-			Some(input.parse()?)
+			input.parse()?
 		} else {
-			None
+			Generics::default()
 		};
 
 		if !input.peek(Paren) {
 			let message = "Expected parentheses (constructor arguments).".to_string();
 			return Err(Error::new(
 				input.cursor().span(),
-				if !component_wheres.is_empty() {
+				if matches!(component_generics.where_clause, Some(where_clause) if !where_clause.predicates.is_empty())
+				{
 					message + "\nDid you forget to end the component where clause with a comma?"
 				} else {
 					message
@@ -184,10 +198,11 @@ impl Parse for ComponentDeclaration {
 
 		let render_attributes = input.call(Attribute::parse_outer)?;
 
+		//TODO: Where clause, somehow.
 		let render_generics = if input.peek(Token![<]) {
-			Some(input.parse()?)
+			input.parse()?
 		} else {
-			None
+			Generics::default()
 		};
 
 		let render_args;
@@ -354,7 +369,6 @@ impl Parse for ComponentDeclaration {
 			attributes,
 			visibility,
 			component_generics,
-			component_wheres,
 			constructor_attributes,
 			constructor_generics,
 			constructor_paren,
@@ -390,7 +404,6 @@ impl ComponentDeclaration {
 			attributes,
 			visibility,
 			component_generics,
-			component_wheres,
 			constructor_attributes,
 			constructor_generics,
 			constructor_paren,
@@ -411,22 +424,6 @@ impl ComponentDeclaration {
 		let component_name = component_name.unwrap();
 
 		let asteracea = asteracea_ident(Span::call_site());
-
-		let component_wheres = {
-			let mut stream = TokenStream::new();
-			for component_where in component_wheres {
-				stream.extend(quote! {
-					#component_where,
-				})
-			}
-			if !stream.is_empty() {
-				stream = quote! {
-					where
-						#stream
-				};
-			}
-			stream
-		};
 
 		let (new_statics, post_new_statics) = static_shared
 			.into_iter()
@@ -602,19 +599,6 @@ impl ComponentDeclaration {
 			#(#field_names: (#field_values),)* // The parentheses around #field_values stop the grammar from breaking as much if no value is provided.
 		};
 
-		let mut render_generics = render_generics
-			.map(Ok)
-			.unwrap_or_else(|| parse2(quote_spanned!(render_paren.span=> <>)))?;
-		render_generics.params.insert(
-			0,
-			parse2(quote_spanned!(render_generics.lt_token.span()=> 'a: 'bump)).unwrap(),
-		);
-		render_generics.params.insert(
-			1,
-			parse2(quote_spanned!(render_generics.lt_token.span()=> 'bump)).unwrap(),
-		);
-		let render_generics = render_generics;
-
 		let bump = quote_spanned! (render_paren.span.resolved_at(Span::call_site())=>
 			bump
 		);
@@ -625,7 +609,49 @@ impl ComponentDeclaration {
 		let render_lifetime: Lifetime =
 			parse2(quote_spanned!(Span::call_site()=> 'RENDER)).unwrap();
 
-		let mut new_impl_generics = vec![];
+		let custom_new_args = constructor_args
+			.iter()
+			.map(|arg| CustomArgument {
+				pat_type: arg.fn_arg.clone(),
+				default: None, //TODO
+			})
+			.collect::<Vec<_>>();
+
+		let custom_render_args = render_args
+			.iter()
+			.map(|arg| CustomArgument {
+				pat_type: arg.clone(),
+				default: None, //TODO
+			})
+			.collect::<Vec<_>>();
+
+		let ParameterHelperDefintions {
+			on_parameter_struct: new_args_generics,
+			parameter_struct_body: new_args_body,
+			on_function: new_generics,
+			for_function_args: new_args_generic_args,
+			on_builder_function: new_args_builder_generics,
+			for_builder_function_return: new_args_builder_generic_args,
+		} = ParameterHelperDefintions::new(
+			&component_generics,
+			&constructor_generics,
+			&parse2(quote_spanned!(constructor_paren.span=> <'a: 'bump, 'bump>)).unwrap(),
+			custom_new_args.as_slice(),
+		);
+
+		let ParameterHelperDefintions {
+			on_parameter_struct: render_args_generics,
+			parameter_struct_body: render_args_body,
+			on_function: render_generics,
+			for_function_args: render_args_generic_args,
+			on_builder_function: render_args_builder_generics,
+			for_builder_function_return: render_args_builder_generic_args,
+		} = ParameterHelperDefintions::new(
+			&component_generics,
+			&render_generics,
+			&parse2(quote_spanned!(render_paren.span=> <'a: 'bump, 'bump>)).unwrap(),
+			custom_render_args.as_slice(),
+		);
 
 		let constructor_arg_declarations: Vec<_> = constructor_args
 			.iter()
@@ -659,122 +685,6 @@ impl ComponentDeclaration {
 			.collect();
 
 		let render_arg_patterns: Vec<_> = render_args.iter().map(|arg| arg.pat.clone()).collect();
-
-		fn merge_where_clauses(base: &WhereClause, addon: &WhereClause) -> WhereClause {
-			WhereClause {
-				where_token: addon.where_token,
-				predicates: base
-					.predicates
-					.iter()
-					.chain(addon.predicates.iter())
-					.cloned()
-					.collect(),
-			}
-		}
-
-		fn merge_generics(base: &Generics, addon: &Generics) -> Generics {
-			Generics {
-				lt_token: addon
-					.lt_token
-					.as_ref()
-					.or_else(|| base.lt_token.as_ref())
-					.cloned(),
-				params: merging_iterator::MergeIter::with_custom_ordering(
-					base.params.iter(),
-					addon.params.iter(),
-					|base, addon| match (base, addon) {
-						(GenericParam::Lifetime(_), _) => true,
-						(_, GenericParam::Lifetime(_)) => false,
-						(GenericParam::Type(_), _) => true,
-						(_, GenericParam::Type(_)) => false,
-						(GenericParam::Const(_), GenericParam::Const(_)) => true,
-					},
-				)
-				.cloned()
-				.collect(),
-				gt_token: addon
-					.gt_token
-					.as_ref()
-					.or_else(|| base.gt_token.as_ref())
-					.cloned(),
-				where_clause: match (base.where_clause.as_ref(), addon.where_clause.as_ref()) {
-					(None, None) => None,
-					(None, Some(w)) | (Some(w), None) => Some(w.clone()),
-					(Some(base), Some(addon)) => Some(merge_where_clauses(base, addon)),
-				},
-			}
-		}
-
-		fn merge_optional_generics(
-			base: &Option<Generics>,
-			addon: &Option<Generics>,
-		) -> Option<Generics> {
-			match (base.as_ref(), addon.as_ref()) {
-				(None, None) => None,
-				(None, Some(g)) | (Some(g), None) => Some(g.clone()),
-				(Some(base), Some(addon)) => Some(merge_generics(base, addon)),
-			}
-		}
-
-		fn merge_generic_arguments(
-			left: impl IntoIterator<Item = GenericArgument>,
-			right: impl IntoIterator<Item = GenericArgument>,
-		) -> impl Iterator<Item = GenericArgument> {
-			merging_iterator::MergeIter::with_custom_ordering(left, right, |left, right| {
-				match (left, right) {
-					(GenericArgument::Lifetime(_), _) => true,
-					(_, GenericArgument::Lifetime(_)) => false,
-					(GenericArgument::Type(_), _) => true,
-					(_, GenericArgument::Type(_)) => false,
-					(GenericArgument::Binding(_), _) => true,
-					(_, GenericArgument::Binding(_)) => false,
-					(GenericArgument::Constraint(_), _) => true,
-					(_, GenericArgument::Constraint(_)) => false,
-					(GenericArgument::Const(_), GenericArgument::Const(_)) => true,
-				}
-			})
-		}
-
-		fn generic_param_to_argument(param: &GenericParam) -> GenericArgument {
-			match param {
-				GenericParam::Type(type_param) => {
-					let ty = &type_param.ident.clone();
-					GenericArgument::Type(parse2(quote!(#ty)).unwrap())
-				}
-				GenericParam::Lifetime(lifetime_def) => {
-					GenericArgument::Lifetime(lifetime_def.lifetime.clone())
-				}
-				GenericParam::Const(const_param) => {
-					let c = &const_param.ident;
-					GenericArgument::Const(parse2(quote!(#c)).unwrap())
-				}
-			}
-		}
-
-		struct ParameterHelperDefintions {
-			pub on_parameter_struct: Generics,
-			pub parameter_struct_body: FieldsNamed,
-			pub on_function: Generics,
-			pub for_function_args: AngleBracketedGenericArguments,
-			pub on_builder_function: Generics,
-			pub for_builder_function_return: AngleBracketedGenericArguments,
-		}
-
-		struct CustomParameter {
-			pat_type: PatType,
-			default: Option<Expr>,
-		}
-
-		impl ParameterHelperDefintions {
-			pub fn new(
-				component_generics: &Option<Generics>,
-				basic_function_generics: &Generics,
-				custom_function_generics: &Option<Generics>,
-				custom_parameters: &[CustomParameter]
-			) -> Self {
-				todo!("ParameterHelperGenerics::new")
-			}
-		}
 
 		//FIXME: This entire section needs a rewrite, but the most glaring problem is that component generics are applied to the methods right now.
 		let new_args_generics = merge_optional_generics(
