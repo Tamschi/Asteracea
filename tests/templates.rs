@@ -126,8 +126,8 @@ component! {
 		// Inner captures are perfect for child components.
 		// Here you can see a shorthand for constructed captures (with the caveat that field type type parameters can't be inferred).
 		// The general syntax is: |#field_name = #type::#constructor(#parameters)|
-		|very_simple = VerySimple::new(&node, VerySimpleNewArgs {})?|.render()
-		|very_simple_qualified = self::VerySimple::new(&node, VerySimpleNewArgs {})?|.render()
+		|very_simple = VerySimple::new(&node, VerySimple::new_args_builder().build())?|.render(bump, VerySimple::render_args_builder().build())
+		|very_simple_qualified = self::VerySimple::new(&node, VerySimple::new_args_builder().build())?|.render(bump, VerySimple::render_args_builder().build())
 		// Note that the above lines end with .render() instead of ;.
 		// This expands to the following call: self.#field_name.render().
 
@@ -138,8 +138,8 @@ component! {
 		// - use or call the reference directly and/or
 		// - call or access a differently named member and/or
 		// - chain member access expressions as below:
-		|very_simple_chained = VerySimple::new(&node, VerySimpleNewArgs {})?|
-			.render() // TODO: It should be possible to insert direct calls, that is `()` without leading `.identifier`, anywhere in this chain.
+		|very_simple_chained = VerySimple::new(&node, VerySimple::new_args_builder().build())?|
+			.render(bump, VerySimple::render_args_builder().build()) // TODO: It should be possible to insert direct calls, that is `()` without leading `.identifier`, anywhere in this chain.
 			.select(|x| x)
 
 		// TODO: if {expression} Part [else Part], defaulting to nothing using an Into, returning a 'static empty Multi as Node<'_>.

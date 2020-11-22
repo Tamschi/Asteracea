@@ -748,7 +748,7 @@ impl ComponentDeclaration {
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
 					#new_args_name {
 						#(#constructor_args_field_patterns,)*
-						__Asteracea_phantom: _,
+						__Asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
 				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> {
 					#borrow_new_statics_for_render_statics_or_in_new
@@ -777,7 +777,7 @@ impl ComponentDeclaration {
 					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
 					#render_args_name {
 						#(#render_args_field_patterns,)*
-						__Asteracea_phantom: _,
+						__Asteracea__phantom: _,
 					}: #render_args_name#render_args_generic_args,
 				) #render_type {
 					//TODO: Captures with overlapping visibility should have their names collide.

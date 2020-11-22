@@ -3,12 +3,12 @@ use proc_macro2::Span;
 use quote::quote;
 use std::{iter, mem};
 use syn::{
-	parse2, parse_quote, spanned::Spanned as _, token::Brace, AngleBracketedGenericArguments,
-	Attribute, Binding, Constraint, Expr, Field, FieldsNamed, GenericArgument, GenericParam,
-	Generics, Ident, Lifetime, ParenthesizedGenericArguments, PatType, Path, PathArguments,
-	PathSegment, ReturnType, Token, TraitBound, Type, TypeArray, TypeGroup, TypeParam,
-	TypeParamBound, TypeParen, TypePath, TypeReference, TypeSlice, TypeTraitObject, TypeTuple,
-	Visibility,
+	parse2, parse_quote, punctuated::Punctuated, spanned::Spanned as _, token::Brace, token::Paren,
+	AngleBracketedGenericArguments, Attribute, Binding, Constraint, Expr, Field, FieldsNamed,
+	GenericArgument, GenericParam, Generics, Ident, Lifetime, LifetimeDef,
+	ParenthesizedGenericArguments, PatType, Path, PathArguments, PathSegment, ReturnType, Token,
+	TraitBound, Type, TypeArray, TypeGroup, TypeParam, TypeParamBound, TypeParen, TypePath,
+	TypeReference, TypeSlice, TypeTraitObject, TypeTuple, Visibility,
 };
 use unzip_n::unzip_n;
 
@@ -210,32 +210,7 @@ fn transform_type(
 	}
 }
 
-fn transform_pat_type(
-	mut pat_type: PatType,
-	lifetime: &Lifetime,
-	impl_generics: &mut Vec<TypeParam>,
-	adjust_lifetimes: bool,
-) -> PatType {
-	transform_type(&mut *pat_type.ty, lifetime, impl_generics, adjust_lifetimes); //TODO: Propagate usage flag.
-	pat_type
-}
-
-fn generic_param_to_argument(param: &GenericParam) -> GenericArgument {
-	match param {
-		GenericParam::Type(type_param) => {
-			let ty = &type_param.ident.clone();
-			GenericArgument::Type(parse2(quote!(#ty)).unwrap())
-		}
-		GenericParam::Lifetime(lifetime_def) => {
-			GenericArgument::Lifetime(lifetime_def.lifetime.clone())
-		}
-		GenericParam::Const(const_param) => {
-			let c = &const_param.ident;
-			GenericArgument::Const(parse2(quote!(#c)).unwrap())
-		}
-	}
-}
-
+#[derive(Debug)]
 pub struct ParameterHelperDefintions {
 	pub on_parameter_struct: Generics,
 	pub parameter_struct_body: FieldsNamed,
@@ -274,13 +249,23 @@ impl ParameterHelperDefintions {
 		let phantom_args = AngleBracketedGenericArguments {
 			colon2_token: None,
 			lt_token: <Token![<]>::default(),
-			args: transient_generics
-				.params
-				.iter()
-				.chain(component_generics.params.iter())
-				.chain(basic_function_generics.params.iter())
-				.map(|param| param.to_argument())
-				.collect(),
+			args: iter::once(GenericArgument::Type(Type::Tuple(TypeTuple {
+				paren_token: Paren::default(),
+				elems: transient_generics
+					.params
+					.iter()
+					.chain(component_generics.params.iter())
+					.chain(basic_function_generics.params.iter())
+					.filter_map(|param| match param {
+						GenericParam::Type(ty_param) => Some(ty_param.ident.to_type()),
+						GenericParam::Lifetime(LifetimeDef { lifetime, .. }) => {
+							Some(parse_quote!(&#lifetime()))
+						}
+						GenericParam::Const(_) => None, // Hopefully fine?
+					})
+					.collect(),
+			})))
+			.collect(),
 			gt_token: <Token![>]>::default(),
 		};
 
@@ -308,7 +293,20 @@ impl ParameterHelperDefintions {
 						)| {
 							Field {
 								//TODO: Builder docs.
-								attrs: attrs.to_vec(),
+								//TODO?: Better optionals. Something like `ident?: Type` to express `ident: Option<Type> = None` but with the Option stripped for the setter?
+								//   Of course the counter-argument here is that I'd like to transition to native Rust named and default parameters eventually,
+								//   and it's unlikely that the language will get an option-stripping workaround that doesn't interfere with generic type inference.
+								attrs: if let Some(default) = default {
+									attrs
+										.iter()
+										.cloned()
+										.chain(iter::once(
+											parse_quote!(#[builder(default = #default)]),
+										))
+										.collect()
+								} else {
+									attrs.to_vec()
+								},
 								vis: Visibility::Inherited,
 								ident: Some(ident.clone()),
 								colon_token: Some(<Token![:]>::default()),
@@ -352,8 +350,52 @@ impl ParameterHelperDefintions {
 				.collect(),
 				gt_token: <Token![>]>::default(),
 			},
-			on_builder_function: todo!("on_builder_function"),
-			for_builder_function_return: todo!("for_builder_function_return"),
+			on_builder_function: transient_generics
+				.add(basic_function_generics)
+				.add(custom_function_generics)
+				.add(&parse_quote!(<#(#impl_generics),*>))
+				.into_owned(),
+			for_builder_function_return: AngleBracketedGenericArguments {
+				colon2_token: None,
+				lt_token: <Token![<]>::default(),
+				args: {
+					let mut args: Punctuated<GenericArgument, Token![,]> = transient_generics
+						.add(component_generics)
+						.add(basic_function_generics)
+						.add(custom_function_generics)
+						.params
+						.iter()
+						.map(|param| param.to_argument())
+						.chain(
+							impl_generics
+								.iter()
+								.map(|type_param| type_param.to_argument()),
+						)
+						.collect();
+
+					let insert_position = dbg!(&args)
+						.iter()
+						.position(|arg| !matches!(arg, GenericArgument::Lifetime(_)))
+						.unwrap_or_else(|| args.len());
+					args.insert(
+						insert_position,
+						GenericArgument::Type(Type::Tuple(TypeTuple {
+							paren_token: Paren::default(),
+							elems: iter::repeat_with(|| {
+								Type::Tuple(TypeTuple {
+									paren_token: Paren::default(),
+									elems: iter::empty::<Type>().collect(),
+								})
+							})
+							.take(custom_arguments.len())
+							.collect::<Punctuated<_, _>>()
+							.into_with_trailing(),
+						})),
+					);
+					args
+				},
+				gt_token: <Token![>]>::default(),
+			},
 		}
 	}
 }

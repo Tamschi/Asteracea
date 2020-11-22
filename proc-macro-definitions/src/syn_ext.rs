@@ -141,7 +141,7 @@ impl<P: Default + Clone> AddExt for Punctuated<GenericArgument, P> {
 #[ext]
 impl<V, P: Default> Punctuated<V, P> {
 	pub fn into_with_trailing(mut self) -> Self {
-		if !self.trailing_punct() {
+		if !self.is_empty() && !self.trailing_punct() {
 			self.push_punct(P::default())
 		}
 		self
