@@ -65,7 +65,7 @@ impl<C> ParseWithContext for Component<C> {
 		}
 
 		let field_name = Ident::new(
-			&format!("__Asteracea_custom_{}", cx.custom_child_element_count),
+			&format!("__asteracea__custom_{}", cx.custom_child_element_count),
 			open_span.resolved_at(Span::mixed_site()),
 		);
 		cx.custom_child_element_count += 1;

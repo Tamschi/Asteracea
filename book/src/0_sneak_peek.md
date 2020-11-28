@@ -47,13 +47,15 @@ impl Counter {
   }
 }
 
-// HTML output from this component:
 asteracea::component! {
   pub CounterUser()()
-  <*Counter
-    *initial = {0}
-    *step = {1}
-    *class = {""}
+
+  <"counter-user" "\n\t"
+    <*Counter
+      *initial = {0}
+      *step = {1}
+      *class = {""}
+    > "\n"
   >
 }
 ```

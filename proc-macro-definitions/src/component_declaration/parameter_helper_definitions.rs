@@ -389,7 +389,7 @@ impl ParameterHelperDefintions {
 					.chain(iter::once(Field {
 						attrs: vec![parse_quote!(#[builder(default, setter(skip))])],
 						vis: Visibility::Inherited,
-						ident: parse_quote!(__Asteracea__phantom),
+						ident: parse_quote!(__asteracea__phantom),
 						colon_token: Some(<Token![:]>::default()),
 						ty: parse_quote!(::std::marker::PhantomData#phantom_args),
 					}))
