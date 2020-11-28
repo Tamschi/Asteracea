@@ -17,6 +17,15 @@ TODO: Date
   * Allow restating element names when closing them (e.g. `/div>`)
   * Added support for unvalidated (custom) HTML element names
   * HTML comments with `<!-- "comment text" -->`
+  * Custom (Asteracea component) child elements:
+
+    ```rust
+    <*Name
+      *new_arg = {}
+      .render_arg = {}
+    >
+    ```
+
 * Revisions:
   * Improved `Counter` example in the README.
 

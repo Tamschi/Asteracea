@@ -8,6 +8,7 @@ pub struct ParseContext {
 	pub allow_non_snake_case_on_structure_workaround: bool, // Workaround since the attribute isn't respected on specific fields.
 	pub field_definitions: Vec<FieldDefinition>,
 	pub event_binding_count: usize,
+	pub custom_child_element_count: usize,
 }
 
 pub trait ParseWithContext {

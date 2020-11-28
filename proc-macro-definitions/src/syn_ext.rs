@@ -283,7 +283,7 @@ impl PatIdent {
 			}
 			None => FieldPat {
 				attrs: self.attrs,
-				member: self.ident.clone().to_member(),
+				member: self.ident.to_member(),
 				colon_token: None,
 				pat: self.ident.to_pat().into(),
 			},

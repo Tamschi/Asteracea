@@ -1,6 +1,7 @@
 mod attached_access_expression;
 mod bump_format_shorthand;
 mod capture_definition;
+mod component;
 mod event_binding;
 mod html_comment;
 mod html_definition;
@@ -8,7 +9,7 @@ mod html_definition;
 pub use self::{
 	attached_access_expression::AttachedAccessExpression, capture_definition::CaptureDefinition,
 };
-use self::{html_comment::HtmlComment, html_definition::HtmlDefinition};
+use self::{component::Component, html_comment::HtmlComment, html_definition::HtmlDefinition};
 use crate::{
 	asteracea_ident,
 	parse_with_context::{ParseContext, ParseWithContext},
@@ -16,12 +17,12 @@ use crate::{
 };
 use core::{cell::RefCell, result::Result as coreResult};
 use event_binding::EventBindingDefinition;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::{quote, quote_spanned};
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
-	token::{Add, Bang, Brace, Bracket},
+	token::{Add, Brace, Bracket},
 	Error, Ident, LitStr, Token,
 };
 
@@ -41,6 +42,7 @@ impl<C> Part<C> {
 		match self.body {
 			PartBody::Capture(_)
 			| PartBody::Comment(_)
+			| PartBody::Component(_)
 			| PartBody::Expression(_, _)
 			| PartBody::Html(_)
 			| PartBody::Multi(_, _)
@@ -76,6 +78,7 @@ impl<C> Part<C> {
 #[allow(clippy::large_enum_variant)]
 pub enum PartBody<C> {
 	Comment(HtmlComment),
+	Component(Component<C>),
 	Text(LitStr),
 	Html(HtmlDefinition<C>),
 	Expression(Brace, TokenStream),
@@ -106,28 +109,34 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 	type Output = Option<Self>;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let lookahead = input.lookahead1();
-		use PartBody::*;
 		Ok(if lookahead.peek(LitStr) {
-			Some(Text(input.parse()?))
+			Some(PartBody::Text(input.parse()?))
 		} else if lookahead.peek(Token![<]) {
 			match {
 				let input = input.fork();
 				input.parse::<Token![<]>().unwrap();
-				input.parse::<Token![!]>().ok()
+				input.parse::<TokenTree>()?
 			} {
-				Some(Bang { .. }) => Some(Comment(HtmlComment::parse_with_context(input, cx)?)),
-				None => Some(Html(HtmlDefinition::<C>::parse_with_context(input, cx)?)),
+				TokenTree::Punct(punct) if punct.as_char() == '!' => Some(PartBody::Comment(
+					HtmlComment::parse_with_context(input, cx)?,
+				)),
+				TokenTree::Punct(punct) if punct.as_char() == '*' => Some(PartBody::Component(
+					Component::parse_with_context(input, cx)?,
+				)),
+				_ => Some(PartBody::Html(HtmlDefinition::<C>::parse_with_context(
+					input, cx,
+				)?)),
 			}
 		} else if lookahead.peek(Brace) {
 			let expression;
 			#[allow(clippy::eval_order_dependence)]
-			Some(Expression(
+			Some(PartBody::Expression(
 				braced!(expression in input),
 				expression.parse()?,
 			))
 		} else if lookahead.peek(Token![#]) || lookahead.peek(Token![|]) {
 			if C::CAN_CAPTURE {
-				CaptureDefinition::parse_with_context(input, cx)?.map(Capture)
+				CaptureDefinition::parse_with_context(input, cx)?.map(PartBody::Capture)
 			} else {
 				return Err(Error::new(
 					lookahead.error().span(),
@@ -143,11 +152,11 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 					inner_parts.push(inner_part);
 				}
 			}
-			Some(Multi(bracket, inner_parts))
+			Some(PartBody::Multi(bracket, inner_parts))
 		} else if lookahead.peek(Add) {
-			Some(EventBinding(EventBindingDefinition::parse_with_context(
-				input, cx,
-			)?))
+			Some(PartBody::EventBinding(
+				EventBindingDefinition::parse_with_context(input, cx)?,
+			))
 		} else if bump_format_shorthand::peek_from(input) {
 			bump_format_shorthand::parse_with_context(input, cx)?
 		} else {
@@ -172,19 +181,19 @@ pub struct GenerateContext<'a> {
 
 impl<C> PartBody<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
-		use PartBody::*;
 		Ok(match self {
-			Comment(html_comment) => html_comment.part_tokens(cx)?,
-			Text(lit_str) => {
+			PartBody::Comment(html_comment) => html_comment.part_tokens(),
+			PartBody::Component(component) => component.part_tokens(),
+			PartBody::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span()=>
 					#asteracea::lignin_schema::lignin::Node::Text(#lit_str)
 				}
 			}
-			Html(html_definition) => html_definition.part_tokens(cx)?,
-			Expression(brace, expression) => quote_spanned!(brace.span=> {#expression}),
-			Capture(capture) => quote!(#capture),
-			Multi(bracket, m) => {
+			PartBody::Html(html_definition) => html_definition.part_tokens(cx)?,
+			PartBody::Expression(brace, expression) => quote_spanned!(brace.span=> {#expression}),
+			PartBody::Capture(capture) => quote!(#capture),
+			PartBody::Multi(bracket, m) => {
 				let asteracea = asteracea_ident(bracket.span);
 				let m = m
 					.iter()
@@ -197,7 +206,7 @@ impl<C> PartBody<C> {
 					]))
 				}
 			}
-			EventBinding(definition) => definition.part_tokens(),
+			PartBody::EventBinding(definition) => definition.part_tokens(),
 		})
 	}
 }

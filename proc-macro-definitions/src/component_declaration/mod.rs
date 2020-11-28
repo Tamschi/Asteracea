@@ -397,6 +397,7 @@ impl ComponentDeclaration {
 					allow_non_snake_case_on_structure_workaround,
 					field_definitions,
 					event_binding_count: _,
+					custom_child_element_count: _,
 				},
 			attributes,
 			visibility,

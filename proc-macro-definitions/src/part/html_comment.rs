@@ -1,14 +1,10 @@
-use super::GenerateContext;
 use crate::{
 	asteracea_ident,
 	parse_with_context::{ParseContext, ParseWithContext},
 };
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
-use syn::{
-	parse::{ParseStream, Result},
-	LitStr,
-};
+use syn::{parse::ParseStream, LitStr};
 use unquote::unquote;
 
 pub struct HtmlComment {
@@ -31,7 +27,7 @@ impl ParseWithContext for HtmlComment {
 }
 
 impl HtmlComment {
-	pub fn part_tokens(&self, _cx: &GenerateContext) -> Result<TokenStream> {
+	pub fn part_tokens(&self) -> TokenStream {
 		let &Self {
 			open_span,
 			ref text,
@@ -39,10 +35,10 @@ impl HtmlComment {
 
 		let asteracea = asteracea_ident(open_span);
 
-		Ok(quote_spanned! {open_span=>
+		quote_spanned! {open_span=>
 			#asteracea::lignin_schema::lignin::Node::Comment(
 				#text
 			)
-		})
+		}
 	}
 }

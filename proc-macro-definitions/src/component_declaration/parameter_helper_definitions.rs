@@ -1,16 +1,14 @@
 use crate::syn_ext::*;
 use proc_macro2::Span;
-use quote::quote;
 use std::{iter, mem};
 use syn::{
-	parse2, parse_quote, punctuated::Punctuated, spanned::Spanned as _, token::Brace, token::Paren,
+	parse_quote, punctuated::Punctuated, spanned::Spanned as _, token::Brace, token::Paren,
 	AngleBracketedGenericArguments, Attribute, Binding, Constraint, Expr, Field, FieldsNamed,
 	GenericArgument, GenericParam, Generics, Ident, Lifetime, LifetimeDef,
-	ParenthesizedGenericArguments, PatType, Path, PathArguments, PathSegment, ReturnType, Token,
-	TraitBound, Type, TypeArray, TypeGroup, TypeParam, TypeParamBound, TypeParen, TypePath,
-	TypeReference, TypeSlice, TypeTraitObject, TypeTuple, Visibility,
+	ParenthesizedGenericArguments, Path, PathArguments, PathSegment, ReturnType, Token, TraitBound,
+	Type, TypeArray, TypeGroup, TypeParam, TypeParamBound, TypeParen, TypePath, TypeReference,
+	TypeSlice, TypeTraitObject, TypeTuple, Visibility,
 };
-use unzip_n::unzip_n;
 use wyz::Tap as _;
 
 fn transform_lifetime(

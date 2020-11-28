@@ -144,12 +144,28 @@ component! {
 
 		// TODO: if {expression} Part [else Part], defaulting to nothing using an Into, returning a 'static empty Multi as Node<'_>.
 		// TODO: for {} in {} Part via lignin::Node::Multi.
+
+		<*VerySimple>
+		<*Parametrized
+			*new_arg = {"new arg value"}
+			.render_arg = {"render arg value"}
+		/Parametrized>
 	>
 }
 
 component! {
 	VerySimple()() -> Node<'static>
 	"Just text"
+}
+
+component! {
+	Parametrized(priv new_arg: &'static str)
+	(render_arg: &str)
+
+	[
+		"new_arg: " !{self.new_arg} <br>
+		"render_arg: " !{render_arg}
+	]
 }
 
 //TODO: This should show a warning for an unused struct. Reasearch why that doesn't happen.
