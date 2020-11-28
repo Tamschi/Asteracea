@@ -641,7 +641,7 @@ impl ComponentDeclaration {
 			for_builder_function_return: new_args_builder_generic_args,
 		} = ParameterHelperDefintions::new(
 			&component_generics,
-			&parse2(quote_spanned!(constructor_paren.span=> <'a: 'bump, 'bump>)).unwrap(),
+			&parse2(quote_spanned!(constructor_paren.span=> <'a: '_>)).unwrap(),
 			&constructor_generics,
 			custom_new_args.as_slice(),
 			&new_lifetime,
@@ -656,7 +656,7 @@ impl ComponentDeclaration {
 			for_builder_function_return: render_args_builder_generic_args,
 		} = ParameterHelperDefintions::new(
 			&component_generics,
-			&parse2(quote_spanned!(render_paren.span=> <'a: 'bump, 'bump>)).unwrap(),
+			&parse2(quote_spanned!(render_paren.span=> <'a: 'bump, 'bump: '_>)).unwrap(),
 			&render_generics,
 			custom_render_args.as_slice(),
 			&render_lifetime,

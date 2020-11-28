@@ -11,6 +11,7 @@ use syn::{
 	TypeReference, TypeSlice, TypeTraitObject, TypeTuple, Visibility,
 };
 use unzip_n::unzip_n;
+use wyz::Tap as _;
 
 fn transform_lifetime(
 	existing_lifetime: &mut Lifetime,
@@ -210,6 +211,26 @@ fn transform_type(
 	}
 }
 
+fn transform_generic_param(generic_param: &mut GenericParam, lifetime: &Lifetime) {
+	let mut impl_generics = vec![];
+	match generic_param {
+		GenericParam::Type(type_param) => transform_type_param_bounds(
+			type_param.bounds.iter_mut(),
+			lifetime,
+			&mut impl_generics,
+			true,
+		),
+		GenericParam::Lifetime(lifetime_def) => {
+			transform_lifetime(&mut lifetime_def.lifetime, lifetime, true);
+			for bound in lifetime_def.bounds.iter_mut() {
+				transform_lifetime(bound, lifetime, true)
+			}
+		}
+		GenericParam::Const(_) => (),
+	}
+	assert!(impl_generics.is_empty())
+}
+
 #[derive(Debug)]
 pub struct ParameterHelperDefintions {
 	pub on_parameter_struct: Generics,
@@ -228,6 +249,7 @@ pub struct CustomArgument<'a> {
 	pub default: Option<&'a Expr>,
 }
 
+#[allow(clippy::needless_collect)] //TODO
 impl ParameterHelperDefintions {
 	pub fn new(
 		component_generics: &Generics,
@@ -237,14 +259,66 @@ impl ParameterHelperDefintions {
 		transient_lifetime: &Lifetime,
 	) -> Self {
 		let mut impl_generics = vec![];
-		let mut argument_types = vec![];
-		for arg in custom_arguments {
-			let mut ty = arg.ty.clone();
-			transform_type(&mut ty, transient_lifetime, &mut impl_generics, true);
-			argument_types.push(ty)
-		}
+		let argument_types = custom_arguments
+			.iter()
+			.map(|arg| {
+				arg.ty
+					.clone()
+					.tap_mut(|ty| transform_type(ty, transient_lifetime, &mut impl_generics, true))
+			})
+			.collect::<Vec<_>>();
+
+		let basic_function_generics_transformed =
+			basic_function_generics.clone().tap_mut(|generics| {
+				for generic_param in generics.params.iter_mut() {
+					transform_generic_param(generic_param, transient_lifetime)
+				}
+			});
+
+		let basic_function_generics_stripped =
+			basic_function_generics.clone().tap_mut(|generics| {
+				for generic_param in generics.params.iter_mut() {
+					match generic_param {
+						GenericParam::Type(type_param) => {
+							type_param.bounds = type_param
+								.bounds
+								.iter()
+								.filter(|type_param_bounds| match type_param_bounds {
+									TypeParamBound::Trait(_) => (true),
+									TypeParamBound::Lifetime(lifetime) => lifetime.ident != "_",
+								})
+								.cloned()
+								.collect()
+						}
+						GenericParam::Lifetime(lifetime_def) => {
+							lifetime_def.bounds = lifetime_def
+								.bounds
+								.iter()
+								.filter(|l| l.ident != "_")
+								.cloned()
+								.collect()
+						}
+						GenericParam::Const(_) => (),
+					}
+				}
+			});
 
 		let transient_generics: Generics = parse_quote!(<#transient_lifetime>);
+
+		let custom_function_generics_bounded =
+			custom_function_generics.clone().tap_mut(|generics| {
+				for generic_param in generics.params.iter_mut() {
+					match generic_param {
+						GenericParam::Type(type_param) => type_param
+							.bounds
+							.insert(0, TypeParamBound::Lifetime(transient_lifetime.clone())),
+						GenericParam::Lifetime(lifetime_def) => {
+							lifetime_def.bounds.insert(0, transient_lifetime.clone())
+						}
+						GenericParam::Const(_) => (),
+					}
+				}
+			});
 
 		let phantom_args = AngleBracketedGenericArguments {
 			colon2_token: None,
@@ -272,7 +346,7 @@ impl ParameterHelperDefintions {
 		Self {
 			on_parameter_struct: transient_generics
 				.add(component_generics)
-				.add(basic_function_generics)
+				.add(&basic_function_generics_transformed)
 				.add(custom_function_generics)
 				.add(&parse_quote!(<#(#impl_generics),*>))
 				.into_owned(),
@@ -323,7 +397,7 @@ impl ParameterHelperDefintions {
 					}))
 					.collect(),
 			},
-			on_function: basic_function_generics
+			on_function: basic_function_generics_stripped
 				.add(custom_function_generics)
 				.add(&parse_quote!(<#(#impl_generics),*>))
 				.into_owned(),
@@ -351,8 +425,8 @@ impl ParameterHelperDefintions {
 				gt_token: <Token![>]>::default(),
 			},
 			on_builder_function: transient_generics
-				.add(basic_function_generics)
-				.add(custom_function_generics)
+				.add(&basic_function_generics_transformed)
+				.add(&custom_function_generics_bounded)
 				.add(&parse_quote!(<#(#impl_generics),*>))
 				.into_owned(),
 			for_builder_function_return: AngleBracketedGenericArguments {
