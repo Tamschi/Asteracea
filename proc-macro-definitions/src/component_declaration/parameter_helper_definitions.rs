@@ -249,7 +249,7 @@ pub struct CustomArgument<'a> {
 	pub default: Option<&'a Expr>,
 }
 
-#[allow(clippy::needless_collect)] //TODO
+#[allow(clippy::needless_collect)] // Inaccurate lint, apparently.
 impl ParameterHelperDefintions {
 	pub fn new(
 		component_generics: &Generics,
@@ -447,7 +447,7 @@ impl ParameterHelperDefintions {
 						)
 						.collect();
 
-					let insert_position = dbg!(&args)
+					let insert_position = args
 						.iter()
 						.position(|arg| !matches!(arg, GenericArgument::Lifetime(_)))
 						.unwrap_or_else(|| args.len());

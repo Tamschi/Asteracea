@@ -19,19 +19,7 @@ asteracea::component! {
 This component expands to the following Rust code, with `use` imports extracted by hand and a little manual formatting:
 
 ```rust no_run noplayground
-use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
-
-pub struct Empty {}
-
-impl Empty {
-    pub fn new() -> Self {
-        Self {}
-    }
-
-    pub fn render<'bump>(&self, bump: &'bump Bump) -> Node<'bump> {
-        (Node::Multi(&*bump.alloc_with(|| [])))
-    }
-}
+//TODO
 ```
 
 As you can see, the `component!` macro created one `struct` type, with one constructor called `new` and one method called `render`. The output of `component!`, as far as you're supposed to touch it, **always** has this shape. No exceptions.

@@ -57,7 +57,7 @@ cargo add asteracea
 
 * No default runtime
 
-  Asteracea components compile to plain Rust code with (usually) no further dependencies, which helps keep bundles small.
+  Asteracea components compile to plain Rust code with few dependencies, which helps keep bundles small.
 
   Use [`lignin-dom`] or [`lignin-html`] to transform rendered `Node` trees into live user interfaces.
 
@@ -77,16 +77,22 @@ asteracea::component! {
 }
 
 // Render into a bump allocator:
+// This is generally only this explicit at the application root.
 let mut bump = lignin::bumpalo::Bump::new();
+let root = {
+  struct Root;
+  asteracea::rhizome::Node::new_for::<Root>().into()
+};
 assert!(matches!(
-  Empty::new().render(&mut bump),
+  Empty::new(&root, Empty::new_args_builder().build()).expect("No DI.")
+    .render(&mut bump, Empty::render_args_builder().build()),
   lignin::Node::Multi(&[]) // Empty node sequence
 ));
 ```
 
 ### Unit component
 
-A return type other than `Node` can be specified after the render argument list, and components that don't output potentially dynamic `Node`s won't require a `Bump` reference to render:
+A return type other than `Node` can be specified after the render argument list:
 
 ```rust
 asteracea::component! {
@@ -101,8 +107,22 @@ asteracea::component! {
   { self.base + offset }
 }
 
-assert_eq!(Unit::new().render(), ());
-assert_eq!(Offset::new(2).render(3), 5);
+// This is generally only this explicit at the application root.
+let mut bump = lignin::bumpalo::Bump::new();
+let root = {
+  struct Root;
+  asteracea::rhizome::Node::new_for::<Root>().into()
+};
+assert_eq!(
+  Unit::new(&root, Unit::new_args_builder().build()).expect("No DI.")
+    .render(&mut bump, Unit::render_args_builder().build()),
+  (),
+);
+assert_eq!(
+  Offset::new(&root, Offset::new_args_builder().base(2).build()).expect("No DI.")
+    .render(&mut bump, Offset::render_args_builder().offset(3).build()),
+  5,
+);
 ```
 
 ² <https://github.com/Tamschi/Asteracea/issues/2>

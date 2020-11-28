@@ -23,18 +23,12 @@ use asteracea::lignin_schema::lignin::Node;
 #   Self {}
 # }
 // …
-pub fn render(&self) -> Node<'static> {
-  (Node::Text("This is text."))
-}
+// TODO
 // …
 # }
 ```
 
 (Click the eye icon to view the rest of the macro output. Note that this also displays a hidden `main` method inserted by mdBook which isn't part of `component!`'s output.)
-
-Most notably, the method now doesn't take a `bump` parameter and returns `Node<'static>` instead of `Node<'bump>`. This is because rendering static text doesn't require an allocation, because the returned [`Node`] can simply refer to the `str` embedded in the executable's data section.
-
-The method consequently also lost its generic lifetime parameter.
 
 ## Multiple `Text` elements
 
@@ -75,11 +69,7 @@ pub fn render<'bump>(
 # }
 ```
 
-Two observations:
-
-- There is no space between the sentences in the HTML output.
-
-- `render` has returned to its previous signature and allocates inside `bump` again.
+Note that there is no space between the sentences in the generated HTML.
 
 Asteracea gives you fairly precise control over the output, but that also means it won't make changes to the document's whitespace for you. If there's no whitespace in the literal in the input, then there won't be whitespace in the content of the output (when rendering with [lignin-html] or [lignin-dom]).
 
@@ -90,7 +80,7 @@ There is one important difference between the HTML and DOM output of adjacent si
 
 This is one of the reasons that a client-side renderer must once parse the existing DOM into a VDOM when hydrating an app. Another good reason is that user-supplied browser extensions may have made changes to the DOM tree.
 
-(Please don't render into `<body>` directly! Many browser extensions insert their own scripts or overlays as child elements here.
+(**Please don't render into `<body>` directly!** Many browser extensions insert their own scripts or overlays as child elements here.
 
 While it's not too likely that these additions will make your app crash, the GUI may glitch and appear for example duplicated. Rendering into, for example, a `<div id=app>` instead is more reliable.)
 

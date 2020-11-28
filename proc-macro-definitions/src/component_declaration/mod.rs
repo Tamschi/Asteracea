@@ -404,7 +404,7 @@ impl ComponentDeclaration {
 			constructor_attributes,
 			constructor_generics,
 			constructor_paren,
-			mut constructor_args,
+			constructor_args,
 			render_attributes,
 			render_generics,
 			render_paren,
@@ -412,7 +412,7 @@ impl ComponentDeclaration {
 			render_type,
 			static_shared_new_procedure,
 			static_shared_render_procedure,
-			mut new_procedure,
+			new_procedure,
 			render_procedure,
 			body,
 			rhizome_extractions,
@@ -750,7 +750,7 @@ impl ComponentDeclaration {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
-				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> {
+				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> where Self: 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					#borrow_new_statics_for_render_statics_or_in_new
 
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
