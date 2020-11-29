@@ -23,8 +23,7 @@ jobs:
         os: [macos, ubuntu, windows]
         rust: [1.46.0, stable, beta, nightly]
         include:
-        - rust: stable
-          os: ubuntu
+        - os: ubuntu
           target: wasm32-unknown-unknown
           no-workspace: --package asteracea --lib
     env:
