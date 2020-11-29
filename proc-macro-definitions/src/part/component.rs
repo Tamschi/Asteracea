@@ -4,8 +4,11 @@ use call2_for_syn::call2_strict;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::{
-	parse::ParseStream, parse2, parse_quote, token::Brace, visit_mut::visit_expr_mut,
-	visit_mut::VisitMut, Error, Ident, Result, Token, Visibility,
+	parse::ParseStream,
+	parse2, parse_quote,
+	token::Brace,
+	visit_mut::{visit_expr_mut, VisitMut},
+	Error, Ident, Result, Token, Visibility,
 };
 use syn_mid::Block;
 use unquote::unquote;

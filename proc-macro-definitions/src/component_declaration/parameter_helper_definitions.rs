@@ -2,7 +2,10 @@ use crate::syn_ext::*;
 use proc_macro2::Span;
 use std::{iter, mem};
 use syn::{
-	parse_quote, punctuated::Punctuated, spanned::Spanned as _, token::Brace, token::Paren,
+	parse_quote,
+	punctuated::Punctuated,
+	spanned::Spanned as _,
+	token::{Brace, Paren},
 	AngleBracketedGenericArguments, Attribute, Binding, Constraint, Expr, Field, FieldsNamed,
 	GenericArgument, GenericParam, Generics, Ident, Lifetime, LifetimeDef,
 	ParenthesizedGenericArguments, Path, PathArguments, PathSegment, ReturnType, Token, TraitBound,
