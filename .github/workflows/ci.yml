@@ -1,0 +1,85 @@
+# Largely inspired by https://github.com/dtolnay/syn/blob/master/.github/workflows/ci.yml under MIT OR Apache-2.0.
+name: CI
+on:
+  pull_request:
+  push:
+  schedule: [cron: "0 8 * * 5"] # 8:00 on Fridays
+
+jobs:
+  test:
+    name: Test
+    runs-os: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo test --workspace --all-features
+
+  check:
+    name: Check on Rust ${{matrix.rust}}${{matrix.target && format(' ({0})', matrix.target)}}
+    runs-on: ${{matrix.os || 'ubuntu'}}-latest
+    strategy:
+      matrix:
+        os: [macos, ubuntu, windows]
+        rust: [1.46.0, stable, beta, nightly]
+        include:
+        - rust: stable
+          target: wasm32-unknown-unknown
+          no-workspace: true
+    env:
+      target: ${{matrix.target && format('--target={0}', matrix.target)}}
+      workspace: ${{matrix.no-workspace && '' || '--workspace'}}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo +${{matrix.rust}} check ${{env.target}} ${{env.workspace}} --no-default-features
+    - run: cargo +${{matrix.rust}} check ${{env.target}} ${{env.workspace}}
+    - run: cargo +${{matrix.rust}} check ${{env.target}} ${{env.workspace}} --all-features
+
+  book:
+    name: Book
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+    - run: cat CI.toml >> Cargo.toml
+    - run: cd book && cargo run
+
+  msrv:
+    name: Minimal Versions
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo +nightly update -Z minimal-versions
+    - run: cargo +nightly check --all-features
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        profile: minimal
+        components: clippy
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo +nightly clippy --workspace --all-features
+
+  fmt:
+    name: Formatting
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        profile: minimal
+        components: rustfmt
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo +nightly fmt --all -- --check
