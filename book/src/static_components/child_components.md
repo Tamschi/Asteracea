@@ -34,6 +34,12 @@ asteracea::component! {
 
 ## Child Component Instancing
 
+> Note: Rust is good at erasing empty instances!
+>
+> If your reused component is stateless, please restate the component's type name instead of using instancing. This will keep your code clearer and less interdependent.
+>
+> For more information, see [The Rustonomicon on Zero Sized Types (ZSTs)](https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts).
+
 Instead of instantiating and storing a child component multiple times, you can instance it by giving it a name and referencing it elsewhere through a Rust block:
 
 ```rust asteracea=Outer
@@ -46,10 +52,12 @@ asteracea::component! {
 asteracea::component! {
   Outer()()
   [
-    <*Inner priv inner> // Alternatively: `pub` etc.
+    <*Inner priv inner> // Alternatively: `pub` or `pub(…)`
     <*{&self.inner}>
   ]
 }
 ```
 
 The component's `.render(…)` method is called for each of these appearances, but `::new(…)` is called only once.
+
+Component instancing is especially useful when rendering alternates, since the child instance is available everywhere in the parent component's body (regardless which `.render(…)` path is taken).
