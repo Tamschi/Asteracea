@@ -25,6 +25,7 @@
 - [3: Conditional Content]()
   - [`if` Conditions]()
   - [`else` Branches]()
+  - [`match` Alternates](./dynamic_components/match_alternates.md)
   - [`for` Loops and Keys]()
 - [4: Modifiers]()
   - [Introduction to VDOM Modifiers]()
