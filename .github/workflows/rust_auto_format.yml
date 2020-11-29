@@ -26,9 +26,7 @@ jobs:
         profile: minimal
         components: rustfmt
     - run: cat CI.toml >> Cargo.toml
-    - run: cargo +nightly fmt
-    - run: cd proc-macro-definitions && cargo +nightly fmt
-    - run: cd book && cargo +nightly fmt
+    - run: cargo +nightly fmt --all
 
     - uses: Tamschi/git-auto-commit-action@v4.7.2
       with:

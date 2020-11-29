@@ -35,6 +35,7 @@ jobs:
       with:
         toolchain: ${{matrix.rust}}
         profile: minimal
+        target: ${{matrix.target}}
     - run: cat CI.toml >> Cargo.toml
     - run: cargo +${{matrix.rust}} check ${{env.target}} ${{env.workspace}} --no-default-features
     - run: cargo +${{matrix.rust}} check ${{env.target}} ${{env.workspace}}
