@@ -16,7 +16,7 @@ jobs:
     - run: cargo test --workspace --all-features
 
   check:
-    name: Check on Rust ${{matrix.rust}}${{matrix.target && format(' ({0})', matrix.target)}}
+    name: Check on Rust ${{matrix.rust}}${{format(' ({0})', matrix.target || matrix.os)}}
     runs-on: ${{matrix.os || 'ubuntu'}}-latest
     strategy:
       matrix:
@@ -32,6 +32,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{matrix.rust}}
+        profile: minimal
     - run: cat CI.toml >> Cargo.toml
     - run: cargo +${{matrix.rust}} check ${{env.target}} ${{env.workspace}} --no-default-features
     - run: cargo +${{matrix.rust}} check ${{env.target}} ${{env.workspace}}
