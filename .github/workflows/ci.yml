@@ -25,10 +25,10 @@ jobs:
         include:
         - rust: stable
           target: wasm32-unknown-unknown
-          no-workspace: true
+          no-workspace: --package asteracea --lib
     env:
       target: ${{matrix.target && format('--target={0}', matrix.target)}}
-      workspace: ${{matrix.no-workspace && '' || '--workspace'}}
+      workspace: ${{matrix.no-workspace || '--workspace'}}
     steps:
     - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1
