@@ -25,6 +25,13 @@ TODO: Date
     >
     ```
 
+  * Child component instancing:
+
+    ```rust
+    <*Name priv name> // Alternatively: `pub`, `pub(…)`
+    <*{&self.name}> // Without `*new_arg`s!
+    ```
+
 * Revisions:
   * Improved `Counter` example in the README.
 
