@@ -17,6 +17,7 @@
   - [Procedure Blocks]()
   - [Render Parameters]()
   - [Constructor Parameters]()
+  - [Predefined Lifetimes](./dynamic_components/predefined_lifetimes.md)
   - [Persistence 1: Constructor Parameter Captures]()
   - [Persistence 2: Body Captures](./dynamic_components/body_captures.md)
   - [Dependency Extraction](./dynamic_components/dependency_extraction.md)

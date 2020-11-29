@@ -751,7 +751,7 @@ impl ComponentDeclaration {
 						#(#constructor_args_field_patterns,)*
 						__asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
-				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> where Self: 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					#borrow_new_statics_for_render_statics_or_in_new
 
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
