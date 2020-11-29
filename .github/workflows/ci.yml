@@ -17,7 +17,7 @@ jobs:
 
   check:
     name: Check on Rust ${{matrix.rust}}${{format(' ({0})', matrix.target || matrix.os)}}
-    runs-on: ${{matrix.os || 'ubuntu'}}-latest
+    runs-on: ${{matrix.os}}-latest
     strategy:
       matrix:
         os: [macos, ubuntu, windows]
@@ -50,7 +50,7 @@ jobs:
     - run: cat CI.toml >> Cargo.toml
     - run: cd book && cargo run
 
-  msrv:
+  minimal-versions:
     name: Minimal Versions
     runs-on: ubuntu-latest
     steps:
