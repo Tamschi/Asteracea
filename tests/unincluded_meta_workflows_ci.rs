@@ -6,5 +6,8 @@ use constants::*;
 
 #[test]
 fn rust_version() {
-	version_sync::assert_contains_regex!(".github/workflows/ci.yml", &format!(r"^        rust: \[{},", RUST_VERSION));
+	version_sync::assert_contains_regex!(
+		".github/workflows/ci.yml",
+		&format!(r"^        rust: \[{},", RUST_VERSION)
+	);
 }
