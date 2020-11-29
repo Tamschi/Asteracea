@@ -27,7 +27,6 @@ impl AsteraceaExamplesBuild {
 					quote! {
 						use debugless_unwrap::DebuglessUnwrap as _;
 						use asteracea::lignin_schema::lignin::Node;
-						use asteracea::lignin_schema::lignin::bumpalo::Bump;
 						use std::collections::HashMap;
 
 						pub fn get_html(key: &str) -> String
@@ -296,7 +295,7 @@ impl<'a> CodeState<'a> {
 				};
 				let component = NAME::new(&root, NAME::new_args_builder()CONSTRUCTOR_BUILD.build()).unwrap();
 
-				let mut bump = asteracea::lignin_schema::lignin::bumpalo::Bump::new();
+				let bump = asteracea::lignin_schema::lignin::bumpalo::Bump::new();
 				let vdom = component.render(&bump, NAME::render_args_builder()RENDER_BUILD.build());
 				let mut html = String::new();
 				lignin_html::render(&mut html, &vdom, &bump).debugless_unwrap();
