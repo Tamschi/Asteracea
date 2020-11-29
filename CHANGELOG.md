@@ -11,11 +11,10 @@ TODO: Date
   * Reworked generated component interface
   * Upgraded `lignin` dependency to 0.0.2
 * Features:
-  * The bump format shorthand now does not imply `'a: 'bump` anymore, where `'a` is the component's lifetime.
   * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.
   * `bump` resolution is now more reliable in cases where the macro input is constructed in multiple macro contexts.
   * Allow restating element names when closing them (e.g. `/div>`)
-  * Added support for unvalidated (custom) HTML element names
+  * Added support for unvalidated (custom) HTML element names: `<"custom-element">`
   * HTML comments with `<!-- "comment text" -->`
   * Custom (Asteracea component) child elements:
 

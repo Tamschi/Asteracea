@@ -11,15 +11,17 @@ asteracea::component! {
   pub Counter(
     initial: i32,
     priv step: i32,
-    pub class: &'static str, //TODO: `pub enabled` instead of `pub class`? It'd make more sense, but requires boolean attributes to be available.
-  )() // Take `class: &str` here instead.
+    //TODO: `pub enabled`, once boolean attributes are available, and default it to `true` once that's possible.
+  )(
+    class: &'bump str, //TODO: Optional parameter, once available.
+  )
 
   |value = Cell::<i32>::new(initial)|;
 
   //
 
   <div
-    ."class" = {self.class}
+    ."class" = {class}
     "The current value is: " !{self.value()} <br>
 
     <button
@@ -54,7 +56,7 @@ asteracea::component! {
     <*Counter
       *initial = {0}
       *step = {1}
-      *class = {""}
+      .class = {""}
     > "\n"
   >
 }
