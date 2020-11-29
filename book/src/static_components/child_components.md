@@ -51,3 +51,5 @@ asteracea::component! {
   ]
 }
 ```
+
+The component's `.render(…)` method is called for each of these appearances, but `::new(…)` is called only once.
