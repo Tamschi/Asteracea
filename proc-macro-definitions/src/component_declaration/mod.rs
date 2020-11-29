@@ -792,6 +792,14 @@ impl ComponentDeclaration {
 				-> #render_args_builder_name#render_args_builder_generic_args {
 					#render_args_name::builder()
 				}
+
+				//TODO: Is it possible to call render_args_builder on the reference instead, somehow?
+				#[doc(hidden)] // This
+				pub fn __asteracea__ref_render_args_builder#render_args_builder_generics(&self)
+				-> #render_args_builder_name#render_args_builder_generic_args {
+					let _ = self;
+					#render_args_name::builder()
+				}
 			}
 		})
 	}

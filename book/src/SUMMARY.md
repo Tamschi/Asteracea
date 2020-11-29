@@ -8,6 +8,7 @@
   - [HTML Comments](./static_components/html_comments.md)
   - [Text](./static_components/text.md)
   - [Elements](./static_components/elements.md)
+  - [Child Components](./static_components/child_components.md)
   - [Attributes]()
   - [Value Formatting]()
   - [Rust Blocks]()

@@ -150,11 +150,17 @@ component! {
 			*new_arg = {"new arg value"}
 			.render_arg = {"render arg value"}
 		/Parametrized>
+
+		<*VerySimple priv private_very_simple>
+		<*VerySimple pub public_very_simple>
+
+		{self.private_very_simple.render(bump, VerySimple::render_args_builder().build())}
+		<*{&self.public_very_simple}>
 	>
 }
 
 component! {
-	VerySimple()() -> Node<'static>
+	pub VerySimple()() -> Node<'static>
 	"Just text"
 }
 
