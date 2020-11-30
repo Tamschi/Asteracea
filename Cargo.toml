@@ -34,7 +34,7 @@ services = []
 [dependencies]
 asteracea_proc-macro-definitions = { path = "./proc-macro-definitions" } # public
 lazy_static = "1.4.0" # public
-lignin-schema = { version = "0.0.1", features = ["bumpalo-collections"] } # public
+lignin-schema = { version = "0.0.2", features = ["bumpalo-collections"] } # public
 rhizome = { version = "0.0.1", features = ["macros"] } # public
 typed-builder = "0.7.1" # public
 

@@ -9,7 +9,7 @@ TODO: Date
   * Removed "rhizome" features (always enabled now)
   * Removed "styles" and "topiary" features. CSS scoping will be enabled through more general means.
   * Reworked generated component interface
-  * Upgraded `lignin` dependency to 0.0.2
+  * Upgraded `lignin` and `lignin-schema` dependencies to 0.0.2 each
 * Features:
   * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.
   * `bump` resolution is now more reliable in cases where the macro input is constructed in multiple macro contexts.
