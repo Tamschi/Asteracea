@@ -1,0 +1,20 @@
+name: Deny Warnings
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+
+jobs:
+  deny-warnings:
+    name: Deny Warnings
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        profile: minimal
+        components: clippy
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo +nightly clippy --workspace --all-features -- -D warnings
