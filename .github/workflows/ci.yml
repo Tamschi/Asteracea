@@ -25,7 +25,7 @@ jobs:
         include:
         - os: ubuntu
           target: wasm32-unknown-unknown
-          no-workspace: --package asteracea --lib
+          no-workspace: --lib
     env:
       target: ${{matrix.target && format('--target={0}', matrix.target)}}
       workspace: ${{matrix.no-workspace || '--workspace'}}
