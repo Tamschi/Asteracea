@@ -50,17 +50,17 @@ jobs:
     - run: cat CI.toml >> Cargo.toml
     - run: cd book && cargo run
 
-  minimal-versions:
-    name: Minimal Versions
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-    - run: cat CI.toml >> Cargo.toml
-    - run: cargo +nightly update -Z minimal-versions
-    - run: cargo +nightly check --all-features
+  # minimal-versions:
+  #   name: Minimal Versions
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - uses: actions-rs/toolchain@v1
+  #     with:
+  #       toolchain: nightly
+  #   - run: cat CI.toml >> Cargo.toml
+  #   - run: cargo +nightly update -Z minimal-versions
+  #   - run: cargo +nightly check --all-features
 
   clippy:
     name: Clippy
