@@ -1,5 +1,7 @@
 use crate::syn_ext::*;
+use call2_for_syn::call2_strict;
 use proc_macro2::Span;
+use quote::quote_spanned;
 use std::{iter, mem};
 use syn::{
 	parse_quote,
@@ -247,7 +249,7 @@ pub struct CustomArgument<'a> {
 	pub attrs: &'a [Attribute],
 	pub ident: &'a Ident,
 	pub ty: &'a Type,
-	pub default: Option<&'a Expr>,
+	pub default: &'a Option<(Token![=], Expr)>,
 }
 
 #[allow(clippy::needless_collect)] // Inaccurate lint, apparently.
@@ -371,13 +373,21 @@ impl ParameterHelperDefintions {
 								//TODO?: Better optionals. Something like `ident?: Type` to express `ident: Option<Type> = None` but with the Option stripped for the setter?
 								//   Of course the counter-argument here is that I'd like to transition to native Rust named and default parameters eventually,
 								//   and it's unlikely that the language will get an option-stripping workaround that doesn't interfere with generic type inference.
-								attrs: if let Some(default) = default {
+								attrs: if let Some((eq, default)) = default {
 									attrs
 										.iter()
 										.cloned()
-										.chain(iter::once(
-											parse_quote!(#[builder(default = #default)]),
-										))
+										.chain(
+											iter::once(
+												call2_strict(
+													quote_spanned!(eq.span=> #[builder(default = #default)]),
+													Attribute::parse_outer,
+												)
+												.unwrap()
+												.unwrap(),
+											)
+											.flatten(),
+										)
 										.collect()
 								} else {
 									attrs.to_vec()

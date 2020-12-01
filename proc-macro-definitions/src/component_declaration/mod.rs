@@ -1,5 +1,5 @@
 use self::{
-	constructor_argument::ConstructorArgument,
+	arguments::{Argument, ConstructorArgument},
 	parameter_helper_definitions::{CustomArgument, ParameterHelperDefintions},
 };
 use crate::{
@@ -20,12 +20,12 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, FnArg, Generics, Ident, Lifetime, Pat, PatIdent, PatType, ReturnType, Token,
-	Type, Visibility, WhereClause, WherePredicate,
+	Attribute, Error, Generics, Ident, Lifetime, Pat, PatIdent, PatType, ReturnType, Token, Type,
+	Visibility, WhereClause, WherePredicate,
 };
 use unzip_n::unzip_n;
 
-mod constructor_argument;
+mod arguments;
 mod parameter_helper_definitions;
 
 unzip_n!(5);
@@ -40,11 +40,11 @@ pub struct ComponentDeclaration {
 	constructor_attributes: Vec<Attribute>,
 	constructor_generics: Generics,
 	constructor_paren: Paren,
-	constructor_args: Vec<ConstructorArgument>,
+	constructor_args: Punctuated<ConstructorArgument, Token![,]>,
 	render_attributes: Vec<Attribute>,
 	render_generics: Generics,
 	render_paren: Paren,
-	render_args: Vec<PatType>,
+	render_args: Punctuated<Argument, Token![,]>,
 	render_type: ReturnType,
 	static_shared_new_procedure: Vec<TokenStream>,
 	static_shared_render_procedure: Vec<TokenStream>,
@@ -189,9 +189,8 @@ impl Parse for ComponentDeclaration {
 			));
 		}
 		let constructor_args;
-		let constructor_paren = parenthesized!(constructor_args in input);
-		let constructor_args = Punctuated::<_, Token![,]>::parse_terminated(&constructor_args)?;
-		let constructor_args: Vec<ConstructorArgument> = constructor_args.into_iter().collect();
+		let constructor_paren = parenthesized!(constructor_args in input); //TODO: Specify error message.
+		let constructor_args = Punctuated::parse_terminated(&constructor_args)?;
 
 		let render_attributes = input.call(Attribute::parse_outer)?;
 
@@ -203,15 +202,8 @@ impl Parse for ComponentDeclaration {
 		};
 
 		let render_args;
-		let render_paren = parenthesized!(render_args in input); //TODO: Map message.
-		let render_args: Punctuated<FnArg, Token![,]> = Punctuated::parse_terminated(&render_args)?;
-		let render_args = render_args
-			.into_iter()
-			.map(|arg| match arg {
-				FnArg::Receiver(_) => Err(Error::new_spanned(arg, "Expected typed argument")),
-				FnArg::Typed(typed) => Ok(typed),
-			})
-			.collect::<Result<_>>()?;
+		let render_paren = parenthesized!(render_args in input); //TODO: Specify error message.
+		let render_args = Punctuated::parse_terminated(&render_args)?;
 
 		let render_type = input.parse()?;
 
@@ -327,8 +319,8 @@ impl Parse for ComponentDeclaration {
 		// These captures are put at the very end of the constructor since they always move their value.
 		for constructor_argument in constructor_args.iter() {
 			if let ConstructorArgument {
-				capture: constructor_argument::Capture::Yes(visibility),
-				fn_arg,
+				capture: arguments::Capture::Yes(visibility),
+				argument: Argument { fn_arg, .. },
 			} = constructor_argument
 			{
 				let span = match visibility {
@@ -610,26 +602,26 @@ impl ComponentDeclaration {
 		let custom_new_args = constructor_args
 			.iter()
 			.map(|arg| Ok(CustomArgument {
-				attrs: arg.fn_arg.attrs.as_slice(),
-				ident: match &*arg.fn_arg.pat {
+				attrs: arg.argument.fn_arg.attrs.as_slice(),
+				ident: match &*arg.argument.fn_arg.pat {
 				    Pat::Ident(PatIdent{ ident, .. }) => ident,
 				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
-				ty: &*arg.fn_arg.ty,
-				default: None, //TODO
+				ty: &*arg.argument.fn_arg.ty,
+				default: &arg.argument.default,
 			}))
 			.collect::<Result<Vec<_>>>()?;
 
 		let custom_render_args = render_args
 			.iter()
 			.map(|arg| Ok(CustomArgument {
-				attrs: arg.attrs.as_slice(),
-				ident: match &*arg.pat {
+				attrs: arg.fn_arg.attrs.as_slice(),
+				ident: match &*arg.fn_arg.pat {
 				    Pat::Ident(PatIdent{ ident, .. }) => ident,
 				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
-				ty: &*arg.ty,
-				default: None, //TODO
+				ty: &*arg.fn_arg.ty,
+				default: &arg.default,
 			}))
 			.collect::<Result<Vec<_>>>()?;
 
@@ -665,7 +657,7 @@ impl ComponentDeclaration {
 
 		let constructor_args_field_patterns = constructor_args
 			.into_iter()
-			.map(|arg| match *arg.fn_arg.pat {
+			.map(|arg| match *arg.argument.fn_arg.pat {
 				Pat::Ident(pat_ident) => pat_ident.try_into_field_pat(),
 				_ => {
 					unreachable!()
@@ -675,7 +667,7 @@ impl ComponentDeclaration {
 
 		let render_args_field_patterns = render_args
 			.into_iter()
-			.map(|arg| match *arg.pat {
+			.map(|arg| match *arg.fn_arg.pat {
 				Pat::Ident(pat_ident) => pat_ident.try_into_field_pat(),
 				_ => {
 					unreachable!()

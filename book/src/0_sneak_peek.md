@@ -11,7 +11,7 @@ asteracea::component! {
   pub Counter(
     initial: i32,
     priv step: i32,
-    pub enabled: bool, //TODO: default to `true` once that's possible.
+    pub enabled: bool = true,
   )(
     class: &'bump str, //TODO: Optional parameter, once available.
   )
@@ -57,7 +57,6 @@ asteracea::component! {
     <*Counter
       *initial = {0}
       *step = {1}
-      *enabled = {true}
       .class = {""}
     > "\n"
   >
