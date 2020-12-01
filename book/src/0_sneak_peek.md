@@ -11,7 +11,7 @@ asteracea::component! {
   pub Counter(
     initial: i32,
     priv step: i32,
-    //TODO: `pub enabled`, once boolean attributes are available, and default it to `true` once that's possible.
+    pub enabled: bool, //TODO: default to `true` once that's possible.
   )(
     class: &'bump str, //TODO: Optional parameter, once available.
   )
@@ -22,6 +22,7 @@ asteracea::component! {
 
   <div
     ."class" = {class}
+    ."disabled"? = {if self.enabled { None } else { Some("") }} //TODO: Allow booleans directly.
     "The current value is: " !{self.value()} <br>
 
     <button
@@ -56,6 +57,7 @@ asteracea::component! {
     <*Counter
       *initial = {0}
       *step = {1}
+      *enabled = {true}
       .class = {""}
     > "\n"
   >
