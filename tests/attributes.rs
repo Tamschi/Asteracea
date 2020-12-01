@@ -1,10 +1,11 @@
 use asteracea::component;
 
 component! {
-    Attributed()()
-    <div
-        ."class" = {"a-class"}
-    >
+	Attributed()()
+		<div
+			."id" = "Hello!"
+			."class" = {"a-class"}
+	>
 }
 
 component! {

@@ -175,9 +175,7 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 }
 
 #[derive(Default)]
-pub struct GenerateContext<'a> {
-	scope_definitions: Vec<&'a TokenStream>,
-}
+pub struct GenerateContext {}
 
 impl<C> PartBody<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {

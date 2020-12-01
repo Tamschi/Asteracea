@@ -18,7 +18,7 @@
   - [Render Parameters]()
   - [Constructor Parameters]()
   - [Predefined Lifetimes](./dynamic_components/predefined_lifetimes.md)
-  - [Boolean Attributes](./dynamic_components/boolean_attributes.md)
+  - [Optional Attributes](./dynamic_components/optional_attributes.md)
   - [Persistence 1: Constructor Parameter Captures]()
   - [Persistence 2: Body Captures](./dynamic_components/body_captures.md)
   - [Dependency Extraction](./dynamic_components/dependency_extraction.md)

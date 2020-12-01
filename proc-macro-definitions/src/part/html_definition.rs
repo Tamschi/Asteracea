@@ -5,14 +5,15 @@ use crate::{
 	Configuration,
 };
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned};
+use quote::{quote_spanned, ToTokens};
 use syn::{
-	braced,
-	parse::{ParseStream, Result},
+	parse::{Parse, ParseStream, Result},
 	spanned::Spanned,
-	token::{Brace, Dot},
+	token::{Brace, Question},
 	Error, Ident, LitStr, Token,
 };
+use syn_mid::Block;
+use unquote::unquote;
 
 mod kw {
 	use syn::custom_keyword;
@@ -22,11 +23,73 @@ mod kw {
 }
 
 enum AttributeDefinition {
-	LiteralWithBlock(Dot, LitStr, TokenStream),
-	LiteralWithLiteral(Dot, LitStr, LitStr),
-	Expression(TokenStream),
+	Assignment(
+		Token![.],
+		AttributeKey,
+		Option<Token![?]>,
+		Token![=],
+		AttributeValue,
+	),
+	RustBlock(Token![.], Block),
 }
 
+enum AttributeKey {
+	//TODO: Known(Ident),
+	Literal(LitStr),
+}
+
+impl ToTokens for AttributeKey {
+	fn to_tokens(&self, tokens: &mut TokenStream) {
+		match self {
+			AttributeKey::Literal(l) => l.to_tokens(tokens),
+		}
+	}
+}
+
+impl Parse for AttributeKey {
+	fn parse(input: ParseStream) -> Result<Self> {
+		Ok(match input.parse() {
+			Ok(lit_str) => AttributeKey::Literal(lit_str),
+			Err(err) => {
+				return Err(Error::new(
+					err.span(),
+					"Expected HTML attribute key (str literal)",
+				))
+			}
+		})
+	}
+}
+
+enum AttributeValue {
+	Literal(LitStr),
+	Blocked(Block),
+}
+
+impl ToTokens for AttributeValue {
+	fn to_tokens(&self, tokens: &mut TokenStream) {
+		match self {
+			AttributeValue::Literal(l) => l.to_tokens(tokens),
+			AttributeValue::Blocked(b) => b.to_tokens(tokens),
+		}
+	}
+}
+
+impl Parse for AttributeValue {
+	fn parse(input: ParseStream) -> Result<Self> {
+		Ok(if input.peek(LitStr) {
+			AttributeValue::Literal(input.parse().unwrap())
+		} else if input.peek(Brace) {
+			AttributeValue::Blocked(input.parse().unwrap())
+		} else {
+			return Err(Error::new(
+				input.span(),
+				"Expected HTML attribte value (string literal or Rust block)",
+			));
+		})
+	}
+}
+
+//TODO: Add a Dynamic(Block) variant.
 enum ElementName {
 	Custom(LitStr),
 	Known(Ident),
@@ -63,28 +126,31 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 		let attributes = {
 			let mut attributes = Vec::new();
 			while let Ok(dot) = input.parse::<Token![.]>() {
-				let attribute_lookahead = input.lookahead1();
-				use AttributeDefinition::*;
-				attributes.push(if attribute_lookahead.peek(LitStr) {
-					let name = input.parse()?;
-					input.parse::<Token![=]>()?;
-					if let Ok(text) = input.parse() {
-						LiteralWithLiteral(dot, name, text)
-					} else {
-						LiteralWithBlock(dot, name, {
-							let content;
-							let brace = braced!(content in input);
-							let content: TokenStream = content.parse()?;
-							quote_spanned! (brace.span=> {#content})
-						})
+				attributes.push(if input.peek(LitStr) {
+					let key;
+					let question: Option<Token![?]>;
+					let eq;
+					let value;
+					unquote!(input, #key #question #eq #value);
+					if question.is_some() && matches!(value, AttributeValue::Literal(_)) {
+						return Err(Error::new(
+							value.span(),
+							format!(
+							"Expected Rust block value for optional HTML attribute, but found `{}`",
+							value.to_token_stream().to_string(),
+						),
+						));
 					}
-				} else if attribute_lookahead.peek(Brace) {
-					let content;
-					let brace = braced!(content in input);
-					let content: TokenStream = content.parse()?;
-					Expression(quote_spanned!(brace.span=> #content))
+					AttributeDefinition::Assignment(dot, key, question, eq, value)
+				} else if input.peek(Brace) {
+					let mut block: Block = input.parse()?;
+					block.brace_token.span = block.brace_token.span.resolved_at(Span::mixed_site());
+					AttributeDefinition::RustBlock(dot, block)
 				} else {
-					return Err(attribute_lookahead.error());
+					return Err(Error::new(
+						input.span(),
+						"Expected Rust block (Attribute) or a string literal (HTML attribute name)",
+					));
 				});
 			}
 			attributes
@@ -145,41 +211,66 @@ impl<C> HtmlDefinition<C> {
 
 		let bump = Ident::new("bump", lt.span().resolved_at(Span::call_site()));
 
-		let cx = GenerateContext {
-			scope_definitions: cx.scope_definitions.clone(),
-		};
-
-		let mut attributes_stream = TokenStream::new();
-		for scope_body in &cx.scope_definitions {
-			attributes_stream.extend(quote! {
-				#scope_body,
-			});
-		}
-
-		for attribute in attributes.iter() {
-			use AttributeDefinition::*;
-			match attribute {
-				LiteralWithBlock(dot, attr_name, attr_value) => {
-					attributes_stream.extend(quote_spanned! {dot.span=>
-						#asteracea::lignin_schema::lignin::Attribute {
-							name: #attr_name,
-							value: #attr_value,
+		let has_optional_attributes = attributes.iter().any(|a| match a {
+			AttributeDefinition::Assignment(_, _, Some(Question { .. }), _, _) => true,
+			AttributeDefinition::Assignment(_, _, None, _, _) => false,
+			AttributeDefinition::RustBlock(_, _) => false,
+		});
+		let attributes = attributes
+			.iter()
+			.map(|a| match a {
+				AttributeDefinition::Assignment(dot, key, question, eq, value) => {
+					let span = dot.span.resolved_at(Span::mixed_site());
+					match (has_optional_attributes, question) {
+						(false, Some(_)) => unreachable!(),
+						(true, Some(Question { spans })) => {
+							quote_spanned! {spans[0].resolved_at(Span::mixed_site())=>{
+								let name = #key; // Always evaluate this.
+								if let Some(value) #eq #value {
+									attrs.push(#asteracea::lignin_schema::lignin::Attribute {
+										name,
+										value,
+									})
+								}
+							}}
+						}
+						(true, None) => quote_spanned! {span=>
+							attrs.push(#asteracea::lignin_schema::lignin::Attribute {
+								name: #key,
+								value: #value,
+							})
 						},
-					})
-				}
-				LiteralWithLiteral(dot, attr_name, attr_text) => {
-					attributes_stream.extend(quote_spanned! {dot.span=>
-						#asteracea::lignin_schema::lignin::Attribute {
-							name: #attr_name,
-							value: #attr_text,
+						(false, None) => quote_spanned! {span=>
+							#asteracea::lignin_schema::lignin::Attribute {
+								name: #key,
+								value: #value,
+							}
 						},
-					})
+					}
 				}
-				Expression(expression) => attributes_stream.extend(quote! {
-					#expression,
-				}),
+				AttributeDefinition::RustBlock(dot, block) => {
+					let span = dot.span.resolved_at(Span::mixed_site());
+					if has_optional_attributes {
+						quote_spanned!(span=> attrs.push(#block))
+					} else {
+						quote_spanned!(span=> #block)
+					}
+				}
+			})
+			.collect::<Vec<_>>();
+
+		let attributes = if has_optional_attributes {
+			let capacity = attributes.len();
+			quote_spanned! {lt.span.resolved_at(Span::mixed_site())=>
+				{
+					let mut attrs = #asteracea::lignin_schema::lignin::bumpalo::collections::Vec::with_capacity_in(#capacity, #bump);
+					#(#attributes)*
+					attrs.into_bump_slice()
+				}
 			}
-		}
+		} else {
+			quote_spanned!(lt.span=> &*#bump.alloc_with(|| [#(#attributes),*]))
+		};
 
 		let (children, parts): (Vec<_>, Vec<_>) = parts
 			.iter()
@@ -216,7 +307,7 @@ impl<C> HtmlDefinition<C> {
 					#bump.alloc_with(||
 						#asteracea::lignin_schema::lignin::Element {
 							name: #name,
-							attributes: &*#bump.alloc_with(|| [#attributes_stream]),
+							attributes: #attributes,
 							content: #children,
 							event_bindings: #event_bindings,
 						}
@@ -227,7 +318,7 @@ impl<C> HtmlDefinition<C> {
 				#asteracea::lignin_schema::lignin::Node::Element(
 					#bump.alloc_with(||
 						#asteracea::lignin_schema::#name(
-							&*#bump.alloc_with(|| [#attributes_stream]),
+							#attributes,
 							#children,
 							#event_bindings,
 						)
