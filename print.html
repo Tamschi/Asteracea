@@ -187,9 +187,8 @@
 <li>
 <p>Low boilerplate:</p>
 <p>Web components have a certain shape that's shared between each of them. Creating a new component shouldn't require a large amount of text to get started, so that the focus is on what the individual component does.</p>
-<p>A completely empty component, minus the outer macro call, can be written as concisely as [<code>E()()[]</code>]. This generates a (zero-size) model, a (practically empty) constructor and a render method that generates an empty element group - a VDOM node that results in no output. More complex components grow naturally from here.</p>
-<p>[<code>E()()[]</code>]: ./1_empty_component.md</p>
-<p>Formatting a value into the output can be as simple as [<code>!{value}</code>]. More on all this later.</p>
+<p>A completely empty component, minus the outer macro call, can be written as concisely as <a href="./static_components/empty_component.html"><code>E()()[]</code></a>. This generates a (zero-size) model, a (practically empty) constructor and a render method that generates an empty element group - a VDOM node that results in no output. More complex components grow naturally from here.</p>
+<p>Formatting a value into the output can be as simple as <a href=""><code>!{value}</code></a>. More on all this later.</p>
 </li>
 <li>
 <p>Straightforward macros:</p>
@@ -686,8 +685,8 @@ asteracea::component! {
 <pre><code class="language-html">&lt;DIV&gt;&lt;/DIV&gt;
 &lt;DIV class=&quot;classicist&quot;&gt;&lt;/DIV&gt;
 </code></pre>
-<p>Instead of [<code>&amp;'bump str</code>], the required value type is [<code>Option&lt;&amp;'bump str&gt;</code>].</p>
-<p>If [<code>None</code>] is provided, the attribute is omitted entirely from the rendered VDOM.</p>
+<p>Instead of <a href="dynamic_components/"><code>&amp;'bump str</code></a>, the required value type is <a href="dynamic_components/"><code>Option&lt;&amp;'bump str&gt;</code></a>.</p>
+<p>If <a href="dynamic_components/"><code>None</code></a> is provided, the attribute is omitted entirely from the rendered VDOM.</p>
 <h1><a class="header" href="#persistence-2-body-captures" id="persistence-2-body-captures">Persistence 2: Body Captures</a></h1>
 <p>TODO</p>
 <h1><a class="header" href="#dependency-extraction" id="dependency-extraction">Dependency Extraction</a></h1>
