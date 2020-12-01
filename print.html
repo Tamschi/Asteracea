@@ -224,7 +224,7 @@ asteracea::component! {
   pub Counter(
     initial: i32,
     priv step: i32,
-    //TODO: `pub enabled`, once boolean attributes are available, and default it to `true` once that's possible.
+    pub enabled: bool, //TODO: default to `true` once that's possible.
   )(
     class: &amp;'bump str, //TODO: Optional parameter, once available.
   )
@@ -235,6 +235,7 @@ asteracea::component! {
 
   &lt;div
     .&quot;class&quot; = {class}
+    .&quot;disabled&quot;? = {if self.enabled { None } else { Some(&quot;&quot;) }} //TODO: Allow booleans directly.
     &quot;The current value is: &quot; !{self.value()} &lt;br&gt;
 
     &lt;button
@@ -269,6 +270,7 @@ asteracea::component! {
     &lt;*Counter
       *initial = {0}
       *step = {1}
+      *enabled = {true}
       .class = {&quot;&quot;}
     &gt; &quot;\n&quot;
   &gt;
@@ -686,7 +688,7 @@ asteracea::component! {
 &lt;DIV class=&quot;classicist&quot;&gt;&lt;/DIV&gt;
 </code></pre>
 <p>Instead of <a href="dynamic_components/"><code>&amp;'bump str</code></a>, the required value type is <a href="dynamic_components/"><code>Option&lt;&amp;'bump str&gt;</code></a>.</p>
-<p>If <a href="dynamic_components/"><code>None</code></a> is provided, the attribute is omitted entirely from the rendered VDOM.</p>
+<p>If <a href="dynamic_components/"><code>None</code></a> is provided, the attribute is omitted entirely from the rendered VDOM. To render a <a href="https://www.w3.org/TR/html52/infrastructure.html#sec-boolean-attributes">boolean attribute</a> like <code>checked</code>, provide <a href="dynamic_components/"><code>Some(&quot;&quot;)</code></a>.</p>
 <h1><a class="header" href="#persistence-2-body-captures" id="persistence-2-body-captures">Persistence 2: Body Captures</a></h1>
 <p>TODO</p>
 <h1><a class="header" href="#dependency-extraction" id="dependency-extraction">Dependency Extraction</a></h1>
