@@ -46,11 +46,9 @@ Asteracea is, as of October 2020, still early in development and subject to chan
 
   Web components have a certain shape that's shared between each of them. Creating a new component shouldn't require a large amount of text to get started, so that the focus is on what the individual component does.
 
-  A completely empty component, minus the outer macro call, can be written as concisely as [`E()()[]`]. This generates a (zero-size) model, a (practically empty) constructor and a render method that generates an empty element group - a VDOM node that results in no output. More complex components grow naturally from here.
+  A completely empty component, minus the outer macro call, can be written as concisely as [`E()()[]`](./static_components/empty_component.md). This generates a (zero-size) model, a (practically empty) constructor and a render method that generates an empty element group - a VDOM node that results in no output. More complex components grow naturally from here.
 
-  [`E()()[]`]: ./1_empty_component.md
-
-  Formatting a value into the output can be as simple as [`!{value}`]. More on all this later.
+  Formatting a value into the output can be as simple as [`!{value}`](). More on all this later.
 
 - Straightforward macros:
 

@@ -23,6 +23,6 @@ asteracea::component! {
 }
 ```
 
-Instead of [`&'bump str`], the required value type is [`Option<&'bump str>`].
+Instead of [`&'bump str`](), the required value type is [`Option<&'bump str>`]().
 
-If [`None`] is provided, the attribute is omitted entirely from the rendered VDOM.
+If [`None`]() is provided, the attribute is omitted entirely from the rendered VDOM.
