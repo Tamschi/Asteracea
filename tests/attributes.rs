@@ -2,9 +2,9 @@ use asteracea::component;
 
 component! {
 	Attributed()()
-		<div
-			."id" = "Hello!"
-			."class" = {"a-class"}
+	<div
+		."id" = "Hello!"
+		."class" = {"a-class"}
 	>
 }
 
@@ -15,6 +15,20 @@ component! {
 
 	<div
 		."class"? = {class}
+	>
+}
+
+component! {
+	MultiOptional()(
+		class: Option<&'bump str>,
+	)
+
+	<div
+		."a" = ""
+		."class"? = {class}
+		."class2"? = {class}
+		."b" = ""
+		."c" = ""
 	>
 }
 

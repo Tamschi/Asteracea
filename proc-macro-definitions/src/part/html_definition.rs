@@ -238,7 +238,7 @@ impl<C> HtmlDefinition<C> {
 							attrs.push(#asteracea::lignin_schema::lignin::Attribute {
 								name: #key,
 								value: #value,
-							})
+							});
 						},
 						(false, None) => quote_spanned! {span=>
 							#asteracea::lignin_schema::lignin::Attribute {
