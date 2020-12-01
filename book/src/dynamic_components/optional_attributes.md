@@ -17,7 +17,7 @@ asteracea::component! {
   Classical()()
 
   [
-    <*Classic .class = {None}> "\n"
+    <*Classic> "\n"
     <*Classic .class = {Some("classicist")}>
   ]
 }
