@@ -758,6 +758,7 @@ impl ComponentDeclaration {
 					// by child nodes and derived from further. A dependency extraction
 					// or seed lifetime extension would then initialise the backing
 					// data structure as needed.
+					// I really should add benchmarks before trying this, though.
 					let #call_site_node = #call_site_node.into_arc();
 
 					Ok(Self {
