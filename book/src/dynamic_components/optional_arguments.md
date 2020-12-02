@@ -25,6 +25,8 @@ asteracea::component! {
 
 `class` is an `Option<&'bump str>` within `Classic`s `.render(…)` method, but the parameter is provided from outside as `&'bump str`.
 
+## Conditional Child Component Parameters
+
 Note that this means that `None` can only be specfied by not setting the parameter at all! Fortunately, it's easy to do this conditionally in the same way as for optional attributes on HTML elements:
 
 ```rust asteracea=Outer
@@ -48,11 +50,13 @@ asteracea::component! {
   Outer()()
 
   [
-    <*Middle>
+    <*Middle> "\n"
     <*Middle .class = {"bourgeoisie"}>
   ]
 }
 ```
+
+This also applies to any other kind of optional parameter, i.e. arguments with explicit default value.
 
 > Asteracea assumes that the order of distinctly named parameter assignments does not matter and, in order to reduce code size, internally moves assignments of parameters that are assigned to conditionally after those of ones that are not. This is a tradeoff incurred by statically validating parameter list completeness.
 >
