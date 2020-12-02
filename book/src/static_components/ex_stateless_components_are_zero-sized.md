@@ -1,7 +1,7 @@
 # EX: Stateless Components are Zero-Sized
 
 <details>
-<summary>This is an optional chaper.</summary>
+<summary>This is an optional chapter.</summary>
 
 > EX-chapters don't contain necessary information on how to use Asteracea.
 >
