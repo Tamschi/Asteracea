@@ -13,6 +13,7 @@
   - [Value Formatting]()
   - [Rust Blocks]()
   - [CSS Scoping]()
+  - [EX: Stateless Components are Zero-Sized](./static_components/ex_stateless_components_are_zero-sized.md)
 - [2: Dynamic Components]()
   - [Procedure Blocks]()
   - [Render Parameters]()

@@ -7,7 +7,7 @@ asteracea::component! {
 }
 ```
 
-```rust asteracea=Counter asteracea::new=.initial(0).step(1).class("")
+```rust asteracea=Counter asteracea::new=.initial(0).step(1) asteracea::render=.class(Some("counter-class"))
 use asteracea::component;
 use std::cell::Cell;
 
@@ -17,14 +17,15 @@ component! {
   pub Counter(
     initial: i32,
     priv step: i32,
+  )(
     /// This component's class attribute value.
-    pub class: &'static str, // ⁵
-  )()
+    class: Option<&'bump str> = None,
+  )
 
   |value = Cell::<i32>::new(initial)|; // shorthand capture
 
   <div
-    ."class" = {self.class} // ⁶
+    ."class"? = {class} // ⁶
     "The current value is: " !{self.value()} <br> // Anything within curlies is plain Rust.
 
     <button
@@ -47,3 +48,17 @@ impl Counter {
   }
 }
 ```
+
+<!-- markdownlint-disable no-inline-html -->
+<div class="subtlish">
+<style>
+.subtlish {
+  height: 0px;
+}
+</style>
+<br><br><br><br><br><br><br><br>
+
+🌬️🍃🌄  
+🏞️🐟🪣
+</div>
+<!-- markdownlint-enable no-inline-html -->

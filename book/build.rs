@@ -55,6 +55,7 @@ fn generate_tests() -> Result<(), Box<dyn Error>> {
 			.to_string()
 			.replace('/', "_")
 			.replace('\\', "_")
+			.replace('-', "_")
 			+ "_L";
 
 		let mut text = String::new();
@@ -67,6 +68,7 @@ fn generate_tests() -> Result<(), Box<dyn Error>> {
 				(Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(tag))), Range { start, .. }) => {
 					let line = line_col.get(start).0;
 					let test_name = name_base.clone() + &line.to_string();
+
 					writeln!(lib, "#[allow(non_snake_case)] mod {};", test_name)?;
 
 					let test_path = Path::new(&out_dir).join(&test_name).with_extension("rs");

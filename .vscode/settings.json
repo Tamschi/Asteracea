@@ -1,16 +1,25 @@
 {
-    "rust-analyzer.cargo.loadOutDirsFromCheck": true,
-    "rust-analyzer.checkOnSave.command": "clippy",
-    "rust-analyzer.procMacro.enable": true,
-    "todo-tree.general.tags": [
-        "BUG",
-        "HACK",
-        "FIXME",
-        "TODO",
-        "XXX",
+	"rust-analyzer.cargo.loadOutDirsFromCheck": true,
+	"rust-analyzer.checkOnSave.command": "clippy",
+	"rust-analyzer.procMacro.enable": true,
+	"todo-tree.general.tags": [
+		"BUG",
+		"HACK",
+		"FIXME",
+		"TODO",
+		"XXX",
 		"todo!",
 		"TK"
-    ],
-    "todo-tree.regex.regex": "(($TAGS)|^\\s*- \\[ \\])",
-    "rust-analyzer.cargo.allFeatures": true
+	],
+	"todo-tree.regex.regex": "(($TAGS)|^\\s*- \\[ \\])",
+	"rust-analyzer.cargo.allFeatures": true,
+	"markdownlint.config": {
+		"default": true,
+		"no-inline-html": {
+			"allowed_elements": [
+				"details",
+				"summary"
+			]
+		}
+	}
 }

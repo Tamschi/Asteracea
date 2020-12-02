@@ -3,21 +3,90 @@
 Asteracea components can be used inside other templates using asterisk syntax:
 
 ```rust asteracea=Outer
+//TODO: Hide this initially.
+use std::marker::PhantomData;
+
 asteracea::component! {
   Inner()()
   "Inner body."
 }
 
+mod module {
+  asteracea::component! {
+    pub Module()()
+    "Module body."
+  }
+}
+
+asteracea::component! {
+  Generic<T>(
+    //TODO: Hide this initially and show an ellipsis comment.
+    // Generic parameters must be used in an instance field.
+    // We can pretend this is the case using a constructor parameter capture.
+    // `PhantomData` is a type that provides fake storage semantics.
+    priv _phantom: PhantomData<T> = PhantomData::default(),
+  )()
+  "Generic body."
+}
+
 asteracea::component! {
   Outer()()
-  <*Inner>
+
+  [
+    <*Inner> "\n"
+    <*module::Module> "\n"
+    <*Generic::<()>> // Mind the turbofish! ::<> 🐟💨
+  ]
 }
 ```
+
+Explicit closing is supported:
+
+```rust asteracea=Outer
+//TODO: Hide repetition.
+use std::marker::PhantomData;
+
+asteracea::component! {
+  Inner()()
+  "Inner body."
+}
+
+mod module {
+  asteracea::component! {
+    pub Module()()
+    "Module body."
+  }
+}
+
+asteracea::component! {
+  Generic<T>(
+    // Generic parameters must be used in an instance field.
+    // We can pretend this is the case using a constructor parameter capture.
+    // `PhantomData` is a type that provides fake storage semantics.
+    priv _phantom: PhantomData<T> = PhantomData::default(),
+  )()
+  "Generic body."
+}
+
+asteracea::component! {
+  Outer()()
+
+  [
+    <*Inner /Inner> "\n"
+    <*module::Module /Module> "\n"
+    <*Generic::<()> /Generic> // 🪣
+  ]
+}
+```
+
+<!--
+I nearly put the FISHING POLE AND FISH emoji above, but that fest to cruel.
+The fish is chilling in a bucket now and will be released into a nicer environment before long.
+-->
 
 Using a component multiple times results in distinct instances:
 
 ```rust asteracea=Outer
-//TODO: Hide this initially.
 asteracea::component! {
   Inner()()
   "Inner body."
