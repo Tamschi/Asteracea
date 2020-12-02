@@ -5,7 +5,8 @@ Asteracea supports boolean and otherwise optional attributes with the following 
 ```rust asteracea=Classical
 asteracea::component! {
   Classic()(
-    class: Option<&'bump str> = None, //TODO: Use optional argument once available.
+    // This will be improved on in the next chapters.
+    class: Option<&'bump str>,
   )
 
   <div
@@ -17,7 +18,7 @@ asteracea::component! {
   Classical()()
 
   [
-    <*Classic> "\n"
+    <*Classic .class = {None}> "\n"
     <*Classic .class = {Some("classicist")}>
   ]
 }

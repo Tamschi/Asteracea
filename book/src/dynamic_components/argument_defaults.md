@@ -1,17 +1,28 @@
 # Argument Defaults
 
-Like in for example TypeScript, you can specify defaults parameters for constructor and render arguments:
+Asteracea provides multiple ways to make working with optional arguments easier.
 
-```rust asteracea=Greeting
+Like in for example TypeScript, you can specify default parameters for constructor and render arguments:
+
+```rust asteracea=Classical
 asteracea::component! {
-  Greeting()(
-    greeting: &str = "Hello!",
+  Classic()(
+    // This will be improved on in the next chapter.
+    class: Option<&'bump str> = None,
   )
 
-  <span
-    ."class" = "greeting"
-    !{greeting}
+  <div
+    ."class"? = {class}
   >
+}
+
+asteracea::component! {
+  Classical()()
+
+  [
+    <*Classic> "\n" // Parameter omitted.
+    <*Classic .class = {Some("classicist")}>
+  ]
 }
 ```
 

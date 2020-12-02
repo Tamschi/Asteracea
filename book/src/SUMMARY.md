@@ -21,7 +21,7 @@
   - [Predefined Lifetimes](./dynamic_components/predefined_lifetimes.md)
   - [Optional Attributes](./dynamic_components/optional_attributes.md)
   - [Argument Defaults](./dynamic_components/argument_defaults.md)
-  - [Optional Arguments]()
+  - [Optional Arguments](./dynamic_components/optional_arguments.md)
   - [Persistence 1: Constructor Parameter Captures]()
   - [Persistence 2: Body Captures](./dynamic_components/body_captures.md)
   - [Dependency Extraction](./dynamic_components/dependency_extraction.md)
