@@ -8,7 +8,7 @@ use syn::{
 	parse2, parse_quote,
 	token::Brace,
 	visit_mut::{visit_expr_mut, VisitMut},
-	Error, Ident, Result, Token, Visibility,
+	Error, ExprPath, Ident, Result, Token, Visibility,
 };
 use syn_mid::Block;
 use unquote::unquote;
@@ -32,8 +32,10 @@ impl<C> ParseWithContext for Component<C> {
 		unquote!(input, #^'open_span <* #$'open_span);
 
 		if input.peek(Ident) {
-			let name: Ident;
-			unquote!(input, #name);
+			// TypePath actually would lead to a better error message here (regarding ::<> use),
+			// but that gobbles up eventual nested child components.
+			let path: ExprPath;
+			unquote!(input, #path);
 
 			let (field_name, visibility) = if input.peek(Token![priv]) {
 				let field_name;
@@ -81,10 +83,10 @@ impl<C> ParseWithContext for Component<C> {
 				} else if input.peek(Token![/]) {
 					let closing_name: Ident;
 					unquote!(input, /#closing_name>);
-					if closing_name != name {
+					if closing_name != path.path.segments.last().ok_or_else(|| Error::new_spanned(path.clone(), "Strange: This path doesn't contain a last segment... Somehow. It's needed for named element closing, so maybe don't do that here."))?.ident {
 						return Err(Error::new_spanned(
 							closing_name,
-							format!("Expected `{}`", name.to_string()),
+							format!("Expected `{}`", path.path.segments.last().unwrap().ident.to_string()),
 						));
 					}
 					break;
@@ -94,7 +96,12 @@ impl<C> ParseWithContext for Component<C> {
 				} else {
 					return Err(Error::new(
 						input.span(),
-						format!("Expected .render_arg or `/{}>` or `>` (end of child component element)", name.to_string()),
+						if let Some(last) = path.path.segments.last() {
+							format!("Expected .render_arg or `/{}>` or `>` (end of child component element)", last.ident.to_string())
+						} else {
+							"Expected .render_arg or `>` (end of child component element)"
+								.to_string()
+						},
 					));
 				}
 			}
@@ -114,7 +121,7 @@ impl<C> ParseWithContext for Component<C> {
 			Ok(Self::Instantiated {
 			capture: call2_strict(
 				quote_spanned! {open_span=>
-						|#visibility #field_name = #name::new(&node, #name::new_args_builder()#(#new_params)*.build())?|
+						|#visibility #field_name = #path::new(&node, #path::new_args_builder()#(#new_params)*.build())?|
 					},
 					|input| CaptureDefinition::<C>::parse_with_context(input, cx),
 				)
@@ -122,7 +129,7 @@ impl<C> ParseWithContext for Component<C> {
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 				.unwrap(),
 			attached_access: parse2(quote_spanned! {open_span=>
-					.render(bump, #name::render_args_builder()#(#render_params)*.build())
+					.render(bump, #path::render_args_builder()#(#render_params)*.build())
 				})
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 		})
