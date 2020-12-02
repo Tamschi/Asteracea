@@ -167,7 +167,7 @@
                     <main>
                         <h1><a class="header" href="#ex-stateless-components-are-zero-sized" id="ex-stateless-components-are-zero-sized">EX: Stateless Components are Zero-Sized</a></h1>
 <details>
-<summary>This is an optional chaper.</summary>
+<summary>This is an optional chapter.</summary>
 <blockquote>
 <p>EX-chapters don't contain necessary information on how to use Asteracea.</p>
 <p>However, they may contain interesting information about performance characteristics or tricks you can use to make your app more maintainable.</p>
@@ -204,11 +204,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffdfc1d15f0.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffdfc1d15f0.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x7ffdfc1d15f8.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x7ffdfc1d15f0.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x7ffdfc1d15f0.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7fffddaa4cd0.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7fffddaa4cd0.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x7fffddaa4cd8.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x7fffddaa4cd0.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x7fffddaa4cd0.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
