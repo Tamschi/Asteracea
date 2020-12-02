@@ -1,7 +1,7 @@
 # EX: Stateless Components are Zero-Sized
 
 <details>
-<summary>EX-Chapters</summary>
+<summary>This is an optional chaper.</summary>
 
 > EX-chapters don't contain necessary information on how to use Asteracea.
 >
@@ -43,7 +43,7 @@ The layout here is somewhat implementation-defined, but generally what you shoul
 
 This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. `()` is Rust's [unit](https://doc.rust-lang.org/stable/std/primitive.unit.html) type, the most convenient [zero sized type](https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts). The same applies to components without instance fields, of course.
 
-Zero-sizing is transitive and has many interesting implications, but for our purposes the most notable one is that stateless components are _almost_¹ function-like at runtime. It's for this reason that Asteracea doesn't provide a special "slim" component syntax.
+Zero-sizing is transitive and has many interesting implications, but for our purposes the most notable one is that stateless components are *almost*¹ function-like at runtime. It's for this reason that Asteracea doesn't provide a special "slim" component syntax.
 
 > ¹ There is likely a small amount of overhead during instantiation due to the [dependency extraction](../dynamic_component/dependency_extraction.md) system.
 > The compiler is in theory allowed to optimise it away, but this isn't guaranteed.
