@@ -31,7 +31,41 @@ impl<C> ParseWithContext for Component<C> {
 		let open_span;
 		unquote!(input, #^'open_span <* #$'open_span);
 
-		if input.peek(Ident) {
+		if input.peek(Brace) {
+			let mut reference: Block;
+			unquote!(input, #reference);
+
+			// Suppress warning.
+			reference.brace_token.span = reference.brace_token.span.resolved_at(Span::mixed_site());
+
+			let mut render_params = vec![];
+			loop {
+				if input.peek(Token![.]) {
+					let name: Ident;
+					let mut block: Block;
+					unquote!(input, .#name = #block);
+
+					// Suppress warning.
+					block.brace_token.span = block.brace_token.span.resolved_at(Span::mixed_site());
+
+					render_params.push((name, block))
+				} else if input.peek(Token![>]) {
+					unquote!(input, >);
+					break;
+				} else {
+					return Err(Error::new(
+						input.span(),
+						"Expected .render_arg or `>` (end of child component element)",
+					));
+				}
+			}
+
+			Ok(Self::Instanced {
+				open_span,
+				reference,
+				render_params,
+			})
+		} else {
 			// TypePath actually would lead to a better error message here (regarding ::<> use),
 			// but that gobbles up eventual nested child components.
 			let path: ExprPath;
@@ -133,45 +167,6 @@ impl<C> ParseWithContext for Component<C> {
 				})
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 		})
-		} else if input.peek(Brace) {
-			let mut reference: Block;
-			unquote!(input, #reference);
-
-			// Suppress warning.
-			reference.brace_token.span = reference.brace_token.span.resolved_at(Span::mixed_site());
-
-			let mut render_params = vec![];
-			loop {
-				if input.peek(Token![.]) {
-					let name: Ident;
-					let mut block: Block;
-					unquote!(input, .#name = #block);
-
-					// Suppress warning.
-					block.brace_token.span = block.brace_token.span.resolved_at(Span::mixed_site());
-
-					render_params.push((name, block))
-				} else if input.peek(Token![>]) {
-					unquote!(input, >);
-					break;
-				} else {
-					return Err(Error::new(
-						input.span(),
-						"Expected .render_arg or `>` (end of child component element)",
-					));
-				}
-			}
-
-			Ok(Self::Instanced {
-				open_span,
-				reference,
-				render_params,
-			})
-		} else {
-			Err(Error::new(
-				input.span(),
-				"Expected identifier (component type) or `{`",
-			))
 		}
 	}
 }
