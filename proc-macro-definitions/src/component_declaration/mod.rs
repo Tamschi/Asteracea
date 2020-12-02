@@ -752,6 +752,12 @@ impl ComponentDeclaration {
 
 					#(#new_procedure)*
 
+					//FIXME: The eager heap allocation here isn't great.
+					// It would probably be sensible to make this lazy through
+					// a "seed" or handle placed on the stack that can be referenced
+					// by child nodes and derived from further. A dependency extraction
+					// or seed lifetime extension would then initialise the backing
+					// data structure as needed.
 					let #call_site_node = #call_site_node.into_arc();
 
 					Ok(Self {
