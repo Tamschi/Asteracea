@@ -11,4 +11,14 @@ component! {
 	>
 }
 
+asteracea::component! {
+	Classic()(
+		class?: &'bump str,
+	)
+
+	<div
+		."class"? = {class} // `Option<_>`-typed!
+	>
+}
+
 // TODO: Test output.

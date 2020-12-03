@@ -607,6 +607,7 @@ impl ComponentDeclaration {
 				    Pat::Ident(PatIdent{ ident, .. }) => ident,
 				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
+				optional: arg.argument.question,
 				ty: &*arg.argument.fn_arg.ty,
 				default: &arg.argument.default,
 			}))
@@ -620,6 +621,7 @@ impl ComponentDeclaration {
 				    Pat::Ident(PatIdent{ ident, .. }) => ident,
 				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
+				optional: arg.question,
 				ty: &*arg.fn_arg.ty,
 				default: &arg.default,
 			}))

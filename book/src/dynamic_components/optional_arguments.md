@@ -29,7 +29,7 @@ asteracea::component! {
 
 Note that this means that `None` can only be specfied by not setting the parameter at all! Fortunately, it's easy to do this conditionally in the same way as for optional attributes on HTML elements:
 
-```rust asteracea=Outer
+```rust //TODO:asteracea=Outer
 asteracea::component! {
   Inner()(
     class?: &'bump str

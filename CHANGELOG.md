@@ -32,6 +32,9 @@ TODO: Date
     <*{&self.name}> // Without `*new_arg`s!
     ```
 
+  * Optional arguments: `pattern?: Type`
+  * Default parameters: `pattern: Type = default`
+
 * Revisions:
   * Improved `Counter` example in the README.
 

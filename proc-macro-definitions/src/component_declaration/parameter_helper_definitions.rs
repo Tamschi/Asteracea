@@ -4,7 +4,7 @@ use proc_macro2::Span;
 use quote::quote_spanned;
 use std::{iter, mem};
 use syn::{
-	parse_quote,
+	parse2, parse_quote,
 	punctuated::Punctuated,
 	spanned::Spanned as _,
 	token::{Brace, Paren},
@@ -248,6 +248,7 @@ pub struct ParameterHelperDefintions {
 pub struct CustomArgument<'a> {
 	pub attrs: &'a [Attribute],
 	pub ident: &'a Ident,
+	pub optional: Option<Token![?]>,
 	pub ty: &'a Type,
 	pub default: &'a Option<(Token![=], Expr)>,
 }
@@ -265,9 +266,15 @@ impl ParameterHelperDefintions {
 		let argument_types = custom_arguments
 			.iter()
 			.map(|arg| {
-				arg.ty
+				let ty = arg
+					.ty
 					.clone()
-					.tap_mut(|ty| transform_type(ty, transient_lifetime, &mut impl_generics, true))
+					.tap_mut(|ty| transform_type(ty, transient_lifetime, &mut impl_generics, true));
+				if let Some(question) = arg.optional {
+					parse2(quote_spanned!(question.span()=> Option<#ty>)).unwrap()
+				} else {
+					ty
+				}
 			})
 			.collect::<Vec<_>>();
 
@@ -363,6 +370,7 @@ impl ParameterHelperDefintions {
 							&CustomArgument {
 								attrs,
 								ident,
+								optional,
 								ty: _,
 								default,
 							},
@@ -373,25 +381,32 @@ impl ParameterHelperDefintions {
 								//TODO?: Better optionals. Something like `ident?: Type` to express `ident: Option<Type> = None` but with the Option stripped for the setter?
 								//   Of course the counter-argument here is that I'd like to transition to native Rust named and default parameters eventually,
 								//   and it's unlikely that the language will get an option-stripping workaround that doesn't interfere with generic type inference.
-								attrs: if let Some((eq, default)) = default {
-									attrs
-										.iter()
-										.cloned()
-										.chain(
-											iter::once(
-												call2_strict(
-													quote_spanned!(eq.span=> #[builder(default = #default)]),
-													Attribute::parse_outer,
-												)
-												.unwrap()
-												.unwrap(),
-											)
-											.flatten(),
-										)
-										.collect()
-								} else {
-									attrs.to_vec()
-								},
+								attrs: iter::once(
+									call2_strict(
+										match (optional, default) {
+											(None, None) => {
+												quote_spanned!(ident.span()=> #[builder()])
+											}
+											(None, Some((eq, default))) => {
+												quote_spanned!(eq.span=> #[builder(default = #default)])
+											}
+											(Some(optional), None) => {
+												quote_spanned!(optional.span()=> #[builder(setter(strip_option), default)])
+											}
+											(Some(optional), Some((eq, default))) => {
+												quote_spanned! {optional.span.join(eq.span).unwrap_or(optional.span)=>
+													#[builder(setter(strip_option), default = Some(#default))]
+												}
+											}
+										},
+										Attribute::parse_outer,
+									)
+									.unwrap()
+									.unwrap(),
+								)
+								.flatten()
+								.chain(attrs.iter().cloned())
+								.collect(),
 								vis: Visibility::Inherited,
 								ident: Some(ident.clone()),
 								colon_token: Some(<Token![:]>::default()),

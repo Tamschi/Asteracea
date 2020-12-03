@@ -1,8 +1,8 @@
-use quote::quote;
 use syn::{
 	parse::{Parse, ParseStream},
-	Attribute, Error, Expr, FnArg, PatType, Result, Token, Visibility,
+	Attribute, Expr, PatType, Result, Token, Visibility,
 };
+use unquote::unquote;
 
 pub struct ConstructorArgument {
 	pub capture: Capture,
@@ -20,6 +20,7 @@ pub enum Capture {
 
 pub struct Argument {
 	pub fn_arg: PatType,
+	pub question: Option<Token![?]>,
 	pub default: Option<(Token![=], Expr)>,
 }
 
@@ -35,24 +36,20 @@ impl Parse for ConstructorArgument {
 				visibility => Capture::Yes(visibility),
 			}
 		};
+		let pat;
+		let question;
+		let colon_token;
+		let ty;
+		unquote!(input, #pat #question #colon_token #ty);
 		Ok(Self {
 			argument: Argument {
-				fn_arg: match input.parse::<FnArg>()? {
-					FnArg::Receiver(r) => {
-						return Err(Error::new_spanned(
-							r,
-							"Component constructors cannot expect `self` parameters.",
-						));
-					}
-					FnArg::Typed(pat_type)
-						if matches!(capture, Capture::No) || pat_type.attrs.is_empty() =>
-					{
-						PatType { attrs, ..pat_type }
-					}
-					FnArg::Typed(PatType { attrs, .. }) => {
-						return Err(Error::new_spanned(quote!(#(#attrs)*), "Attributes are currently not available in this position. Place them before the visibility modifier instead."));
-					}
+				fn_arg: PatType {
+					attrs,
+					pat,
+					colon_token,
+					ty,
 				},
+				question,
 				default: input.call(parse_default)?,
 			},
 			capture,
@@ -62,16 +59,22 @@ impl Parse for ConstructorArgument {
 
 impl Parse for Argument {
 	fn parse(input: ParseStream) -> Result<Self> {
+		//TODO: This function makes a pretty good case for declaration and call syntax for quote.
+		// Maybe something like `#let(pat)`, `#do(Attribute::parse_outer => attr)` and `#do let(parse_default => default)`.
+		let attrs = input.call(Attribute::parse_outer)?;
+		let pat;
+		let question;
+		let colon_token;
+		let ty;
+		unquote!(input, #pat #question #colon_token #ty);
 		Ok(Self {
-			fn_arg: match input.parse::<FnArg>()? {
-				FnArg::Receiver(r) => {
-					return Err(Error::new_spanned(
-						r,
-						"Components cannot expect `self` parameters.",
-					));
-				}
-				FnArg::Typed(pat_type) => pat_type,
+			fn_arg: PatType {
+				attrs,
+				pat,
+				colon_token,
+				ty,
 			},
+			question,
 			default: input.call(parse_default)?,
 		})
 	}
