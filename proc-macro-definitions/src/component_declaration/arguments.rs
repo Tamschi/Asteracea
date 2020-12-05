@@ -1,3 +1,4 @@
+use quote::ToTokens;
 use syn::{
 	parse::{Parse, ParseStream},
 	Attribute, Expr, PatType, Result, Token, Visibility,
@@ -17,6 +18,27 @@ pub enum Capture {
 	// Types that are Copy will still be usable in the constructor regardless, and for anything else there are more explicit captures.
 	Yes(syn::Visibility),
 }
+impl Parse for Capture {
+	fn parse(input: ParseStream) -> Result<Self> {
+		Ok(if input.peek(Token![priv]) {
+			input.parse::<Token![priv]>().unwrap();
+			Capture::Yes(Visibility::Inherited)
+		} else {
+			match input.parse()? {
+				Visibility::Inherited => Capture::No,
+				visibility => Capture::Yes(visibility),
+			}
+		})
+	}
+}
+impl ToTokens for Capture {
+	fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+		match self {
+			Capture::No => (),
+			Capture::Yes(visibility) => visibility.to_tokens(tokens),
+		}
+	}
+}
 
 pub struct Argument {
 	pub fn_arg: PatType,
@@ -26,31 +48,25 @@ pub struct Argument {
 
 impl Parse for ConstructorArgument {
 	fn parse(input: ParseStream) -> Result<Self> {
-		let attrs = input.call(Attribute::parse_outer)?;
-		let capture = if input.peek(Token![priv]) {
-			input.parse::<Token![priv]>().unwrap();
-			Capture::Yes(Visibility::Inherited)
-		} else {
-			match input.parse()? {
-				Visibility::Inherited => Capture::No,
-				visibility => Capture::Yes(visibility),
-			}
-		};
-		let pat;
-		let question;
-		let colon_token;
-		let ty;
-		unquote!(input, #pat #question #colon_token #ty);
+		unquote!(input,
+			#do let Attributes::parse_outer => attrs
+			#let capture
+			#let pat
+			#let question
+			#let colon_token
+			#let ty
+			#do let Default::parse => default
+		);
 		Ok(Self {
 			argument: Argument {
 				fn_arg: PatType {
-					attrs,
+					attrs: attrs.into_inner(),
 					pat,
 					colon_token,
 					ty,
 				},
 				question,
-				default: input.call(parse_default)?,
+				default: default.into_inner(),
 			},
 			capture,
 		})
@@ -59,31 +75,65 @@ impl Parse for ConstructorArgument {
 
 impl Parse for Argument {
 	fn parse(input: ParseStream) -> Result<Self> {
-		//TODO: This function makes a pretty good case for declaration and call syntax for quote.
-		// Maybe something like `#let(pat)`, `#do(Attribute::parse_outer => attr)` and `#do let(parse_default => default)`.
-		let attrs = input.call(Attribute::parse_outer)?;
-		let pat;
-		let question;
-		let colon_token;
-		let ty;
-		unquote!(input, #pat #question #colon_token #ty);
+		unquote!(input,
+			#do let Attributes::parse_outer => attrs
+			#let pat
+			#let question
+			#let colon_token
+			#let ty
+			#do let Default::parse => default
+		);
 		Ok(Self {
 			fn_arg: PatType {
-				attrs,
+				attrs: attrs.into_inner(),
 				pat,
 				colon_token,
 				ty,
 			},
 			question,
-			default: input.call(parse_default)?,
+			default: default.into_inner(),
 		})
 	}
 }
 
-fn parse_default(input: ParseStream) -> Result<Option<(Token![=], Expr)>> {
-	input
-		.parse::<Option<_>>()
-		.unwrap()
-		.map(|eq| Ok((eq, input.parse()?)))
-		.transpose()
+struct Attributes(Vec<Attribute>);
+impl Attributes {
+	fn parse_outer(input: ParseStream) -> Result<Self> {
+		Attribute::parse_outer(input).map(Self)
+	}
+	fn into_inner(self) -> Vec<Attribute> {
+		self.0
+	}
+}
+impl ToTokens for Attributes {
+	fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+		for attr in self.0.iter() {
+			attr.to_tokens(tokens)
+		}
+	}
+}
+
+struct Default(Option<(Token![=], Expr)>);
+impl Default {
+	fn into_inner(self) -> Option<(Token![=], Expr)> {
+		self.0
+	}
+}
+impl Parse for Default {
+	fn parse(input: ParseStream) -> Result<Self> {
+		input
+			.parse::<Option<_>>()
+			.unwrap()
+			.map(|eq| Ok((eq, input.parse()?)))
+			.transpose()
+			.map(Self)
+	}
+}
+impl ToTokens for Default {
+	fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+		if let Some((eq, expr)) = self.0.as_ref() {
+			eq.to_tokens(tokens);
+			expr.to_tokens(tokens);
+		}
+	}
 }
