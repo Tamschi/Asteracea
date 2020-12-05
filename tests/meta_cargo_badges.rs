@@ -5,19 +5,6 @@ mod constants;
 use constants::*;
 
 #[test]
-fn travis_ci() {
-	version_sync::assert_contains_regex!(
-		"Cargo.toml",
-		&format!(
-			r#"^travis-ci = \{{ repository = "{user}/{repo}", branch = "{branch}" \}}$"#,
-			user = USER,
-			repo = REPOSITORY,
-			branch = BRANCH,
-		)
-	);
-}
-
-#[test]
 fn is_it_maintained_issue_resolution() {
 	version_sync::assert_contains_regex!(
 		"Cargo.toml",

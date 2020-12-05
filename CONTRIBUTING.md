@@ -16,7 +16,7 @@ For anything else, please use the ["Custom issue"] template.
 ### CI
 
 This repository uses fairly extensive CI to make sure everything is in order.  
-Travis CI will automatically build and test your pull requests.
+GitHub Actions will automatically build and test your pull requests.
 
 **I recommend working on branches with a `-` or `/` in their name.**  
 The CI is configured slightly differently for them to make WIP code a bit easier.
