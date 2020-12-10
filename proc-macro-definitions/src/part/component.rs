@@ -235,6 +235,7 @@ impl ToTokens for Parameter {
 		let value_stmts = &self.value.stmts;
 		let value = quote_spanned! (self.value.brace_token.span.resolved_at(Span::mixed_site())=> {#value_stmts});
 		match self.question {
+			//FIXME: This branch isn't really needed in terms of program flow. It should be declared unreachable once unquote! doesn't hit it anymore.
 			Some(_) => value.to_tokens(tokens),
 			None => {
 				let dot = quote_spanned!(self.punct.span()=> .);
@@ -250,12 +251,10 @@ fn parameter_struct_expression(
 	make_builder: Expr,
 	parameters: &[Parameter],
 ) -> TokenStream {
-	let optional_names = parameters
+	if parameters
 		.iter()
-		.filter_map(|parameter| parameter.question.map(|_| parameter.ident.to_string()))
-		.collect::<HashSet<_>>();
-
-	if optional_names.is_empty() {
+		.all(|parameter| parameter.question.is_none())
+	{
 		let parameters = parameters
 			.iter()
 			.map(
@@ -267,7 +266,7 @@ fn parameter_struct_expression(
 				     value,
 				 }| {
 					let stmts = &value.stmts;
-					// Suppress unused-braces warning:
+					// Suppress unneeded-braces warning:
 					let value = quote_spanned! {value.brace_token.span.resolved_at(Span::mixed_site())=>
 						{#stmts}
 					};
@@ -281,41 +280,55 @@ fn parameter_struct_expression(
 			#make_builder#(#parameters)*.build()
 		}
 	} else {
-		let param_idents = parameters
-			.iter()
-			.enumerate()
-			.map(|(i, parameter)| Ident::new(format!("p{}", i).as_str(), parameter.ident.span()))
-			.collect::<Vec<_>>();
+		let mut deferred_names = HashSet::new();
 
-		let conditional_idents = param_idents
-			.iter()
-			.zip(parameters.iter())
-			.filter_map(|(ident, parameter)| parameter.question.map(|_| ident));
+		let mut deferred = vec![];
 
-		let (early_names, early_idents) = param_idents
-			.iter()
-			.zip(parameters.iter())
-			.filter_map(|(ident, parameter)| {
-				if !optional_names.contains(&parameter.ident.to_string()) {
-					Some((&parameter.ident, ident))
-				} else {
-					None
+		let mut output = quote_spanned! {fallback_span=>
+			let builder = #make_builder;
+		};
+
+		for parameter in parameters.iter() {
+			let stmts = &parameter.value.stmts;
+			// Suppress unneeded-braces warning.
+			let value = quote_spanned! {parameter.value.brace_token.span.resolved_at(Span::mixed_site())=> {#stmts}};
+			if parameter.question.is_some() {
+				deferred_names.insert(parameter.ident.to_string());
+			}
+			output.extend(if deferred_names.contains(&parameter.ident.to_string()) {
+				let ident = Ident::new(
+					&format!("deferred_parameter_{}", deferred.len()),
+					parameter.ident.span().resolved_at(Span::mixed_site()),
+				);
+				deferred.push(Deferred {
+					name: &parameter.ident,
+					deferred: ident.clone(),
+					conditional: parameter.question.is_some(),
+				});
+				quote_spanned! {parameter.punct.span().resolved_at(Span::mixed_site())=>
+					let #ident = #value;
+				}
+			} else {
+				let name = &parameter.ident;
+				quote_spanned! {parameter.punct.span().resolved_at(Span::mixed_site())=>
+					let builder = builder.#name(#value);
 				}
 			})
-			.unzip::<_, _, Vec<_>, Vec<_>>();
+		}
 
-		let (late_names, late_idents) = param_idents
-			.iter()
-			.zip(parameters.iter())
-			.filter_map(|(ident, parameter)| {
-				if optional_names.contains(&parameter.ident.to_string()) {
-					Some((&parameter.ident, ident))
-				} else {
-					None
-				}
-			})
-			.unzip::<_, _, Vec<_>, Vec<_>>();
+		dbg!(deferred);
+		todo!();
 
-		todo!()
+		quote_spanned!(fallback_span.resolved_at(Span::mixed_site())=> {
+			#output
+			builder.build()
+		})
 	}
+}
+
+#[derive(Debug)]
+struct Deferred<'a> {
+	name: &'a Ident,
+	deferred: Ident,
+	conditional: bool,
 }
