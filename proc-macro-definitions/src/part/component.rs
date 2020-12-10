@@ -24,7 +24,7 @@ pub enum Component<C> {
 	Instanced {
 		open_span: Span,
 		reference: Block,
-		render_params: Vec<(Ident, Block)>,
+		render_params: Vec<Parameter>,
 	},
 }
 impl<C> ParseWithContext for Component<C> {
@@ -44,14 +44,8 @@ impl<C> ParseWithContext for Component<C> {
 			let mut render_params = vec![];
 			loop {
 				if input.peek(Token![.]) {
-					let name: Ident;
-					let mut block: Block;
-					unquote!(input, .#name = #block);
-
-					// Suppress warning.
-					block.brace_token.span = block.brace_token.span.resolved_at(Span::mixed_site());
-
-					render_params.push((name, block))
+					unquote!(input, #let param);
+					render_params.push(param)
 				} else if input.peek(Token![>]) {
 					unquote!(input, >);
 					break;
@@ -133,20 +127,30 @@ impl<C> ParseWithContext for Component<C> {
 
 			cx.custom_child_element_count += 1;
 
+			let new_params = parameter_struct_expression(
+				open_span,
+				parse2(quote_spanned! (open_span=> #path::new_args_builder())).unwrap(),
+				new_params.as_slice(),
+			);
+
 			Ok(Self::Instantiated {
 			capture: call2_strict(
 				quote_spanned! {open_span=>
-						|#visibility #field_name = #path::new(&node, #path::new_args_builder()#(#new_params)*.build())?|
+						|#visibility #field_name = #path::new(&node, #new_params)?|
 					},
 					|input| CaptureDefinition::<C>::parse_with_context(input, cx),
 				)
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 				.unwrap(),
-			attached_access: parse2(quote_spanned! {open_span=>
-					.render(bump, #path::render_args_builder()#(#render_params)*.build())
-				})
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
+			attached_access: {
+				let render_params = parameter_struct_expression(
+					open_span.resolved_at(Span::mixed_site()),
+					parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).unwrap(),
+					render_params.as_slice(),
+				);
+				parse2(quote_spanned! (open_span=> .render(bump, #render_params)))
+				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?}
 		})
 		}
 	}
@@ -168,15 +172,18 @@ impl<C> Component<C> {
 				reference,
 				render_params,
 			} => {
-				let render_params = render_params
-					.iter()
-					.map(|(name, block)| quote_spanned!(*open_span=> .#name(#block)))
-					.collect::<Vec<_>>();
 				let binding = quote_spanned!(reference.brace_token.span.resolved_at(Span::mixed_site())=> let reference: &_ = #reference;);
 				let bump = quote_spanned!(*open_span=> bump);
+				let render_params = parameter_struct_expression(
+					open_span.resolved_at(Span::mixed_site()),
+					parse2(
+						quote_spanned!(open_span.resolved_at(Span::mixed_site())=> reference.__asteracea__ref_render_args_builder()),
+					).unwrap(),
+					render_params.as_slice(),
+				);
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					#binding
-					reference.render(#bump, reference.__asteracea__ref_render_args_builder()#(#render_params)*.build())
+					reference.render(#bump, #render_params)
 				}))
 				.unwrap();
 				visit_expr_mut(&mut SelfMassager, &mut expr);
@@ -196,7 +203,7 @@ impl VisitMut for SelfMassager {
 	}
 }
 
-struct Parameter {
+pub struct Parameter {
 	punct: Punct,
 	ident: Ident,
 	question: Option<Token![?]>,
@@ -228,7 +235,7 @@ impl ToTokens for Parameter {
 		let value_stmts = &self.value.stmts;
 		let value = quote_spanned! (self.value.brace_token.span.resolved_at(Span::mixed_site())=> {#value_stmts});
 		match self.question {
-			Some(_) => value.to_tokens(tokens), //TODO: Contextualise this properly!
+			Some(_) => value.to_tokens(tokens),
 			None => {
 				let dot = quote_spanned!(self.punct.span()=> .);
 				let ident = &self.ident;
@@ -241,7 +248,7 @@ impl ToTokens for Parameter {
 fn parameter_struct_expression(
 	fallback_span: Span,
 	make_builder: Expr,
-	parameters: Vec<Parameter>,
+	parameters: &[Parameter],
 ) -> TokenStream {
 	let optional_names = parameters
 		.iter()
@@ -250,17 +257,20 @@ fn parameter_struct_expression(
 
 	if optional_names.is_empty() {
 		let parameters = parameters
-			.into_iter()
+			.iter()
 			.map(
 				|Parameter {
 				     punct,
 				     ident,
-				     question,
-				     eq,
-				     mut value,
+				     question: _,
+				     eq: _,
+				     value,
 				 }| {
+					let stmts = &value.stmts;
 					// Suppress unused-braces warning:
-					value.brace_token.span = value.brace_token.span.resolved_at(Span::mixed_site());
+					let value = quote_spanned! {value.brace_token.span.resolved_at(Span::mixed_site())=>
+						{#stmts}
+					};
 					quote_spanned! {punct.span()=>
 						.#ident(#value)
 					}
