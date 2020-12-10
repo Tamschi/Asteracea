@@ -281,6 +281,41 @@ fn parameter_struct_expression(
 			#make_builder#(#parameters)*.build()
 		}
 	} else {
-		todo!("Optional parameters.")
+		let param_idents = parameters
+			.iter()
+			.enumerate()
+			.map(|(i, parameter)| Ident::new(format!("p{}", i).as_str(), parameter.ident.span()))
+			.collect::<Vec<_>>();
+
+		let conditional_idents = param_idents
+			.iter()
+			.zip(parameters.iter())
+			.filter_map(|(ident, parameter)| parameter.question.map(|_| ident));
+
+		let (early_names, early_idents) = param_idents
+			.iter()
+			.zip(parameters.iter())
+			.filter_map(|(ident, parameter)| {
+				if !optional_names.contains(&parameter.ident.to_string()) {
+					Some((&parameter.ident, ident))
+				} else {
+					None
+				}
+			})
+			.unzip::<_, _, Vec<_>, Vec<_>>();
+
+		let (late_names, late_idents) = param_idents
+			.iter()
+			.zip(parameters.iter())
+			.filter_map(|(ident, parameter)| {
+				if optional_names.contains(&parameter.ident.to_string()) {
+					Some((&parameter.ident, ident))
+				} else {
+					None
+				}
+			})
+			.unzip::<_, _, Vec<_>, Vec<_>>();
+
+		todo!()
 	}
 }
