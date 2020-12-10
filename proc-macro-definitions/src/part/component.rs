@@ -1,14 +1,17 @@
+use std::collections::HashSet;
+
 use super::{AttachedAccessExpression, CaptureDefinition};
 use crate::parse_with_context::{ParseContext, ParseWithContext};
 use call2_for_syn::call2_strict;
-use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned};
+use proc_macro2::{Punct, Spacing, Span, TokenStream};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::{
-	parse::ParseStream,
+	group::Parens,
+	parse::{Parse, ParseStream},
 	parse2, parse_quote,
-	token::Brace,
+	token::{Brace, Paren},
 	visit_mut::{visit_expr_mut, VisitMut},
-	Error, ExprPath, Ident, Result, Token, Visibility,
+	Error, Expr, ExprPath, Ident, Result, Token, Visibility,
 };
 use syn_mid::Block;
 use unquote::unquote;
@@ -93,27 +96,15 @@ impl<C> ParseWithContext for Component<C> {
 				}
 			};
 
-			let mut new_params = vec![];
-			let mut render_params = vec![];
+			let mut new_params: Vec<Parameter> = vec![];
+			let mut render_params: Vec<Parameter> = vec![];
 			loop {
 				if input.peek(Token![*]) {
-					let name: Ident;
-					let mut block: Block;
-					unquote!(input, *#name = #block);
-
-					// Suppress warning.
-					block.brace_token.span = block.brace_token.span.resolved_at(Span::mixed_site());
-
-					new_params.push((name, block))
+					unquote!(input, #let param);
+					new_params.push(param)
 				} else if input.peek(Token![.]) {
-					let name: Ident;
-					let mut block: Block;
-					unquote!(input, .#name = #block);
-
-					// Suppress warning.
-					block.brace_token.span = block.brace_token.span.resolved_at(Span::mixed_site());
-
-					render_params.push((name, block))
+					unquote!(input, #let param);
+					render_params.push(param)
 				} else if input.peek(Token![/]) {
 					let closing_name: Ident;
 					unquote!(input, /#closing_name>);
@@ -141,16 +132,6 @@ impl<C> ParseWithContext for Component<C> {
 			}
 
 			cx.custom_child_element_count += 1;
-
-			let new_params = new_params
-				.into_iter()
-				.map(|(name, block)| quote_spanned! (open_span=> .#name(#block)))
-				.collect::<Vec<_>>();
-
-			let render_params = render_params
-				.into_iter()
-				.map(|(name, block)| quote_spanned! (open_span=> .#name(#block)))
-				.collect::<Vec<_>>();
 
 			Ok(Self::Instantiated {
 			capture: call2_strict(
@@ -212,5 +193,84 @@ impl VisitMut for SelfMassager {
 		if i == "self" {
 			i.set_span(i.span().resolved_at(Span::call_site()))
 		}
+	}
+}
+
+struct Parameter {
+	punct: Punct,
+	ident: Ident,
+	question: Option<Token![?]>,
+	eq: Token![=],
+	value: Block,
+}
+
+impl Parse for Parameter {
+	fn parse(input: ParseStream) -> Result<Self> {
+		unquote! {input,
+			#let punct
+			#let ident
+			#let question
+			#let eq
+			#let value
+		};
+		Ok(Parameter {
+			punct,
+			ident,
+			question,
+			eq,
+			value,
+		})
+	}
+}
+
+impl ToTokens for Parameter {
+	fn to_tokens(&self, tokens: &mut TokenStream) {
+		let value_stmts = &self.value.stmts;
+		let value = quote_spanned! (self.value.brace_token.span.resolved_at(Span::mixed_site())=> {#value_stmts});
+		match self.question {
+			Some(_) => value.to_tokens(tokens), //TODO: Contextualise this properly!
+			None => {
+				let dot = quote_spanned!(self.punct.span()=> .);
+				let ident = &self.ident;
+				quote_spanned! (self.eq.span=> #dot#ident(#value)).to_tokens(tokens)
+			}
+		}
+	}
+}
+
+fn parameter_struct_expression(
+	fallback_span: Span,
+	make_builder: Expr,
+	parameters: Vec<Parameter>,
+) -> TokenStream {
+	let optional_names = parameters
+		.iter()
+		.filter_map(|parameter| parameter.question.map(|_| parameter.ident.to_string()))
+		.collect::<HashSet<_>>();
+
+	if optional_names.is_empty() {
+		let parameters = parameters
+			.into_iter()
+			.map(
+				|Parameter {
+				     punct,
+				     ident,
+				     question,
+				     eq,
+				     mut value,
+				 }| {
+					// Suppress unused-braces warning:
+					value.brace_token.span = value.brace_token.span.resolved_at(Span::mixed_site());
+					quote_spanned! {punct.span()=>
+						.#ident(#value)
+					}
+				},
+			)
+			.collect::<Vec<_>>();
+		quote_spanned! {fallback_span=>
+			#make_builder#(#parameters)*.build()
+		}
+	} else {
+		todo!("Optional parameters.")
 	}
 }

@@ -21,4 +21,29 @@ asteracea::component! {
 	>
 }
 
+asteracea::component! {
+  Inner()(
+	class?: &'bump str
+  )
+
+  <span ."class"? = {class}>
+}
+
+asteracea::component! {
+  Middle()(
+	class?: &'bump str
+  )
+
+  <*Inner .class? = {class}>
+}
+
+asteracea::component! {
+  Outer()()
+
+  [
+	<*Middle> "\n"
+	<*Middle .class = {"bourgeoisie"}>
+  ]
+}
+
 // TODO: Test output.
