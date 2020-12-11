@@ -226,7 +226,7 @@ impl<C> HtmlDefinition<C> {
 						(true, Some(Question { spans })) => {
 							quote_spanned! {spans[0].resolved_at(Span::mixed_site())=>{
 								let name = #key; // Always evaluate this.
-								if let Some(value) #eq #value {
+								if let Some(value) #eq #asteracea::ConditionalAttributeValue::into_str_option(#value) {
 									attrs.push(#asteracea::lignin_schema::lignin::Attribute {
 										name,
 										value,

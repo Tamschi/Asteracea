@@ -32,4 +32,15 @@ component! {
 	>
 }
 
+asteracea::component! {
+  Vis()(
+	visible: bool,
+  )
+
+  <div
+	."hidden"? = {!visible}
+	"#"
+  >
+}
+
 //TODO: Test output.

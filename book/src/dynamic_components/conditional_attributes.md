@@ -1,6 +1,6 @@
 # Conditional Attributes
 
-Asteracea supports conditionally setting boolean and otherwise optional attributes with the following syntax:
+Asteracea supports conditionally setting optional attributes with the following syntax:
 
 ```rust asteracea=Classical
 asteracea::component! {
@@ -24,6 +24,38 @@ asteracea::component! {
 }
 ```
 
-Instead of [`&'bump str`](), the required value type is [`Option<&'bump str>`]().
+Instead of [`&'bump str`](), the attribute value type here is [`Option<&'bump str>`](). If [`None`]() is provided, the attribute is omitted entirely from the rendered VDOM.
 
-If [`None`]() is provided, the attribute is omitted entirely from the rendered VDOM. To render a [boolean attribute](https://www.w3.org/TR/html52/infrastructure.html#sec-boolean-attributes) like `checked`, provide [`Some("")`]().
+This can be used to conditionally render a [boolean attribute](https://www.w3.org/TR/html52/infrastructure.html#sec-boolean-attributes) like `checked`, providing [`Some("")`]() to enable the attribute. However, it is usually more convenient to use a [`bool`]() directly:
+
+## Boolean Attributes
+
+To make dynamic boolean attributes like [`hidden`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/hidden) more convenient to use, conditional attributes also accept [`bool`]() values directly:
+
+```rust asteracea=Outer
+asteracea::component! {
+  Vis()(
+    visible: bool,
+  )
+
+  <div
+    ."hidden"? = {!visible}
+    "#"
+  >
+}
+
+asteracea::component! {
+  Outer()()
+
+  [
+    <*Vis .visible = {true}> "\n"
+    <*Vis .visible = {false}>
+  ]
+}
+```
+
+[`true`]() is converted to [`Some("")`]() and [`false`]() to [`None`]() in this case, [as per specification](https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#boolean-attributes).
+
+> Which types are compatible with conditional attributes is controlled by the [`ConditionalAttributeValue`]() trait.
+>
+> It is by default implemented for `bool` and `Option<&'bump str>`, and I recommend **not** extending this list unless the conversion is very fast.
