@@ -23,7 +23,7 @@ asteracea::component! {
 
 asteracea::component! {
   Inner()(
-	class?: &'bump str
+	class?: &'bump str,
   )
 
   <span ."class"? = {class}>
@@ -31,7 +31,7 @@ asteracea::component! {
 
 asteracea::component! {
   Middle()(
-	class?: &'bump str
+	class?: &'bump str,
   )
 
   <*Inner .class? = {class}>
