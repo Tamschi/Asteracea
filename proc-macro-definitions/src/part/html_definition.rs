@@ -223,10 +223,19 @@ impl<C> HtmlDefinition<C> {
 					let span = dot.span.resolved_at(Span::mixed_site());
 					match (has_optional_attributes, question) {
 						(false, Some(_)) => unreachable!(),
-						(true, Some(Question { spans })) => {
-							quote_spanned! {spans[0].resolved_at(Span::mixed_site())=>{
+						(true, Some(Question { .. })) => {
+							let value = match value {
+								AttributeValue::Literal(l) => quote_spanned! (l.span()=> l),
+								AttributeValue::Blocked(b) => {
+									let stmts = &b.stmts;
+									quote_spanned! {b.brace_token.span.resolved_at(Span::mixed_site())=>
+										#asteracea::ConditionalAttributeValue::into_str_option({ #stmts })
+									}
+								}
+							};
+							quote_spanned! {value.span().resolved_at(Span::mixed_site())=> {
 								let name = #key; // Always evaluate this.
-								if let Some(value) #eq #asteracea::ConditionalAttributeValue::into_str_option(#value) {
+								if let Some(value) #eq #value {
 									attrs.push(#asteracea::lignin_schema::lignin::Attribute {
 										name,
 										value,
