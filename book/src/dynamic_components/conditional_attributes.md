@@ -1,6 +1,6 @@
-# Optional Attributes
+# Conditional Attributes
 
-Asteracea supports boolean and otherwise optional attributes with the following syntax:
+Asteracea supports conditionally setting boolean and otherwise optional attributes with the following syntax:
 
 ```rust asteracea=Classical
 asteracea::component! {
