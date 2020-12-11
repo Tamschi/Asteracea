@@ -25,7 +25,7 @@ lignin-html = "0.0.2"
 line-col = "0.2.1"
 quote = "1.0.7"
 proc-macro2 = "1.0.24" #TODO
-mdbook = "0.4.3" #TODO
+mdbook = { version = "0.4.3", default-features = false, features = ["search"] }
 pulldown-cmark = "0.7.0" #TODO
 pulldown-cmark-to-cmark = "5.0.0" #TODO
 
@@ -34,7 +34,7 @@ version-sync = "0.9.1"
 
 [build-dependencies]
 asteracea = { path = ".." }
-mdbook = "0.4.3"
+mdbook = { version = "0.4.3", default-features = false, features = ["search"] }
 lignin-html = "0.0.2"
 line-col = "0.2.1"
 pulldown-cmark = "0.7.0"
