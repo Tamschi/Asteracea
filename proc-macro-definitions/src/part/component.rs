@@ -327,7 +327,7 @@ fn parameter_struct_expression(
 				builder_calls: Box::new(iter::empty()),
 			}));
 
-		for deferred in deferred.iter().cloned() {
+		for deferred in deferred.iter() {
 			if deferred.conditional {
 				match_arms = Box::new(match_arms.flat_map(move |previous| {
 					iter::once(MatchArm {
