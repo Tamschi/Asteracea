@@ -755,11 +755,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7fff999cc2d0.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7fff999cc2d0.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x7fff999cc2d8.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x7fff999cc2d0.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x7fff999cc2d0.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffdd76ce968.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffdd76ce968.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x7ffdd76ce970.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x7ffdd76ce968.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x7ffdd76ce968.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
@@ -787,7 +787,7 @@ The compiler is in theory allowed to optimise it away, but this isn't guaranteed
 </ul>
 <p>TODO: More details, especially regarding event handlers. Remove <code>Self: 'static</code> constraint.</p>
 <h1><a class="header" href="#conditional-attributes" id="conditional-attributes">Conditional Attributes</a></h1>
-<p>Asteracea supports conditionally setting boolean and otherwise optional attributes with the following syntax:</p>
+<p>Asteracea supports conditionally setting optional attributes with the following syntax:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -815,8 +815,42 @@ asteracea::component! {
 <pre><code class="language-html">&lt;DIV&gt;&lt;/DIV&gt;
 &lt;DIV class=&quot;classicist&quot;&gt;&lt;/DIV&gt;
 </code></pre>
-<p>Instead of <a href="dynamic_components/"><code>&amp;'bump str</code></a>, the required value type is <a href="dynamic_components/"><code>Option&lt;&amp;'bump str&gt;</code></a>.</p>
-<p>If <a href="dynamic_components/"><code>None</code></a> is provided, the attribute is omitted entirely from the rendered VDOM. To render a <a href="https://www.w3.org/TR/html52/infrastructure.html#sec-boolean-attributes">boolean attribute</a> like <code>checked</code>, provide <a href="dynamic_components/"><code>Some(&quot;&quot;)</code></a>.</p>
+<p>Instead of <a href="dynamic_components/"><code>&amp;'bump str</code></a>, the attribute value type here is <a href="dynamic_components/"><code>Option&lt;&amp;'bump str&gt;</code></a>. If <a href="dynamic_components/"><code>None</code></a> is provided, the attribute is omitted entirely from the rendered VDOM.</p>
+<p>This can be used to conditionally render a <a href="https://www.w3.org/TR/html52/infrastructure.html#sec-boolean-attributes">boolean attribute</a> like <code>checked</code>, providing <a href="dynamic_components/"><code>Some(&quot;&quot;)</code></a> to enable the attribute. However, it is usually more convenient to use a <a href="dynamic_components/"><code>bool</code></a> directly:</p>
+<h2><a class="header" href="#boolean-attributes" id="boolean-attributes">Boolean Attributes</a></h2>
+<p>To make dynamic boolean attributes like <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/hidden"><code>hidden</code></a> more convenient to use, conditional attributes also accept <a href="dynamic_components/"><code>bool</code></a> values directly:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  Vis()(
+    visible: bool,
+  )
+
+  &lt;div
+    .&quot;hidden&quot;? = {!visible}
+    &quot;#&quot;
+  &gt;
+}
+
+asteracea::component! {
+  Outer()()
+
+  [
+    &lt;*Vis .visible = {true}&gt; &quot;\n&quot;
+    &lt;*Vis .visible = {false}&gt;
+  ]
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">&lt;DIV&gt;#&lt;/DIV&gt;
+&lt;DIV hidden=&quot;&quot;&gt;#&lt;/DIV&gt;
+</code></pre>
+<p><a href="dynamic_components/"><code>true</code></a> is converted to <a href="dynamic_components/"><code>Some(&quot;&quot;)</code></a> and <a href="dynamic_components/"><code>false</code></a> to <a href="dynamic_components/"><code>None</code></a> in this case, <a href="https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#boolean-attributes">as per specification</a>.</p>
+<blockquote>
+<p>Which types are compatible with conditional attributes is controlled by the <a href="dynamic_components/"><code>ConditionalAttributeValue</code></a> trait.</p>
+<p>It is by default implemented for <code>bool</code> and <code>Option&lt;&amp;'bump str&gt;</code>, and I recommend <strong>not</strong> extending this list unless the conversion is very fast.</p>
+</blockquote>
 <h1><a class="header" href="#argument-defaults" id="argument-defaults">Argument Defaults</a></h1>
 <p>Asteracea provides multiple ways to make working with optional arguments easier.</p>
 <p>Like in for example TypeScript, you can specify default parameters for constructor and render arguments:</p>
