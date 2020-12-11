@@ -22,6 +22,7 @@
   - [Optional Attributes](./dynamic_components/optional_attributes.md)
   - [Argument Defaults](./dynamic_components/argument_defaults.md)
   - [Optional Arguments](./dynamic_components/optional_arguments.md)
+  - [Conditional Child Component Parameters](./dynamic_components/conditional_child_component_parameters.md)
   - [Persistence 1: Constructor Parameter Captures]()
   - [Persistence 2: Body Captures](./dynamic_components/body_captures.md)
   - [Dependency Extraction](./dynamic_components/dependency_extraction.md)
