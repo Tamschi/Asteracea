@@ -1,17 +1,17 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, iter};
 
 use super::{AttachedAccessExpression, CaptureDefinition};
 use crate::parse_with_context::{ParseContext, ParseWithContext};
 use call2_for_syn::call2_strict;
-use proc_macro2::{Punct, Spacing, Span, TokenStream};
+use proc_macro2::{Punct, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
-	group::Parens,
 	parse::{Parse, ParseStream},
 	parse2, parse_quote,
 	token::{Brace, Paren},
 	visit_mut::{visit_expr_mut, VisitMut},
-	Error, Expr, ExprPath, Ident, Result, Token, Visibility,
+	Error, Expr, ExprPath, Ident, Pat, PatIdent, PatTuple, PatTupleStruct, Result, Token,
+	Visibility,
 };
 use syn_mid::Block;
 use unquote::unquote;
@@ -94,11 +94,9 @@ impl<C> ParseWithContext for Component<C> {
 			let mut render_params: Vec<Parameter> = vec![];
 			loop {
 				if input.peek(Token![*]) {
-					unquote!(input, #let param);
-					new_params.push(param)
+					new_params.push(input.parse()?)
 				} else if input.peek(Token![.]) {
-					unquote!(input, #let param);
-					render_params.push(param)
+					render_params.push(input.parse()?)
 				} else if input.peek(Token![/]) {
 					let closing_name: Ident;
 					unquote!(input, /#closing_name>);
@@ -129,7 +127,8 @@ impl<C> ParseWithContext for Component<C> {
 
 			let new_params = parameter_struct_expression(
 				open_span,
-				parse2(quote_spanned! (open_span=> #path::new_args_builder())).unwrap(),
+				parse2(quote_spanned! (open_span=> #path::new_args_builder()))
+					.expect("new_params make_builder"),
 				new_params.as_slice(),
 			);
 
@@ -146,7 +145,7 @@ impl<C> ParseWithContext for Component<C> {
 			attached_access: {
 				let render_params = parameter_struct_expression(
 					open_span.resolved_at(Span::mixed_site()),
-					parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).unwrap(),
+					parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
 					render_params.as_slice(),
 				);
 				parse2(quote_spanned! (open_span=> .render(bump, #render_params)))
@@ -178,7 +177,7 @@ impl<C> Component<C> {
 					open_span.resolved_at(Span::mixed_site()),
 					parse2(
 						quote_spanned!(open_span.resolved_at(Span::mixed_site())=> reference.__asteracea__ref_render_args_builder()),
-					).unwrap(),
+					).expect("render_params make_builder 2"),
 					render_params.as_slice(),
 				);
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
@@ -203,6 +202,7 @@ impl VisitMut for SelfMassager {
 	}
 }
 
+#[derive(Clone)]
 pub struct Parameter {
 	punct: Punct,
 	ident: Ident,
@@ -235,8 +235,7 @@ impl ToTokens for Parameter {
 		let value_stmts = &self.value.stmts;
 		let value = quote_spanned! (self.value.brace_token.span.resolved_at(Span::mixed_site())=> {#value_stmts});
 		match self.question {
-			//FIXME: This branch isn't really needed in terms of program flow. It should be declared unreachable once unquote! doesn't hit it anymore.
-			Some(_) => value.to_tokens(tokens),
+			Some(_) => unreachable!(),
 			None => {
 				let dot = quote_spanned!(self.punct.span()=> .);
 				let ident = &self.ident;
@@ -288,7 +287,7 @@ fn parameter_struct_expression(
 			let builder = #make_builder;
 		};
 
-		for parameter in parameters.iter() {
+		for parameter in parameters.into_iter() {
 			let stmts = &parameter.value.stmts;
 			// Suppress unneeded-braces warning.
 			let value = quote_spanned! {parameter.value.brace_token.span.resolved_at(Span::mixed_site())=> {#stmts}};
@@ -301,7 +300,7 @@ fn parameter_struct_expression(
 					parameter.ident.span().resolved_at(Span::mixed_site()),
 				);
 				deferred.push(Deferred {
-					name: &parameter.ident,
+					name: parameter.ident.clone(),
 					deferred: ident.clone(),
 					conditional: parameter.question.is_some(),
 				});
@@ -316,19 +315,143 @@ fn parameter_struct_expression(
 			})
 		}
 
-		dbg!(deferred);
-		todo!();
+		let conditional_idents = deferred
+			.iter()
+			.filter(|deferred| deferred.conditional)
+			.map(|deferred| &deferred.deferred)
+			.collect::<Vec<_>>();
 
-		quote_spanned!(fallback_span.resolved_at(Span::mixed_site())=> {
+		let mut match_arms: Box<dyn '_ + CloneableIterator<'_, Item = MatchArm<'_>>> =
+			Box::new(iter::once(MatchArm {
+				pattern_content: Box::new(iter::empty()),
+				builder_calls: Box::new(iter::empty()),
+			}));
+
+		for deferred in deferred.iter().cloned() {
+			if deferred.conditional {
+				match_arms = Box::new(match_arms.flat_map(move |previous| {
+					iter::once(MatchArm {
+						pattern_content: Box::new(
+							previous.pattern_content.clone().chain(iter::once((
+								Pat::Ident(PatIdent {
+									attrs: vec![],
+									by_ref: None,
+									mutability: None,
+									ident: parse2(
+										quote_spanned!(deferred.name.span().resolved_at(Span::mixed_site())=> None),
+									)
+									.unwrap(),
+									subpat: None,
+								}),
+								Token![,](deferred.name.span()),
+							))),
+						),
+						builder_calls: previous.builder_calls.clone(),
+					})
+					.chain(iter::once(MatchArm {
+						pattern_content: Box::new(
+							previous.pattern_content.clone().chain(iter::once((
+								Pat::TupleStruct(PatTupleStruct {
+									attrs: vec![],
+									path: parse2(
+										quote_spanned!(deferred.name.span().resolved_at(Span::mixed_site())=> Some),
+									)
+									.expect("conditional parameter Some"),
+									pat: PatTuple {
+										attrs: vec![],
+										paren_token: Paren(
+											deferred.name.span().resolved_at(Span::mixed_site()),
+										),
+										elems: iter::once(Pat::Ident(PatIdent {
+											attrs: vec![],
+											by_ref: None,
+											mutability: None,
+											ident: deferred.deferred.clone(),
+											subpat: None,
+										}))
+										.collect(),
+									},
+								}),
+								Token![,](deferred.name.span()),
+							))),
+						),
+						builder_calls: Box::new(previous.builder_calls.chain(iter::once(
+							BuilderMethodCall {
+								builder_method: deferred.name.clone(),
+								deferred: deferred.deferred.clone(),
+							},
+						))),
+					}))
+				}));
+			} else {
+				match_arms = Box::new(match_arms.map(move |previous| MatchArm {
+					pattern_content: previous.pattern_content,
+					builder_calls: Box::new(previous.builder_calls.chain(iter::once(
+						BuilderMethodCall {
+							builder_method: deferred.name.clone(),
+							deferred: deferred.deferred.clone(),
+						},
+					))),
+				}))
+			}
+		}
+
+		let match_arms = match_arms.map(
+			|MatchArm {
+			     pattern_content,
+			     builder_calls,
+			 }| {
+				let (pats, commata) = pattern_content.unzip::<_, _, Vec<_>, Vec<_>>();
+				let (method_names, values) = builder_calls
+					.map(|builder_call| (builder_call.builder_method, builder_call.deferred))
+					.unzip::<_, _, Vec<_>, Vec<_>>();
+				quote_spanned! {fallback_span.resolved_at(Span::mixed_site())=>
+					(#(#pats#commata )*) => builder#(.#method_names(#values))*.build(),
+				}
+			},
+		);
+
+		quote_spanned! {fallback_span.resolved_at(Span::mixed_site())=> {
 			#output
-			builder.build()
-		})
+			match (#(#conditional_idents, )*) {
+				#(#match_arms)*
+			}
+		}}
 	}
 }
 
-#[derive(Debug)]
-struct Deferred<'a> {
-	name: &'a Ident,
+trait CloneableIterator<'a>: Iterator {
+	fn box_clone(&self) -> Box<dyn 'a + CloneableIterator<'a, Item = Self::Item>>;
+}
+impl<'a, T: 'a + Iterator> CloneableIterator<'a> for T
+where
+	T: Clone,
+{
+	fn box_clone(&self) -> Box<dyn 'a + CloneableIterator<'a, Item = Self::Item>> {
+		Box::new(self.clone())
+	}
+}
+impl<'a, Item: 'a> Clone for Box<dyn 'a + CloneableIterator<'a, Item = Item>> {
+	fn clone(&self) -> Self {
+		(**self).box_clone()
+	}
+}
+
+#[derive(Clone)]
+struct Deferred {
+	name: Ident,
 	deferred: Ident,
 	conditional: bool,
+}
+
+#[derive(Clone)]
+struct MatchArm<'a> {
+	pattern_content: Box<dyn 'a + CloneableIterator<'a, Item = (Pat, Token![,])>>,
+	builder_calls: Box<dyn 'a + CloneableIterator<'a, Item = BuilderMethodCall>>,
+}
+
+#[derive(Clone)]
+struct BuilderMethodCall {
+	builder_method: Ident,
+	deferred: Ident,
 }
