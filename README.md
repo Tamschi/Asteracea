@@ -139,21 +139,30 @@ fn schedule_render() { /* ... */ }
 
 component! {
   pub Counter(
+    /// The counter's starting value.
     initial: i32,
-    priv step: i32,
-    /// This component's class attribute value.
-    pub class: &'static str, // ⁵
-  )()
+    priv step: i32, // field from argument
+    pub enabled: bool = true, // default parameter
+  )(
+    // optional argument;
+    // `class` is `Option<&'bump str>` only inside this component, not its API.
+    class?: &'bump str,
+  )
 
-  |value = Cell::<i32>::new(initial)|; // shorthand capture
+  // shorthand capture; Defines a struct field.
+  |value = Cell::<i32>::new(initial)|;
 
   <div
-    ."class" = {self.class} // ⁶
-    "The current value is: " !{self.value()} <br> // Anything within curlies is plain Rust.
+    // conditional attribute from `Option<&'bump str>`
+    ."class"? = {class}
+
+    // Anything within curlies is plain Rust.
+    "The current value is: " !{self.value()} <br>
 
     <button
-      "+" !{self.step} // shorthand bump_format call
-      +"click" {
+      ."disabled"? = {!self.enabled} // boolean attribute from `bool`
+      "+" !{self.step} // shorthand `bump_format` call
+      +"click" { // event handler
         self.value.set(self.value() + self.step);
         schedule_render();
       }
@@ -161,6 +170,7 @@ component! {
   >
 }
 
+// Counter is a plain struct, so `impl` works as expected!
 impl Counter {
   pub fn value(&self) -> i32 {
     self.value.get()
@@ -170,10 +180,18 @@ impl Counter {
     self.value.set(value);
   }
 }
-```
 
-⁵ <https://github.com/Tamschi/Asteracea/issues/5>  
-⁶ <https://github.com/Tamschi/Asteracea/issues/6>
+
+asteracea::component! {
+  CounterUser()()
+
+  <*Counter
+    *initial = {0} // parameters by name
+    *step = {1}
+    .class = {"custom-counter"} // without Some(…)
+  >
+}
+```
 
 ## License
 
