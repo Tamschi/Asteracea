@@ -180,7 +180,7 @@ asteracea::component! {
     priv step: i32,
     pub enabled: bool = true,
   )(
-    class: &amp;'bump str, //TODO: Optional parameter, once available.
+    class?: &amp;'bump str,
   )
 
   |value = Cell::&lt;i32&gt;::new(initial)|;
@@ -188,11 +188,11 @@ asteracea::component! {
   //
 
   &lt;div
-    .&quot;class&quot; = {class}
-    .&quot;disabled&quot;? = {if self.enabled { None } else { Some(&quot;&quot;) }} //TODO: Allow booleans directly.
+    .&quot;class&quot;? = {class}
     &quot;The current value is: &quot; !{self.value()} &lt;br&gt;
 
     &lt;button
+      .&quot;disabled&quot;? = {!self.enabled}
       &quot;+&quot; !{self.step}
       +&quot;click&quot; {self.step()}
     &gt;
@@ -224,14 +224,13 @@ asteracea::component! {
     &lt;*Counter
       *initial = {0}
       *step = {1}
-      .class = {&quot;&quot;}
     &gt; &quot;\n&quot;
   &gt;
 }
 <span class="boring">}
 </span></code></pre></pre>
 <pre><code class="language-html">&lt;counter-user&gt;
-	&lt;DIV class=&quot;&quot;&gt;The current value is: 0&lt;BR&gt;&lt;BUTTON&gt;+1&lt;/BUTTON&gt;&lt;/DIV&gt;
+	&lt;DIV&gt;The current value is: 0&lt;BR&gt;&lt;BUTTON&gt;+1&lt;/BUTTON&gt;&lt;/DIV&gt;
 &lt;/counter-user&gt;
 </code></pre>
 <p>This guide assumes you have done some web development before, so some parts of the template should look familiar to you.</p>

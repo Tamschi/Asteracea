@@ -191,13 +191,13 @@ component! {
     priv step: i32,
   )(
     /// This component's class attribute value.
-    class: Option&lt;&amp;'bump str&gt; = None,
+    class?: &amp;'bump str,
   )
 
   |value = Cell::&lt;i32&gt;::new(initial)|; // shorthand capture
 
   &lt;div
-    .&quot;class&quot;? = {class} // ⁶
+    .&quot;class&quot;? = {class}
     &quot;The current value is: &quot; !{self.value()} &lt;br&gt; // Anything within curlies is plain Rust.
 
     &lt;button

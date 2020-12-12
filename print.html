@@ -226,7 +226,7 @@ asteracea::component! {
     priv step: i32,
     pub enabled: bool = true,
   )(
-    class: &amp;'bump str, //TODO: Optional parameter, once available.
+    class?: &amp;'bump str,
   )
 
   |value = Cell::&lt;i32&gt;::new(initial)|;
@@ -234,11 +234,11 @@ asteracea::component! {
   //
 
   &lt;div
-    .&quot;class&quot; = {class}
-    .&quot;disabled&quot;? = {if self.enabled { None } else { Some(&quot;&quot;) }} //TODO: Allow booleans directly.
+    .&quot;class&quot;? = {class}
     &quot;The current value is: &quot; !{self.value()} &lt;br&gt;
 
     &lt;button
+      .&quot;disabled&quot;? = {!self.enabled}
       &quot;+&quot; !{self.step}
       +&quot;click&quot; {self.step()}
     &gt;
@@ -270,14 +270,13 @@ asteracea::component! {
     &lt;*Counter
       *initial = {0}
       *step = {1}
-      .class = {&quot;&quot;}
     &gt; &quot;\n&quot;
   &gt;
 }
 <span class="boring">}
 </span></code></pre></pre>
 <pre><code class="language-html">&lt;counter-user&gt;
-	&lt;DIV class=&quot;&quot;&gt;The current value is: 0&lt;BR&gt;&lt;BUTTON&gt;+1&lt;/BUTTON&gt;&lt;/DIV&gt;
+	&lt;DIV&gt;The current value is: 0&lt;BR&gt;&lt;BUTTON&gt;+1&lt;/BUTTON&gt;&lt;/DIV&gt;
 &lt;/counter-user&gt;
 </code></pre>
 <p>This guide assumes you have done some web development before, so some parts of the template should look familiar to you.</p>
@@ -755,11 +754,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffdd76ce968.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffdd76ce968.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x7ffdd76ce970.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x7ffdd76ce968.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x7ffdd76ce968.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffe71db2948.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffe71db2948.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x7ffe71db2950.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x7ffe71db2948.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x7ffe71db2948.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
@@ -999,13 +998,13 @@ component! {
     priv step: i32,
   )(
     /// This component's class attribute value.
-    class: Option&lt;&amp;'bump str&gt; = None,
+    class?: &amp;'bump str,
   )
 
   |value = Cell::&lt;i32&gt;::new(initial)|; // shorthand capture
 
   &lt;div
-    .&quot;class&quot;? = {class} // ⁶
+    .&quot;class&quot;? = {class}
     &quot;The current value is: &quot; !{self.value()} &lt;br&gt; // Anything within curlies is plain Rust.
 
     &lt;button
