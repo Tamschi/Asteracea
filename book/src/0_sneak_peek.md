@@ -13,7 +13,7 @@ asteracea::component! {
     priv step: i32,
     pub enabled: bool = true,
   )(
-    class: &'bump str, //TODO: Optional parameter, once available.
+    class?: &'bump str,
   )
 
   |value = Cell::<i32>::new(initial)|;
@@ -21,11 +21,11 @@ asteracea::component! {
   //
 
   <div
-    ."class" = {class}
-    ."disabled"? = {if self.enabled { None } else { Some("") }} //TODO: Allow booleans directly.
+    ."class"? = {class}
     "The current value is: " !{self.value()} <br>
 
     <button
+      ."disabled"? = {!self.enabled}
       "+" !{self.step}
       +"click" {self.step()}
     >
@@ -57,7 +57,6 @@ asteracea::component! {
     <*Counter
       *initial = {0}
       *step = {1}
-      .class = {""}
     > "\n"
   >
 }
