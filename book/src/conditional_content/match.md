@@ -1,8 +1,8 @@
-# `match` Alternates
+# `match {…} [ … ]`
 
 Rust's `match` statements are available in Asteracea contexts, with slightly changed syntax:
 
-```TODO
+```TODOrust TODOasteracea=Routed
 // Not yet implemented and very much subject to change.
 asteracea::component! {
   pub Routed()()
