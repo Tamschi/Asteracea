@@ -2,7 +2,7 @@
 
 To conditionally render a node, you can use `if`-expressions whenever a [`Node<'bump>`]() is expected:
 
-```rust asteracea=Conditioned
+```TODOrust TODOasteracea=Conditioned
 asteracea::compontent! {
   Conditional()(
     present: bool,
@@ -26,7 +26,7 @@ Note the required curly braces (`{}`) around the condition and their absence on 
 
 To render multiple elements conditionally, use a multi node:
 
-```rust asteracea=Conditioned
+```TODOrust TODOasteracea=Conditioned
 asteracea::compontent! {
   Conditional()(
     present: bool,
@@ -52,9 +52,9 @@ asteracea::component! {
 
 ## Pattern-matching with `let`
 
-is also available, though this means that Asteracea's `if`-`{condition}` is *not* automatically a Rust block. Use `{({ statements })}` if you really need one, though wrapping the `if` in a `with { … } <…>`-expression is likely a better idea in terms of code organisation.
+is also available, though this means that Asteracea's `if`-`{condition}` is *not* automatically a Rust block. Use `{{ statements }}` if you really need one, though wrapping the `if` in a `with { … } <…>`-expression is likely a better idea in terms of code organisation.
 
-```rust asteracea=Conditioned
+```TODOrust TODOasteracea=Conditioned
 asteracea::compontent! {
   Conditional()(
     content?: impl FnOnce(&Bump<'bump>) -> Node<'bump>,

@@ -28,7 +28,7 @@
   - [Dependency Extraction](./dynamic_components/dependency_extraction.md)
   - [Event Handlers]()
   - [Fallible Components]()
-  - [`with {…} <…>`]()
+  - [`with {…} <…>`](./dynamic_components/with.md)
 - [3: Conditional Content]()
   - [`.param => <…>`]()
   - [`if {…} <…>`](./conditional_content/if.md)

@@ -2,6 +2,12 @@
 
 Welcome to the Asteracea guide book!
 
+> **This book is a work in progress!**
+>
+> Until the first minor version stabilisation, there likely will only be this `develop`-branch version published online as rendered version, which usually won't mach a version of the crate published to crates.io. (Respective versions are tagged and can be rendered offline using (from the repository's root directory) `cd book` and `cargo run`.)
+>
+> In addition to the missing chapters, URLs are subject to change, links have have not been filled in and code blocks without highlighting or rendered HTML output may show unimplemented features.
+
 ## Audience
 
 While using Asteracea effectively requires knowledge of Rust, this book is written also with non-Rustaceans in mind.
