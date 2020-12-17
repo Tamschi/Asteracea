@@ -19,7 +19,9 @@ asteracea::component! {
 }
 ```
 
-Bindings declared in the `with`-expression's are only in scope the one [`Node`]() creation, but with a multi node, you can use them for multiple elements:
+`with`-expressions can be used anywhere an [element expression](*) is expected.
+
+Bindings declared in the `with`-expression's are only in scope for the embedded [element expression](*), but with a multi node, you can use them for multiple elements:
 
 ```TODOrust TODOasteracea=WithExample
 asteracea::component! {
