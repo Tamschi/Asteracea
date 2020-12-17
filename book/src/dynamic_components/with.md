@@ -1,8 +1,8 @@
-# `with {…} <…>`
+# `with { …; } <…>`
 
 While you can in theory place nearly any Rust code inside `{}`-braces as part of Asteracea's grammar, this can be disorderly for more complex calculations or cumbersome where you want to reuse parts of a calculation.
 
-Instead, you can use a `with {…} <…>`-expression to run a number of Rust statements procedurally:
+Instead, you can use a `with { …; } <…>`-expression to run a number of Rust statements procedurally:
 
 ```rust asteracea=WithExample
 asteracea::component! {

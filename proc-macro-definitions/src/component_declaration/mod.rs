@@ -34,6 +34,11 @@ unzip_n!(5);
 unzip_n!(6);
 unzip_n!(7);
 
+mod kw {
+	syn::custom_keyword!(new);
+	syn::custom_keyword!(with);
+}
+
 pub struct ComponentDeclaration {
 	cx: ParseContext,
 	attributes: Vec<Attribute>,
@@ -48,7 +53,7 @@ pub struct ComponentDeclaration {
 	render_paren: Paren,
 	render_args: Punctuated<Argument, Token![,]>,
 	render_type: ReturnType,
-	constructor_block: Option<(Token![do], Block)>,
+	constructor_block: Option<(kw::new, kw::with, Block)>,
 	body: Part<ComponentRenderConfiguration>,
 	rhizome_extractions: Vec<TokenStream>,
 }
@@ -216,9 +221,13 @@ impl Parse for ComponentDeclaration {
 			}
 		}
 
-		let constructor_block = if input.peek(Token![do]) {
-			unquote!(input, #let do_ #let block);
-			Some((do_, block))
+		let constructor_block = if input.peek(kw::new) {
+			unquote! {input,
+				#let new
+				#let with
+				#let block
+			};
+			Some((new, with, block))
 		} else {
 			None
 		};
@@ -463,7 +472,8 @@ impl ComponentDeclaration {
 			rt @ ReturnType::Type(_, _) => rt.clone(),
 		};
 
-		let constructor_block_statements = constructor_block.map(|(_do, block)| block.stmts);
+		let constructor_block_statements =
+			constructor_block.map(|(_new, _with, block)| block.stmts);
 
 		let call_site_node = Ident::new("node", Span::call_site());
 

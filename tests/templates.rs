@@ -41,7 +41,7 @@ component! {
 		b_extractable: BExtractable,
 	)*/
 
-	do {
+	new with {
 		// Constructor block.
 	}
 
