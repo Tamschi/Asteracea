@@ -41,27 +41,8 @@ component! {
 		b_extractable: BExtractable,
 	)*/
 
-	do for 'NEW static {
-		let binding_for_static_initializers = "This is a static value.";
-	}
-	do for 'RENDER static {
-		// Can use 'NEW static captures, but not bindings, implicitly.
-	}
-	do for 'NEW {
-		// Can use 'NEW static captures.
-	}
-	do for 'RENDER {
-		// Can use 'RENDER static captures.
-
-		// This is a render procedure block.
-		// It's pasted near - but not quite at - the beginning of the `render` method's body, so you can't use inner documentation here.
-		// You should prefer outer documentation as shown above anyway, though.
-
-		// The main use is to prepare some variables you need for rendering (but those calculations should be lightweight!).
-		let scope_attribute = Attribute{
-			name: "scope-attribute",
-			value: static_attribute_value,
-		}; // Available in 'RENDER (see below).
+	do {
+		// Constructor block.
 	}
 
 	// This is a top-level capture expression.
@@ -73,15 +54,6 @@ component! {
 	/// (Outer documentation is a series of outer attributes, which means any outer attributes work here.)
 	|null: usize = {d.into()}|;
 
-	// You can bind static values that are valid in multiple contexts via a static capture:
-	|'NEW 'RENDER static static_attribute_value: &'static str = {binding_for_static_initializers}|;
-	|'RENDER static static_attribute: Attribute<'static> = {Attribute{name: "static-attribute", value: static_attribute_value}}|; // Implicit availability of 'NEW static captures in 'RENDER static! Doesn't cause a warning when absent.
-	|_captured_attribute: Attribute<'static> = {Attribute{name: "captured-attribute", value: static_attribute_value}}|; // Available in 'NEW.
-	// TODO: static mut, rc, rc mut
-	// TODO: `mut` should appear either behind `static` (use Mutex) or behind applicable keywords (use RwLock). Ideally warn if many different locks are used?
-	// TODO: Add option to specify `!Send` to create thread-keyed statics with single-threaded access primitives.
-	// TODO: On exclusive locks, find a way to specify they should allow reentrance from the same thread.
-
 	// Any node-producing part is valid here, but you need only one.
 	// (This is pretty lenient. Any nodes that produce a value matching the render return type will work.)
 	<div
@@ -89,7 +61,10 @@ component! {
 		."Attributes-are-written"="like this." // This must appear directly inside HTML elements, above all children.
 
 		//TODO: Support capturing directly in an attribute expression like so: .|...|
-		.{*static_attribute} // You can use Rust expressions here, too.
+		.{Attribute {
+			name: "an-attribute",
+			value: "a value",
+		}} // You can use Rust expressions here, too.
 		// Attached access expressions work on attributes, but it's not necessary to clone this anymore.
 
 		"You can add verbatim text like so."

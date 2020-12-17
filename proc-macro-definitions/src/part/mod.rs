@@ -6,6 +6,8 @@ mod event_binding;
 mod html_comment;
 mod html_definition;
 
+//TODO: Renamed module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
+
 pub use self::{
 	attached_access_expression::AttachedAccessExpression, capture_definition::CaptureDefinition,
 };
@@ -25,6 +27,7 @@ use syn::{
 	token::{Add, Brace, Bracket},
 	Error, Ident, LitStr, Token,
 };
+use syn_mid::Block;
 
 pub struct Part<C> {
 	body: PartBody<C>,
@@ -46,7 +49,8 @@ impl<C> Part<C> {
 			| PartBody::Expression(_, _)
 			| PartBody::Html(_)
 			| PartBody::Multi(_, _)
-			| PartBody::Text(_) => PartKind::Child,
+			| PartBody::Text(_)
+			| PartBody::With(_, _, _) => PartKind::Child,
 			PartBody::EventBinding(_) => PartKind::EventBinding,
 		}
 	}
@@ -75,6 +79,10 @@ impl<C> Part<C> {
 	}
 }
 
+mod kw {
+	syn::custom_keyword!(with);
+}
+
 #[allow(clippy::large_enum_variant)]
 pub enum PartBody<C> {
 	Comment(HtmlComment),
@@ -85,6 +93,7 @@ pub enum PartBody<C> {
 	Capture(CaptureDefinition<C>),
 	Multi(Bracket, Vec<Part<C>>),
 	EventBinding(EventBindingDefinition),
+	With(kw::with, Block, Option<Box<Part<C>>>),
 }
 
 //TODO: Split this off onto a wrapper (FragmetRootPart?) to avoid confusion.
@@ -159,16 +168,24 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 			))
 		} else if bump_format_shorthand::peek_from(input) {
 			bump_format_shorthand::parse_with_context(input, cx)?
+		} else if input.peek(kw::with) {
+			unquote::unquote! {input,
+				#let with
+				#let block
+			};
+			let part = Part::parse_with_context(input, cx)?.map(Box::new);
+			Some(PartBody::With(with, block, part))
 		} else {
 			return Err(Error::new(
 				lookahead.error().span(),
 				"Expected one of the following:
                 \"text\"
-                <element ...>
+                <element …>
                 {rust expression}
                 |declaration: Only = capture|;
                 |capture: With = declaration|(and, render, call)
-                +\"event_name\" = |event| handler()",
+				+\"event_name\" = |event| handler()
+				with { …; } <…>",
 			));
 		})
 	}
@@ -205,6 +222,16 @@ impl<C> PartBody<C> {
 				}
 			}
 			PartBody::EventBinding(definition) => definition.part_tokens(),
+			PartBody::With(with, block, part) => {
+				let isolate = quote_spanned!(with.span=> {});
+				let statements = &block.stmts;
+				let part_tokens = part.as_ref().map(|part| part.part_tokens(cx)).transpose()?;
+				quote_spanned!(block.brace_token.span=> {
+					#statements
+					#isolate
+					#part_tokens
+				})
+			}
 		})
 	}
 }

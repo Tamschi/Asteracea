@@ -9,14 +9,12 @@ mod parse_with_context;
 mod part;
 mod syn_ext;
 mod try_parse;
-mod yank_any;
 
 use self::{
 	component_declaration::ComponentDeclaration,
 	map_message::MapMessage,
 	part::{GenerateContext, Part},
 	try_parse::TryParse,
-	yank_any::YankAny,
 };
 use lazy_static::lazy_static;
 use proc_macro::TokenStream as TokenStream1;

@@ -1,5 +1,5 @@
 use crate::{
-	component_declaration::{FieldDefinition, TypeLevelFieldDefinition, TypeLevelFieldTarget},
+	component_declaration::FieldDefinition,
 	parse_with_context::{ParseContext, ParseWithContext},
 };
 use core::marker::PhantomData;
@@ -8,7 +8,7 @@ use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	braced, parenthesized,
 	parse::{ParseStream, Result},
-	punctuated, AttrStyle, Attribute, Error, Ident, Lifetime, Path, Token, Type,
+	punctuated, AttrStyle, Attribute, Error, Ident, Path, Token, Type,
 };
 use take_mut::take;
 
@@ -17,36 +17,12 @@ pub struct CaptureDefinition<C> {
 	_phantom: PhantomData<C>,
 }
 
-struct StaticInfo {
-	targets: Vec<TypeLevelFieldTarget>,
-}
-
 impl<C> ParseWithContext for CaptureDefinition<C> {
 	type Output = Option<Self>;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let mut attributes = input.call(Attribute::parse_outer)?;
 
 		input.parse::<Token![|]>()?;
-
-		let static_info = if !input.peek(Lifetime) {
-			None
-		} else {
-			let mut targets = Vec::new();
-			while input.peek(Lifetime) {
-				let target: TypeLevelFieldTarget = input.parse()?;
-				let lifetime = target.0.clone();
-				if !targets.iter().any(|x| *x == target) {
-					targets.push(target)
-				} else {
-					return Err(Error::new_spanned(
-						lifetime,
-						"Duplicate capture scope found.",
-					));
-				}
-			}
-			input.parse::<Token![static]>()?;
-			Some(StaticInfo { targets })
-		};
 
 		attributes.append(
 			&mut input
@@ -157,13 +133,7 @@ impl<C> ParseWithContext for CaptureDefinition<C> {
 			field_type,
 			initial_value,
 		};
-		let access = if let Some(static_info) = static_info {
-			cx.static_shared.push(TypeLevelFieldDefinition {
-				targets: static_info.targets,
-				field_definition,
-			});
-			access_name.map(ToTokens::into_token_stream)
-		} else {
+		let access = {
 			cx.field_definitions.push(field_definition);
 			access_name
 				.map(|access_name: Ident| quote_spanned!(access_name.span()=> self.#access_name))

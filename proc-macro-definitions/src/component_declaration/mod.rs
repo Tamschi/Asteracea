@@ -7,14 +7,14 @@ use crate::{
 	parse_with_context::{ParseContext, ParseWithContext},
 	part::GenerateContext,
 	syn_ext::{AddOptionExt, *},
-	warn, Configuration, MapMessage, Part, YankAny,
+	warn, Configuration, MapMessage, Part,
 };
 use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapNone as _};
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote, quote_spanned};
 use syn::{
-	braced, parenthesized,
+	parenthesized,
 	parse::{discouraged, Parse, ParseStream, Result},
 	parse2,
 	punctuated::Punctuated,
@@ -23,6 +23,8 @@ use syn::{
 	Attribute, Error, Generics, Ident, Lifetime, Pat, PatIdent, PatType, ReturnType, Token, Type,
 	Visibility, WhereClause, WherePredicate,
 };
+use syn_mid::Block;
+use unquote::unquote;
 use unzip_n::unzip_n;
 
 mod arguments;
@@ -46,52 +48,9 @@ pub struct ComponentDeclaration {
 	render_paren: Paren,
 	render_args: Punctuated<Argument, Token![,]>,
 	render_type: ReturnType,
-	static_shared_new_procedure: Vec<TokenStream>,
-	static_shared_render_procedure: Vec<TokenStream>,
-	new_procedure: Vec<TokenStream>,
-	render_procedure: Vec<TokenStream>,
+	constructor_block: Option<(Token![do], Block)>,
 	body: Part<ComponentRenderConfiguration>,
 	rhizome_extractions: Vec<TokenStream>,
-}
-
-pub struct TypeLevelFieldTarget(pub Lifetime);
-
-impl Parse for TypeLevelFieldTarget {
-	fn parse(input: ParseStream) -> Result<Self> {
-		let target: Lifetime = input.parse()?;
-		match &target.ident {
-			x if x == "NEW" => (),
-			x if x == "RENDER" => (),
-			_ => return Err(Error::new_spanned(target, "Expected 'NEW or 'RENDER.")),
-		};
-		Ok(Self(target))
-	}
-}
-
-impl PartialEq for TypeLevelFieldTarget {
-	fn eq(&self, rhs: &Self) -> bool {
-		self.0.ident == rhs.0.ident //TODO: Check if this goes by name only.
-	}
-}
-
-impl TypeLevelFieldTarget {
-	fn is_new(&self) -> bool {
-		self.0.ident == "NEW"
-	}
-	fn is_render(&self) -> bool {
-		self.0.ident == "RENDER"
-	}
-}
-
-impl ToTokens for TypeLevelFieldTarget {
-	fn to_tokens(&self, output: &mut TokenStream) {
-		self.0.to_tokens(output);
-	}
-}
-
-pub struct TypeLevelFieldDefinition {
-	pub targets: Vec<TypeLevelFieldTarget>,
-	pub field_definition: FieldDefinition,
 }
 
 pub struct FieldDefinition {
@@ -214,8 +173,6 @@ impl Parse for ComponentDeclaration {
 			..Default::default()
 		};
 
-		let mut render_procedure = Vec::default();
-
 		// Dependency extraction:
 		while let Some(ref_token) = input.parse::<Token![ref]>().ok() {
 			let rhizome_lookahead = input.lookahead1();
@@ -259,55 +216,12 @@ impl Parse for ComponentDeclaration {
 			}
 		}
 
-		let mut static_shared_new_procedure = Vec::default();
-		let mut static_shared_render_procedure = Vec::default();
-		let mut new_procedure = Vec::default();
-		while input.peek(Token![do]) {
-			input.parse::<Token![do]>()?;
-			input.parse::<Token![for]>()?;
-			let lifetime: TypeLevelFieldTarget = input.parse()?;
-
-			// TODO: This can definitely be abstracted into a try_parse function, which would also be helpful elsewhere.
-			let static_token = if input.peek(Token![static]) {
-				Some(input.parse::<Token![static]>()?)
-			} else {
-				None
-			};
-
-			let procedure = if lifetime.is_new() {
-				if static_token.is_some() {
-					&mut static_shared_new_procedure
-				} else {
-					&mut new_procedure
-				}
-			} else if lifetime.is_render() {
-				if static_token.is_some() {
-					&mut static_shared_render_procedure
-				} else {
-					&mut render_procedure
-				}
-			} else {
-				//TODO: When doing this, also evert the branches above so the order matches the execution order.
-				todo!("Refactor into TypeLevelFieldTarget so that this todo! isn't necessary anymore.");
-			};
-
-			{
-				let contents;
-				let brace = braced!(contents in input);
-				let contents: TokenStream = contents.parse()?;
-
-				procedure.push(quote_spanned! {brace.span=>
-					// The extra tokens are here to prevent useful weirdness.
-					// #contents can't be scoped since identifiers must be available later.
-					{}
-					#contents
-					// The documentation comment in the next line causes better error locality.
-					#[allow(unused_doc_comments)]
-					///
-					{}
-				});
-			}
-		}
+		let constructor_block = if input.peek(Token![do]) {
+			unquote!(input, #let do_ #let block);
+			Some((do_, block))
+		} else {
+			None
+		};
 
 		let body = loop {
 			match Part::parse_with_context(input, &mut cx)? {
@@ -367,17 +281,13 @@ impl Parse for ComponentDeclaration {
 			render_paren,
 			render_args,
 			render_type,
-			static_shared_new_procedure,
-			static_shared_render_procedure,
-			new_procedure,
-			render_procedure,
+			constructor_block,
 			body,
 			rhizome_extractions,
 		})
 	}
 }
 
-//TODO: Make sure NewStatics and RenderStatics are properly hidden so that they can't collide.
 impl ComponentDeclaration {
 	#[allow(clippy::cognitive_complexity)]
 	pub fn into_tokens(self) -> Result<TokenStream> {
@@ -385,7 +295,6 @@ impl ComponentDeclaration {
 			cx:
 				ParseContext {
 					component_name,
-					static_shared,
 					allow_non_snake_case_on_structure_workaround,
 					field_definitions,
 					event_binding_count: _,
@@ -403,10 +312,7 @@ impl ComponentDeclaration {
 			render_paren,
 			render_args,
 			render_type,
-			static_shared_new_procedure,
-			static_shared_render_procedure,
-			new_procedure,
-			render_procedure,
+			constructor_block,
 			body,
 			rhizome_extractions,
 		} = self;
@@ -414,155 +320,6 @@ impl ComponentDeclaration {
 		let component_name = component_name.unwrap();
 
 		let asteracea = asteracea_ident(Span::call_site());
-
-		let (new_statics, post_new_statics) = static_shared
-			.into_iter()
-			.partition::<Vec<_>, _>(|ss| ss.targets.iter().any(TypeLevelFieldTarget::is_new));
-
-		let (render_statics, other_statics) = post_new_statics
-			.into_iter()
-			.partition::<Vec<_>, _>(|ss| ss.targets.iter().any(TypeLevelFieldTarget::is_render));
-
-		assert!(other_statics.is_empty());
-
-		//TODO: Refactor.
-		let (
-			new_statics,
-			borrow_new_statics_for_render_statics_or_in_new,
-			borrow_new_statics_in_render,
-		) = if new_statics.is_empty() {
-			(None, None, None)
-		} else {
-			let mut any_render = false;
-			let (
-				attributes,
-				_visibilities, //TODO: Expose these as getter on the component struct if public, or something.
-				names,
-				types,
-				values,
-				new_pattern_parts,
-				render_pattern_parts,
-			) = new_statics
-				.into_iter()
-				.map(|mut ss| {
-					let field_name = ss.field_definition.name;
-					(
-						ss.field_definition.attributes,
-						ss.field_definition.visibility,
-						field_name.clone(),
-						ss.field_definition.field_type,
-						ss.field_definition.initial_value,
-						if let Some(target) = ss.targets.yank_any(TypeLevelFieldTarget::is_new) {
-							let mut name = field_name.clone();
-							name.set_span(target.0.ident.span());
-							quote!(#name)
-						} else {
-							unreachable!();
-						},
-						if let Some(target) = ss.targets.iter().find(|x| x.is_render()) {
-							any_render = true;
-							let mut field_name = field_name;
-							field_name.set_span(target.0.ident.span());
-							Some(quote!(#field_name,))
-						} else {
-							None
-						},
-					)
-				})
-				.unzip_n_vec();
-			(
-				Some(quote! {
-					struct NewStatics {
-						#(#(#attributes)* #names: #types,)*
-					}
-
-					#asteracea::lazy_static::lazy_static! {
-						static ref NEW_STATICS: NewStatics = {
-							#(#static_shared_new_procedure)*
-							NewStatics {
-								#(#names: {#values},)*
-							}
-						};
-					}
-				}),
-				Some(quote! {
-					let NewStatics {
-						#(#new_pattern_parts,)*
-					} = &*NEW_STATICS;
-				}),
-				if !any_render {
-					None // Don't hit the Once if all is nothing.
-				} else {
-					Some(quote! {
-						let NewStatics {
-							#(#render_pattern_parts)*
-							..
-						} = &*NEW_STATICS;
-					})
-				},
-			)
-		};
-
-		//TODO: Refactor.
-		let (render_statics, borrow_render_statics_in_render) = if render_statics.is_empty() {
-			(None, None)
-		} else {
-			let (
-				attributes,
-				_visibilities, //TODO: Expose these as getter on the component struct if public, or something.
-				names,
-				types,
-				values,
-				render_pattern_parts,
-			) = render_statics
-				.into_iter()
-				.map(|mut ss| {
-					let field_name = ss.field_definition.name;
-					(
-						ss.field_definition.attributes,
-						ss.field_definition.visibility,
-						field_name.clone(),
-						ss.field_definition.field_type,
-						ss.field_definition.initial_value,
-						if let Some(target) = ss.targets.yank_any(TypeLevelFieldTarget::is_render) {
-							let mut field_name = field_name;
-							field_name.set_span(target.0.ident.span());
-							quote!(#field_name)
-						} else {
-							unreachable!();
-						},
-					)
-				})
-				.unzip_n_vec();
-			(
-				Some(quote! {
-					struct RenderStatics {
-						#(#(#attributes)* #names: #types,)*
-					}
-
-					#asteracea::lazy_static::lazy_static! {
-						static ref RENDER_STATICS: RenderStatics = {
-
-							// The primary use is in the constructor, so while the identifiers are available here for convenience, that shouldn't raise warnings.
-							// If value is to be used only here, then it should go into a `do for 'RENDER static` procedure instead.
-							#[allow(unused_variables)]
-							#borrow_new_statics_for_render_statics_or_in_new
-
-							#(#static_shared_render_procedure)*
-
-							RenderStatics {
-								#(#names: {#values},)*
-							}
-						};
-					}
-				}),
-				Some(quote! {
-					let RenderStatics {
-						#(#render_pattern_parts,)*
-					} = &*RENDER_STATICS;
-				}),
-			)
-		};
 
 		let allow_non_snake_case_on_structure_workaround =
 			if allow_non_snake_case_on_structure_workaround {
@@ -706,15 +463,14 @@ impl ComponentDeclaration {
 			rt @ ReturnType::Type(_, _) => rt.clone(),
 		};
 
+		let constructor_block_statements = constructor_block.map(|(_do, block)| block.stmts);
+
 		let call_site_node = Ident::new("node", Span::call_site());
 
 		let (component_impl_generics, component_type_generics, component_where_clause) =
 			component_generics.split_for_impl();
 
 		Ok(quote_spanned! {Span::mixed_site()=>
-			#new_statics
-			#render_statics
-
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::typed_builder::TypedBuilder)]
 			#[builder(doc)]
@@ -746,13 +502,13 @@ impl ComponentDeclaration {
 						__asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
 				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
-					#borrow_new_statics_for_render_statics_or_in_new
-
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
 					#(#rhizome_extractions)*
 					let mut #call_site_node = #call_site_node;
 
-					#(#new_procedure)*
+					{} // Isolate constrcutor block.
+					#constructor_block_statements
+					{} // Dito.
 
 					//FIXME: The eager heap allocation here isn't great.
 					// It would probably be sensible to make this lazy through
@@ -782,11 +538,8 @@ impl ComponentDeclaration {
 						__asteracea__phantom: _,
 					}: #render_args_name#render_args_generic_args,
 				) #render_type {
-					//TODO: Captures with overlapping visibility should have their names collide.
-					#borrow_new_statics_in_render
-					#borrow_render_statics_in_render
-					#(#render_procedure)*
-					(#body)
+					{} // Isolation against inner attributes.
+					#body
 				}
 
 				pub fn render_args_builder#render_args_builder_generics()

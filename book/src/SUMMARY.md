@@ -15,7 +15,7 @@
   - [CSS Scoping]()
   - [EX: Stateless Components are Zero-Sized](./static_components/ex_stateless_components_are_zero-sized.md)
 - [2: Dynamic Components]()
-  - [`do {…}` (Constructor Block)](./dynamic_components/do.md)
+  - [`do {…}` (Constructor Block)](./dynamic_components/do-constructor_block.md)
   - [Render Parameters]()
   - [Constructor Parameters]()
   - [Predefined Lifetimes](./dynamic_components/predefined_lifetimes.md)

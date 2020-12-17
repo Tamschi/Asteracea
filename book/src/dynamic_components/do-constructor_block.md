@@ -18,7 +18,7 @@ asteracea::component! {
 
 Code inside the `do`-block has access to constructor parameters, and `let`-bindings from the constructor block are in scope for capture initialisers:
 
-```rust asteracea=QuoteHolder
+```rust asteracea=Quoter
 asteracea::component! {
   pub QuoteHolder(
     text: &str,
@@ -34,5 +34,11 @@ asteracea::component! {
   |quote: String = { quoted }|;
 
   !{self.quote}
+}
+
+asteracea::component! {
+  pub Quoter()()
+
+  <*QuoteHolder *text = { "This text is quoted." }>
 }
 ```

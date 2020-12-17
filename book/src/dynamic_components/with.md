@@ -4,17 +4,17 @@ While you can in theory place nearly any Rust code inside `{}`-braces as part of
 
 Instead, you can use a `with {…} <…>`-expression to run a number of Rust statements procedurally:
 
-```TODOrust TODOasteracea=WithExample
+```rust asteracea=WithExample
 asteracea::component! {
   pub WithExample()()
 
   with {
-    let tree_types = "oak";
+    let tree_type = "oak";
     let leaves_state = "fallen";
   } <div
-    .class = !"{} {}"{tree_types, leaves_state}
+    //TODO: ."class" = !"{} {}"{tree_type, leaves_state}
     !"The tree in the garden is an {}.\n"{ tree_type }
-    !"The {tree}'s leaves are {leaves}."{ tree = tree_type, leaves = leaves_state }
+    !"The {}'s leaves are {}."{tree_type, leaves_state} //TODO: Support named formatting parameters.
   >
 }
 ```
@@ -23,17 +23,17 @@ asteracea::component! {
 
 Bindings declared in the `with`-expression's are only in scope for the embedded [element expression](*), but with a multi node, you can use them for multiple elements:
 
-```TODOrust TODOasteracea=WithExample
+```rust asteracea=WithExample
 asteracea::component! {
   pub WithExample()()
 
   <div
     with {
-      let tree_types = "oak";
+      let tree_type = "oak";
       let leaves_state = "fallen";
     } [
       !"The tree in the garden is an {}.\n"{ tree_type }
-      !"The {tree}'s leaves are {leaves}."{ tree = tree_type, leaves = leaves_state }
+      !"The {}'s leaves are {}."{tree_type, leaves_state} //TODO: Support named formatting parameters.
     ]
   >
 }

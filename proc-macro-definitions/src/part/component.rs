@@ -287,7 +287,7 @@ fn parameter_struct_expression(
 			let builder = #make_builder;
 		};
 
-		for parameter in parameters.into_iter() {
+		for parameter in parameters.iter() {
 			let stmts = &parameter.value.stmts;
 			// Suppress unneeded-braces warning.
 			let value = quote_spanned! {parameter.value.brace_token.span.resolved_at(Span::mixed_site())=> {#stmts}};
