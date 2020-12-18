@@ -165,21 +165,41 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#match----" id="match----"><code>match {…} [ … ]</code></a></h1>
+                        <h1><a class="header" href="#match----" id="match----"><code>match &lt;…&gt; [ … ]</code></a></h1>
 <p>Rust's <code>match</code> statements are available in Asteracea contexts, with slightly changed syntax:</p>
-<pre><code class="language-TODOrust TODOasteracea=Routed">// Not yet implemented and very much subject to change.
-asteracea::component! {
-  pub Routed()()
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>enum Enum&lt;'a&gt; {
+  Text(&amp;'a str),
+  Other,
+}
 
-  match &lt;*Router&gt; [
-    Router::INDEX | &quot;&quot; =&gt; { unreachable!() }
-    &quot;bio&quot; =&gt; &lt;*Bio&gt;
-    &quot;projects&quot; =&gt; &lt;*Projects&gt;
-    &quot;404&quot; =&gt; &lt;*Missing priv missing&gt;
-    other =&gt; &lt;*{&amp;self.missing .root={other}}&gt;
+asteracea::component! {
+  MatchEnum()(
+    enum_value: Enum&lt;'_&gt;,
+  )
+
+  match {enum_value} [
+    Enum::Text(text) =&gt; &lt;span !{text}&gt;
+    Enum::Other =&gt; &lt;div .&quot;class&quot; = &quot;placeholder&quot;&gt;
   ]
 }
+
+asteracea::component! {
+  pub Matched()()
+
+  [
+    &lt;*MatchEnum .enum_value = { Enum::Text(&quot;Hello!&quot;) }&gt; &quot;\n&quot;
+    &lt;*MatchEnum .enum_value = { Enum::Other }&gt;
+  ]
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">&lt;SPAN&gt;Hello!&lt;/SPAN&gt;
+&lt;DIV class=&quot;placeholder&quot;&gt;&lt;/DIV&gt;
 </code></pre>
+<!-- TODO: Explain how matching on components, for example a router, works. Router::INDEX = "\0" -->
 
                     </main>
 
