@@ -484,12 +484,12 @@ impl ComponentDeclaration {
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::typed_builder::TypedBuilder)]
 			#[builder(doc)]
-			pub struct #new_args_name#new_args_generics #new_args_body
+			#visibility struct #new_args_name#new_args_generics #new_args_body
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::typed_builder::TypedBuilder)]
 			#[builder(doc)]
-			pub struct #render_args_name#render_args_generics #render_args_body
+			#visibility struct #render_args_name#render_args_generics #render_args_body
 
 			#allow_non_snake_case_on_structure_workaround
 			#(#attributes)*
