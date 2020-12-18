@@ -1,18 +1,32 @@
-# `match {…} [ … ]`
+# `match <…> [ … ]`
 
 Rust's `match` statements are available in Asteracea contexts, with slightly changed syntax:
 
-```TODOrust TODOasteracea=Routed
-// Not yet implemented and very much subject to change.
-asteracea::component! {
-  pub Routed()()
+```rust asteracea=Matched
+enum Enum<'a> {
+  Text(&'a str),
+  Other,
+}
 
-  match <*Router> [
-    Router::INDEX | "" => { unreachable!() }
-    "bio" => <*Bio>
-    "projects" => <*Projects>
-    "404" => <*Missing priv missing>
-    other => <*{&self.missing .root={other}}>
+asteracea::component! {
+  MatchEnum()(
+    enum_value: Enum<'_>,
+  )
+
+  match {enum_value} [
+    Enum::Text(text) => <span !{text}>
+    Enum::Other => <div ."class" = "placeholder">
+  ]
+}
+
+asteracea::component! {
+  pub Matched()()
+
+  [
+    <*MatchEnum .enum_value = { Enum::Text("Hello!") }> "\n"
+    <*MatchEnum .enum_value = { Enum::Other }>
   ]
 }
 ```
+
+<!-- TODO: Explain how matching on components, for example a router, works. Router::INDEX = "\0" -->

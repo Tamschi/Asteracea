@@ -41,7 +41,7 @@ TODO: Date
   * Boolean attributes: `."attribute-name"? = {bool}`
   * `new with { …; }` blocks to insert statements into the constructor
   * `with { …; } <…>` expressions to insert statements into the `.render` method
-  * Conditional content via `if {…} <…>` and `if …… else <…>`
+  * Conditional content via `if {…} <…>`, `if …… else <…>` and `match <…> [ … ]`
 
 * Revisions:
   * Improved `Counter` example in the README.

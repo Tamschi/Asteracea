@@ -25,8 +25,9 @@ use quote::{quote, quote_spanned};
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
+	spanned::Spanned as _,
 	token::{Add, Brace, Bracket},
-	Error, Expr, Ident, LitStr, Token,
+	Attribute, Error, Expr, Ident, LitStr, Pat, Token,
 };
 use syn_mid::Block;
 use unquote::unquote;
@@ -51,6 +52,7 @@ impl<C> Part<C> {
 			| PartBody::Expression(_, _)
 			| PartBody::Html(_)
 			| PartBody::If(_, _, _, _)
+			| PartBody::Match(_, _, _, _)
 			| PartBody::Multi(_, _)
 			| PartBody::Text(_)
 			| PartBody::With(_, _, _) => PartKind::Child,
@@ -100,6 +102,18 @@ pub enum PartBody<C> {
 	),
 	Expression(Brace, TokenStream),
 	Capture(CaptureDefinition<C>),
+	Match(
+		Token![match],
+		Box<Part<C>>,
+		Bracket,
+		Vec<(
+			Vec<Attribute>,
+			Pat,
+			Option<(Token![if], Expr)>,
+			Token![=>],
+			Box<Part<C>>,
+		)>,
+	),
 	Multi(Bracket, Vec<Part<C>>),
 	EventBinding(EventBindingDefinition),
 	With(kw::with, Block, Option<Box<Part<C>>>),
@@ -115,7 +129,7 @@ impl<C: Configuration> Parse for Part<C> {
 			} else {
 				Err(Error::new(
 					Span::call_site(),
-					"The top-level part must return a value.",
+					"This part must return a value.", //TODO: Better message or better yet program restructuring.
 				))
 			}
 		})
@@ -158,6 +172,29 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 				.map(|else_| Result::Ok((else_, input.parse()?)))
 				.transpose()?;
 			Some(PartBody::If(if_, condition, Box::new(then), else_arm))
+		} else if input.peek(Token![match]) {
+			//FIXME: This will be possible much more nicely once unquote is better.
+			unquote!(input, #let match_);
+			let on = input.parse()?;
+			let body;
+			let bracket = bracketed!(body in input);
+			let arms = {
+				let input = body;
+				let mut arms = vec![];
+				while !input.is_empty() {
+					let attrs = input.call(Attribute::parse_outer)?;
+					let pat = input.parse()?;
+					let if_: Option<Token![if]> = input.parse()?;
+					let guard = if_
+						.map(|if_| Result::Ok((if_, input.parse()?)))
+						.transpose()?;
+					let fat_arrow = input.parse()?;
+					let part = input.parse()?;
+					arms.push((attrs, pat, guard, fat_arrow, part))
+				}
+				arms
+			};
+			Some(PartBody::Match(match_, Box::new(on), bracket, arms))
 		} else if lookahead.peek(Brace) {
 			let expression;
 			#[allow(clippy::eval_order_dependence)]
@@ -248,6 +285,24 @@ impl<C: Configuration> PartBody<C> {
 				} else {
 					#else_tokens
 				}}
+			}
+			PartBody::Match(match_, on, bracket, arms) => {
+				let on_tokens = on.part_tokens(cx)?;
+				let arms = arms
+					.iter()
+					.map(|(attrs, pat, guard, fat_arrow, part)| {
+						let guard = guard
+							.as_ref()
+							.map(|(if_, guard)| quote_spanned!(if_.span=> #if_ #guard));
+						let part = part.part_tokens(cx)?;
+						Ok(quote_spanned! {fat_arrow.span()=>
+							#(#attrs)*
+							#pat #guard #fat_arrow #part,
+						})
+					})
+					.collect::<Result<Vec<_>>>()?;
+				let body = quote_spanned!(bracket.span => { #(#arms)* });
+				quote_spanned!(match_.span=> #match_ #on_tokens #body)
 			}
 			PartBody::Expression(brace, expression) => quote_spanned!(brace.span=> {#expression}),
 			PartBody::Capture(capture) => quote!(#capture),
