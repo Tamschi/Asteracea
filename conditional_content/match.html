@@ -199,7 +199,33 @@ asteracea::component! {
 <pre><code class="language-html">&lt;SPAN&gt;Hello!&lt;/SPAN&gt;
 &lt;DIV class=&quot;placeholder&quot;&gt;&lt;/DIV&gt;
 </code></pre>
-<!-- TODO: Explain how matching on components, for example a router, works. Router::INDEX = "\0" -->
+<p>Note that the match expression accepts an element expression (<code>&lt;…&gt;</code>) as parameter! If an element renders into something other than a <a href=""><code>Node</code></a>, you can branch on that result this way:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component!{
+  Router()() -&gt; &amp;'_ str
+
+  //TODO: Retrieve from fragment.
+  { &quot;\0&quot; }
+}
+
+impl Router {
+  const INDEX: &amp;'static str = &quot;\0&quot;;
+}
+
+asteracea::component! {
+  RouterUser()()
+
+  match &lt;*Router&gt; [
+    Router::INDEX | &quot;&quot; =&gt; &quot;Index&quot;
+    _ =&gt; {unreachable!()}
+  ]
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">Index
+</code></pre>
 
                     </main>
 
