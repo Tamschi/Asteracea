@@ -2,8 +2,8 @@
 
 To conditionally render a node, you can use `if`-expressions whenever a [`Node<'bump>`]() is expected:
 
-```TODOrust TODOasteracea=Conditioned
-asteracea::compontent! {
+```rust asteracea=Conditioned
+asteracea::component! {
   Conditional()(
     present: bool,
   )
@@ -26,8 +26,8 @@ Note the required curly braces (`{}`) around the condition and their absence on 
 
 To render multiple elements conditionally, use a multi node:
 
-```TODOrust TODOasteracea=Conditioned
-asteracea::compontent! {
+```rust asteracea=Conditioned
+asteracea::component! {
   Conditional()(
     present: bool,
   )
@@ -38,6 +38,7 @@ asteracea::compontent! {
       <span " and ">
     ]
     "I like this place."
+  ]
 }
 
 asteracea::component! {
@@ -54,27 +55,30 @@ asteracea::component! {
 
 is also available, though this means that Asteracea's `if`-`{condition}` is *not* automatically a Rust block. Use `{{ statements }}` if you really need one, though wrapping the `if` in a `with { … } <…>`-expression is likely a better idea in terms of code organisation.
 
-```TODOrust TODOasteracea=Conditioned
-asteracea::compontent! {
+```rust asteracea=Conditioned
+use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
+
+asteracea::component! {
   Conditional()(
-    content?: impl FnOnce(&Bump<'bump>) -> Node<'bump>,
+    content?: &'bump str,
   )
 
   [
     "["
-    if {let Some(content) = content}
-      { content(bump) }
+    if {let Some(content) = content} <div
+      !{content}
+    >
     "]"
+  ]
 }
 
 asteracea::component! {
   Conditioned()()
 
   [
+    // TODO:Use `.content => <…>` once that works.
     <*Conditional> "\n"
-    <*Conditional .content = {|bump: &Bump<'bump>| asteracea::fragment! { // TODO:Use `.content => <…>` once that works.
-      <div "Content!">
-    }}>
+    <*Conditional .content = {"Content!"}>
   ]
 }
 ```

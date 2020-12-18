@@ -198,7 +198,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 	}
 }
 
-impl<C> HtmlDefinition<C> {
+impl<C: Configuration> HtmlDefinition<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		let Self {
 			lt,

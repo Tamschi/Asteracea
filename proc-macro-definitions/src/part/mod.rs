@@ -18,6 +18,7 @@ use crate::{
 	Configuration,
 };
 use core::{cell::RefCell, result::Result as coreResult};
+use debugless_unwrap::DebuglessUnwrap;
 use event_binding::EventBindingDefinition;
 use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::{quote, quote_spanned};
@@ -25,9 +26,10 @@ use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
 	token::{Add, Brace, Bracket},
-	Error, Ident, LitStr, Token,
+	Error, Expr, Ident, LitStr, Token,
 };
 use syn_mid::Block;
+use unquote::unquote;
 
 pub struct Part<C> {
 	body: PartBody<C>,
@@ -48,6 +50,7 @@ impl<C> Part<C> {
 			| PartBody::Component(_)
 			| PartBody::Expression(_, _)
 			| PartBody::Html(_)
+			| PartBody::If(_, _, _, _)
 			| PartBody::Multi(_, _)
 			| PartBody::Text(_)
 			| PartBody::With(_, _, _) => PartKind::Child,
@@ -71,7 +74,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 		)
 	}
 }
-impl<C> Part<C> {
+impl<C: Configuration> Part<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		let body = self.body.part_tokens(cx)?;
 		let attached_access = &self.attached_access;
@@ -89,6 +92,12 @@ pub enum PartBody<C> {
 	Component(Component<C>),
 	Text(LitStr),
 	Html(HtmlDefinition<C>),
+	If(
+		Token![if],
+		Expr,
+		Box<Part<C>>,
+		Option<(Token![else], Box<Part<C>>)>,
+	),
 	Expression(Brace, TokenStream),
 	Capture(CaptureDefinition<C>),
 	Multi(Bracket, Vec<Part<C>>),
@@ -136,6 +145,19 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 					input, cx,
 				)?)),
 			}
+		} else if input.peek(Token![if]) {
+			//FIXME: This will be possible much more nicely once unquote is better.
+			unquote!(input, #let if_);
+			let condition;
+			braced!(condition in input);
+			let condition = condition.parse()?;
+			let then = input.parse()?;
+			let else_: Option<Token![else]>;
+			unquote!(input, #else_);
+			let else_arm = else_
+				.map(|else_| Result::Ok((else_, input.parse()?)))
+				.transpose()?;
+			Some(PartBody::If(if_, condition, Box::new(then), else_arm))
 		} else if lookahead.peek(Brace) {
 			let expression;
 			#[allow(clippy::eval_order_dependence)]
@@ -169,7 +191,7 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 		} else if bump_format_shorthand::peek_from(input) {
 			bump_format_shorthand::parse_with_context(input, cx)?
 		} else if input.peek(kw::with) {
-			unquote::unquote! {input,
+			unquote! {input,
 				#let with
 				#let block
 			};
@@ -194,7 +216,7 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 #[derive(Default)]
 pub struct GenerateContext {}
 
-impl<C> PartBody<C> {
+impl<C: Configuration> PartBody<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		Ok(match self {
 			PartBody::Comment(html_comment) => html_comment.part_tokens(),
@@ -206,6 +228,27 @@ impl<C> PartBody<C> {
 				}
 			}
 			PartBody::Html(html_definition) => html_definition.part_tokens(cx)?,
+			PartBody::If(if_, condition, then_part, else_arm) => {
+				let then_tokens = then_part.part_tokens(cx)?;
+				let else_tokens = if let Some((else_, else_part)) = else_arm {
+					let else_part = else_part.part_tokens(cx)?;
+					quote_spanned!(else_.span=> { #else_part })
+				} else {
+					call2_for_syn::call2_strict(quote_spanned!(if_.span=> []), |input| {
+						Part::<C>::parse_with_context(input, &mut ParseContext::default())
+					})
+					.debugless_unwrap()
+					.expect("if - default else")
+					.expect("if -  default else 2")
+					.part_tokens(cx)
+					.unwrap()
+				};
+				quote_spanned! {if_.span=> if #condition {
+					#then_tokens
+				} else {
+					#else_tokens
+				}}
+			}
 			PartBody::Expression(brace, expression) => quote_spanned!(brace.span=> {#expression}),
 			PartBody::Capture(capture) => quote!(#capture),
 			PartBody::Multi(bracket, m) => {
