@@ -32,7 +32,7 @@
 - [3: Conditional Content]()
   - [`.param => <…>`]()
   - [`if {…} <…>`](./conditional_content/if.md)
-  - [`if …… else <…>`]()
+  - [`if …… else <…>`](./conditional_content/if_else.md)
   - [`for … in {…} by {…} <…>`]()
   - [`for ………… else <…>`]()
   - [`match {…} [ … ]`](./conditional_content/match.md)
