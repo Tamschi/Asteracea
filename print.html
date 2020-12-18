@@ -759,11 +759,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffe479cf1f0.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffe479cf1f0.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x7ffe479cf1f8.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x7ffe479cf1f0.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x7ffe479cf1f0.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffc3180abc8.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffc3180abc8.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x7ffc3180abd0.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x7ffc3180abc8.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x7ffc3180abc8.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
@@ -1059,7 +1059,10 @@ The oak's leaves are fallen.&lt;/DIV&gt;
 </code></pre>
 <h1><a class="header" href="#if--" id="if--"><code>if {…} &lt;…&gt;</code></a></h1>
 <p>To conditionally render a node, you can use <code>if</code>-expressions whenever a <a href="conditional_content/"><code>Node&lt;'bump&gt;</code></a> is expected:</p>
-<pre><code class="language-TODOrust TODOasteracea=Conditioned">asteracea::compontent! {
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
   Conditional()(
     present: bool,
   )
@@ -1076,10 +1079,16 @@ asteracea::component! {
     &lt;*Conditional .present = {true}&gt;
   ]
 }
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">I am here.
 </code></pre>
 <p>Note the required curly braces (<code>{}</code>) around the condition and their absence on the body! This is reversed from plain Rust to show that the condition is a Rust expression while the body is not.</p>
 <p>To render multiple elements conditionally, use a multi node:</p>
-<pre><code class="language-TODOrust TODOasteracea=Conditioned">asteracea::compontent! {
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
   Conditional()(
     present: bool,
   )
@@ -1090,6 +1099,7 @@ asteracea::component! {
       &lt;span &quot; and &quot;&gt;
     ]
     &quot;I like this place.&quot;
+  ]
 }
 
 asteracea::component! {
@@ -1100,31 +1110,45 @@ asteracea::component! {
     &lt;*Conditional .present = {true}&gt;
   ]
 }
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">I like this place.
+I am here&lt;SPAN&gt; and &lt;/SPAN&gt;I like this place.
 </code></pre>
 <h2><a class="header" href="#pattern-matching-with-let" id="pattern-matching-with-let">Pattern-matching with <code>let</code></a></h2>
 <p>is also available, though this means that Asteracea's <code>if</code>-<code>{condition}</code> is <em>not</em> automatically a Rust block. Use <code>{{ statements }}</code> if you really need one, though wrapping the <code>if</code> in a <code>with { … } &lt;…&gt;</code>-expression is likely a better idea in terms of code organisation.</p>
-<pre><code class="language-TODOrust TODOasteracea=Conditioned">asteracea::compontent! {
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
+
+asteracea::component! {
   Conditional()(
-    content?: impl FnOnce(&amp;Bump&lt;'bump&gt;) -&gt; Node&lt;'bump&gt;,
+    content?: &amp;'bump str,
   )
 
   [
     &quot;[&quot;
-    if {let Some(content) = content}
-      { content(bump) }
+    if {let Some(content) = content} &lt;div
+      !{content}
+    &gt;
     &quot;]&quot;
+  ]
 }
 
 asteracea::component! {
   Conditioned()()
 
   [
+    // TODO:Use `.content =&gt; &lt;…&gt;` once that works.
     &lt;*Conditional&gt; &quot;\n&quot;
-    &lt;*Conditional .content = {|bump: &amp;Bump&lt;'bump&gt;| asteracea::fragment! { // TODO:Use `.content =&gt; &lt;…&gt;` once that works.
-      &lt;div &quot;Content!&quot;&gt;
-    }}&gt;
+    &lt;*Conditional .content = {&quot;Content!&quot;}&gt;
   ]
 }
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">[]
+[&lt;DIV&gt;Content!&lt;/DIV&gt;]
 </code></pre>
 <blockquote>
 <p><strong>Implicit <code>else</code></strong></p>
