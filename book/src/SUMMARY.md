@@ -35,7 +35,7 @@
   - [`if …… else <…>`](./conditional_content/if_else.md)
   - [`for … in {…} by {…} <…>`]()
   - [`for ………… else <…>`]()
-  - [`match {…} [ … ]`](./conditional_content/match.md)
+  - [`match <…> [ … ]`](./conditional_content/match.md)
 - [4: Modifiers]()
   - [Introduction to VDOM Modifiers]()
   - [CSS Scoping]()
