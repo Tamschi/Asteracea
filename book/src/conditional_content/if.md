@@ -76,7 +76,6 @@ asteracea::component! {
   Conditioned()()
 
   [
-    // TODO:Use `.content => <…>` once that works.
     <*Conditional> "\n"
     <*Conditional .content = {"Content!"}>
   ]
