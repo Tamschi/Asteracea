@@ -33,7 +33,7 @@ Note that the match expression accepts an element expression (`<…>`) as parame
 
 ```rust asteracea=RouterUser
 asteracea::component!{
-  Router()() -> &'_ str
+  Router()() -> &str
 
   //TODO: Retrieve from fragment.
   { "\0" }

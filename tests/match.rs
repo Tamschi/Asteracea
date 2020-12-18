@@ -15,7 +15,7 @@ asteracea::component! {
 }
 
 asteracea::component! {
-  Router()() -> &'_ str
+  Router()() -> &str
 
   //TODO: Retrieve from fragment.
 
