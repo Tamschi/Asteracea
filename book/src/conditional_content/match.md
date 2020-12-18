@@ -29,4 +29,26 @@ asteracea::component! {
 }
 ```
 
-<!-- TODO: Explain how matching on components, for example a router, works. Router::INDEX = "\0" -->
+Note that the match expression accepts an element expression (`<…>`) as parameter! If an element renders into something other than a [`Node`](), you can branch on that result this way:
+
+```rust asteracea=RouterUser
+asteracea::component!{
+  Router()() -> &'_ str
+
+  //TODO: Retrieve from fragment.
+  { "\0" }
+}
+
+impl Router {
+  const INDEX: &'static str = "\0";
+}
+
+asteracea::component! {
+  RouterUser()()
+
+  match <*Router> [
+    Router::INDEX | "" => "Index"
+    _ => {unreachable!()}
+  ]
+}
+```

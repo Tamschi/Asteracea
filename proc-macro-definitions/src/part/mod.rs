@@ -31,6 +31,7 @@ use syn::{
 };
 use syn_mid::Block;
 use unquote::unquote;
+use wyz::Pipe as _;
 
 pub struct Part<C> {
 	body: PartBody<C>,
@@ -88,7 +89,7 @@ mod kw {
 	syn::custom_keyword!(with);
 }
 
-#[allow(clippy::large_enum_variant)]
+#[allow(clippy::large_enum_variant, clippy::type_complexity)]
 pub enum PartBody<C> {
 	Comment(HtmlComment),
 	Component(Component<C>),
@@ -108,7 +109,7 @@ pub enum PartBody<C> {
 		Bracket,
 		Vec<(
 			Vec<Attribute>,
-			Pat,
+			Vec<(Option<Token![|]>, Pat)>,
 			Option<(Token![if], Expr)>,
 			Token![=>],
 			Box<Part<C>>,
@@ -123,12 +124,32 @@ pub enum PartBody<C> {
 // Or maybe just parse it differently, if that's not too much of an issue.
 impl<C: Configuration> Parse for Part<C> {
 	fn parse(input: ParseStream<'_>) -> Result<Self> {
+		let span = input.span();
 		Self::parse_with_context(input, &mut Default::default()).and_then(|part| {
 			if let Some(part) = part {
 				Ok(part)
 			} else {
 				Err(Error::new(
-					Span::call_site(),
+					span,
+					"The top level part must return a value.", //TODO: Better message or better yet program restructuring.
+				))
+			}
+		})
+	}
+}
+
+impl<C: Configuration> Part<C> {
+	pub fn parse_required_with_context(
+		input: ParseStream<'_>,
+		cx: &mut ParseContext,
+	) -> Result<Self> {
+		let span = input.span();
+		Self::parse_with_context(input, cx).and_then(|part| {
+			if let Some(part) = part {
+				Ok(part)
+			} else {
+				Err(Error::new(
+					span,
 					"This part must return a value.", //TODO: Better message or better yet program restructuring.
 				))
 			}
@@ -172,32 +193,45 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 					"Unexpected token in `if` condition",
 				));
 			}
-			let then = input.parse()?;
+			let then = Part::parse_required_with_context(input, cx)?;
 			let else_: Option<Token![else]>;
 			unquote!(input, #else_);
 			let else_arm = else_
-				.map(|else_| Result::Ok((else_, input.parse()?)))
+				.map(|else_| {
+					Result::Ok((
+						else_,
+						Part::parse_required_with_context(input, cx)?.pipe(Box::new),
+					))
+				})
 				.transpose()?;
 			Some(PartBody::If(if_, condition, Box::new(then), else_arm))
 		} else if input.peek(Token![match]) {
 			//FIXME: This will be possible much more nicely once unquote is better.
 			unquote!(input, #let match_);
-			let on = input.parse()?;
+			let on = Part::parse_required_with_context(input, cx)?;
 			let body;
 			let bracket = bracketed!(body in input);
 			let arms = {
-				let input = body;
+				let input = &body;
 				let mut arms = vec![];
 				while !input.is_empty() {
 					let attrs = input.call(Attribute::parse_outer)?;
-					let pat = input.parse()?;
+					let pats = {
+						let mut pats = vec![];
+						while {
+							unquote!(input, #let maybe_pipe #let pat);
+							pats.push((maybe_pipe, pat));
+							input.peek(Token![|])
+						} {}
+						pats
+					};
 					let if_: Option<Token![if]> = input.parse()?;
 					let guard = if_
 						.map(|if_| Result::Ok((if_, input.parse()?)))
 						.transpose()?;
 					let fat_arrow = input.parse()?;
-					let part = input.parse()?;
-					arms.push((attrs, pat, guard, fat_arrow, part))
+					let part = Part::parse_required_with_context(input, cx)?.pipe(Box::new);
+					arms.push((attrs, pats, guard, fat_arrow, part))
 				}
 				arms
 			};
@@ -297,14 +331,18 @@ impl<C: Configuration> PartBody<C> {
 				let on_tokens = on.part_tokens(cx)?;
 				let arms = arms
 					.iter()
-					.map(|(attrs, pat, guard, fat_arrow, part)| {
+					.map(|(attrs, pats, guard, fat_arrow, part)| {
 						let guard = guard
 							.as_ref()
 							.map(|(if_, guard)| quote_spanned!(if_.span=> #if_ #guard));
 						let part = part.part_tokens(cx)?;
+						let (pipes, pats) = pats
+							.iter()
+							.map(|(pipe, pat)| (pipe.as_ref(), pat))
+							.unzip::<_, _, Vec<_>, Vec<_>>();
 						Ok(quote_spanned! {fat_arrow.span()=>
 							#(#attrs)*
-							#pat #guard #fat_arrow #part,
+							#(#pipes #pats)* #guard #fat_arrow #part,
 						})
 					})
 					.collect::<Result<Vec<_>>>()?;
