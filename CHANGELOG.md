@@ -10,6 +10,7 @@ TODO: Date
   * Removed "styles" and "topiary" features. CSS scoping will be enabled through more general means.
   * Reworked generated component interface
   * Upgraded `lignin` and `lignin-schema` dependencies to 0.0.2 each
+  * Removed all type-level (static) storage declarations. This reduces complexity a lot. Use plain Rust `static` items and, where needed, `new with { …; }` blocks and/or `with { …; } <…>` expressions instead.
 
 * Features:
   * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.
@@ -38,6 +39,8 @@ TODO: Date
   * Conditional attributes: `."attribute-name"? = {Option<&'bump str>}`
   * Conditional parameters (like conditional attributes)
   * Boolean attributes: `."attribute-name"? = {bool}`
+  * `new with { …; }` blocks to insert statements into the constructor
+  * `with { …; } <…>` expressions to insert statements into the `.render` method
 
 * Revisions:
   * Improved `Counter` example in the README.
