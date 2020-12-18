@@ -162,9 +162,16 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 		} else if input.peek(Token![if]) {
 			//FIXME: This will be possible much more nicely once unquote is better.
 			unquote!(input, #let if_);
-			let condition;
-			braced!(condition in input);
-			let condition = condition.parse()?;
+			let condition_body;
+			braced!(condition_body in input);
+			let condition = condition_body.parse()?;
+			if let Ok(unexpected) = condition_body.parse() {
+				let unexpected: TokenTree = unexpected;
+				return Err(Error::new(
+					unexpected.span(),
+					"Unexpected token in `if` condition",
+				));
+			}
 			let then = input.parse()?;
 			let else_: Option<Token![else]>;
 			unquote!(input, #else_);
@@ -280,7 +287,7 @@ impl<C: Configuration> PartBody<C> {
 					.part_tokens(cx)
 					.unwrap()
 				};
-				quote_spanned! {if_.span=> if #condition {
+				quote_spanned! {if_.span.resolved_at(Span::mixed_site())=> if #condition {
 					#then_tokens
 				} else {
 					#else_tokens
