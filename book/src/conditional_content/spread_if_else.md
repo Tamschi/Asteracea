@@ -1,4 +1,4 @@
-# `if …… else <…>`
+# `spread if …… else <…>`
 
 You can explicitly specify alternative content with an `else` branch:
 
@@ -13,7 +13,7 @@ asteracea::component! {
     show_alternative: bool = false,
   )
 
-  if {show_alternative}
+  spread if {show_alternative}
     "Default"
   else
     "Alternative"

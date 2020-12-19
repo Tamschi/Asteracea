@@ -7,6 +7,7 @@ mod html_comment;
 mod html_definition;
 
 //TODO: Renamed module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
+//TODO: Rust expressions shouldn't automatically be blocks except for ones after `with`.
 
 pub use self::{
 	attached_access_expression::AttachedAccessExpression, capture_definition::CaptureDefinition,
@@ -18,10 +19,10 @@ use crate::{
 	Configuration,
 };
 use core::{cell::RefCell, result::Result as coreResult};
-use debugless_unwrap::DebuglessUnwrap;
+use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapErr as _};
 use event_binding::EventBindingDefinition;
 use proc_macro2::{Span, TokenStream, TokenTree};
-use quote::{quote, quote_spanned};
+use quote::{quote, quote_spanned, spanned::Spanned};
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
@@ -52,8 +53,8 @@ impl<C> Part<C> {
 			| PartBody::Component(_)
 			| PartBody::Expression(_, _)
 			| PartBody::Html(_)
-			| PartBody::If(_, _, _, _)
-			| PartBody::Match(_, _, _, _)
+			| PartBody::If(_, _, _, _, _)
+			| PartBody::Match(_, _, _, _, _)
 			| PartBody::Multi(_, _)
 			| PartBody::Text(_)
 			| PartBody::With(_, _, _) => PartKind::Child,
@@ -87,23 +88,55 @@ impl<C: Configuration> Part<C> {
 
 mod kw {
 	syn::custom_keyword!(with);
+	syn::custom_keyword!(spread);
+}
+
+pub enum InitMode {
+	Dyn(Token![dyn], ParseContext),
+	Spread(kw::spread),
+}
+
+impl Parse for InitMode {
+	fn parse(input: ParseStream) -> Result<Self> {
+		Ok(if let Some(dyn_) = input.parse().unwrap() {
+			InitMode::Dyn(dyn_, ParseContext::default())
+		} else if let Some(spread) = input.parse().unwrap() {
+			InitMode::Spread(spread)
+		} else {
+			return Err(Error::new(
+				input.span(),
+				"Expected one of `dyn` or `spread`",
+			));
+		})
+	}
+}
+
+impl Spanned for InitMode {
+	fn __span(&self) -> Span {
+		match self {
+			InitMode::Dyn(dyn_, _) => dyn_.span,
+			InitMode::Spread(spread) => spread.span,
+		}
+	}
 }
 
 #[allow(clippy::large_enum_variant, clippy::type_complexity)]
 pub enum PartBody<C> {
+	Capture(CaptureDefinition<C>),
 	Comment(HtmlComment),
 	Component(Component<C>),
-	Text(LitStr),
+	EventBinding(EventBindingDefinition),
+	Expression(Brace, TokenStream),
 	Html(HtmlDefinition<C>),
 	If(
+		InitMode,
 		Token![if],
 		Expr,
 		Box<Part<C>>,
 		Option<(Token![else], Box<Part<C>>)>,
 	),
-	Expression(Brace, TokenStream),
-	Capture(CaptureDefinition<C>),
 	Match(
+		InitMode,
 		Token![match],
 		Box<Part<C>>,
 		Bracket,
@@ -116,7 +149,7 @@ pub enum PartBody<C> {
 		)>,
 	),
 	Multi(Bracket, Vec<Part<C>>),
-	EventBinding(EventBindingDefinition),
+	Text(LitStr),
 	With(kw::with, Block, Option<Box<Part<C>>>),
 }
 
@@ -181,8 +214,11 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 				)?)),
 			}
 		} else if input.peek(Token![if]) {
+			return Err(input.call(InitMode::parse).debugless_unwrap_err());
+		} else if (input.peek(Token![dyn]) || input.peek(kw::spread)) && input.peek2(Token![if]) {
 			//FIXME: This will be possible much more nicely once unquote is better.
-			unquote!(input, #let if_);
+			let mut init_mode;
+			unquote!(input, #init_mode #let if_);
 			let condition_body;
 			braced!(condition_body in input);
 			let condition = condition_body.parse()?;
@@ -193,21 +229,42 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 					"Unexpected token in `if` condition",
 				));
 			}
-			let then = Part::parse_required_with_context(input, cx)?;
+			let then = match &mut init_mode {
+				InitMode::Dyn(_, _) => {
+					todo!("`dyn if`")
+				}
+				InitMode::Spread(_) => Part::parse_required_with_context(input, cx)?,
+			};
 			let else_: Option<Token![else]>;
 			unquote!(input, #else_);
 			let else_arm = else_
 				.map(|else_| {
 					Result::Ok((
 						else_,
-						Part::parse_required_with_context(input, cx)?.pipe(Box::new),
+						match &mut init_mode {
+							InitMode::Dyn(_, _) => {
+								todo!("`dyn if else`")
+							}
+							InitMode::Spread(_) => Part::parse_required_with_context(input, cx)?,
+						}
+						.pipe(Box::new),
 					))
 				})
 				.transpose()?;
-			Some(PartBody::If(if_, condition, Box::new(then), else_arm))
+			Some(PartBody::If(
+				init_mode,
+				if_,
+				condition,
+				Box::new(then),
+				else_arm,
+			))
 		} else if input.peek(Token![match]) {
+			return Err(input.call(InitMode::parse).debugless_unwrap_err());
+		} else if (input.peek(Token![dyn]) || input.peek(kw::spread)) && input.peek2(Token![match])
+		{
 			//FIXME: This will be possible much more nicely once unquote is better.
-			unquote!(input, #let match_);
+			let mut init_mode;
+			unquote!(input, #init_mode #let match_);
 			let on = Part::parse_required_with_context(input, cx)?;
 			let body;
 			let bracket = bracketed!(body in input);
@@ -230,12 +287,24 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 						.map(|if_| Result::Ok((if_, input.parse()?)))
 						.transpose()?;
 					let fat_arrow = input.parse()?;
-					let part = Part::parse_required_with_context(input, cx)?.pipe(Box::new);
+					let part = match &mut init_mode {
+						InitMode::Dyn(_, _) => {
+							todo!("`dyn match arm`")
+						}
+						InitMode::Spread(_) => Part::parse_required_with_context(input, cx)?,
+					}
+					.pipe(Box::new);
 					arms.push((attrs, pats, guard, fat_arrow, part))
 				}
 				arms
 			};
-			Some(PartBody::Match(match_, Box::new(on), bracket, arms))
+			Some(PartBody::Match(
+				init_mode,
+				match_,
+				Box::new(on),
+				bracket,
+				arms,
+			))
 		} else if lookahead.peek(Brace) {
 			let expression;
 			#[allow(clippy::eval_order_dependence)]
@@ -306,7 +375,10 @@ impl<C: Configuration> PartBody<C> {
 				}
 			}
 			PartBody::Html(html_definition) => html_definition.part_tokens(cx)?,
-			PartBody::If(if_, condition, then_part, else_arm) => {
+			PartBody::If(InitMode::Dyn(dyn_, dyn_context), if_, condition, then_part, else_arm) => {
+				todo!("`dyn if`")
+			}
+			PartBody::If(InitMode::Spread(_spread), if_, condition, then_part, else_arm) => {
 				let then_tokens = then_part.part_tokens(cx)?;
 				let else_tokens = if let Some((else_, else_part)) = else_arm {
 					let else_part = else_part.part_tokens(cx)?;
@@ -327,7 +399,10 @@ impl<C: Configuration> PartBody<C> {
 					#else_tokens
 				}}
 			}
-			PartBody::Match(match_, on, bracket, arms) => {
+			PartBody::Match(InitMode::Dyn(dyn_, dyn_context), match_, on, bracket, arms) => {
+				todo!("`dyn match`")
+			}
+			PartBody::Match(InitMode::Spread(_spread), match_, on, bracket, arms) => {
 				let on_tokens = on.part_tokens(cx)?;
 				let arms = arms
 					.iter()

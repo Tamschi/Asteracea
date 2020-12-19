@@ -8,7 +8,7 @@ asteracea::component! {
 		enum_value: Enum<'_>,
 	)
 
-	match {enum_value} [
+	spread match {enum_value} [
 		Enum::Text(text) => <span !{text}>
 		Enum::Other => <div ."class" = "placeholder">
 	]
@@ -29,7 +29,7 @@ impl Router {
 asteracea::component! {
   pub RouterUser()()
 
-  match <*Router> [
+  spread match <*Router> [
 	Router::INDEX | "" => "Index"
 	_ => {unreachable!()}
   ]

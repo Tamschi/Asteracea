@@ -1,6 +1,6 @@
-# `if {…} <…>`
+# `spread if {…} <…>`
 
-To conditionally render a node, you can use `if`-expressions whenever a [`Node<'bump>`]() is expected:
+To conditionally render a node, you can use `spread if`-expressions whenever a [`Node<'bump>`]() is expected:
 
 ```rust asteracea=Conditioned
 asteracea::component! {
@@ -8,7 +8,7 @@ asteracea::component! {
     present: bool,
   )
 
-  if {present}
+  spread if {present}
     "I am here."
 }
 
@@ -33,7 +33,7 @@ asteracea::component! {
   )
 
   [
-    if {present} [ // <-- I recommend formatting this `[]` as you would format `{}` in Rust.
+    spread if {present} [ // <-- I recommend formatting this `[]` as you would format `{}` in Rust.
       "I am here"
       <span " and ">
     ]
@@ -53,7 +53,7 @@ asteracea::component! {
 
 ## Pattern-matching with `let`
 
-is also available, though this means that Asteracea's `if`-`{condition}` is *not* automatically a Rust block. Use `{{ statements }}` if you really need one, though wrapping the `if` in a `with { … } <…>`-expression is likely a better idea in terms of code organisation.
+is also available, though this means that Asteracea's `if`-`{condition}` is *not* automatically a Rust block. Use `{{ statements }}` if you really need one, though wrapping the `spread if` in a `with { … } <…>`-expression is likely a better idea in terms of code organisation.
 
 ```rust asteracea=Conditioned
 use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
@@ -65,7 +65,7 @@ asteracea::component! {
 
   [
     "["
-    if {let Some(content) = content} <div
+    spread if {let Some(content) = content} <div
       !{content}
     >
     "]"
@@ -84,12 +84,12 @@ asteracea::component! {
 
 > **Implicit `else`**
 >
-> If an `if`-expression's condition is not met, an empty [`Node::Multi(…)`]() (`[]`) is rendered by default.
+> If a `spread if`-expression's condition is not met, an empty [`Node::Multi(…)`]() (`[]`) is rendered by default.
 
 <!-- intentionally split -->
 
 > **A note for React users**
 >
-> Unlike React Hooks, Asteracea's captures (including `<*ChildComponent>`s) are generally fine to use in conditional `if`-branches, even if which branch is taken changes during the component's lifetime.
+> Unlike React Hooks, Asteracea's captures (including `<*ChildComponent>`s) are generally fine to use in conditional `spread if`-branches, even if which branch is taken changes during the component's lifetime.
 >
 > The tradeoff for this is that their initialisers always run during component instantiation and that fields are created for any declared captures.

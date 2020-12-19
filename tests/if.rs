@@ -5,7 +5,7 @@ asteracea::component! {
 		present: bool,
 	)
 
-	if {present}
+	spread if {present}
 		"I am here."
 }
 
@@ -15,7 +15,7 @@ asteracea::component! {
 	)
 
 	[
-		if {present} [ // <-- I recommend formatting this `[]` as you would format `{}` in Rust.
+		spread if {present} [ // <-- I recommend formatting this `[]` as you would format `{}` in Rust.
 			"I am here"
 			<span " and ">
 		]
@@ -30,7 +30,7 @@ asteracea::component! {
 
 	[
 		"["
-		if {let Some(content) = content}
+		spread if {let Some(content) = content}
 			{ content(bump) }
 		"]"
 	]
