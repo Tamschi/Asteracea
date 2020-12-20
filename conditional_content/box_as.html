@@ -1,0 +1,338 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js ayu">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>box ⟦as …⟧ &lt;…&gt; - Asteracea</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+
+		<!-- Plausible analytics -->
+		<script async defer data-domain="schichler.dev" src="https://plausible.io/js/plausible.js"></script>
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "ayu";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('ayu')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../intro.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../0_sneak_peek.html"><strong aria-hidden="true">2.</strong> 0: Sneak Peek</a></li><li class="chapter-item expanded "><a href="../static_components/index.html"><strong aria-hidden="true">3.</strong> 1: Static Components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../static_components/empty_component.html"><strong aria-hidden="true">3.1.</strong> An Empty Component</a></li><li class="chapter-item expanded "><a href="../static_components/rust_comments.html"><strong aria-hidden="true">3.2.</strong> Rust Comments</a></li><li class="chapter-item expanded "><a href="../static_components/html_comments.html"><strong aria-hidden="true">3.3.</strong> HTML Comments</a></li><li class="chapter-item expanded "><a href="../static_components/text.html"><strong aria-hidden="true">3.4.</strong> Text</a></li><li class="chapter-item expanded "><a href="../static_components/elements.html"><strong aria-hidden="true">3.5.</strong> Elements</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.6.</strong> Attributes</div></li><li class="chapter-item expanded "><a href="../static_components/child_components.html"><strong aria-hidden="true">3.7.</strong> Child Components</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.8.</strong> Value Formatting</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.9.</strong> Rust Blocks</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.10.</strong> CSS Scoping</div></li><li class="chapter-item expanded "><a href="../static_components/ex_stateless_components_are_zero-sized.html"><strong aria-hidden="true">3.11.</strong> EX: Stateless Components are Zero-Sized</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.</strong> 2: Dynamic Components</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="../dynamic_components/new_with.html"><strong aria-hidden="true">4.1.</strong> new with { …; }</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.2.</strong> Render Parameters</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.3.</strong> Constructor Parameters</div></li><li class="chapter-item expanded "><a href="../dynamic_components/predefined_lifetimes.html"><strong aria-hidden="true">4.4.</strong> Predefined Lifetimes</a></li><li class="chapter-item expanded "><a href="../dynamic_components/conditional_attributes.html"><strong aria-hidden="true">4.5.</strong> Conditional Attributes</a></li><li class="chapter-item expanded "><a href="../dynamic_components/argument_defaults.html"><strong aria-hidden="true">4.6.</strong> Argument Defaults</a></li><li class="chapter-item expanded "><a href="../dynamic_components/optional_arguments.html"><strong aria-hidden="true">4.7.</strong> Optional Arguments</a></li><li class="chapter-item expanded "><a href="../dynamic_components/conditional_child_component_parameters.html"><strong aria-hidden="true">4.8.</strong> Conditional Child Component Parameters</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.9.</strong> Persistence 1: Constructor Parameter Captures</div></li><li class="chapter-item expanded "><a href="../dynamic_components/body_captures.html"><strong aria-hidden="true">4.10.</strong> Persistence 2: Body Captures</a></li><li class="chapter-item expanded "><a href="../dynamic_components/dependency_extraction.html"><strong aria-hidden="true">4.11.</strong> Dependency Extraction</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.12.</strong> Event Handlers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.13.</strong> Fallible Components</div></li><li class="chapter-item expanded "><a href="../dynamic_components/with.html"><strong aria-hidden="true">4.14.</strong> with { …; } &lt;…&gt;</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> 3: Conditional Content</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">5.1.</strong> .param =&gt; &lt;…&gt;</div></li><li class="chapter-item expanded "><a href="../conditional_content/spread_if.html"><strong aria-hidden="true">5.2.</strong> spread if {…} &lt;…&gt;</a></li><li class="chapter-item expanded "><a href="../conditional_content/spread_if_else.html"><strong aria-hidden="true">5.3.</strong> spread if …… else &lt;…&gt;</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.4.</strong> dyn if {…} ⟦as …⟧ ⟦⦃dynǁmove⦄⟧ &lt;…&gt; ⟦else ⟦⦃dynǁmove⦄⟧ &lt;…&gt;⟧</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.5.</strong> for … in {…} by {…} &lt;…&gt;</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.6.</strong> for ………… else &lt;…&gt;</div></li><li class="chapter-item expanded "><a href="../conditional_content/spread_match.html"><strong aria-hidden="true">5.7.</strong> spread match &lt;…&gt; [ … ]</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.8.</strong> dyn match &lt;…&gt; [ … ]</div></li><li class="chapter-item expanded "><a href="../conditional_content/box_as.html" class="active"><strong aria-hidden="true">5.9.</strong> box ⟦as …⟧ &lt;…&gt;</a></li><li class="chapter-item expanded "><a href="../conditional_content/defer_move_as.html"><strong aria-hidden="true">5.10.</strong> defer ⟦move⟧ ⟦as …⟧ &lt;…&gt;</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> 4: Modifiers</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">6.1.</strong> Introduction to VDOM Modifiers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.2.</strong> CSS Scoping</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> 5: Miscellaneous</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="../misc/glossary.html"><strong aria-hidden="true">7.1.</strong> Glossary</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.2.</strong> Embdedding JavaScript Components</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">8.</strong> 6: Integrating Asteracea</div></li><li class="chapter-item expanded "><a href="../ex_hello_asteracea.html"><strong aria-hidden="true">9.</strong> EX: Hello Asteracea</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu (default)</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">
+						Asteracea
+						<span style="color: red;" aria-label="[WIP: Expect breaking and URL changes!]" title="Automatically generated from the develop branch. Expect breaking and URL changes!">[WIP]</span>
+					</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#box-as--" id="box-as--"><code>box ⟦as …⟧ &lt;…&gt;</code></a></h1>
+<p>A <code>box ⟦as …⟧ &lt;…&gt;</code> expression moves its parameter's backing storage into a new named heap object.</p>
+<p>In practical terms:</p>
+<ul>
+<li>
+<p>Any captures are first placed in a <a href=""><code>Box&lt;…&gt;</code></a> before being assigned to a ⟦named⟧ field inside the current component instance.</p>
+<p>This means that, for example, if you write <code>box as boxed &lt;*Component as child&gt;</code>, you'll need to access it as <code>self.boxed.child</code>.</p>
+<p>This <strong>introduces some level of runtime indirection</strong>, also when rendering components.</p>
+</li>
+<li>
+<p><strong>Uninitialised boxed expressions take up very little space.</strong></p>
+</li>
+<li>
+<p><strong>Recursion becomes possible.</strong></p>
+</li>
+</ul>
+<h2><a class="header" href="#component-recursion" id="component-recursion">Component recursion</a></h2>
+<p>Infinite recursive (storage) inlining isn't possible (except <em>theoretically</em> for zero-sized-types, but Rust makes no distinction here).</p>
+<p>This means the following requires boxing:</p>
+<pre><code class="language-TODOrust TODOasteracea=Countdown asteracea::render=.i(6)">asteracea::component! {
+  Countdown()(
+    i: usize,
+  )
+
+  [
+    !{i}
+    dyn if {i &gt; 0} [
+      &quot;\n&quot;
+      box &lt;*Countdown .i = {i - 1}&gt;
+    ]
+  ]
+}
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong></p>
+<p>It's decidedly better to implement the above with a loop!<br />
+If you have a better example to demonstrate recursion with, please <a href="">let me know</a>!</p>
+</blockquote>
+<p>Note the use of <code>dyn if</code> to prevent infinite eager initialisation.</p>
+<p>You can alternatively combine <code>spread if</code> with <code>lazy ⟦move⟧</code> to avoid throwing away heap allocations once they exist. This is better in cases where the recursion depth changes quickly or </p>
+<h2><a class="header" href="#memory-savings" id="memory-savings">Memory savings</a></h2>
+<p>The container component size reduction isn't very useful in most cases, since Asteracea initialises child components eagerly, but can be used to great effect with <strong><code>dyn</code> branching if certain arms require especially large storage</strong>.</p>
+<!-- TODO: Check if it's possible to let Clippy warn about that. -->
+<p>Consider the following:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::mem::{MaybeUninit, size_of};
+
+asteracea::component! {
+  Heavy()()
+
+  |large: [u8; 1_000] = {[0; 1_000]}|; // 1 KB
+  &quot;Hello!&quot;
+}
+
+asteracea::component! {
+  Holder()(
+    show: bool = false,
+  )
+
+  [
+    &quot;Holder size: &quot; !{size_of::&lt;Self&gt;()} &quot; bytes&quot;
+    spread if {show} //TODO: Replace `spread` with `dyn`!
+      &lt;*Heavy&gt;
+  ]
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">Holder size: 1000 bytes
+</code></pre>
+<p>As you can see, <code>Holder</code> requires 1KB of space even though <code>Heavy</code> is never used.</p>
+<p>You can avoid this as follows:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::mem::{MaybeUninit, size_of};
+
+asteracea::component! {
+  Heavy()()
+
+  |large: [u8; 1_000] = {[0; 1_000]}|; // 1 KB
+  &quot;Hello!&quot;
+}
+
+asteracea::component! {
+  Holder()(
+    show: bool = false,
+  )
+
+  [
+    &quot;Holder size: &quot; !{size_of::&lt;Self&gt;()} &quot; bytes&quot;
+    spread if {show} //TODO: Replace `spread` with `dyn`!
+      /*box*/ &lt;*Heavy&gt;
+  ]
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-html">Holder size: 1000 bytes
+</code></pre>
+<p>As <code>dyn if</code> won't initialise its branches unless necessary, no heap allocation happens in this case either.</p>
+<!-- TODO: Is there any way to demo this? -->
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../conditional_content/spread_match.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../conditional_content/defer_move_as.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../conditional_content/spread_match.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../conditional_content/defer_move_as.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
