@@ -3,7 +3,7 @@ use lignin::bumpalo::Bump;
 use rhizome::Node;
 
 asteracea::component! {
-	Boxed()() []
+	pub Boxed()() []
 }
 
 // asteracea::component! {
@@ -40,7 +40,7 @@ fn simple() -> Result<(), ExtractableResolutionError> {
 asteracea::component! {
 	Named()()
 
-	box as named <*Boxed as boxed>
+	box priv named <*Boxed priv boxed>
 }
 
 #[test]
@@ -58,9 +58,13 @@ fn named() -> Result<(), ExtractableResolutionError> {
 
 mod a_module {
 	asteracea::component! {
-		Public()()
+		pub Boxed()() []
+	}
 
-		box as pub public <*Boxed as boxed>
+	asteracea::component! {
+		pub Public()()
+
+		box pub public <*Boxed pub boxed>
 	}
 }
 
@@ -82,7 +86,7 @@ fn public() -> Result<(), ExtractableResolutionError> {
 asteracea::component! {
 	Typed()()
 
-	box as named: struct TypedBoxed <*Boxed as boxed>
+	box priv named: struct TypedBoxed <*Boxed priv boxed>
 }
 
 #[test]
@@ -102,7 +106,7 @@ fn typed() -> Result<(), ExtractableResolutionError> {
 asteracea::component! {
 	TypeReused()()
 
-	box as named: TypedBoxed <*Boxed as boxed>
+	box priv named: TypedBoxed <*Boxed priv boxed>
 }
 
 #[test]
@@ -115,6 +119,26 @@ fn reused() -> Result<(), ExtractableResolutionError> {
 
 	let typed: TypedBoxed = *component.named;
 	let _: Boxed = typed.boxed;
+
+	Ok(())
+}
+
+asteracea::component! {
+	Multi()()
+
+	[
+		box <*Boxed priv boxed>
+		box <*Boxed priv boxed>
+	]
+}
+
+#[test]
+fn multi() -> Result<(), ExtractableResolutionError> {
+	let root = Node::new_for::<()>();
+	let component = Multi::new(&root.into(), Multi::new_args_builder().build())?;
+
+	let bump = Bump::new();
+	let _vdom = component.render(&bump, Multi::render_args_builder().build());
 
 	Ok(())
 }

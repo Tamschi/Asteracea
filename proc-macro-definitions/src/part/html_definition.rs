@@ -95,7 +95,7 @@ enum ElementName {
 	Known(Ident),
 }
 
-pub struct HtmlDefinition<C> {
+pub struct HtmlDefinition<C: Configuration> {
 	lt: Token![<],
 	name: ElementName,
 	attributes: Vec<AttributeDefinition>,

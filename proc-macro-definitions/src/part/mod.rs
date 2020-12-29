@@ -1,4 +1,5 @@
 mod attached_access_expression;
+mod box_expression;
 mod bump_format_shorthand;
 mod capture_definition;
 mod component;
@@ -12,7 +13,10 @@ mod html_definition;
 pub use self::{
 	attached_access_expression::AttachedAccessExpression, capture_definition::CaptureDefinition,
 };
-use self::{component::Component, html_comment::HtmlComment, html_definition::HtmlDefinition};
+use self::{
+	box_expression::BoxExpression, component::Component, html_comment::HtmlComment,
+	html_definition::HtmlDefinition,
+};
 use crate::{
 	asteracea_ident,
 	parse_with_context::{ParseContext, ParseWithContext},
@@ -34,7 +38,7 @@ use syn_mid::Block;
 use unquote::unquote;
 use wyz::Pipe as _;
 
-pub struct Part<C> {
+pub struct Part<C: Configuration> {
 	body: PartBody<C>,
 	attached_access: AttachedAccessExpression, //TODO: Clean this up.
 }
@@ -45,10 +49,11 @@ enum PartKind {
 	EventBinding,
 }
 
-impl<C> Part<C> {
+impl<C: Configuration> Part<C> {
 	fn kind(&self) -> PartKind {
 		match self.body {
-			PartBody::Capture(_)
+			PartBody::Box(_)
+			| PartBody::Capture(_)
 			| PartBody::Comment(_)
 			| PartBody::Component(_)
 			| PartBody::Expression(_, _)
@@ -121,7 +126,8 @@ impl Spanned for InitMode {
 }
 
 #[allow(clippy::large_enum_variant, clippy::type_complexity)]
-pub enum PartBody<C> {
+pub enum PartBody<C: Configuration> {
+	Box(BoxExpression<C>),
 	Capture(CaptureDefinition<C>),
 	Comment(HtmlComment),
 	Component(Component<C>),
@@ -195,7 +201,9 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 	type Output = Option<Self>;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let lookahead = input.lookahead1();
-		Ok(if lookahead.peek(LitStr) {
+		Ok(if lookahead.peek(Token![box]) {
+			Some(PartBody::Box(BoxExpression::parse_with_context(input, cx)?))
+		} else if lookahead.peek(LitStr) {
 			Some(PartBody::Text(input.parse()?))
 		} else if lookahead.peek(Token![<]) {
 			match {
@@ -366,6 +374,7 @@ pub struct GenerateContext {}
 impl<C: Configuration> PartBody<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		Ok(match self {
+			PartBody::Box(box_expression) => box_expression.part_tokens(cx)?,
 			PartBody::Comment(html_comment) => html_comment.part_tokens(),
 			PartBody::Component(component) => component.part_tokens(),
 			PartBody::Text(lit_str) => {
