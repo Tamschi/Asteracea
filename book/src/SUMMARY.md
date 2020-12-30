@@ -37,7 +37,7 @@
   - [`for … in <…> by <…> ⟦priv …⟦: ⟦struct⟧ …⟧⟧ <…> ⟦else <…>⟧`]()
   - [`spread match <…> [ … ]`](./conditional_content/spread_match.md)
   - [`dyn match <…> [ … ]`]()
-  - [`box ⟦priv …⟦: ⟦struct⟧ …⟧⟧ <…>`](./conditional_content/box_as.md)
+  - [`box ⟦priv …⟦: ⟦struct⟧ …⟧⟧ <…>`](./conditional_content/box.md)
   - [`defer ⟦priv …⟦: ⟦struct⟧ …⟧⟧ ⟦dyn ⟦move⟧⟧ <…>`](./conditional_content/defer_move_as.md)
 - [4: Modifiers]()
   - [Introduction to VDOM Modifiers]()

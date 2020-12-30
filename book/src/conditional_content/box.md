@@ -1,12 +1,12 @@
-# `box ⟦as ⟦pub⟧ …⟦: ⟦struct⟧ …⟧⟧ <…>`
+# `box ⟦priv …⟦: ⟦struct⟧ …⟧⟧ <…>`
 
 A `box <…>` expression moves its parameter's backing storage into a new heap object, bound to a field of the current [storage context](*).
 
-The field can be named using `as …` syntax. If the field is named, its type can be specified using `: …`.
+The field can be named using `box priv …` syntax. If the field is named, its type can be specified using `: …`.
 
 If you don't name the type or specify its name using `: struct …`, it is generated automatically.
 
-The field can be made public by writing `as pub …`. Any other standard Rust visibility can be used in place of `pub`, too, to similar effects.
+The field can be made public by writing `box pub …`. Any other standard Rust visibility can be used in place of `pub`, too, to similar effects.
 
 In practical terms:
 

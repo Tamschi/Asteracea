@@ -103,10 +103,14 @@ fn typed() -> Result<(), ExtractableResolutionError> {
 	Ok(())
 }
 
+struct BoxContainer {
+	boxed: Boxed,
+}
+
 asteracea::component! {
 	TypeReused()()
 
-	box priv named: TypedBoxed <*Boxed priv boxed>
+	box priv named: BoxContainer <*Boxed priv boxed>
 }
 
 #[test]
@@ -117,7 +121,7 @@ fn reused() -> Result<(), ExtractableResolutionError> {
 	let bump = Bump::new();
 	let _vdom = component.render(&bump, TypeReused::render_args_builder().build());
 
-	let typed: TypedBoxed = *component.named;
+	let typed: BoxContainer = *component.named;
 	let _: Boxed = typed.boxed;
 
 	Ok(())

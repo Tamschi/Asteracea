@@ -1,7 +1,10 @@
 use crate::component_declaration::FieldDefinition;
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
-use syn::{parse::ParseStream, parse2, Expr, ExprPath, Generics, Ident, Result, Visibility};
+use syn::{
+	parse::ParseStream, parse2, spanned::Spanned, Expr, ExprPath, Generics, Ident, Result,
+	Visibility,
+};
 use unzip_n::unzip_n;
 
 pub struct ParseContext<'a> {
@@ -15,7 +18,11 @@ impl<'a> ParseContext<'a> {
 		Self {
 			component_name: Some(component_name),
 			storage: parse2(quote_spanned!(component_name.span()=> self)).unwrap(),
-			storage_context: StorageContext::default(),
+			storage_context: StorageContext {
+				type_name: component_name.clone(),
+				field_definitions: vec![],
+				generated_names: 0,
+			},
 		}
 	}
 
@@ -23,21 +30,29 @@ impl<'a> ParseContext<'a> {
 		Self {
 			component_name: None,
 			storage: parse2(quote_spanned!(Span::mixed_site()=> self)).unwrap(),
-			storage_context: Default::default(),
+			storage_context: StorageContext {
+				type_name: Ident::new("UNUSED", Span::mixed_site()),
+				field_definitions: vec![],
+				generated_names: 0,
+			},
 		}
 	}
 
-	pub fn new_nested(&self, storage: Expr) -> Self {
+	pub fn new_nested(&self, storage: Expr, type_name: Ident) -> Self {
 		Self {
 			component_name: self.component_name,
 			storage,
-			storage_context: StorageContext::default(),
+			storage_context: StorageContext {
+				type_name,
+				field_definitions: vec![],
+				generated_names: 0,
+			},
 		}
 	}
 }
 
-#[derive(Default)]
 pub struct StorageContext {
+	type_name: Ident,
 	field_definitions: Vec<FieldDefinition>,
 	generated_names: usize,
 }
@@ -53,6 +68,13 @@ impl StorageContext {
 		);
 		self.generated_names += 1;
 		field
+	}
+
+	pub fn generated_type_name(&self, field_name: &Ident) -> Ident {
+		Ident::new(
+			&format!("{}__Asteracea__Field_{}", self.type_name, field_name),
+			field_name.span(),
+		)
 	}
 
 	pub fn push(&mut self, field_definition: FieldDefinition) {
@@ -91,6 +113,19 @@ impl StorageContext {
 					#(#field_attributes)*
 					#field_visibilities #field_names: #field_types,
 				)*
+			}
+		}
+	}
+
+	pub fn value(&self, type_path: &ExprPath) -> TokenStream {
+		let (field_names, field_values) = self
+			.field_definitions()
+			.map(|c| (&c.name, &c.initial_value))
+			.unzip::<_, _, Vec<_>, Vec<_>>();
+
+		quote_spanned! {type_path.span().resolved_at(Span::mixed_site())=>
+			#type_path {
+				#(#field_names: (#field_values),)* // The parentheses around #field_values stop the grammar from breaking as much if no value is provided.
 			}
 		}
 	}

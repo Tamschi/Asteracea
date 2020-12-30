@@ -12,7 +12,7 @@ use crate::{
 use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapNone as _};
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	parenthesized,
 	parse::{discouraged, Parse, ParseStream, Result},
@@ -318,14 +318,8 @@ impl ComponentDeclaration {
 		let struct_definition =
 			storage_context.type_definition(&visibility, &component_name, &component_generics);
 
-		let (field_names, field_values) = storage_context
-			.field_definitions()
-			.map(|c| (&c.name, &c.initial_value))
-			.unzip::<_, _, Vec<_>, Vec<_>>();
-
-		let field_initializers = quote! {
-			#(#field_names: (#field_values),)* // The parentheses around #field_values stop the grammar from breaking as much if no value is provided.
-		};
+		let constructed_value =
+			storage_context.value(&parse2(component_name.to_token_stream()).unwrap());
 
 		let bump = quote_spanned! (render_paren.span.resolved_at(Span::call_site())=>
 			bump
@@ -494,9 +488,7 @@ impl ComponentDeclaration {
 					// I really should add benchmarks before trying this, though.
 					let #call_site_node = #call_site_node.into_arc();
 
-					Ok(Self {
-						#field_initializers
-					})
+					Ok(#constructed_value)
 				}
 
 				pub fn new_args_builder#new_args_builder_generics()
