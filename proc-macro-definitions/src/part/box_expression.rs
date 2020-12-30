@@ -8,18 +8,17 @@ use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use either::Either;
 use proc_macro2::TokenStream;
 use quote::quote_spanned;
-use syn::{parse::ParseStream, parse2, ExprPath, Ident, Result, Token, Visibility};
+use syn::{parse::ParseStream, parse2, Expr, ExprPath, Ident, Result, Token, Visibility};
 
 #[allow(clippy::type_complexity)]
-pub struct BoxExpression<C: Configuration>(
-	Token![box],
-	Option<(
-		Either<Token![priv], Visibility>,
-		Ident,
-		Option<(Token![:], Either<(Token![struct], Ident), ExprPath>)>,
-	)>,
-	Box<Part<C>>,
-);
+pub struct BoxExpression<C: Configuration> {
+	box_: Token![box],
+	vis: Either<Token![priv], Visibility>,
+	field_name: Ident,
+	type_: Option<(Token![:], Either<(Token![struct], Ident), ExprPath>)>,
+	content: Box<Part<C>>,
+	storage: Expr,
+}
 
 impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 	type Output = Self;
@@ -35,8 +34,8 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 				vis => Some(Either::Right(vis)),
 			}
 		};
-		let binding = if let Some(vis) = vis.clone() {
-			let name = input.parse()?;
+		let (vis, field_name, type_) = if let Some(vis) = vis.clone() {
+			let field_name = input.parse()?;
 
 			let type_ = if let Some(colon) = input.parse().unwrap() {
 				let type_ = if let Some(struct_) = input.parse().unwrap() {
@@ -49,15 +48,18 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 				None
 			};
 
-			Some((vis, name, type_))
+			(vis, field_name, type_)
 		} else {
-			None
+			(
+				Either::Left(Token![priv](box_.span)),
+				cx.storage_context.next_field(box_.span),
+				None,
+			)
 		};
 
 		let storage = &cx.storage;
-		let (field_name, type_path): (Ident, ExprPath) = if let Some(binding) = &binding {
-			let field_name = Clone::clone(&binding.1);
-			let type_path = if let Some(type_) = &binding.2 {
+		let type_path: ExprPath = {
+			let type_path = if let Some(type_) = type_.as_ref() {
 				match &type_.1 {
 					Either::Left((_, name)) => {
 						parse2(quote_spanned!(Ident::span(name)=> #name)).unwrap()
@@ -68,28 +70,22 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 				let type_name = cx.storage_context.generated_type_name(&field_name);
 				parse2(quote_spanned!(type_name.span() => #type_name)).unwrap()
 			};
-			(field_name, type_path)
-		} else {
-			let field_name = cx.storage_context.next_field(box_.span);
-			let type_name = cx.storage_context.generated_type_name(&field_name);
-			let type_path = parse2(quote_spanned!(type_name.span() => #type_name)).unwrap();
-			(field_name, type_path)
+			type_path
 		};
 		let storage = parse2(quote_spanned!(box_.span=> #storage.#field_name)).unwrap();
 
-		let mut parse_context =
-			cx.new_nested(storage, cx.storage_context.generated_type_name(&field_name));
-		let contents = Box::new(Part::parse_required_with_context(
+		let mut parse_context = cx.new_nested(
+			&storage,
+			cx.storage_context.generated_type_name(&field_name),
+		);
+		let content = Box::new(Part::parse_required_with_context(
 			input,
 			&mut parse_context,
 		)?);
 
 		let resolved_vis = match &vis {
-			Some(custom) => match custom {
-				Either::Left(_) => Visibility::Inherited,
-				Either::Right(vis) => vis.clone(),
-			},
-			None => Visibility::Inherited,
+			Either::Left(_) => Visibility::Inherited,
+			Either::Right(vis) => vis.clone(),
 		};
 
 		let boxed_value = parse_context.storage_context.value(&type_path);
@@ -104,12 +100,26 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		.unwrap()
 		.debugless_unwrap_none();
 
-		Ok(Self(box_, binding, contents))
+		Ok(Self {
+			box_,
+			vis,
+			field_name,
+			type_,
+			content,
+			storage,
+		})
 	}
 }
 
 impl<C: Configuration> BoxExpression<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
-		self.2.part_tokens(cx)
+		let field_name = &self.field_name;
+		let content = self.content.part_tokens(cx)?;
+		let storage = &self.storage;
+
+		Ok(quote_spanned! (self.box_.span=> {
+			let #field_name = #storage;
+			#content
+		}))
 	}
 }

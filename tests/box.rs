@@ -110,7 +110,10 @@ struct BoxContainer {
 asteracea::component! {
 	TypeReused()()
 
-	box priv named: BoxContainer <*Boxed priv boxed>
+	box priv named: BoxContainer [
+		<*Boxed priv boxed>
+		<*{&named.boxed}>
+	]
 }
 
 #[test]
