@@ -179,6 +179,20 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			Either::Right(vis) => vis.clone(),
 		};
 
+		if add_phantom {
+			call2_strict(
+				quote_spanned! {box_.span.resolved_at(Span::mixed_site())=>
+					|__Asteracea__phantom = ::std::marker::PhantomData::<(/*TODO*/)>::default()|;
+				},
+				|input| {
+					CaptureDefinition::<C>::parse_with_context(input, &mut parse_context)
+						.unwrap()
+						.debugless_unwrap_none()
+				},
+			)
+			.unwrap()
+		}
+
 		let boxed_value = parse_context.storage_context.value(&type_path);
 
 		call2_strict(
