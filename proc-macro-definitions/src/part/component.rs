@@ -171,7 +171,7 @@ impl<C> Component<C> {
 				let render_params = parameter_struct_expression(
 					open_span.resolved_at(Span::mixed_site()),
 					parse2(
-						quote_spanned!(open_span.resolved_at(Span::mixed_site())=> reference.__asteracea__ref_render_args_builder()),
+						quote_spanned!(open_span.resolved_at(Span::mixed_site())=> reference.__Asteracea__ref_render_args_builder()),
 					).expect("render_params make_builder 2"),
 					render_params.as_slice(),
 				);

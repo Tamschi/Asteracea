@@ -471,7 +471,7 @@ impl ComponentDeclaration {
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
 					#new_args_name {
 						#(#constructor_args_field_patterns,)*
-						__asteracea__phantom: _,
+						__Asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
 				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
@@ -505,7 +505,7 @@ impl ComponentDeclaration {
 					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
 					#render_args_name {
 						#(#render_args_field_patterns,)*
-						__asteracea__phantom: _,
+						__Asteracea__phantom: _,
 					}: #render_args_name#render_args_generic_args,
 				) #render_type {
 					let this = #render_self;
@@ -519,7 +519,7 @@ impl ComponentDeclaration {
 
 				//TODO: Is it possible to call render_args_builder on the reference instead, somehow?
 				#[doc(hidden)] // This
-				pub fn __asteracea__ref_render_args_builder#render_args_builder_generics(&self)
+				pub fn __Asteracea__ref_render_args_builder#render_args_builder_generics(&self)
 				-> #render_args_builder_name#render_args_builder_generic_args {
 					let _ = self;
 					#render_args_name::builder()
