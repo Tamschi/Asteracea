@@ -134,9 +134,11 @@ impl<C> ParseWithContext for CaptureDefinition<C> {
 			initial_value,
 		};
 		let access = {
-			cx.field_definitions.push(field_definition);
-			access_name
-				.map(|access_name: Ident| quote_spanned!(access_name.span()=> self.#access_name))
+			cx.storage_context.push(field_definition);
+			let storage = cx.storage;
+			access_name.map(
+				|access_name: Ident| quote_spanned!(access_name.span()=> #storage.#access_name),
+			)
 		};
 
 		Ok(access.map(|access| Self {

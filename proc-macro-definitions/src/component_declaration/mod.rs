@@ -4,7 +4,7 @@ use self::{
 };
 use crate::{
 	asteracea_ident,
-	parse_with_context::{ParseContext, ParseWithContext},
+	parse_with_context::{ParseContext, ParseWithContext, StorageContext},
 	part::GenerateContext,
 	syn_ext::{AddOptionExt, *},
 	warn, Configuration, MapMessage, Part,
@@ -40,10 +40,11 @@ mod kw {
 }
 
 pub struct ComponentDeclaration {
-	cx: ParseContext,
 	attributes: Vec<Attribute>,
 	visibility: Visibility,
+	name: Ident,
 	component_generics: Generics,
+	storage_context: StorageContext,
 	constructor_attributes: Vec<Attribute>,
 	constructor_generics: Generics,
 	constructor_paren: Paren,
@@ -173,10 +174,7 @@ impl Parse for ComponentDeclaration {
 
 		let mut rhizome_extractions = Vec::new();
 
-		let mut cx = ParseContext {
-			component_name: Some(component_name),
-			..Default::default()
-		};
+		let mut cx = ParseContext::new_root(&component_name);
 
 		// Dependency extraction:
 		while let Some(ref_token) = input.parse::<Token![ref]>().ok() {
@@ -277,9 +275,10 @@ impl Parse for ComponentDeclaration {
 		}
 
 		Ok(Self {
-			cx,
 			attributes,
 			visibility,
+			name: component_name,
+			storage_context: cx.storage_context,
 			component_generics,
 			constructor_attributes,
 			constructor_generics,
@@ -301,16 +300,10 @@ impl ComponentDeclaration {
 	#[allow(clippy::cognitive_complexity)]
 	pub fn into_tokens(self) -> Result<TokenStream> {
 		let Self {
-			cx:
-				ParseContext {
-					component_name,
-					allow_non_snake_case_on_structure_workaround,
-					field_definitions,
-					event_binding_count: _,
-					custom_child_element_count: _,
-				},
 			attributes,
 			visibility,
+			name: component_name,
+			storage_context,
 			component_generics,
 			constructor_attributes,
 			constructor_generics,
@@ -326,20 +319,14 @@ impl ComponentDeclaration {
 			rhizome_extractions,
 		} = self;
 
-		let component_name = component_name.unwrap();
-
 		let asteracea = asteracea_ident(Span::call_site());
 
-		let allow_non_snake_case_on_structure_workaround =
-			if allow_non_snake_case_on_structure_workaround {
-				quote! (#[allow(non_snake_case)])
-			} else {
-				quote!()
-			};
+		let struct_definition =
+			storage_context.type_definition(&visibility, &component_name, &component_generics);
 
 		let (field_attributes, field_visibilities, field_names, field_types, field_values) =
-			field_definitions
-				.into_iter()
+			storage_context
+				.field_definitions()
 				.map(|c| {
 					(
 						c.attributes,
@@ -491,15 +478,8 @@ impl ComponentDeclaration {
 			#[builder(doc)]
 			#visibility struct #render_args_name#render_args_generics #render_args_body
 
-			#allow_non_snake_case_on_structure_workaround
 			#(#attributes)*
-			#visibility struct #component_name#component_generics
-			{
-				#(
-					#(#field_attributes)*
-					#field_visibilities #field_names: #field_types,
-				)*
-			}
+			#struct_definition
 
 			impl#component_impl_generics #component_name#component_type_generics
 			#component_where_clause

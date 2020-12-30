@@ -84,17 +84,8 @@ impl EventBindingDefinition {
 			}
 		};
 
-		let field_name = Ident::new(
-			&format!(
-				"asteracea__event_handler_{}_{}",
-				cx.event_binding_count,
-				&name.value()
-			),
-			name.span(),
-		);
-		cx.event_binding_count += 1;
+		let field_name = cx.storage_context.next_field(name.span());
 
-		cx.allow_non_snake_case_on_structure_workaround = true;
 		call2_strict(
 			quote_spanned! {prefix.span=>
 				#[allow(non_snake_case)] // This currently has no effect, hence `allow_non_snake_case_on_structure_workaround`.

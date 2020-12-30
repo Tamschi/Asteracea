@@ -96,7 +96,7 @@ mod kw {
 	syn::custom_keyword!(spread);
 }
 
-pub enum InitMode {
+pub enum InitMode<'a> {
 	Dyn(Token![dyn], ParseContext),
 	Spread(kw::spread),
 }

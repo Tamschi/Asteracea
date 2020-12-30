@@ -81,10 +81,7 @@ impl<C> ParseWithContext for Component<C> {
 					| visibility @ Visibility::Crate(_)
 					| visibility @ Visibility::Restricted(_) => (input.parse()?, visibility),
 					Visibility::Inherited => (
-						Ident::new(
-							&format!("__asteracea__custom_{}", cx.custom_child_element_count),
-							open_span.resolved_at(Span::mixed_site()),
-						),
+						cx.storage_context.next_field(open_span),
 						Visibility::Inherited,
 					),
 				}

@@ -5,7 +5,8 @@ use crate::{
 };
 use either::Either;
 use proc_macro2::TokenStream;
-use syn::{parse::ParseStream, ExprPath, Ident, Result, Token, Visibility};
+use quote::quote_spanned;
+use syn::{parse::ParseStream, parse2, ExprPath, Ident, Result, Token, Visibility};
 
 #[allow(clippy::type_complexity)]
 pub struct BoxExpression<C: Configuration>(
@@ -22,7 +23,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 	type Output = Self;
 
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
-		let box_ = input.parse()?;
+		let box_: Token![box] = input.parse()?;
 
 		let vis = if let Ok(priv_) = input.parse() {
 			Some(Either::Left(priv_))
@@ -51,10 +52,15 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			None
 		};
 
-		let mut parse_context = ParseContext {
-			component_name: cx.component_name.clone(),
-			..ParseContext::default()
+		let storage = &cx.storage;
+		let field_name: Ident = if let Some(binding) = &binding {
+			Clone::clone(&binding.1)
+		} else {
+			cx.storage_context.next_field(box_.span)
 		};
+		let storage = parse2(quote_spanned!(box_.span=> #storage.#field_name)).unwrap();
+
+		let mut parse_context = cx.new_nested(storage);
 		let contents = Box::new(Part::parse_required_with_context(
 			input,
 			&mut parse_context,
