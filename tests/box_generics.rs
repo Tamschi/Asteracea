@@ -49,5 +49,5 @@ asteracea::component! {
 asteracea::component! {
 	CustomWhered<T> where T: Debug, ()()
 
-	box priv a: struct A::<T> where T: Debug <*CustomWhered::<T>>
+	box priv b: struct B::<T> where T: Debug; <*CustomWhered::<T>>
 }

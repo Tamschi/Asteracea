@@ -1,5 +1,3 @@
-use std::{borrow::Cow, iter};
-
 use super::{CaptureDefinition, GenerateContext, Part};
 use crate::{
 	parse_with_context::{ParseContext, ParseWithContext},
@@ -10,6 +8,7 @@ use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use either::Either;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
+use std::borrow::Cow;
 use syn::{
 	parse::ParseStream,
 	parse2,
@@ -27,11 +26,17 @@ pub struct BoxExpression<C: Configuration> {
 	type_: Option<(
 		Token![:],
 		Either<
-			(Token![struct], Ident, Option<Token![::]>, Generics),
+			(
+				Token![struct],
+				Ident,
+				Option<Token![::]>,
+				Generics,
+				Option<Token![;]>,
+			),
 			(
 				ExprPath,
-				// Must end with comma.
-				Option<WhereClause>,
+				// Must end with semicolon.
+				Option<(WhereClause, Token![;])>,
 			),
 		>,
 	)>,
@@ -59,12 +64,19 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 				let type_ = if let Some(struct_) = input.parse().unwrap() {
 					let name = input.parse()?;
 					let double_colon: Option<Token![::]> = input.parse()?;
-					let generics = if double_colon.is_some() {
-						input.parse()?
+					let (generics, semicolon) = if double_colon.is_some() {
+						let mut generics: Generics = input.parse()?;
+						generics.where_clause = input.parse()?;
+						let semicolon = if generics.where_clause.is_some() {
+							Some(input.parse()?)
+						} else {
+							None
+						};
+						(generics, semicolon)
 					} else {
-						Generics::default()
+						(Generics::default(), None)
 					};
-					Either::Left((struct_, name, double_colon, generics))
+					Either::Left((struct_, name, double_colon, generics, semicolon))
 				} else {
 					let path = input.parse()?;
 					let where_clause: Option<WhereClause> = input.parse()?;
@@ -83,6 +95,9 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 							));
 						}
 					}
+					let where_clause = where_clause
+						.map(|w| Result::Ok((w, input.parse::<Token![;]>()?)))
+						.transpose()?;
 					Either::Right((path, where_clause))
 				};
 				Some((colon, type_))
@@ -105,7 +120,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			(Cow<Generics>, bool),
 		) = if let Some(type_) = type_.as_ref() {
 			match &type_.1 {
-				Either::Left((_, name, _, generics)) => (
+				Either::Left((_, name, _, generics, _semicolon)) => (
 					parse2(quote_spanned!(Ident::span(name)=> #name)).unwrap(),
 					Some(name.clone()),
 					(Cow::Borrowed(generics), false),
@@ -117,7 +132,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 						Cow::Owned({
 							let path: TypePath = parse2(path.to_token_stream())?;
 							let arguments = &path.path.segments.last().unwrap().arguments;
-							let mut generics = match arguments {
+							let generics = match arguments {
 								PathArguments::None => Generics::default(),
 								PathArguments::AngleBracketed(a_bra_args) => Generics {
 									lt_token: Some(a_bra_args.lt_token),
@@ -129,7 +144,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 									    syn::GenericArgument::Const(_) => {todo!("box type generic const")}
 									},pair.punct().cloned().cloned()))).collect::<Result<_>>()?,
 									gt_token: Some(a_bra_args.gt_token),
-									where_clause: where_clause.clone()
+									where_clause: where_clause.as_ref().map(|(w, _)| w).cloned()
 								},
 								PathArguments::Parenthesized(par_args) => {
 									return Err(Error::new_spanned(par_args, "Parenthesized generic arguments are not supported in this position."))
