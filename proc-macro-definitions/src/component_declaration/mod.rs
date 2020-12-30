@@ -169,7 +169,7 @@ impl Parse for ComponentDeclaration {
 
 		let mut rhizome_extractions = Vec::new();
 
-		let mut cx = ParseContext::new_root(&visibility, &component_name);
+		let mut cx = ParseContext::new_root(&visibility, &component_name, &component_generics);
 
 		// Dependency extraction:
 		while let Some(ref_token) = input.parse::<Token![ref]>().ok() {

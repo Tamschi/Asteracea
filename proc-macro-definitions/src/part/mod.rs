@@ -32,7 +32,7 @@ use syn::{
 	parse::{Parse, ParseStream, Result},
 	spanned::Spanned as _,
 	token::{Add, Brace, Bracket},
-	Attribute, Error, Expr, Ident, LitStr, Pat, Token, Visibility,
+	Attribute, Error, Expr, Generics, Ident, LitStr, Pat, Token, Visibility,
 };
 use syn_mid::Block;
 use unquote::unquote;
@@ -158,7 +158,7 @@ impl<C: Configuration> Parse for Part<C> {
 		let span = input.span();
 		Self::parse_with_context(
 			input,
-			&mut ParseContext::new_fragment(&Visibility::Inherited),
+			&mut ParseContext::new_fragment(&Visibility::Inherited, &Generics::default()),
 		)
 		.and_then(|part| {
 			if let Some(part) = part {

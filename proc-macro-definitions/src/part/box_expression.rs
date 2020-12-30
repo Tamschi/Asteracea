@@ -1,3 +1,5 @@
+use std::{borrow::Cow, iter};
+
 use super::{CaptureDefinition, GenerateContext, Part};
 use crate::{
 	parse_with_context::{ParseContext, ParseWithContext},
@@ -8,7 +10,13 @@ use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use either::Either;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
-use syn::{parse::ParseStream, parse2, ExprPath, Generics, Ident, Result, Token, Visibility};
+use syn::{
+	parse::ParseStream,
+	parse2,
+	punctuated::{Pair, Punctuated},
+	Error, ExprPath, GenericParam, Generics, Ident, LifetimeDef, PathArguments, Result, Token,
+	TypeParam, TypePath, Visibility, WhereClause,
+};
 
 #[allow(clippy::type_complexity)]
 #[allow(dead_code)]
@@ -16,7 +24,17 @@ pub struct BoxExpression<C: Configuration> {
 	box_: Token![box],
 	vis: Either<Token![priv], Visibility>,
 	field_name: Ident,
-	type_: Option<(Token![:], Either<(Token![struct], Ident), ExprPath>)>,
+	type_: Option<(
+		Token![:],
+		Either<
+			(Token![struct], Ident, Option<Token![::]>, Generics),
+			(
+				ExprPath,
+				// Must end with comma.
+				Option<WhereClause>,
+			),
+		>,
+	)>,
 	content: Box<Part<C>>,
 }
 
@@ -39,9 +57,33 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 
 			let type_ = if let Some(colon) = input.parse().unwrap() {
 				let type_ = if let Some(struct_) = input.parse().unwrap() {
-					Either::Left((struct_, input.parse()?))
+					let name = input.parse()?;
+					let double_colon: Option<Token![::]> = input.parse()?;
+					let generics = if double_colon.is_some() {
+						input.parse()?
+					} else {
+						Generics::default()
+					};
+					Either::Left((struct_, name, double_colon, generics))
 				} else {
-					Either::Right(input.parse()?)
+					let path = input.parse()?;
+					let where_clause: Option<WhereClause> = input.parse()?;
+					if let Some(where_clause) = where_clause.as_ref() {
+						if let Some(last) = where_clause.predicates.pairs().last() {
+							if last.punct().is_none() {
+								return Err(Error::new_spanned(
+									last,
+									"Each `where`-predicate must end with a `,` here.",
+								));
+							}
+						} else {
+							return Err(Error::new_spanned(
+								where_clause.where_token,
+								"A `where` clause can't be empty here.",
+							));
+						}
+					}
+					Either::Right((path, where_clause))
 				};
 				Some((colon, type_))
 			} else {
@@ -57,24 +99,61 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			)
 		};
 
-		let (type_path, generated_type_name): (ExprPath, Option<Ident>) =
-			if let Some(type_) = type_.as_ref() {
-				match &type_.1 {
-					Either::Left((_, name)) => (
-						parse2(quote_spanned!(Ident::span(name)=> #name)).unwrap(),
-						Some(name.clone()),
+		let (type_path, generated_type_name, (generics, add_phantom)): (
+			ExprPath,
+			Option<Ident>,
+			(Cow<Generics>, bool),
+		) = if let Some(type_) = type_.as_ref() {
+			match &type_.1 {
+				Either::Left((_, name, _, generics)) => (
+					parse2(quote_spanned!(Ident::span(name)=> #name)).unwrap(),
+					Some(name.clone()),
+					(Cow::Borrowed(generics), false),
+				),
+				Either::Right((path, where_clause)) => (
+					ExprPath::clone(path),
+					None,
+					(
+						Cow::Owned({
+							let path: TypePath = parse2(path.to_token_stream())?;
+							let arguments = &path.path.segments.last().unwrap().arguments;
+							let mut generics = match arguments {
+								PathArguments::None => Generics::default(),
+								PathArguments::AngleBracketed(a_bra_args) => Generics {
+									lt_token: Some(a_bra_args.lt_token),
+									params: a_bra_args.args.pairs().map(|pair| Result::Ok(Pair::new(match pair.value(){
+									    syn::GenericArgument::Lifetime(l) => GenericParam::Lifetime(LifetimeDef{ attrs: vec![], lifetime: l.clone(), colon_token: None, bounds: Punctuated::default()}),
+									    syn::GenericArgument::Type(t) => GenericParam::Type(TypeParam{attrs: vec![], ident: parse2(t.to_token_stream())?, colon_token:None,bounds:Punctuated::default(),eq_token:None,default:None}),
+										syn::GenericArgument::Binding(_) => {todo!("box type generic binding")}
+									    syn::GenericArgument::Constraint(_) => {todo!("box type generic constraint")}
+									    syn::GenericArgument::Const(_) => {todo!("box type generic const")}
+									},pair.punct().cloned().cloned()))).collect::<Result<_>>()?,
+									gt_token: Some(a_bra_args.gt_token),
+									where_clause: where_clause.clone()
+								},
+								PathArguments::Parenthesized(par_args) => {
+									return Err(Error::new_spanned(par_args, "Parenthesized generic arguments are not supported in this position."))
+								}
+							};
+							generics
+						}),
+						false,
 					),
-					Either::Right(path) => (ExprPath::clone(path), None),
-				}
-			} else {
-				let type_name = cx.storage_context.generated_type_name(&field_name);
-				(
-					parse2(type_name.to_token_stream()).unwrap(),
-					Some(type_name),
-				)
-			};
+				),
+			}
+		} else {
+			let type_name = cx.storage_context.generated_type_name(&field_name);
+			(
+				parse2(type_name.to_token_stream()).unwrap(),
+				Some(type_name),
+				(Cow::Borrowed(cx.storage_generics), true),
+			)
+		};
 
-		let mut parse_context = cx.new_nested(cx.storage_context.generated_type_name(&field_name));
+		let mut parse_context = cx.new_nested(
+			cx.storage_context.generated_type_name(&field_name),
+			generics.as_ref(),
+		);
 		let content = Box::new(Part::parse_required_with_context(
 			input,
 			&mut parse_context,

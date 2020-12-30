@@ -7,15 +7,21 @@ use unzip_n::unzip_n;
 pub struct ParseContext<'a> {
 	pub item_visibility: &'a Visibility,
 	pub component_name: Option<&'a Ident>,
+	pub storage_generics: &'a Generics,
 	pub storage_context: StorageContext,
 	pub random_items: Vec<TokenStream>,
 }
 
 impl<'a> ParseContext<'a> {
-	pub fn new_root(component_visibility: &'a Visibility, component_name: &'a Ident) -> Self {
+	pub fn new_root(
+		component_visibility: &'a Visibility,
+		component_name: &'a Ident,
+		component_generics: &'a Generics,
+	) -> Self {
 		Self {
 			item_visibility: component_visibility,
 			component_name: Some(component_name),
+			storage_generics: component_generics,
 			storage_context: StorageContext {
 				type_name: component_name.clone(),
 				field_definitions: vec![],
@@ -25,10 +31,11 @@ impl<'a> ParseContext<'a> {
 		}
 	}
 
-	pub fn new_fragment(item_visibility: &'a Visibility) -> Self {
+	pub fn new_fragment(dummy_visibility: &'a Visibility, dummy_generics: &'a Generics) -> Self {
 		Self {
-			item_visibility,
+			item_visibility: dummy_visibility,
 			component_name: None,
+			storage_generics: dummy_generics,
 			storage_context: StorageContext {
 				type_name: Ident::new("UNUSED", Span::mixed_site()),
 				field_definitions: vec![],
@@ -38,10 +45,11 @@ impl<'a> ParseContext<'a> {
 		}
 	}
 
-	pub fn new_nested(&self, type_name: Ident) -> Self {
+	pub fn new_nested(&self, type_name: Ident, nested_generics: &'a Generics) -> Self {
 		Self {
 			item_visibility: self.item_visibility,
 			component_name: self.component_name,
+			storage_generics: nested_generics,
 			storage_context: StorageContext {
 				type_name,
 				field_definitions: vec![],
