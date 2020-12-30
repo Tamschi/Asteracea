@@ -13,8 +13,8 @@ use syn::{
 	parse::ParseStream,
 	parse2,
 	punctuated::{Pair, Punctuated},
-	Error, ExprPath, GenericParam, Generics, Ident, LifetimeDef, PathArguments, Result, Token,
-	TypeGenerics, TypeParam, TypePath, Visibility, WhereClause,
+	ConstParam, Error, ExprPath, GenericArgument, GenericParam, Generics, Ident, LifetimeDef,
+	PathArguments, Result, Token, TypeGenerics, TypeParam, TypePath, Visibility, WhereClause,
 };
 
 #[allow(clippy::type_complexity)]
@@ -114,16 +114,102 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			)
 		};
 
+		fn strip_params(
+			arguments: &Punctuated<GenericParam, Token![,]>,
+		) -> Punctuated<GenericParam, Token![,]> {
+			arguments
+				.pairs()
+				.map(|pair| {
+					Pair::new(
+						match pair.value() {
+							GenericParam::Type(t) => GenericParam::Type(TypeParam {
+								attrs: vec![],
+								ident: t.ident.clone(),
+								colon_token: None,
+								bounds: Punctuated::default(),
+								eq_token: None,
+								default: None,
+							}),
+							GenericParam::Lifetime(l) => GenericParam::Lifetime(LifetimeDef {
+								attrs: vec![],
+								lifetime: l.lifetime.clone(),
+								colon_token: None,
+								bounds: Punctuated::default(),
+							}),
+							GenericParam::Const(c) => GenericParam::Type(TypeParam {
+								attrs: vec![],
+								ident: c.ident.clone(),
+								colon_token: None,
+								bounds: Punctuated::default(),
+								eq_token: None,
+								default: None,
+							}),
+						},
+						pair.punct().cloned().cloned(),
+					)
+				})
+				.collect()
+		}
+
+		fn generic_arguments_to_generic_params(
+			arguments: &Punctuated<GenericArgument, Token![,]>,
+		) -> Result<Punctuated<GenericParam, Token![,]>> {
+			arguments
+				.pairs()
+				.map(|pair| {
+					Ok(Pair::new(
+						match pair.value() {
+							syn::GenericArgument::Lifetime(l) => {
+								GenericParam::Lifetime(LifetimeDef {
+									attrs: vec![],
+									lifetime: l.clone(),
+									colon_token: None,
+									bounds: Punctuated::default(),
+								})
+							}
+							syn::GenericArgument::Type(t) => GenericParam::Type(TypeParam {
+								attrs: vec![],
+								ident: parse2(t.to_token_stream())?,
+								colon_token: None,
+								bounds: Punctuated::default(),
+								eq_token: None,
+								default: None,
+							}),
+							syn::GenericArgument::Binding(_) => {
+								todo!("box type generic binding")
+							}
+							syn::GenericArgument::Constraint(_) => {
+								todo!("box type generic constraint")
+							}
+							syn::GenericArgument::Const(_) => {
+								todo!("box type generic const")
+							}
+						},
+						pair.punct().cloned().cloned(),
+					))
+				})
+				.collect()
+		}
+
 		let (type_path, generated_type_name, (generics, add_phantom)): (
 			ExprPath,
 			Option<Ident>,
 			(Cow<Generics>, bool),
 		) = if let Some(type_) = type_.as_ref() {
 			match &type_.1 {
-				Either::Left((_, name, _, generics, _semicolon)) => (
-					parse2(quote_spanned!(Ident::span(name)=> #name)).unwrap(),
+				Either::Left((_, name, double_colon, generics, _semicolon)) => (
+					{
+						let generics = Generics {
+							lt_token: generics.lt_token,
+							params: strip_params(&generics.params),
+							gt_token: generics.gt_token,
+							where_clause: None,
+						};
+						parse2(quote_spanned!(Ident::span(name)=> #name#double_colon#generics))
+							.unwrap()
+					},
 					Some(name.clone()),
-					(Cow::Borrowed(generics), false),
+					(Cow::Borrowed(generics), true), // FIXME: This shouldn't actually generate a phantom! Removing it is a breaking change.
 				),
 				Either::Right((path, where_clause)) => (
 					ExprPath::clone(path),
@@ -136,13 +222,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 								PathArguments::None => Generics::default(),
 								PathArguments::AngleBracketed(a_bra_args) => Generics {
 									lt_token: Some(a_bra_args.lt_token),
-									params: a_bra_args.args.pairs().map(|pair| Result::Ok(Pair::new(match pair.value(){
-									    syn::GenericArgument::Lifetime(l) => GenericParam::Lifetime(LifetimeDef{ attrs: vec![], lifetime: l.clone(), colon_token: None, bounds: Punctuated::default()}),
-									    syn::GenericArgument::Type(t) => GenericParam::Type(TypeParam{attrs: vec![], ident: parse2(t.to_token_stream())?, colon_token:None,bounds:Punctuated::default(),eq_token:None,default:None}),
-										syn::GenericArgument::Binding(_) => {todo!("box type generic binding")}
-									    syn::GenericArgument::Constraint(_) => {todo!("box type generic constraint")}
-									    syn::GenericArgument::Const(_) => {todo!("box type generic const")}
-									},pair.punct().cloned().cloned()))).collect::<Result<_>>()?,
+									params: generic_arguments_to_generic_params(&a_bra_args.args)?,
 									gt_token: Some(a_bra_args.gt_token),
 									where_clause: where_clause.as_ref().map(|(w, _)| w).cloned()
 								},
