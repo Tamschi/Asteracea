@@ -159,7 +159,11 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		} else {
 			let type_name = cx.storage_context.generated_type_name(&field_name);
 			(
-				parse2(type_name.to_token_stream()).unwrap(),
+				{
+					let (_, type_generics, _) = cx.storage_generics.split_for_impl();
+					let type_generics = type_generics.as_turbofish();
+					dbg!(parse2(quote_spanned!(type_name.span()=> #type_name#type_generics))).unwrap()
+				},
 				Some(type_name),
 				(Cow::Borrowed(cx.storage_generics), true),
 			)
@@ -209,7 +213,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			let type_definition = parse_context.storage_context.type_definition(
 				cx.item_visibility,
 				&generated_type_name,
-				&Generics::default(),
+				&generics,
 			);
 
 			cx.random_items

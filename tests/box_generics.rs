@@ -40,14 +40,14 @@ asteracea::component! {
 	box <*Whered::<T>>
 }
 
-asteracea::component! {
-	CustomClaused<T: Debug>()()
+// asteracea::component! {
+// 	CustomClaused<T: Debug>()()
 
-	box priv a: struct A::<T: Debug> <*CustomClaused::<T>>
-}
+// 	box priv a: struct A::<T: Debug> <*CustomClaused::<T>>
+// }
 
-asteracea::component! {
-	CustomWhered<T> where T: Debug, ()()
+// asteracea::component! {
+// 	CustomWhered<T> where T: Debug, ()()
 
-	box priv b: struct B::<T> where T: Debug; <*CustomWhered::<T>>
-}
+// 	box priv b: struct B::<T> where T: Debug; <*CustomWhered::<T>>
+// }
