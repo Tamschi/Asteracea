@@ -505,7 +505,7 @@ impl ComponentDeclaration {
 						__asteracea__phantom: _,
 					}: #render_args_name#render_args_generic_args,
 				) #render_type {
-					{} // Isolation against inner attributes.
+					let this = #render_self;
 					#body
 				}
 

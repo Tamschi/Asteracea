@@ -3,7 +3,7 @@ use crate::{
 	parse_with_context::{ParseContext, ParseWithContext},
 };
 use core::marker::PhantomData;
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	braced, parenthesized,
@@ -135,9 +135,8 @@ impl<C> ParseWithContext for CaptureDefinition<C> {
 		};
 		let access = {
 			cx.storage_context.push(field_definition);
-			let storage = &cx.storage;
 			access_name.map(
-				|access_name: Ident| quote_spanned!(access_name.span()=> #storage.#access_name),
+				|access_name: Ident| quote_spanned!(access_name.span().resolved_at(Span::mixed_site())=> this.#access_name),
 			)
 		};
 

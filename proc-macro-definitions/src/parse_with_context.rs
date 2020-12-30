@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use crate::component_declaration::FieldDefinition;
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
@@ -11,7 +9,6 @@ use unzip_n::unzip_n;
 
 pub struct ParseContext<'a> {
 	pub component_name: Option<&'a Ident>,
-	pub storage: Cow<'a, Expr>,
 	pub storage_context: StorageContext,
 }
 
@@ -19,7 +16,6 @@ impl<'a> ParseContext<'a> {
 	pub fn new_root(component_name: &'a Ident) -> Self {
 		Self {
 			component_name: Some(component_name),
-			storage: Cow::Owned(parse2(quote_spanned!(component_name.span()=> self)).unwrap()),
 			storage_context: StorageContext {
 				type_name: component_name.clone(),
 				field_definitions: vec![],
@@ -31,7 +27,6 @@ impl<'a> ParseContext<'a> {
 	pub fn new_fragment() -> Self {
 		Self {
 			component_name: None,
-			storage: Cow::Owned(parse2(quote_spanned!(Span::mixed_site()=> self)).unwrap()),
 			storage_context: StorageContext {
 				type_name: Ident::new("UNUSED", Span::mixed_site()),
 				field_definitions: vec![],
@@ -40,10 +35,9 @@ impl<'a> ParseContext<'a> {
 		}
 	}
 
-	pub fn new_nested(&self, storage: &'a Expr, type_name: Ident) -> Self {
+	pub fn new_nested(&self, type_name: Ident) -> Self {
 		Self {
 			component_name: self.component_name,
-			storage: Cow::Borrowed(storage),
 			storage_context: StorageContext {
 				type_name,
 				field_definitions: vec![],

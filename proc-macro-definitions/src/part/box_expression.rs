@@ -6,9 +6,9 @@ use crate::{
 use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use either::Either;
-use proc_macro2::TokenStream;
-use quote::quote_spanned;
-use syn::{parse::ParseStream, parse2, Expr, ExprPath, Ident, Result, Token, Visibility};
+use proc_macro2::{Span, TokenStream};
+use quote::{quote_spanned, ToTokens};
+use syn::{parse::ParseStream, parse2, ExprPath, Ident, Result, Token, Visibility};
 
 #[allow(clippy::type_complexity)]
 pub struct BoxExpression<C: Configuration> {
@@ -17,7 +17,6 @@ pub struct BoxExpression<C: Configuration> {
 	field_name: Ident,
 	type_: Option<(Token![:], Either<(Token![struct], Ident), ExprPath>)>,
 	content: Box<Part<C>>,
-	storage: Expr,
 }
 
 impl<C: Configuration> ParseWithContext for BoxExpression<C> {
@@ -34,7 +33,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 				vis => Some(Either::Right(vis)),
 			}
 		};
-		let (vis, field_name, type_) = if let Some(vis) = vis.clone() {
+		let (vis, field_name, type_) = if let Some(vis) = vis {
 			let field_name = input.parse()?;
 
 			let type_ = if let Some(colon) = input.parse().unwrap() {
@@ -57,7 +56,6 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			)
 		};
 
-		let storage = &cx.storage;
 		let type_path: ExprPath = {
 			let type_path = if let Some(type_) = type_.as_ref() {
 				match &type_.1 {
@@ -68,16 +66,12 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 				}
 			} else {
 				let type_name = cx.storage_context.generated_type_name(&field_name);
-				parse2(quote_spanned!(type_name.span() => #type_name)).unwrap()
+				parse2(type_name.to_token_stream()).unwrap()
 			};
 			type_path
 		};
-		let storage = parse2(quote_spanned!(box_.span=> #storage.#field_name)).unwrap();
 
-		let mut parse_context = cx.new_nested(
-			&storage,
-			cx.storage_context.generated_type_name(&field_name),
-		);
+		let mut parse_context = cx.new_nested(cx.storage_context.generated_type_name(&field_name));
 		let content = Box::new(Part::parse_required_with_context(
 			input,
 			&mut parse_context,
@@ -106,7 +100,6 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			field_name,
 			type_,
 			content,
-			storage,
 		})
 	}
 }
@@ -115,11 +108,13 @@ impl<C: Configuration> BoxExpression<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		let field_name = &self.field_name;
 		let content = self.content.part_tokens(cx)?;
-		let storage = &self.storage;
 
-		Ok(quote_spanned! (self.box_.span=> {
-			let #field_name = #storage;
-			#content
-		}))
+		Ok(
+			quote_spanned! (self.box_.span.resolved_at(Span::mixed_site())=> {
+				let this = &*this.#field_name;
+				let #field_name = this;
+				#content
+			}),
+		)
 	}
 }

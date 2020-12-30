@@ -111,7 +111,9 @@ asteracea::component! {
 	TypeReused()()
 
 	box priv named: BoxContainer [
-		<*Boxed priv boxed>
+		with {
+			let named = "This doesn't shadow the storage context for captures!";
+		} <*Boxed priv boxed>
 		<*{&named.boxed}>
 	]
 }
