@@ -78,7 +78,7 @@ fn public() -> Result<(), ExtractableResolutionError> {
 	let bump = Bump::new();
 	let _vdom = component.render(&bump, Public::render_args_builder().build());
 
-	let _: Boxed = (*component.public).boxed;
+	let _: a_module::Boxed = (*component.public).boxed;
 
 	Ok(())
 }
@@ -112,6 +112,7 @@ asteracea::component! {
 
 	box priv named: BoxContainer [
 		with {
+			#[allow(unused_variables)]
 			let named = "This doesn't shadow the storage context for captures!";
 		} <*Boxed priv boxed>
 		<*{&named.boxed}>

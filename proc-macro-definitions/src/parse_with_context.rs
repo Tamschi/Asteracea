@@ -1,48 +1,53 @@
 use crate::component_declaration::FieldDefinition;
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
-use syn::{
-	parse::ParseStream, parse2, spanned::Spanned, Expr, ExprPath, Generics, Ident, Result,
-	Visibility,
-};
+use syn::{parse::ParseStream, spanned::Spanned, ExprPath, Generics, Ident, Result, Visibility};
 use unzip_n::unzip_n;
 
 pub struct ParseContext<'a> {
+	pub item_visibility: &'a Visibility,
 	pub component_name: Option<&'a Ident>,
 	pub storage_context: StorageContext,
+	pub random_items: Vec<TokenStream>,
 }
 
 impl<'a> ParseContext<'a> {
-	pub fn new_root(component_name: &'a Ident) -> Self {
+	pub fn new_root(component_visibility: &'a Visibility, component_name: &'a Ident) -> Self {
 		Self {
+			item_visibility: component_visibility,
 			component_name: Some(component_name),
 			storage_context: StorageContext {
 				type_name: component_name.clone(),
 				field_definitions: vec![],
 				generated_names: 0,
 			},
+			random_items: vec![],
 		}
 	}
 
-	pub fn new_fragment() -> Self {
+	pub fn new_fragment(item_visibility: &'a Visibility) -> Self {
 		Self {
+			item_visibility,
 			component_name: None,
 			storage_context: StorageContext {
 				type_name: Ident::new("UNUSED", Span::mixed_site()),
 				field_definitions: vec![],
 				generated_names: 0,
 			},
+			random_items: vec![],
 		}
 	}
 
 	pub fn new_nested(&self, type_name: Ident) -> Self {
 		Self {
+			item_visibility: self.item_visibility,
 			component_name: self.component_name,
 			storage_context: StorageContext {
 				type_name,
 				field_definitions: vec![],
 				generated_names: 0,
 			},
+			random_items: vec![],
 		}
 	}
 }

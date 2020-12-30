@@ -51,6 +51,7 @@ pub struct ComponentDeclaration {
 	constructor_block: Option<(kw::new, kw::with, Block)>,
 	body: Part<ComponentRenderConfiguration>,
 	rhizome_extractions: Vec<TokenStream>,
+	random_items: Vec<TokenStream>,
 }
 
 pub struct FieldDefinition {
@@ -168,7 +169,7 @@ impl Parse for ComponentDeclaration {
 
 		let mut rhizome_extractions = Vec::new();
 
-		let mut cx = ParseContext::new_root(&component_name);
+		let mut cx = ParseContext::new_root(&visibility, &component_name);
 
 		// Dependency extraction:
 		while let Some(ref_token) = input.parse::<Token![ref]>().ok() {
@@ -269,9 +270,10 @@ impl Parse for ComponentDeclaration {
 		}
 
 		Ok(Self {
+			random_items: cx.random_items,
 			attributes,
-			visibility,
 			storage_context: cx.storage_context,
+			visibility,
 			name: component_name,
 			component_generics,
 			constructor_attributes,
@@ -311,6 +313,7 @@ impl ComponentDeclaration {
 			constructor_block,
 			body,
 			rhizome_extractions,
+			random_items,
 		} = self;
 
 		let asteracea = asteracea_ident(Span::call_site());
@@ -522,6 +525,8 @@ impl ComponentDeclaration {
 					#render_args_name::builder()
 				}
 			}
+
+			#(#random_items)*
 		})
 	}
 }

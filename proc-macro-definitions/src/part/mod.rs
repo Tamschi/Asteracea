@@ -32,7 +32,7 @@ use syn::{
 	parse::{Parse, ParseStream, Result},
 	spanned::Spanned as _,
 	token::{Add, Brace, Bracket},
-	Attribute, Error, Expr, Ident, LitStr, Pat, Token,
+	Attribute, Error, Expr, Ident, LitStr, Pat, Token, Visibility,
 };
 use syn_mid::Block;
 use unquote::unquote;
@@ -156,7 +156,11 @@ pub enum PartBody<C: Configuration> {
 impl<C: Configuration> Parse for Part<C> {
 	fn parse(input: ParseStream<'_>) -> Result<Self> {
 		let span = input.span();
-		Self::parse_with_context(input, &mut ParseContext::new_fragment()).and_then(|part| {
+		Self::parse_with_context(
+			input,
+			&mut ParseContext::new_fragment(&Visibility::Inherited),
+		)
+		.and_then(|part| {
 			if let Some(part) = part {
 				Ok(part)
 			} else {

@@ -8,9 +8,10 @@ use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use either::Either;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
-use syn::{parse::ParseStream, parse2, ExprPath, Ident, Result, Token, Visibility};
+use syn::{parse::ParseStream, parse2, ExprPath, Generics, Ident, Result, Token, Visibility};
 
 #[allow(clippy::type_complexity)]
+#[allow(dead_code)]
 pub struct BoxExpression<C: Configuration> {
 	box_: Token![box],
 	vis: Either<Token![priv], Visibility>,
@@ -56,20 +57,22 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			)
 		};
 
-		let type_path: ExprPath = {
-			let type_path = if let Some(type_) = type_.as_ref() {
+		let (type_path, generated_type_name): (ExprPath, Option<Ident>) =
+			if let Some(type_) = type_.as_ref() {
 				match &type_.1 {
-					Either::Left((_, name)) => {
-						parse2(quote_spanned!(Ident::span(name)=> #name)).unwrap()
-					}
-					Either::Right(path) => ExprPath::clone(path),
+					Either::Left((_, name)) => (
+						parse2(quote_spanned!(Ident::span(name)=> #name)).unwrap(),
+						Some(name.clone()),
+					),
+					Either::Right(path) => (ExprPath::clone(path), None),
 				}
 			} else {
 				let type_name = cx.storage_context.generated_type_name(&field_name);
-				parse2(type_name.to_token_stream()).unwrap()
+				(
+					parse2(type_name.to_token_stream()).unwrap(),
+					Some(type_name),
+				)
 			};
-			type_path
-		};
 
 		let mut parse_context = cx.new_nested(cx.storage_context.generated_type_name(&field_name));
 		let content = Box::new(Part::parse_required_with_context(
@@ -93,6 +96,22 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		.debugless_unwrap()
 		.unwrap()
 		.debugless_unwrap_none();
+
+		if let Some(generated_type_name) = generated_type_name {
+			let type_definition = parse_context.storage_context.type_definition(
+				cx.item_visibility,
+				&generated_type_name,
+				&Generics::default(),
+			);
+
+			cx.random_items
+				.push(quote_spanned! {box_.span.resolved_at(Span::mixed_site())=>
+					#[allow(non_camel_case_types)]
+					#type_definition
+				})
+		}
+
+		cx.random_items.extend(parse_context.random_items);
 
 		Ok(Self {
 			box_,
