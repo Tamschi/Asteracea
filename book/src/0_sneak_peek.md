@@ -68,7 +68,7 @@ Others probably look pretty unfamilar, even with both a web development and Rust
 
 Overall, I like to call this an MVC lite approach: You can see the model, view and controller parts of the component, in this order, without them being separated into different files. I've marked the boundaries between parts with a Rust comment each (`//`).
 
-This actually isn't mandatory - Asteracea is quite flexible and lets you mix them when appropriate - but it's a good way to clean up larger components that atherwise wouldn't fit on the screen well.
+This actually isn't mandatory - Asteracea is quite flexible and lets you mix them when appropriate - but it's a good way to clean up larger components that otherwise wouldn't fit on the screen well.
 
 There's also syntax highlighting without extra tools! The version here in the book is simplified, but if you use [rust-analyzer], then it's really quite smart.
 
