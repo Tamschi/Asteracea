@@ -1,4 +1,4 @@
-# `box ⟦priv …⟦: ⟦struct⟧ …⟧⟧ <…>`
+# `box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ <…>`
 
 A `box <…>` expression moves its parameter's backing storage into a new heap object, bound to a field of the current [storage context](*).
 

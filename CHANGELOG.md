@@ -42,6 +42,7 @@ TODO: Date
   * `new with { …; }` blocks to insert statements into the constructor
   * `with { …; } <…>` expressions to insert statements into the `.render` method
   * Conditional content via `if {…} <…>`, `if …… else <…>` and `match <…> [ … ]`
+  * Box expressions: `box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ <…>`
 
 * Revisions:
   * Improved `Counter` example in the README.

@@ -209,7 +209,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 							.unwrap()
 					},
 					Some(name.clone()),
-					(Cow::Borrowed(generics), true), // FIXME: This shouldn't actually generate a phantom! Removing it is a breaking change.
+					(Cow::Borrowed(generics), false),
 				),
 				Either::Right((path, where_clause)) => (
 					ExprPath::clone(path),

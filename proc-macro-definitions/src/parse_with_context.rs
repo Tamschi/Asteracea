@@ -114,9 +114,11 @@ impl StorageContext {
 			.map(|f| (&f.attributes, &f.visibility, &f.name, &f.field_type))
 			.unzip_n_vec();
 
+		let where_clause = &generics.where_clause;
 		quote_spanned! {type_name.span()=>
 			#allow_non_snake_case_on_structure_workaround
 			#visibility struct #type_name#generics
+			#where_clause
 			{
 				#(
 					#(#field_attributes)*
