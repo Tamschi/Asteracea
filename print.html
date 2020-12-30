@@ -287,7 +287,7 @@ asteracea::component! {
 <p>This guide assumes you have done some web development before, so some parts of the template should look familiar to you.</p>
 <p>Others probably look pretty unfamilar, even with both a web development and Rust background. I removed some redundant grammar and had to invent new syntax for some features that don't appear as such in either ecosystem.</p>
 <p>Overall, I like to call this an MVC lite approach: You can see the model, view and controller parts of the component, in this order, without them being separated into different files. I've marked the boundaries between parts with a Rust comment each (<code>//</code>).</p>
-<p>This actually isn't mandatory - Asteracea is quite flexible and lets you mix them when appropriate - but it's a good way to clean up larger components that atherwise wouldn't fit on the screen well.</p>
+<p>This actually isn't mandatory - Asteracea is quite flexible and lets you mix them when appropriate - but it's a good way to clean up larger components that otherwise wouldn't fit on the screen well.</p>
 <p>There's also syntax highlighting without extra tools! The version here in the book is simplified, but if you use <a href="https://rust-analyzer.github.io/">rust-analyzer</a>, then it's really quite smart.</p>
 <p>The following chapters will teach you how to read and write these components, though becoming fluent may require a little bit of practice.</p>
 <h1><a class="header" href="#chapter-1-static-components" id="chapter-1-static-components">Chapter 1: Static Components</a></h1>
@@ -759,11 +759,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffd9787dba0.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffd9787dba0.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x7ffd9787dba8.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x7ffd9787dba0.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x7ffd9787dba0.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffcb4917d50.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x7ffcb4917d50.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x7ffcb4917d58.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x7ffcb4917d50.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x7ffcb4917d50.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
