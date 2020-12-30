@@ -111,8 +111,8 @@ impl<C: Configuration> BoxExpression<C> {
 
 		Ok(
 			quote_spanned! (self.box_.span.resolved_at(Span::mixed_site())=> {
-				let this = &*this.#field_name;
-				let #field_name = this;
+				let #field_name = &*this.#field_name;
+				let this = #field_name;
 				#content
 			}),
 		)
