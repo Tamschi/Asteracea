@@ -25,7 +25,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let box_: Token![box] = input.parse()?;
 
-		let vis = if let Ok(priv_) = input.parse() {
+		let vis = if let Some(priv_) = input.parse().unwrap() {
 			Some(Either::Left(priv_))
 		} else {
 			match input.parse().unwrap() {
@@ -36,8 +36,8 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		let binding = if let Some(vis) = vis {
 			let name = input.parse()?;
 
-			let type_ = if let Ok(colon) = input.parse() {
-				let type_ = if let Ok(struct_) = input.parse() {
+			let type_ = if let Some(colon) = input.parse().unwrap() {
+				let type_ = if let Some(struct_) = input.parse().unwrap() {
 					Either::Left((struct_, input.parse()?))
 				} else {
 					Either::Right(input.parse()?)

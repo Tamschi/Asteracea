@@ -106,7 +106,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 	type Output = Self;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self> {
 		let lt = input.parse::<Token![<]>()?;
-		let name = if let Ok(name @ LitStr { .. }) = input.parse() {
+		let name = if let Some(name @ LitStr { .. }) = input.parse().unwrap() {
 			if name.value().contains(' ') {
 				return Err(Error::new_spanned(
 					name,
@@ -114,7 +114,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 				));
 			}
 			ElementName::Custom(name)
-		} else if let Ok(name) = input.parse() {
+		} else if let Some(name) = input.parse().unwrap() {
 			ElementName::Known(name)
 		} else {
 			return Err(Error::new(

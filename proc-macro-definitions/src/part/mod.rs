@@ -19,7 +19,7 @@ use self::{
 };
 use crate::{
 	asteracea_ident,
-	parse_with_context::{ParseContext, ParseWithContext},
+	parse_with_context::{ParseContext, ParseWithContext, StorageContext},
 	Configuration,
 };
 use core::{cell::RefCell, result::Result as coreResult};
@@ -58,7 +58,7 @@ impl<C: Configuration> Part<C> {
 			| PartBody::Component(_)
 			| PartBody::Expression(_, _)
 			| PartBody::Html(_)
-			| PartBody::If(_, _, _, _, _)
+			| PartBody::If(_, _, _, _, _, _)
 			| PartBody::Match(_, _, _, _, _)
 			| PartBody::Multi(_, _)
 			| PartBody::Text(_)
@@ -96,15 +96,15 @@ mod kw {
 	syn::custom_keyword!(spread);
 }
 
-pub enum InitMode<'a> {
-	Dyn(Token![dyn], ParseContext),
+pub enum InitMode {
+	Dyn(Token![dyn]),
 	Spread(kw::spread),
 }
 
 impl Parse for InitMode {
 	fn parse(input: ParseStream) -> Result<Self> {
 		Ok(if let Some(dyn_) = input.parse().unwrap() {
-			InitMode::Dyn(dyn_, ParseContext::default())
+			InitMode::Dyn(dyn_)
 		} else if let Some(spread) = input.parse().unwrap() {
 			InitMode::Spread(spread)
 		} else {
@@ -113,15 +113,6 @@ impl Parse for InitMode {
 				"Expected one of `dyn` or `spread`",
 			));
 		})
-	}
-}
-
-impl Spanned for InitMode {
-	fn __span(&self) -> Span {
-		match self {
-			InitMode::Dyn(dyn_, _) => dyn_.span,
-			InitMode::Spread(spread) => spread.span,
-		}
 	}
 }
 
@@ -139,7 +130,8 @@ pub enum PartBody<C: Configuration> {
 		Token![if],
 		Expr,
 		Box<Part<C>>,
-		Option<(Token![else], Box<Part<C>>)>,
+		Token![else],
+		Box<Part<C>>,
 	),
 	Match(
 		InitMode,
@@ -164,7 +156,7 @@ pub enum PartBody<C: Configuration> {
 impl<C: Configuration> Parse for Part<C> {
 	fn parse(input: ParseStream<'_>) -> Result<Self> {
 		let span = input.span();
-		Self::parse_with_context(input, &mut Default::default()).and_then(|part| {
+		Self::parse_with_context(input, &mut ParseContext::new_fragment()).and_then(|part| {
 			if let Some(part) = part {
 				Ok(part)
 			} else {
@@ -196,7 +188,6 @@ impl<C: Configuration> Part<C> {
 	}
 }
 
-thread_local!(static CX: RefCell<Option<ParseContext>> = RefCell::default());
 impl<C: Configuration> ParseWithContext for PartBody<C> {
 	type Output = Option<Self>;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
@@ -225,12 +216,12 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 			return Err(input.call(InitMode::parse).debugless_unwrap_err());
 		} else if (input.peek(Token![dyn]) || input.peek(kw::spread)) && input.peek2(Token![if]) {
 			//FIXME: This will be possible much more nicely once unquote is better.
-			let mut init_mode;
-			unquote!(input, #init_mode #let if_);
+			let mut init_mode = input.parse()?;
+			let if_: Token![if] = input.parse()?;
 			let condition_body;
 			braced!(condition_body in input);
 			let condition = condition_body.parse()?;
-			if let Ok(unexpected) = condition_body.parse() {
+			if let Some(unexpected) = condition_body.parse().unwrap() {
 				let unexpected: TokenTree = unexpected;
 				return Err(Error::new(
 					unexpected.span(),
@@ -238,32 +229,39 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 				));
 			}
 			let then = match &mut init_mode {
-				InitMode::Dyn(_, _) => {
+				InitMode::Dyn(_) => {
 					todo!("`dyn if`")
 				}
 				InitMode::Spread(_) => Part::parse_required_with_context(input, cx)?,
 			};
-			let else_: Option<Token![else]>;
-			unquote!(input, #else_);
-			let else_arm = else_
-				.map(|else_| {
-					Result::Ok((
-						else_,
-						match &mut init_mode {
-							InitMode::Dyn(_, _) => {
-								todo!("`dyn if else`")
-							}
-							InitMode::Spread(_) => Part::parse_required_with_context(input, cx)?,
+			let (else_, else_arm) = if let Some(else_) = input.parse().unwrap() {
+				(
+					else_,
+					match &mut init_mode {
+						InitMode::Dyn(_) => {
+							todo!("`dyn if else`")
 						}
-						.pipe(Box::new),
-					))
-				})
-				.transpose()?;
+						InitMode::Spread(_) => Part::parse_required_with_context(input, cx)?,
+					}
+					.pipe(Box::new),
+				)
+			} else {
+				(
+					Token![else](if_.span),
+					call2_for_syn::call2_strict(quote_spanned!(if_.span=> []), |input| {
+						Part::parse_required_with_context(input, cx)
+					})
+					.debugless_unwrap()
+					.unwrap()
+					.pipe(Box::new),
+				)
+			};
 			Some(PartBody::If(
 				init_mode,
 				if_,
 				condition,
 				Box::new(then),
+				else_,
 				else_arm,
 			))
 		} else if input.peek(Token![match]) {
@@ -271,8 +269,8 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 		} else if (input.peek(Token![dyn]) || input.peek(kw::spread)) && input.peek2(Token![match])
 		{
 			//FIXME: This will be possible much more nicely once unquote is better.
-			let mut init_mode;
-			unquote!(input, #init_mode #let match_);
+			let mut init_mode = input.parse()?;
+			unquote!(input, #let match_);
 			let on = Part::parse_required_with_context(input, cx)?;
 			let body;
 			let bracket = bracketed!(body in input);
@@ -296,7 +294,7 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 						.transpose()?;
 					let fat_arrow = input.parse()?;
 					let part = match &mut init_mode {
-						InitMode::Dyn(_, _) => {
+						InitMode::Dyn(_) => {
 							todo!("`dyn match arm`")
 						}
 						InitMode::Spread(_) => Part::parse_required_with_context(input, cx)?,
@@ -384,23 +382,21 @@ impl<C: Configuration> PartBody<C> {
 				}
 			}
 			PartBody::Html(html_definition) => html_definition.part_tokens(cx)?,
-			PartBody::If(InitMode::Dyn(dyn_, dyn_context), if_, condition, then_part, else_arm) => {
+			PartBody::If(InitMode::Dyn(dyn_), if_, condition, then_part, else_, else_part) => {
 				todo!("`dyn if`")
 			}
-			PartBody::If(InitMode::Spread(_spread), if_, condition, then_part, else_arm) => {
+			PartBody::If(
+				InitMode::Spread(_spread),
+				if_,
+				condition,
+				then_part,
+				else_,
+				else_part,
+			) => {
 				let then_tokens = then_part.part_tokens(cx)?;
-				let else_tokens = if let Some((else_, else_part)) = else_arm {
+				let else_tokens = {
 					let else_part = else_part.part_tokens(cx)?;
-					quote_spanned!(else_.span=> { #else_part })
-				} else {
-					call2_for_syn::call2_strict(quote_spanned!(if_.span=> []), |input| {
-						Part::<C>::parse_with_context(input, &mut ParseContext::default())
-					})
-					.debugless_unwrap()
-					.expect("if - default else")
-					.expect("if -  default else 2")
-					.part_tokens(cx)
-					.unwrap()
+					quote_spanned!(else_.span()=> { #else_part })
 				};
 				quote_spanned! {if_.span.resolved_at(Span::mixed_site())=> if #condition {
 					#then_tokens
@@ -408,7 +404,7 @@ impl<C: Configuration> PartBody<C> {
 					#else_tokens
 				}}
 			}
-			PartBody::Match(InitMode::Dyn(dyn_, dyn_context), match_, on, bracket, arms) => {
+			PartBody::Match(InitMode::Dyn(dyn_), match_, on, bracket, arms) => {
 				todo!("`dyn match`")
 			}
 			PartBody::Match(InitMode::Spread(_spread), match_, on, bracket, arms) => {

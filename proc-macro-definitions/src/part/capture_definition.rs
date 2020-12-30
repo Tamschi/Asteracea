@@ -135,7 +135,7 @@ impl<C> ParseWithContext for CaptureDefinition<C> {
 		};
 		let access = {
 			cx.storage_context.push(field_definition);
-			let storage = cx.storage;
+			let storage = &cx.storage;
 			access_name.map(
 				|access_name: Ident| quote_spanned!(access_name.span()=> #storage.#access_name),
 			)

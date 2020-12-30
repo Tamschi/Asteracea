@@ -19,6 +19,14 @@ impl<'a> ParseContext<'a> {
 		}
 	}
 
+	pub fn new_fragment() -> Self {
+		Self {
+			component_name: None,
+			storage: parse2(quote_spanned!(Span::mixed_site()=> self)).unwrap(),
+			storage_context: Default::default(),
+		}
+	}
+
 	pub fn new_nested(&self, storage: Expr) -> Self {
 		Self {
 			component_name: self.component_name,
@@ -72,7 +80,7 @@ impl StorageContext {
 		let (field_attributes, field_visibilities, field_names, field_types) = self
 			.field_definitions
 			.iter()
-			.map(|f| (f.attributes, f.visibility, f.name, f.field_type))
+			.map(|f| (&f.attributes, &f.visibility, &f.name, &f.field_type))
 			.unzip_n_vec();
 
 		quote_spanned! {type_name.span()=>

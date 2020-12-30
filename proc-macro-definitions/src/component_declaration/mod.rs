@@ -25,15 +25,9 @@ use syn::{
 };
 use syn_mid::Block;
 use unquote::unquote;
-use unzip_n::unzip_n;
 
 mod arguments;
 mod parameter_helper_definitions;
-
-unzip_n!(5);
-unzip_n!(6);
-unzip_n!(7);
-
 mod kw {
 	syn::custom_keyword!(new);
 	syn::custom_keyword!(with);
@@ -277,8 +271,8 @@ impl Parse for ComponentDeclaration {
 		Ok(Self {
 			attributes,
 			visibility,
-			name: component_name,
 			storage_context: cx.storage_context,
+			name: component_name,
 			component_generics,
 			constructor_attributes,
 			constructor_generics,
@@ -324,19 +318,10 @@ impl ComponentDeclaration {
 		let struct_definition =
 			storage_context.type_definition(&visibility, &component_name, &component_generics);
 
-		let (field_attributes, field_visibilities, field_names, field_types, field_values) =
-			storage_context
-				.field_definitions()
-				.map(|c| {
-					(
-						c.attributes,
-						c.visibility,
-						c.name,
-						c.field_type,
-						c.initial_value,
-					)
-				})
-				.unzip_n_vec();
+		let (field_names, field_values) = storage_context
+			.field_definitions()
+			.map(|c| (&c.name, &c.initial_value))
+			.unzip::<_, _, Vec<_>, Vec<_>>();
 
 		let field_initializers = quote! {
 			#(#field_names: (#field_values),)* // The parentheses around #field_values stop the grammar from breaking as much if no value is provided.

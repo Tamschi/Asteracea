@@ -120,8 +120,6 @@ impl<C> ParseWithContext for Component<C> {
 				}
 			}
 
-			cx.custom_child_element_count += 1;
-
 			let new_params = parameter_struct_expression(
 				open_span,
 				parse2(quote_spanned! (open_span=> #path::new_args_builder()))
