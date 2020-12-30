@@ -14,7 +14,7 @@ use syn::{
 	parse2,
 	punctuated::{Pair, Punctuated},
 	Error, ExprPath, GenericParam, Generics, Ident, LifetimeDef, PathArguments, Result, Token,
-	TypeParam, TypePath, Visibility, WhereClause,
+	TypeGenerics, TypeParam, TypePath, Visibility, WhereClause,
 };
 
 #[allow(clippy::type_complexity)]
@@ -162,7 +162,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 				{
 					let (_, type_generics, _) = cx.storage_generics.split_for_impl();
 					let type_generics = type_generics.as_turbofish();
-					dbg!(parse2(quote_spanned!(type_name.span()=> #type_name#type_generics))).unwrap()
+					parse2(quote_spanned!(type_name.span()=> #type_name#type_generics)).unwrap()
 				},
 				Some(type_name),
 				(Cow::Borrowed(cx.storage_generics), true),
@@ -184,9 +184,20 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		};
 
 		if add_phantom {
+			let phantom_generics = generics
+				.type_params()
+				.map(|t| TypeParam {
+					attrs: t.attrs.clone(),
+					ident: t.ident.clone(),
+					colon_token: None,
+					bounds: Punctuated::default(),
+					eq_token: None,
+					default: None,
+				})
+				.collect::<Vec<_>>();
 			call2_strict(
 				quote_spanned! {box_.span.resolved_at(Span::mixed_site())=>
-					|__Asteracea__phantom = ::std::marker::PhantomData::<(/*TODO*/)>::default()|;
+					|__Asteracea__phantom = ::std::marker::PhantomData::<(#(#phantom_generics, )*)>::default()|;
 				},
 				|input| {
 					CaptureDefinition::<C>::parse_with_context(input, &mut parse_context)
