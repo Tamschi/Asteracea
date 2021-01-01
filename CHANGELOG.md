@@ -31,7 +31,7 @@ TODO: Date
 
     ```rust
     <*Name priv name> // Alternatively: `pub`, `pub(…)`
-    <*{&self.name}> // Without `*new_arg`s!
+    <*{self.name_pinned()}> // Without `*new_arg`s!
     ```
 
   * Optional arguments: `pattern?: Type`

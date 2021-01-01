@@ -84,7 +84,8 @@ let root = {
   asteracea::rhizome::Node::new_for::<Root>().into()
 };
 assert!(matches!(
-  Empty::new(&root, Empty::new_args_builder().build()).expect("No DI.")
+  Box::pin(Empty::new(&root, Empty::new_args_builder().build()).expect("No DI."))
+    .as_ref()
     .render(&mut bump, Empty::render_args_builder().build()),
   lignin::Node::Multi(&[]) // Empty node sequence
 ));
@@ -114,12 +115,14 @@ let root = {
   asteracea::rhizome::Node::new_for::<Root>().into()
 };
 assert_eq!(
-  Unit::new(&root, Unit::new_args_builder().build()).expect("No DI.")
+  Box::pin(Unit::new(&root, Unit::new_args_builder().build()).expect("No DI."))
+    .as_ref()
     .render(&mut bump, Unit::render_args_builder().build()),
   (),
 );
 assert_eq!(
-  Offset::new(&root, Offset::new_args_builder().base(2).build()).expect("No DI.")
+  Box::pin(Offset::new(&root, Offset::new_args_builder().base(2).build()).expect("No DI."))
+    .as_ref()
     .render(&mut bump, Offset::render_args_builder().offset(3).build()),
   5,
 );

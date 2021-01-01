@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, pin::Pin};
 
 asteracea::component! {
 	Boxed<T>()()
@@ -17,6 +17,12 @@ asteracea::component! {
 
 struct Predefined<T> {
 	boxed: Boxed<T>,
+}
+
+impl<T> Predefined<T> {
+	fn boxed_pinned(self: Pin<&Self>) -> Pin<&Boxed<T>> {
+		unsafe { self.map_unchecked(|p| &p.boxed) }
+	}
 }
 
 asteracea::component! {

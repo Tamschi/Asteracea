@@ -1,7 +1,10 @@
 use crate::component_declaration::FieldDefinition;
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
-use syn::{parse::ParseStream, spanned::Spanned, ExprPath, Generics, Ident, Result, Visibility};
+use syn::{
+	parse::ParseStream, spanned::Spanned, Attribute, Error, ExprPath, Generics, Ident, Result,
+	Visibility,
+};
 use unzip_n::unzip_n;
 
 pub struct ParseContext<'a> {
@@ -96,10 +99,11 @@ impl StorageContext {
 
 	pub fn type_definition(
 		&self,
+		attributes: &[Attribute],
 		visibility: &Visibility,
 		type_name: &Ident,
 		generics: &Generics,
-	) -> TokenStream {
+	) -> Result<TokenStream> {
 		let allow_non_snake_case_on_structure_workaround = if self.generated_names > 0 {
 			Some(quote_spanned! (type_name.span()=> #[allow(non_snake_case)]))
 		} else {
@@ -114,8 +118,90 @@ impl StorageContext {
 			.map(|f| (&f.attributes, &f.visibility, &f.name, &f.field_type))
 			.unzip_n_vec();
 
-		let where_clause = &generics.where_clause;
-		quote_spanned! {type_name.span()=>
+		let (impl_generics, type_generics, where_clause) = generics.split_for_impl();
+
+		let explicit_default_drop = if self.field_definitions.iter().any(|f| f.structurally_pinned)
+		{
+			for attribute in attributes {
+				if let Some(path) = attribute.path.get_ident() {
+					if path == "repr" {
+						return Err(Error::new_spanned(path, "Custom `repr` not allowed due to field pin projection. (Box any child components to get around this.)"));
+					}
+				}
+			}
+
+			Some(quote_spanned! {type_name.span()=>
+				/// Asteracea implements some level of structural pinning for any child components not pinned by a `box <…>` expression.
+				/// As such, no custom Drop implementation is possible directly on this storage context.
+				///
+				/// See [`std::pin` - Pinning *is* structural for `field`](https://doc.rust-lang.org/stable/std/pin/index.html#pinning-is-structural-for-field) for more information.
+				///
+				/// > **Note:**
+				/// >
+				/// > Components may still be [`Unpin`](`::std::marker::Unpin`) - unless any direct child components are `!Unpin`.
+				/// > The generated structural pinning implementation contains a static assertion in this regard,
+				/// > which should only fail if you manually implement [`Unpin`](`::std::marker::Unpin`) on the respective storage context.
+				impl#impl_generics ::core::ops::Drop for #type_name#type_generics
+					#where_clause {
+						fn drop(&mut self) {
+							let _ = self;
+						}
+				}
+			})
+		} else {
+			None
+		};
+
+		let structural_pinning = self
+			.field_definitions
+			.iter()
+			.filter_map(|field| {
+				if field.structurally_pinned {
+					let asteracea =
+						crate::asteracea_ident(field.name.span().resolved_at(Span::mixed_site()));
+					let FieldDefinition {
+						attributes,
+						visibility,
+						name,
+						field_type,
+						initial_value: _,
+						structurally_pinned: _,
+					} = field;
+					let pinned_name = Ident::new(&format!("{}_pinned", name), name.span());
+					Some(quote_spanned! {field.name.span()=>
+						#(#attributes)*
+						#visibility fn #pinned_name(self: ::std::pin::Pin<&Self>) -> ::std::pin::Pin<&#field_type> {
+							//TODO!: Reactivate this somehow! The library is unsound without it.
+							// {
+							// 	type StorageContext = Self;
+							// 	type Field = #field_type;
+							// 	const legal: bool = !::#asteracea::impls::impls!(Field: !::std::marker::Unpin) || !::#asteracea::impls::impls!(StorageContext: ::std::marker::Unpin);
+							// 	::#asteracea::static_assertions::const_assert!(legal);
+							// };
+
+							unsafe {
+								self.map_unchecked(|this| &this.#name)
+							}
+						}
+					})
+				} else {
+					None
+				}
+			})
+			.collect::<Vec<_>>();
+
+		let structural_pinning = if structural_pinning.is_empty() {
+			None
+		} else {
+			Some(quote_spanned! {type_name.span()=>
+				impl#impl_generics #type_name#type_generics #where_clause {
+					#(#structural_pinning)*
+				}
+			})
+		};
+
+		Ok(quote_spanned! {type_name.span()=>
+			#(#attributes)*
 			#allow_non_snake_case_on_structure_workaround
 			#visibility struct #type_name#generics
 			#where_clause
@@ -125,7 +211,11 @@ impl StorageContext {
 					#field_visibilities #field_names: #field_types,
 				)*
 			}
-		}
+
+			#explicit_default_drop
+
+			#structural_pinning
+		})
 	}
 
 	pub fn value(&self, type_path: &ExprPath) -> TokenStream {

@@ -44,7 +44,9 @@ fn defer() -> Result<(), ExtractableResolutionError> {
 	let component = Deferrer::new(&root.into(), Deferrer::new_args_builder().build())?;
 
 	let bump = Bump::new();
-	let _vdom = component.render(&bump, Deferrer::render_args_builder().build());
+	let _vdom = Box::pin(component)
+		.as_ref()
+		.render(&bump, Deferrer::render_args_builder().build());
 
 	Ok(())
 }

@@ -13,8 +13,8 @@ use syn::{
 	parse::ParseStream,
 	parse2,
 	punctuated::{Pair, Punctuated},
-	ConstParam, Error, ExprPath, GenericArgument, GenericParam, Generics, Ident, LifetimeDef,
-	PathArguments, Result, Token, TypeGenerics, TypeParam, TypePath, Visibility, WhereClause,
+	Error, ExprPath, GenericArgument, GenericParam, Generics, Ident, LifetimeDef, PathArguments,
+	Result, Token, TypeParam, TypePath, Visibility, WhereClause,
 };
 
 #[allow(clippy::type_complexity)]
@@ -292,7 +292,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 
 		call2_strict(
 			quote_spanned! {box_.span=>
-				|#resolved_vis #field_name: ::std::boxed::Box<#type_path> = {::std::boxed::Box::new(#boxed_value)}|;
+				|#resolved_vis #field_name: ::std::pin::Pin<::std::boxed::Box<#type_path>> = {::std::boxed::Box::pin(#boxed_value)}|;
 			},
 			|input| CaptureDefinition::<C>::parse_with_context(input, cx),
 		)
@@ -302,10 +302,11 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 
 		if let Some(generated_type_name) = generated_type_name {
 			let type_definition = parse_context.storage_context.type_definition(
+				&[],
 				cx.item_visibility,
 				&generated_type_name,
 				&generics,
-			);
+			)?;
 
 			cx.random_items
 				.push(quote_spanned! {box_.span.resolved_at(Span::mixed_site())=>
@@ -333,7 +334,7 @@ impl<C: Configuration> BoxExpression<C> {
 
 		Ok(
 			quote_spanned! (self.box_.span.resolved_at(Span::mixed_site())=> {
-				let #field_name = &*this.#field_name;
+				let #field_name = this.#field_name.as_ref();
 				let this = #field_name;
 				#content
 			}),

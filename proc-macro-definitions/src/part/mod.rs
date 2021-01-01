@@ -322,7 +322,10 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 				braced!(expression in input),
 				expression.parse()?,
 			))
-		} else if lookahead.peek(Token![#]) || lookahead.peek(Token![|]) {
+		} else if lookahead.peek(capture_definition::kw::pin)
+			|| lookahead.peek(Token![#])
+			|| lookahead.peek(Token![|])
+		{
 			if C::CAN_CAPTURE {
 				CaptureDefinition::parse_with_context(input, cx)?.map(PartBody::Capture)
 			} else {
@@ -361,7 +364,7 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
                 \"text\"
                 <element …>
                 {rust expression}
-                |declaration: Only = capture|;
+                ⟦pin⟧ |declaration: Only = capture|;
                 |capture: With = declaration|(and, render, call)
 				+\"event_name\" = |event| handler()
 				with { …; } <…>",

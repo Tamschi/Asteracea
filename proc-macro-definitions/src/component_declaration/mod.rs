@@ -60,6 +60,7 @@ pub struct FieldDefinition {
 	pub name: Ident,
 	pub field_type: TokenStream,
 	pub initial_value: TokenStream,
+	pub structurally_pinned: bool,
 }
 
 enum ComponentRenderConfiguration {}
@@ -318,8 +319,12 @@ impl ComponentDeclaration {
 
 		let asteracea = asteracea_ident(Span::call_site());
 
-		let struct_definition =
-			storage_context.type_definition(&visibility, &component_name, &component_generics);
+		let struct_definition = storage_context.type_definition(
+			attributes.as_slice(),
+			&visibility,
+			&component_name,
+			&component_generics,
+		)?;
 
 		let constructed_value =
 			storage_context.value(&parse2(component_name.to_token_stream()).unwrap());
@@ -386,7 +391,7 @@ impl ComponentDeclaration {
 			for_builder_function_return: render_args_builder_generic_args,
 		} = ParameterHelperDefintions::new(
 			&component_generics,
-			&parse2(quote_spanned!(render_paren.span=> <'a: 'bump, 'bump: '_>)).unwrap(),
+			&parse2(quote_spanned!(render_paren.span=> <'a, 'bump: '_>)).unwrap(),
 			&render_generics,
 			custom_render_args.as_slice(),
 			&render_lifetime,
@@ -460,12 +465,10 @@ impl ComponentDeclaration {
 			#[builder(doc)]
 			#visibility struct #render_args_name#render_args_generics #render_args_body
 
-			#(#attributes)*
 			#struct_definition
 
 			impl#component_impl_generics #component_name#component_type_generics
-			#component_where_clause
-			{
+				#component_where_clause {
 				#(#constructor_attributes)*
 				pub fn new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
@@ -501,7 +504,7 @@ impl ComponentDeclaration {
 
 				#(#render_attributes)*
 				pub fn render#render_generics(
-					&'a #render_self,
+					#render_self: ::std::pin::Pin<&'a Self>,
 					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
 					#render_args_name {
 						#(#render_args_field_patterns,)*

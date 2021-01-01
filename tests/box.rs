@@ -1,3 +1,5 @@
+use std::pin::Pin;
+
 use asteracea::error::ExtractableResolutionError;
 use lignin::bumpalo::Bump;
 use rhizome::Node;
@@ -32,7 +34,9 @@ fn simple() -> Result<(), ExtractableResolutionError> {
 	let component = Simple::new(&root.into(), Simple::new_args_builder().build())?;
 
 	let bump = Bump::new();
-	let _vdom = component.render(&bump, Simple::render_args_builder().build());
+	let _vdom = Box::pin(component)
+		.as_ref()
+		.render(&bump, Simple::render_args_builder().build());
 
 	Ok(())
 }
@@ -46,12 +50,14 @@ asteracea::component! {
 #[test]
 fn named() -> Result<(), ExtractableResolutionError> {
 	let root = Node::new_for::<()>();
-	let component = Named::new(&root.into(), Named::new_args_builder().build())?;
+	let component = Box::pin(Named::new(&root.into(), Named::new_args_builder().build())?);
 
 	let bump = Bump::new();
-	let _vdom = component.render(&bump, Named::render_args_builder().build());
+	let _vdom = component
+		.as_ref()
+		.render(&bump, Named::render_args_builder().build());
 
-	let _: Boxed = (*component.named).boxed;
+	let _: Boxed = component.named.boxed;
 
 	Ok(())
 }
@@ -73,12 +79,17 @@ fn public() -> Result<(), ExtractableResolutionError> {
 	use a_module::Public;
 
 	let root = Node::new_for::<()>();
-	let component = Public::new(&root.into(), Public::new_args_builder().build())?;
+	let component = Box::pin(Public::new(
+		&root.into(),
+		Public::new_args_builder().build(),
+	)?);
 
 	let bump = Bump::new();
-	let _vdom = component.render(&bump, Public::render_args_builder().build());
+	let _vdom = component
+		.as_ref()
+		.render(&bump, Public::render_args_builder().build());
 
-	let _: a_module::Boxed = (*component.public).boxed;
+	let _: a_module::Boxed = component.public.boxed;
 
 	Ok(())
 }
@@ -92,12 +103,14 @@ asteracea::component! {
 #[test]
 fn typed() -> Result<(), ExtractableResolutionError> {
 	let root = Node::new_for::<()>();
-	let component = Typed::new(&root.into(), Typed::new_args_builder().build())?;
+	let component = Box::pin(Typed::new(&root.into(), Typed::new_args_builder().build())?);
 
 	let bump = Bump::new();
-	let _vdom = component.render(&bump, Typed::render_args_builder().build());
+	let _vdom = component
+		.as_ref()
+		.render(&bump, Typed::render_args_builder().build());
 
-	let typed: TypedBoxed = *component.named;
+	let typed: Pin<&TypedBoxed> = component.named.as_ref();
 	let _: Boxed = typed.boxed;
 
 	Ok(())
@@ -105,6 +118,15 @@ fn typed() -> Result<(), ExtractableResolutionError> {
 
 struct BoxContainer {
 	boxed: Boxed,
+}
+
+impl BoxContainer {
+	fn boxed_pinned(self: Pin<&Self>) -> Pin<&Boxed> {
+		unsafe {
+			// SAFETY: Not moved out of.
+			self.map_unchecked(|bc| &bc.boxed)
+		}
+	}
 }
 
 asteracea::component! {
@@ -115,19 +137,24 @@ asteracea::component! {
 			#[allow(unused_variables)]
 			let named = "This doesn't shadow the storage context for captures!";
 		} <*Boxed priv boxed>
-		<*{&named.boxed}>
+		<*{named.boxed_pinned()}>
 	]
 }
 
 #[test]
 fn reused() -> Result<(), ExtractableResolutionError> {
 	let root = Node::new_for::<()>();
-	let component = TypeReused::new(&root.into(), TypeReused::new_args_builder().build())?;
+	let component = Box::pin(TypeReused::new(
+		&root.into(),
+		TypeReused::new_args_builder().build(),
+	)?);
 
 	let bump = Bump::new();
-	let _vdom = component.render(&bump, TypeReused::render_args_builder().build());
+	let _vdom = component
+		.as_ref()
+		.render(&bump, TypeReused::render_args_builder().build());
 
-	let typed: BoxContainer = *component.named;
+	let typed: &Pin<Box<BoxContainer>> = &component.named;
 	let _: Boxed = typed.boxed;
 
 	Ok(())
@@ -157,7 +184,9 @@ fn multi() -> Result<(), ExtractableResolutionError> {
 	let component = Multi::new(&root.into(), Multi::new_args_builder().build())?;
 
 	let bump = Bump::new();
-	let _vdom = component.render(&bump, Multi::render_args_builder().build());
+	let _vdom = Box::pin(component)
+		.as_ref()
+		.render(&bump, Multi::render_args_builder().build());
 
 	Ok(())
 }

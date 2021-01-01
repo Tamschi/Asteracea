@@ -122,7 +122,7 @@ asteracea::component! {
   Outer()()
   [
     <*Inner priv inner> // Alternatively: `pub` or `pub(…)`
-    <*{&self.inner}>
+    <*{self.inner_pinned()}>
   ]
 }
 ```

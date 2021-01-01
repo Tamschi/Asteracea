@@ -89,7 +89,7 @@ impl EventBindingDefinition {
 		call2_strict(
 			quote_spanned! {prefix.span=>
 				#[allow(non_snake_case)] // This currently has no effect, hence `allow_non_snake_case_on_structure_workaround`.
-				|#field_name: Box<dyn Fn(&dyn ::core::any::Any)> = { Box::new(#handler) }|;
+				|#field_name: ::std::pin::Pin<::std::rc::Rc<dyn ::std::ops::Fn(&dyn ::core::any::Any)>> = { ::std::rc::Rc::pin(#handler) }|;
 			},
 			|input| {
 				enum EventBindingConfiguration {}
@@ -126,8 +126,8 @@ impl EventBindingDefinition {
 		quote_spanned! {name.span()=>
 			#asteracea::lignin_schema::lignin::EventBinding {
 				name: #name,
-				context: self,
-				handler: &*#self_ident.#field_name,
+				context: #asteracea::unsound_extend_reference(self.get_ref()),
+				handler: #self_ident.#field_name.clone(),
 			}
 		}
 	}

@@ -130,7 +130,7 @@ impl<C> ParseWithContext for Component<C> {
 			Ok(Self::Instantiated {
 			capture: call2_strict(
 				quote_spanned! {open_span=>
-						|#visibility #field_name = #path::new(&node, #new_params)?|
+						pin |#visibility #field_name = #path::new(&node, #new_params)?|
 					},
 					|input| CaptureDefinition::<C>::parse_with_context(input, cx),
 				)
@@ -166,7 +166,7 @@ impl<C> Component<C> {
 				reference,
 				render_params,
 			} => {
-				let binding = quote_spanned!(reference.brace_token.span.resolved_at(Span::mixed_site())=> let reference: &_ = #reference;);
+				let binding = quote_spanned!(reference.brace_token.span.resolved_at(Span::mixed_site())=> let reference: ::std::pin::Pin<&_> = #reference;);
 				let bump = quote_spanned!(*open_span=> bump);
 				let render_params = parameter_struct_expression(
 					open_span.resolved_at(Span::mixed_site()),

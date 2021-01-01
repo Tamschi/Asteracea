@@ -101,8 +101,8 @@ component! {
 		// Inner captures are perfect for child components.
 		// Here you can see a shorthand for constructed captures (with the caveat that field type type parameters can't be inferred).
 		// The general syntax is: |#field_name = #type::#constructor(#parameters)|
-		|very_simple = VerySimple::new(&node, VerySimple::new_args_builder().build())?|.render(bump, VerySimple::render_args_builder().build())
-		|very_simple_qualified = self::VerySimple::new(&node, VerySimple::new_args_builder().build())?|.render(bump, VerySimple::render_args_builder().build())
+		pin |very_simple = VerySimple::new(&node, VerySimple::new_args_builder().build())?|.render(bump, VerySimple::render_args_builder().build())
+		pin |very_simple_qualified = self::VerySimple::new(&node, VerySimple::new_args_builder().build())?|.render(bump, VerySimple::render_args_builder().build())
 		// Note that the above lines end with .render() instead of ;.
 		// This expands to the following call: self.#field_name.render().
 
@@ -113,7 +113,7 @@ component! {
 		// - use or call the reference directly and/or
 		// - call or access a differently named member and/or
 		// - chain member access expressions as below:
-		|very_simple_chained = VerySimple::new(&node, VerySimple::new_args_builder().build())?|
+		pin |very_simple_chained = VerySimple::new(&node, VerySimple::new_args_builder().build())?|
 			.render(bump, VerySimple::render_args_builder().build()) // TODO: It should be possible to insert direct calls, that is `()` without leading `.identifier`, anywhere in this chain.
 			.select(|x| x)
 
@@ -129,8 +129,8 @@ component! {
 		<*VerySimple priv private_very_simple>
 		<*VerySimple pub public_very_simple>
 
-		{self.private_very_simple.render(bump, VerySimple::render_args_builder().build())}
-		<*{&self.public_very_simple}>
+		{self.private_very_simple_pinned().render(bump, VerySimple::render_args_builder().build())}
+		<*{self.public_very_simple_pinned()}>
 	>
 }
 
@@ -163,14 +163,17 @@ fn test() {
 	enum RootTag {}
 	let parent_node = Arc::new(rhizome::Node::new_for::<RootTag>());
 
-	AVeryComplexComponent::<i32>::new(
-		&parent_node,
-		AVeryComplexComponentNewArgs::builder()
-			.a(0)
-			.d(0usize)
-			.build(),
+	Box::pin(
+		AVeryComplexComponent::<i32>::new(
+			&parent_node,
+			AVeryComplexComponentNewArgs::builder()
+				.a(0)
+				.d(0usize)
+				.build(),
+		)
+		.unwrap(),
 	)
-	.unwrap()
+	.as_ref()
 	.render(
 		&Bump::new(),
 		AVeryComplexComponentRenderArgs::builder()._b(1).build(),

@@ -17,10 +17,16 @@ pub struct CaptureDefinition<C> {
 	_phantom: PhantomData<C>,
 }
 
+pub mod kw {
+	syn::custom_keyword!(pin);
+}
+
 impl<C> ParseWithContext for CaptureDefinition<C> {
 	type Output = Option<Self>;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let mut attributes = input.call(Attribute::parse_outer)?;
+
+		let pin: Option<kw::pin> = input.parse()?;
 
 		input.parse::<Token![|]>()?;
 
@@ -119,25 +125,29 @@ impl<C> ParseWithContext for CaptureDefinition<C> {
 
 		input.parse::<Token![|]>()?;
 
-		let access_name = if input.peek(Token![;]) {
-			input.parse::<Token![;]>()?;
-			None
-		} else {
-			Some(name.clone())
-		};
-
 		let field_definition = FieldDefinition {
 			attributes,
 			visibility,
-			name,
+			name: name.clone(),
 			field_type,
 			initial_value,
+			structurally_pinned: pin.is_some(),
 		};
+		cx.storage_context.push(field_definition);
+
 		let access = {
-			cx.storage_context.push(field_definition);
-			access_name.map(
-				|access_name: Ident| quote_spanned!(access_name.span().resolved_at(Span::mixed_site())=> this.#access_name),
-			)
+			if input.peek(Token![;]) {
+				input.parse::<Token![;]>()?;
+				None
+			} else {
+				Some(if let Some(pin) = pin {
+					let pinned_name = Ident::new(&format!("{}_pinned", name), name.span());
+					let pin_parens = quote_spanned!(pin.span=> ());
+					quote_spanned!(pinned_name.span().resolved_at(Span::mixed_site())=> this.#pinned_name#pin_parens)
+				} else {
+					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> this.#name)
+				})
+			}
 		};
 
 		Ok(access.map(|access| Self {
