@@ -134,6 +134,15 @@ fn reused() -> Result<(), ExtractableResolutionError> {
 }
 
 asteracea::component! {
+	VisIgnored()()
+
+	box priv b: BoxContainer
+		// There's no good way to check the visibility here (since the declaration isn't emitted),
+		// so it's possible to use a mismatching one for fields on externally-defined storage types.
+		<*Boxed pub boxed>
+}
+
+asteracea::component! {
 	Multi()()
 
 	[
