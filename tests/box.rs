@@ -161,3 +161,15 @@ fn multi() -> Result<(), ExtractableResolutionError> {
 
 	Ok(())
 }
+
+asteracea::component! {
+	Nested()()
+
+	[
+		box [
+			box <*Boxed>
+			box <*Boxed>
+		]
+		box box <*Boxed>
+	]
+}
