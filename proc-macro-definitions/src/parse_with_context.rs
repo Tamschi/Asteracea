@@ -180,11 +180,11 @@ impl StorageContext {
 							__Asteracea__pinned: ::std::marker::PhantomPinned,
 						}});
 						Some(quote_spanned! {
-							field_name.span()=> ::#asteracea::static_assertions::assert_not_impl_any!(#type_name: Unpin);
+							type_name.span()=> ::#asteracea::static_assertions::assert_not_impl_any!(#type_name: Unpin);
 						})
 					} else {
 						// Any other case won't be provably sound until min_specialization lands.
-						Some(quote_spanned! {field_name.span()=>
+						Some(quote_spanned! {generics.span()=>
 							::std::compile_error!("Asteracea can't soundly generate named generic storage context types if anything inside requires pinning :( (Once min_specialization lands, the required static assert against `Self: Unpin` will become available. For now, please use a `box <…>`-expression with either anonymous or manually defined storage context type to pin any child components in a heap allocation.)");
 						})
 					};
