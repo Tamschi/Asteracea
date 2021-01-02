@@ -52,3 +52,13 @@ pub fn unsound_extend_reference<T: ?Sized>(reference: &T) -> &'static T {
 		::std::mem::transmute(reference)
 	}
 }
+
+/// Until [`min_specialization`](https://doc.rust-lang.org/stable/unstable-book/language-features/min-specialization.html)
+/// lands, this trait is used to ensure no unsound [`Unpin`](`::std::marker::Unpin`) implementations exist on generated storage contexts that
+/// have an automatically generated structural pinning implementation.
+pub trait StrictUnpinConstraint {}
+
+/// If this `impl` collides, then `T` erroneously implements [`Unpin`](::std::marker::Unpin`).
+///
+/// See [`StrictUnpinConstraint`] for more information.
+impl<T: Unpin> StrictUnpinConstraint for T {}
