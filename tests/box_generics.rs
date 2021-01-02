@@ -52,20 +52,21 @@ asteracea::component! {
 	box []
 }
 
-asteracea::component! {
-	Custom<T>()()
+// Waiting on min_specialization.
+// asteracea::component! {
+// 	Custom<T>()()
 
-	box priv a: struct C::<T> <*Boxed::<T>>
-}
+// 	box priv a: struct C::<T> <*Boxed::<T>>
+// }
 
-asteracea::component! {
-	CustomClaused<T: Debug>()()
+// asteracea::component! {
+// 	CustomClaused<T: Debug>()()
 
-	box priv a: struct CC::<T: Debug> <*Picky::<T>>
-}
+// 	box priv a: struct CC::<T: Debug> <*Picky::<T>>
+// }
 
-asteracea::component! {
-	CustomWhered<T> where T: Debug, ()()
+// asteracea::component! {
+// 	CustomWhered<T> where T: Debug, ()()
 
-	box priv a: struct CW::<T> where T: Debug; <*Picky::<T>>
-}
+// 	box priv a: struct CW::<T> where T: Debug; <*Picky::<T>>
+// }

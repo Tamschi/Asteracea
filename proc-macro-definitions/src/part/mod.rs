@@ -19,14 +19,14 @@ use self::{
 };
 use crate::{
 	asteracea_ident,
-	parse_with_context::{ParseContext, ParseWithContext, StorageContext},
+	parse_with_context::{ParseContext, ParseWithContext},
 	Configuration,
 };
-use core::{cell::RefCell, result::Result as coreResult};
+use core::result::Result as coreResult;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapErr as _};
 use event_binding::EventBindingDefinition;
 use proc_macro2::{Span, TokenStream, TokenTree};
-use quote::{quote, quote_spanned, spanned::Spanned};
+use quote::{quote, quote_spanned};
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},

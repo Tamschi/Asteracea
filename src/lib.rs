@@ -4,7 +4,6 @@
 #![allow(clippy::match_bool)]
 
 pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
-pub use impls;
 pub use lazy_static;
 pub use lignin_schema;
 pub use rhizome;

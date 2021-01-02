@@ -1,6 +1,6 @@
 use crate::component_declaration::FieldDefinition;
 use proc_macro2::{Span, TokenStream};
-use quote::quote_spanned;
+use quote::{quote_spanned, ToTokens};
 use syn::{
 	parse::ParseStream, spanned::Spanned, Attribute, Error, ExprPath, Generics, Ident, Result,
 	Visibility,
@@ -152,6 +152,7 @@ impl StorageContext {
 			None
 		};
 
+		let mut phantom_pinned = None;
 		let structural_pinning = self
 			.field_definitions
 			.iter()
@@ -162,25 +163,43 @@ impl StorageContext {
 					let FieldDefinition {
 						attributes,
 						visibility,
-						name,
+						name: field_name,
 						field_type,
 						initial_value: _,
 						structurally_pinned: _,
 					} = field;
-					let pinned_name = Ident::new(&format!("{}_pinned", name), name.span());
-					Some(quote_spanned! {field.name.span()=>
+					let pinned_name = Ident::new(&format!("{}_pinned", field_name), field_name.span());
+
+					let not_unpin_assertion = if type_name.to_string().contains("__Asteracea__") {
+						// Asteracea itself won't implement Unpin, so we're in the clear here.
+						None
+					} else if generics.params.is_empty() {
+						// It's already possible to assert this correctly on the outer type, but we can't check for the field type,
+						// so we have to force `!Unpin` on the storage context even if it wouldn't be necessary otherwise.
+						phantom_pinned.get_or_insert_with(||{quote_spanned! {field_name.span().resolved_at(Span::mixed_site())=>
+							__Asteracea__pinned: ::std::marker::PhantomPinned,
+						}});
+						Some(quote_spanned! {
+							field_name.span()=> ::#asteracea::static_assertions::assert_not_impl_any!(#type_name: Unpin);
+						})
+					} else {
+						// Any other case won't be provably sound until min_specialization lands.
+						Some(quote_spanned! {field_name.span()=>
+							::std::compile_error!("Asteracea can't soundly generate named generic storage context types if anything inside requires pinning :( (Once min_specialization lands, the required static assert against `Self: Unpin` will become available. For now, please use a `box <…>`-expression with either anonymous or manually defined storage context type to pin any child components in a heap allocation.)");
+						})
+					};
+
+					Some(quote_spanned! {field_name.span()=>
 						#(#attributes)*
 						#visibility fn #pinned_name(self: ::std::pin::Pin<&Self>) -> ::std::pin::Pin<&#field_type> {
-							//TODO!: Reactivate this somehow! The library is unsound without it.
-							// {
-							// 	type StorageContext = Self;
-							// 	type Field = #field_type;
-							// 	const legal: bool = !::#asteracea::impls::impls!(Field: !::std::marker::Unpin) || !::#asteracea::impls::impls!(StorageContext: ::std::marker::Unpin);
-							// 	::#asteracea::static_assertions::const_assert!(legal);
-							// };
+							#not_unpin_assertion
 
 							unsafe {
-								self.map_unchecked(|this| &this.#name)
+								// SAFETY:
+								//   That the storage type doesn't implement `Unpin` is asserted above, #[repr] is blocked explicitly and
+								//   custom Drop implementations are also denied when necessary. As such, consumers of Asteracea
+								//   cannot break the requirements for structural pinning, except using `unsafe`.
+								self.map_unchecked(|this| &this.#field_name)
 							}
 						}
 					})
@@ -210,6 +229,7 @@ impl StorageContext {
 					#(#field_attributes)*
 					#field_visibilities #field_names: #field_types,
 				)*
+				#phantom_pinned
 			}
 
 			#explicit_default_drop
@@ -218,15 +238,40 @@ impl StorageContext {
 		})
 	}
 
-	pub fn value(&self, type_path: &ExprPath) -> TokenStream {
+	pub fn value(&self, generated_type: bool, type_path: &ExprPath) -> TokenStream {
 		let (field_names, field_values) = self
 			.field_definitions()
 			.map(|c| (&c.name, &c.initial_value))
 			.unzip::<_, _, Vec<_>, Vec<_>>();
 
+		// Workaround until min_specialization lands. See above.
+		let phantom_pinned = if generated_type
+			&& !type_path
+				.to_token_stream()
+				.to_string()
+				.contains("__Asteracea__")
+			&& type_path
+				.path
+				.segments
+				.last()
+				.expect("StorageContext.value(…): Called with an empty `type_path`, somehow.")
+				.arguments
+				.is_empty() && self
+			.field_definitions
+			.iter()
+			.any(|f| f.structurally_pinned)
+		{
+			Some(
+				quote_spanned! {type_path.span().resolved_at(Span::mixed_site())=> __Asteracea__pinned: ::std::marker::PhantomPinned,},
+			)
+		} else {
+			None
+		};
+
 		quote_spanned! {type_path.span().resolved_at(Span::mixed_site())=>
 			#type_path {
 				#(#field_names: (#field_values),)* // The parentheses around #field_values stop the grammar from breaking as much if no value is provided.
+				#phantom_pinned
 			}
 		}
 	}

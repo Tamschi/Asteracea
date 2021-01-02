@@ -327,7 +327,7 @@ impl ComponentDeclaration {
 		)?;
 
 		let constructed_value =
-			storage_context.value(&parse2(component_name.to_token_stream()).unwrap());
+			storage_context.value(true, &parse2(component_name.to_token_stream()).unwrap());
 
 		let bump = quote_spanned! (render_paren.span.resolved_at(Span::call_site())=>
 			bump

@@ -288,7 +288,9 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			.unwrap()
 		}
 
-		let boxed_value = parse_context.storage_context.value(&type_path);
+		let boxed_value = parse_context
+			.storage_context
+			.value(generated_type_name.is_some(), &type_path);
 
 		call2_strict(
 			quote_spanned! {box_.span=>
