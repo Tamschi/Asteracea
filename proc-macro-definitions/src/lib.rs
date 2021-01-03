@@ -7,6 +7,7 @@ mod component_declaration;
 mod map_message;
 mod parse_with_context;
 mod part;
+mod storage_configuration;
 mod syn_ext;
 mod try_parse;
 
