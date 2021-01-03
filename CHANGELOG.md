@@ -9,7 +9,7 @@ TODO: Date
   * Removed "rhizome" features (always enabled now)
   * Removed "styles" and "topiary" features. CSS scoping will be enabled through more general means.
   * Reworked generated component interface
-  * Upgraded `lignin` and `lignin-schema` dependencies to 0.0.2 each
+  * Upgraded `lignin` and `lignin-schema` dependencies to 0.0.3 each
   * Removed all type-level (static) storage declarations. This reduces complexity a lot. Use plain Rust `static` items and, where needed, `new with { …; }` blocks and/or `with { …; } <…>` expressions instead.
 
 * Features:
