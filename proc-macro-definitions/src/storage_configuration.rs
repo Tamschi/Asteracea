@@ -5,15 +5,19 @@ use syn::{
 use unquote::unquote;
 use wyz::Pipe;
 
-/// ⦃priv‖⦅Visibility⦆⦄ …⟦: ⦅StorageTypeConfiguration⦆⟧
-pub struct StorageConfiguration {
-	visibility: Visibility,
-	field_name: Ident,
-	accessible_type: Option<StorageTypeConfiguration>,
+/// ⟦⦃priv‖⦅Visibility⦆⦄ …⦅StorageTypeConfiguration⦆⟧
+pub enum StorageConfiguration {
+	Anonymous,
+	Bound {
+		visibility: Visibility,
+		field_name: Ident,
+		type_configuration: StorageTypeConfiguration,
+	},
 }
 
-/// ⟦struct⟧ … ⟦where …;⟧
+/// ⟦: ⟦struct⟧ … ⟦where …;⟧⟧
 enum StorageTypeConfiguration {
+	Anonymous,
 	Generated {
 		struct_: Token![struct],
 		type_name: Ident,
@@ -25,30 +29,28 @@ enum StorageTypeConfiguration {
 	},
 }
 
-impl StorageConfiguration {
-	pub fn parse(input: ParseStream) -> Result<Option<Self>> {
-		Ok(Some(Self {
+impl Parse for StorageConfiguration {
+	fn parse(input: ParseStream) -> Result<Self> {
+		Ok(Self::Bound {
 			visibility: if input.parse::<Option<Token![priv]>>().unwrap().is_some() {
 				Visibility::Inherited
 			} else {
 				match input.parse::<Visibility>().unwrap() {
-					Visibility::Inherited => return Ok(None),
+					Visibility::Inherited => return Ok(Self::Anonymous),
 					explicit => explicit,
 				}
 			},
 			field_name: input.parse()?,
-			accessible_type: if input.parse::<Option<Token![:]>>().unwrap().is_some() {
-				Some(input.parse()?)
-			} else {
-				None
-			},
-		}))
+			type_configuration: input.parse()?,
+		})
 	}
 }
 
 impl Parse for StorageTypeConfiguration {
 	fn parse(input: ParseStream) -> Result<Self> {
-		if let Some(struct_) = input.parse()? {
+		if input.parse::<Option<Token![:]>>().unwrap().is_none() {
+			Self::Anonymous
+		} else if let Some(struct_) = input.parse()? {
 			let type_name = input.parse()?;
 			let generics = if input.parse::<Option<Token![::]>>().unwrap().is_some() {
 				let mut generics = input.parse::<Generics>()?;
