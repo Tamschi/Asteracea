@@ -157,6 +157,7 @@ impl StorageContext {
 		};
 
 		let mut phantom_pinned = None;
+		let mut strict_unpin_constraint = None;
 		let structural_pinning = self
 			.field_definitions
 			.iter()
@@ -172,32 +173,33 @@ impl StorageContext {
 						initial_value: _,
 						structurally_pinned: _,
 					} = field;
-					let pinned_name = Ident::new(&format!("{}_pinned", field_name), field_name.span());
+					let pinned_name =
+						Ident::new(&format!("{}_pinned", field_name), field_name.span());
 
-					let not_unpin_assertion = if type_name.to_string().contains("__Asteracea__") {
+					if type_name.to_string().contains("__Asteracea__") {
 						// Asteracea itself won't implement Unpin, so we're in the clear here.
-						None
-					} else if generics.params.is_empty() {
-						// It's already possible to assert this correctly on the outer type, but we can't check for the field type,
-						// so we have to force `!Unpin` on the storage context even if it wouldn't be necessary otherwise.
-						phantom_pinned.get_or_insert_with(||{quote_spanned! {field_name.span().resolved_at(Span::mixed_site())=>
-							__Asteracea__pinned: ::std::marker::PhantomPinned,
-						}});
-						Some(quote_spanned! {
-							type_name.span()=> ::#asteracea::static_assertions::assert_not_impl_any!(#type_name: Unpin);
-						})
 					} else {
-						// Any other case won't be provably sound until min_specialization lands.
-						Some(quote_spanned! {generics.span()=>
-							::std::compile_error!("Asteracea can't soundly generate named generic storage context types if anything inside requires pinning :( (Once min_specialization lands, the required static assert against `Self: Unpin` will become available. For now, please use a `box <…>`-expression with either anonymous or manually defined storage context type to pin any child components in a heap allocation.)");
-						})
+						// It's already possible to assert this correctly on the outer type, but we can't (nicely) check in relation to the field type
+						// without <https://doc.rust-lang.org/stable/unstable-book/language-features/min-specialization.html>,
+						// so we have to force `!Unpin` on the storage context even if it wouldn't be necessary otherwise.
+						phantom_pinned.get_or_insert_with(|| {
+							quote_spanned! {field_name.span().resolved_at(Span::mixed_site())=>
+								__Asteracea__pinned: ::std::marker::PhantomPinned,
+							}
+						});
+						strict_unpin_constraint.get_or_insert_with(|| {
+							quote_spanned! {type_name.span()=>
+								/// Forbids [`Unpin`](`::std::marker::Unpin`) on this generated storage context type.
+								///
+								/// See [`StrictUnpinConstraint`](`::asteracea::StrictUnpinConstraint`) for more information.
+								impl#impl_generics ::#asteracea::StrictUnpinConstraint for #type_name#type_generics #where_clause {}
+							}
+						});
 					};
 
 					Some(quote_spanned! {field_name.span()=>
 						#(#attributes)*
 						#visibility fn #pinned_name(self: ::std::pin::Pin<&Self>) -> ::std::pin::Pin<&#field_type> {
-							#not_unpin_assertion
-
 							unsafe {
 								// SAFETY:
 								//   That the storage type doesn't implement `Unpin` is asserted above, #[repr] is blocked explicitly and
@@ -239,6 +241,8 @@ impl StorageContext {
 			#explicit_default_drop
 
 			#structural_pinning
+
+			#strict_unpin_constraint
 		})
 	}
 
