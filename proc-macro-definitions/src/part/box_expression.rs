@@ -1,6 +1,7 @@
 use super::{CaptureDefinition, GenerateContext, Part};
 use crate::{
 	parse_with_context::{ParseContext, ParseWithContext},
+	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
@@ -14,32 +15,16 @@ use syn::{
 	parse2,
 	punctuated::{Pair, Punctuated},
 	Error, ExprPath, GenericArgument, GenericParam, Generics, Ident, LifetimeDef, PathArguments,
-	Result, Token, TypeParam, TypePath, Visibility, WhereClause,
+	Result, Token, TypeParam, TypePath, Visibility,
 };
 
 #[allow(clippy::type_complexity)]
 #[allow(dead_code)]
 pub struct BoxExpression<C: Configuration> {
 	box_: Token![box],
-	vis: Either<Token![priv], Visibility>,
+	visibility: Visibility,
 	field_name: Ident,
-	type_: Option<(
-		Token![:],
-		Either<
-			(
-				Token![struct],
-				Ident,
-				Option<Token![::]>,
-				Generics,
-				Option<Token![;]>,
-			),
-			(
-				ExprPath,
-				// Must end with semicolon.
-				Option<(WhereClause, Token![;])>,
-			),
-		>,
-	)>,
+	type_configuration: StorageTypeConfiguration,
 	content: Box<Part<C>>,
 }
 
@@ -48,149 +33,9 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let box_: Token![box] = input.parse()?;
+		let storage_configuration: StorageConfiguration = input.parse()?;
 
-		let vis = if let Some(priv_) = input.parse().unwrap() {
-			Some(Either::Left(priv_))
-		} else {
-			match input.parse().unwrap() {
-				Visibility::Inherited => None,
-				vis => Some(Either::Right(vis)),
-			}
-		};
-		let (vis, field_name, type_) = if let Some(vis) = vis {
-			let field_name = input.parse()?;
-
-			let type_ = if let Some(colon) = input.parse().unwrap() {
-				let type_ = if let Some(struct_) = input.parse().unwrap() {
-					let name = input.parse()?;
-					let double_colon: Option<Token![::]> = input.parse()?;
-					let (generics, semicolon) = if double_colon.is_some() {
-						let mut generics: Generics = input.parse()?;
-						generics.where_clause = input.parse()?;
-						let semicolon = if generics.where_clause.is_some() {
-							Some(input.parse()?)
-						} else {
-							None
-						};
-						(generics, semicolon)
-					} else {
-						(Generics::default(), None)
-					};
-					Either::Left((struct_, name, double_colon, generics, semicolon))
-				} else {
-					let path = input.parse()?;
-					let where_clause: Option<WhereClause> = input.parse()?;
-					if let Some(where_clause) = where_clause.as_ref() {
-						if let Some(last) = where_clause.predicates.pairs().last() {
-							if last.punct().is_none() {
-								return Err(Error::new_spanned(
-									last,
-									"Each `where`-predicate must end with a `,` here.",
-								));
-							}
-						} else {
-							return Err(Error::new_spanned(
-								where_clause.where_token,
-								"A `where` clause can't be empty here.",
-							));
-						}
-					}
-					let where_clause = where_clause
-						.map(|w| Result::Ok((w, input.parse::<Token![;]>()?)))
-						.transpose()?;
-					Either::Right((path, where_clause))
-				};
-				Some((colon, type_))
-			} else {
-				None
-			};
-
-			(vis, field_name, type_)
-		} else {
-			(
-				Either::Left(Token![priv](box_.span)),
-				cx.storage_context.next_field(box_.span),
-				None,
-			)
-		};
-
-		fn strip_params(
-			arguments: &Punctuated<GenericParam, Token![,]>,
-		) -> Punctuated<GenericParam, Token![,]> {
-			arguments
-				.pairs()
-				.map(|pair| {
-					Pair::new(
-						match pair.value() {
-							GenericParam::Type(t) => GenericParam::Type(TypeParam {
-								attrs: vec![],
-								ident: t.ident.clone(),
-								colon_token: None,
-								bounds: Punctuated::default(),
-								eq_token: None,
-								default: None,
-							}),
-							GenericParam::Lifetime(l) => GenericParam::Lifetime(LifetimeDef {
-								attrs: vec![],
-								lifetime: l.lifetime.clone(),
-								colon_token: None,
-								bounds: Punctuated::default(),
-							}),
-							GenericParam::Const(c) => GenericParam::Type(TypeParam {
-								attrs: vec![],
-								ident: c.ident.clone(),
-								colon_token: None,
-								bounds: Punctuated::default(),
-								eq_token: None,
-								default: None,
-							}),
-						},
-						pair.punct().cloned().cloned(),
-					)
-				})
-				.collect()
-		}
-
-		fn generic_arguments_to_generic_params(
-			arguments: &Punctuated<GenericArgument, Token![,]>,
-		) -> Result<Punctuated<GenericParam, Token![,]>> {
-			arguments
-				.pairs()
-				.map(|pair| {
-					Ok(Pair::new(
-						match pair.value() {
-							syn::GenericArgument::Lifetime(l) => {
-								GenericParam::Lifetime(LifetimeDef {
-									attrs: vec![],
-									lifetime: l.clone(),
-									colon_token: None,
-									bounds: Punctuated::default(),
-								})
-							}
-							syn::GenericArgument::Type(t) => GenericParam::Type(TypeParam {
-								attrs: vec![],
-								ident: parse2(t.to_token_stream())?,
-								colon_token: None,
-								bounds: Punctuated::default(),
-								eq_token: None,
-								default: None,
-							}),
-							syn::GenericArgument::Binding(_) => {
-								todo!("box type generic binding")
-							}
-							syn::GenericArgument::Constraint(_) => {
-								todo!("box type generic constraint")
-							}
-							syn::GenericArgument::Const(_) => {
-								todo!("box type generic const")
-							}
-						},
-						pair.punct().cloned().cloned(),
-					))
-				})
-				.collect()
-		}
-
+		//OLD
 		let (type_path, generated_type_name, (generics, add_phantom)): (
 			ExprPath,
 			Option<Ident>,
@@ -248,20 +93,28 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 				(Cow::Borrowed(cx.storage_generics), true),
 			)
 		};
+		//END OF OLD
 
+		let visibility = storage_configuration.visibility();
+
+		let field_name = storage_configuration
+			.field_name()
+			.cloned()
+			.unwrap_or_else(|| cx.storage_context.next_field(box_.span));
+
+		let type_configuration = storage_configuration.type_configuration();
+
+		let nested_generics = type_configuration
+			.generics()?
+			.unwrap_or_else(|| cx.storage_generics.clone());
 		let mut parse_context = cx.new_nested(
 			cx.storage_context.generated_type_name(&field_name),
-			generics.as_ref(),
+			&nested_generics,
 		);
 		let content = Box::new(Part::parse_required_with_context(
 			input,
 			&mut parse_context,
 		)?);
-
-		let resolved_vis = match &vis {
-			Either::Left(_) => Visibility::Inherited,
-			Either::Right(vis) => vis.clone(),
-		};
 
 		if add_phantom {
 			let phantom_generics = generics
@@ -321,7 +174,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 
 		Ok(Self {
 			box_,
-			vis,
+			visibility,
 			field_name,
 			type_,
 			content,

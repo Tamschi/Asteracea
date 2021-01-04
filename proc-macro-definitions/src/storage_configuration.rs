@@ -25,7 +25,8 @@ pub enum StorageConfiguration {
 }
 
 /// ⟦: ⟦struct⟧ … ⟦where …;⟧⟧
-enum StorageTypeConfiguration {
+#[derive(Clone)]
+pub enum StorageTypeConfiguration {
 	Anonymous,
 	Generated {
 		struct_: Token![struct],
@@ -209,29 +210,41 @@ fn generic_arguments(generics: &Generics) -> Result<Punctuated<GenericArgument, 
 }
 
 impl StorageConfiguration {
-	fn type_path(&self, container: &StorageContext, field_name: &Ident) -> Result<ExprPath> {
+	pub fn visibility(&self) -> Visibility {
 		match self {
-			StorageConfiguration::Anonymous => ExprPath {
-				attrs: vec![],
-				qself: None,
-				path: field_name.clone().into(),
-			},
+			StorageConfiguration::Anonymous => Visibility::Inherited,
+			StorageConfiguration::Bound { visibility, .. } => visibility.clone(),
+		}
+	}
+
+	pub fn field_name(&self) -> Option<&Ident> {
+		match self {
+			StorageConfiguration::Anonymous => None,
+			StorageConfiguration::Bound { field_name, .. } => Some(field_name),
+		}
+	}
+
+	pub fn type_configuration(&self) -> StorageTypeConfiguration {
+		match self {
+			StorageConfiguration::Anonymous => StorageTypeConfiguration::Anonymous,
 			StorageConfiguration::Bound {
-				field_name,
-				type_configuration: StorageTypeConfiguration::Anonymous,
-				..
-			} => ExprPath {
+				type_configuration, ..
+			} => type_configuration.clone(),
+		}
+	}
+}
+
+impl StorageTypeConfiguration {
+	pub fn type_path(&self, container: &StorageContext, field_name: &Ident) -> Result<ExprPath> {
+		match self {
+			StorageTypeConfiguration::Anonymous => ExprPath {
 				attrs: vec![],
 				qself: None,
 				path: container.generated_type_name(field_name).into(),
 			},
-			StorageConfiguration::Bound {
-				type_configuration:
-					StorageTypeConfiguration::Generated {
-						type_name,
-						generics,
-						..
-					},
+			StorageTypeConfiguration::Generated {
+				type_name,
+				generics,
 				..
 			} => ExprPath {
 				attrs: vec![],
@@ -254,10 +267,41 @@ impl StorageConfiguration {
 					.collect(),
 				},
 			},
-			StorageConfiguration::Bound {
-				type_configuration: StorageTypeConfiguration::Predefined { type_path, .. },
+			StorageTypeConfiguration::Predefined { type_path, .. } => type_path.clone(),
+		}
+		.pipe(Ok)
+	}
+
+	pub fn generics(&self) -> Result<Option<Generics>> {
+		match self {
+			StorageTypeConfiguration::Anonymous => None,
+			StorageTypeConfiguration::Generated {
+				generics: (_, generics),
 				..
-			} => type_path.clone(),
+			} => Some(generics.clone()),
+			StorageTypeConfiguration::Predefined {
+				type_path,
+				where_clause,
+			} => {
+				let arguments = &type_path.path.segments.last().unwrap().arguments;
+				let mut generics = match arguments {
+					PathArguments::None => Generics::default(),
+					PathArguments::AngleBracketed(a_bra_args) => Generics {
+						lt_token: Some(a_bra_args.lt_token),
+						params: generic_arguments_to_generic_params(&a_bra_args.args)?,
+						gt_token: Some(a_bra_args.gt_token),
+						where_clause: None,
+					},
+					PathArguments::Parenthesized(p) => {
+						return Err(Error::new_spanned(
+							p,
+							"Parenthesized generic arguments are not supported in this position.",
+						));
+					}
+				};
+				generics.where_clause = where_clause.as_ref().cloned();
+				Some(generics)
+			}
 		}
 		.pipe(Ok)
 	}

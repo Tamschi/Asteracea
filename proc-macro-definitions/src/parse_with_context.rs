@@ -48,13 +48,17 @@ impl<'a> ParseContext<'a> {
 		}
 	}
 
-	pub fn new_nested(&self, type_name: Ident, nested_generics: &'a Generics) -> Self {
+	pub fn new_nested(
+		&self,
+		type_name_as_if_generated: Ident,
+		nested_generics: &'a Generics,
+	) -> Self {
 		Self {
 			item_visibility: self.item_visibility,
 			component_name: self.component_name,
 			storage_generics: nested_generics,
 			storage_context: StorageContext {
-				type_name,
+				type_name: type_name_as_if_generated,
 				field_definitions: vec![],
 				generated_names: 0,
 			},
