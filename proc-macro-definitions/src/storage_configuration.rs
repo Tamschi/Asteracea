@@ -305,4 +305,12 @@ impl StorageTypeConfiguration {
 		}
 		.pipe(Ok)
 	}
+
+	pub fn type_is_generated(&self) -> bool {
+		match self {
+			StorageTypeConfiguration::Anonymous => true,
+			StorageTypeConfiguration::Generated { .. } => true,
+			StorageTypeConfiguration::Predefined { .. } => false,
+		}
+	}
 }

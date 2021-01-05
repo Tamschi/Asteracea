@@ -141,13 +141,15 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			.unwrap()
 		}
 
+		let type_path = type_configuration.type_path(&cx.storage_context, &field_name)?;
+
 		let boxed_value = parse_context
 			.storage_context
-			.value(generated_type_name.is_some(), &type_path);
+			.value(type_configuration.type_is_generated(), &type_path);
 
 		call2_strict(
 			quote_spanned! {box_.span=>
-				|#resolved_vis #field_name: ::std::pin::Pin<::std::boxed::Box<#type_path>> = {::std::boxed::Box::pin(#boxed_value)}|;
+				|#visibility #field_name: ::std::pin::Pin<::std::boxed::Box<#type_path>> = {::std::boxed::Box::pin(#boxed_value)}|;
 			},
 			|input| CaptureDefinition::<C>::parse_with_context(input, cx),
 		)
