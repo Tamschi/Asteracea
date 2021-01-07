@@ -471,7 +471,7 @@ impl ComponentDeclaration {
 			#[builder(doc)]
 			#visibility struct #render_args_name#render_args_generics #render_args_body
 
-			#struct_definition
+			#(#struct_definition)*
 
 			impl#component_impl_generics #component_name#component_type_generics
 				#component_where_clause {

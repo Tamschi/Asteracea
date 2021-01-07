@@ -8,15 +8,17 @@ use syn::{
 	punctuated::{Pair, Punctuated},
 	token::{Brace, Bracket},
 	AngleBracketedGenericArguments, AttrStyle, Attribute, Error, ExprPath, Fields, FieldsNamed,
-	GenericArgument, GenericParam, Generics, Ident, ItemStruct, LifetimeDef, Path, PathArguments,
-	PathSegment, Result, Token, TypeParam, TypePath, Visibility, WhereClause,
+	GenericArgument, GenericParam, Generics, Ident, ImplItem, ImplItemMethod, Item, ItemImpl,
+	ItemStruct, LifetimeDef, Path, PathArguments, PathSegment, Result, Token, TypeParam, TypePath,
+	Visibility, WhereClause,
 };
 use unquote::unquote;
 use wyz::Pipe;
 
-use crate::parse_with_context::StorageContext;
+use crate::{component_declaration::FieldDefinition, parse_with_context::StorageContext};
 
 /// ⟦⦃priv‖⦅Visibility⦆⦄ …⦅StorageTypeConfiguration⦆⟧
+#[allow(clippy::large_enum_variant)]
 pub enum StorageConfiguration {
 	Anonymous,
 	Bound {
@@ -322,14 +324,34 @@ impl StorageTypeConfiguration {
 		ident: Ident,
 		contents: &StorageContext,
 		parent_generics: &Generics,
-	) -> Result<ItemStruct> {
+	) -> Result<Vec<Item>> {
 		let span = ident.span();
 		let generics = self.generics()?.unwrap_or_else(|| parent_generics.clone());
 
+		let fields = contents.fields(self, &generics);
+
+		//TODO: Unsound! Restore safety asserts. (I.e.: Assert that the surrounding type isn't `Unpin`!)
+
+		let structural_pinning_fns = contents
+			.field_definitions()
+			.map(|f| {
+				let f_visibility = &f.visibility;
+				let f_name = &f.name;
+				let f_type = &f.field_type;
+				let fn_name = Ident::new(&format!("{}_pinned", &f_name), span);
+				parse2::<ImplItemMethod>(quote_spanned! {span=>
+					#f_visibility fn #fn_name(self: ::std::pin::Pin<&Self>) -> ::std::pin::Pin<&#f_type> {
+						unsafe { self.map_unchecked(|this| &this.#f_name) }
+					}
+				})
+				.expect("structural pinning method")
+			})
+			.map(ImplItem::Method)
+			.collect();
+
 		let fields = Fields::Named(FieldsNamed {
 			brace_token: Brace(span),
-			named: contents
-				.fields(self, &generics)
+			named: fields
 				.into_iter()
 				.map(|f| Pair::Punctuated(f, Token![,](span)))
 				.collect(),
@@ -346,18 +368,34 @@ impl StorageTypeConfiguration {
 			attributes.push(allow_non_snake_case())
 		}
 
-		ItemStruct {
-			attrs: attributes,
-			vis: visibility,
-			struct_token: self
-				.struct_()
-				.cloned()
-				.unwrap_or_else(|| Token![struct](span)),
-			ident,
-			fields,
-			generics,
-			semi_token: None,
-		}
+		vec![
+			Item::Struct(ItemStruct {
+				attrs: attributes,
+				vis: visibility,
+				struct_token: self
+					.struct_()
+					.cloned()
+					.unwrap_or_else(|| Token![struct](span)),
+				ident: ident.clone(),
+				fields,
+				generics: generics.clone(),
+				semi_token: None,
+			}),
+			Item::Impl(ItemImpl {
+				attrs: vec![],
+				defaultness: None,
+				unsafety: None,
+				impl_token: Token![impl](span),
+				generics,
+				trait_: None,
+				self_ty: Box::new(Type::Path(TypePath {
+					qself: None,
+					path: ident.into(),
+				})),
+				brace_token: Brace(span),
+				items: structural_pinning_fns,
+			}),
+		]
 		.pipe(Ok)
 	}
 }

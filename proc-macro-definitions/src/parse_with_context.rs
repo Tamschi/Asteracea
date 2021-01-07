@@ -159,20 +159,31 @@ impl StorageContext {
 				ty: Type::Verbatim(f.field_type.clone()),
 			})
 			.collect();
+
+		let phantom_span = self.type_name.span().resolved_at(Span::mixed_site());
 		if configuration.use_implicit_generics() {
-			let span = self.type_name.span().resolved_at(Span::mixed_site());
 			let phantom_params = strip_params(&container_generics.params);
 
 			fields.push(Field {
 				attrs: vec![],
 				vis: Visibility::Inherited,
-				ident: Some(Ident::new("__Asteracea__phantom", span)),
-				colon_token: Some(Token![:](span)),
+				ident: Some(Ident::new("__Asteracea__phantom", phantom_span)),
+				colon_token: Some(Token![:](phantom_span)),
 				ty: Type::Verbatim(
-					quote_spanned!(span=> ::std::marker::PhantomData<(#phantom_params)>),
+					quote_spanned!(phantom_span=> ::std::marker::PhantomData<(#phantom_params)>),
 				),
 			})
 		}
+		if self.field_definitions.iter().any(|f| f.structurally_pinned) {
+			fields.push(Field {
+				attrs: vec![],
+				vis: Visibility::Inherited,
+				ident: Some(Ident::new("__Asteracea__pinned", phantom_span)),
+				colon_token: Some(Token![:](phantom_span)),
+				ty: Type::Verbatim(quote_spanned!(phantom_span=> ::std::marker::PhantomPinned)),
+			})
+		}
+
 		fields
 	}
 }

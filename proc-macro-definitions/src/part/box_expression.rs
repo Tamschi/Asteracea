@@ -65,7 +65,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		.debugless_unwrap_none();
 
 		if type_configuration.type_is_generated() {
-			cx.assorted_items.push(Item::Struct(
+			cx.assorted_items.extend(
 				type_configuration.struct_definition(
 					vec![],
 					visibility.clone(),
@@ -79,7 +79,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 					&parse_context.storage_context,
 					cx.storage_generics,
 				)?,
-			))
+			)
 		}
 
 		cx.assorted_items.extend(parse_context.assorted_items);
