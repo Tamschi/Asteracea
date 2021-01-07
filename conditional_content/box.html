@@ -261,12 +261,12 @@ asteracea::component! {
   [
     &quot;Holder size: &quot; !{size_of::&lt;Self&gt;()} &quot; bytes&quot;
     spread if {show} //TODO: Replace `spread` with `dyn`!
-      /*box*/ &lt;*Heavy&gt;
+      box &lt;*Heavy&gt;
   ]
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">Holder size: 1000 bytes
+<pre><code class="language-html">Holder size: 8 bytes
 </code></pre>
 <p>As <code>dyn if</code> won't initialise its branches unless necessary, no heap allocation happens in this case either.</p>
 <!-- TODO: Is there any way to demo this? -->
