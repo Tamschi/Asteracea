@@ -1,7 +1,7 @@
 use super::{CaptureDefinition, GenerateContext, Part};
 use crate::{
-	storage_context::{ParseContext, ParseWithContext},
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
+	storage_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
@@ -39,7 +39,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		let nested_generics = type_configuration.generics()?;
 		let auto_generics = nested_generics.is_none();
 		let nested_generics = nested_generics.unwrap_or_else(|| cx.storage_generics.clone());
-		
+
 		let mut parse_context = cx.new_nested(
 			cx.storage_context.generated_type_name(&field_name),
 			&nested_generics,
