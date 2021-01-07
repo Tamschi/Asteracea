@@ -104,7 +104,7 @@ asteracea::component! {
   [
     "Holder size: " !{size_of::<Self>()} " bytes"
     spread if {show} //TODO: Replace `spread` with `dyn`!
-      /*box*/ <*Heavy>
+      box <*Heavy>
   ]
 }
 ```
