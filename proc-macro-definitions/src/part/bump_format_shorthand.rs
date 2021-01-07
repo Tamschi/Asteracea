@@ -1,6 +1,6 @@
 use crate::{
 	asteracea_ident,
-	parse_with_context::{ParseContext, ParseWithContext},
+	storage_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;

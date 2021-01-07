@@ -2,7 +2,7 @@ use crate::{
 	component_declaration::FieldDefinition, storage_configuration::StorageTypeConfiguration,
 };
 use proc_macro2::{Span, TokenStream};
-use quote::{quote_spanned, ToTokens};
+use quote::quote_spanned;
 use syn::{
 	parse::ParseStream,
 	punctuated::{Pair, Punctuated},

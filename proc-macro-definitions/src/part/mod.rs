@@ -19,7 +19,7 @@ use self::{
 };
 use crate::{
 	asteracea_ident,
-	parse_with_context::{ParseContext, ParseWithContext},
+	storage_context::{ParseContext, ParseWithContext},
 	Configuration,
 };
 use core::result::Result as coreResult;

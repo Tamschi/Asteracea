@@ -5,7 +5,7 @@ extern crate proc_macro;
 
 mod component_declaration;
 mod map_message;
-mod parse_with_context;
+mod storage_context;
 mod part;
 mod storage_configuration;
 mod syn_ext;

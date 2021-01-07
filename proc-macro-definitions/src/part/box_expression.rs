@@ -1,6 +1,6 @@
 use super::{CaptureDefinition, GenerateContext, Part};
 use crate::{
-	parse_with_context::{ParseContext, ParseWithContext},
+	storage_context::{ParseContext, ParseWithContext},
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
 	workaround_module::Configuration,
 };

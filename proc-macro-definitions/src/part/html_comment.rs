@@ -1,6 +1,6 @@
 use crate::{
 	asteracea_ident,
-	parse_with_context::{ParseContext, ParseWithContext},
+	storage_context::{ParseContext, ParseWithContext},
 };
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;

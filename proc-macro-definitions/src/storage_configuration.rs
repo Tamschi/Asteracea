@@ -15,7 +15,7 @@ use syn::{
 use unquote::unquote;
 use wyz::Pipe;
 
-use crate::{component_declaration::FieldDefinition, parse_with_context::StorageContext};
+use crate::{component_declaration::FieldDefinition, storage_context::StorageContext};
 
 /// ⟦⦃priv‖⦅Visibility⦆⦄ …⦅StorageTypeConfiguration⦆⟧
 #[allow(clippy::large_enum_variant)]
@@ -334,7 +334,7 @@ impl StorageTypeConfiguration {
 	pub fn use_implicit_generics(&self) -> bool {
 		match self {
 			StorageTypeConfiguration::Anonymous => true,
-			StorageTypeConfiguration::Generated { generics, .. } => generics.0.is_none(),
+			StorageTypeConfiguration::Generated { .. } => false,
 			StorageTypeConfiguration::Predefined { .. } => false,
 		}
 	}

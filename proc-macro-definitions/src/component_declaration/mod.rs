@@ -4,7 +4,7 @@ use self::{
 };
 use crate::{
 	asteracea_ident,
-	parse_with_context::{ParseContext, ParseWithContext, StorageContext},
+	storage_context::{ParseContext, ParseWithContext, StorageContext},
 	part::GenerateContext,
 	storage_configuration::StorageTypeConfiguration,
 	syn_ext::{AddOptionExt, *},

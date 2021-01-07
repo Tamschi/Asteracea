@@ -1,7 +1,7 @@
 use std::{collections::HashSet, iter};
 
 use super::{AttachedAccessExpression, CaptureDefinition};
-use crate::parse_with_context::{ParseContext, ParseWithContext};
+use crate::storage_context::{ParseContext, ParseWithContext};
 use call2_for_syn::call2_strict;
 use proc_macro2::{Punct, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};

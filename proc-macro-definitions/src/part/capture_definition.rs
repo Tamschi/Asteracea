@@ -1,6 +1,6 @@
 use crate::{
 	component_declaration::FieldDefinition,
-	parse_with_context::{ParseContext, ParseWithContext},
+	storage_context::{ParseContext, ParseWithContext},
 };
 use core::marker::PhantomData;
 use proc_macro2::{Span, TokenStream};

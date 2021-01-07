@@ -1,7 +1,7 @@
 use super::{GenerateContext, Part, PartKind};
 use crate::{
 	asteracea_ident,
-	parse_with_context::{ParseContext, ParseWithContext},
+	storage_context::{ParseContext, ParseWithContext},
 	Configuration,
 };
 use proc_macro2::{Span, TokenStream};
