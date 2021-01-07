@@ -1,9 +1,11 @@
-use crate::component_declaration::FieldDefinition;
+use crate::{
+	component_declaration::FieldDefinition, storage_configuration::StorageTypeConfiguration,
+};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 use syn::{
-	parse::ParseStream, spanned::Spanned, Attribute, Error, ExprPath, Generics, Ident, Result,
-	Visibility,
+	parse::ParseStream, spanned::Spanned, Attribute, Error, ExprPath, Field, Generics, Ident,
+	Result, Token, Type, Visibility,
 };
 use unzip_n::unzip_n;
 
@@ -278,6 +280,38 @@ impl StorageContext {
 				#phantom_pinned
 			}
 		}
+	}
+
+	pub fn fields(
+		&self,
+		configuration: &StorageTypeConfiguration,
+		parent_generics: &Generics,
+	) -> Vec<Field> {
+		let mut fields: Vec<Field> = self
+			.field_definitions
+			.iter()
+			.map(|f| Field {
+				attrs: f.attributes.clone(),
+				vis: f.visibility.clone(),
+				ident: Some(f.name.clone()),
+				colon_token: Some(Token![:](f.name.span())),
+				ty: Type::Verbatim(f.field_type.clone()),
+			})
+			.collect();
+		if configuration.use_implicit_generics() {
+			let span = self.type_name.span().resolved_at(Span::mixed_site());
+
+			fields.push(Field {
+				attrs: vec![],
+				vis: Visibility::Inherited,
+				ident: Some(Ident::new("__Asteracea__phantom", span)),
+				colon_token: Some(Token![:](span)),
+				ty: Type::Verbatim(
+					quote_spanned!(span=> ::std::marker::PhantomData#parent_generics),
+				),
+			})
+		}
+		fields
 	}
 }
 

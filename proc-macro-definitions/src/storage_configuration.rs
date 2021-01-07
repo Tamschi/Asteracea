@@ -313,4 +313,18 @@ impl StorageTypeConfiguration {
 			StorageTypeConfiguration::Predefined { .. } => false,
 		}
 	}
+
+	pub fn use_implicit_generics(&self) -> bool {
+		match self {
+			StorageTypeConfiguration::Anonymous => true,
+			StorageTypeConfiguration::Generated { generics, .. } => {
+				// One should imply the other.
+				generics.0.is_none() && generics.1.params.is_empty()
+			}
+			StorageTypeConfiguration::Predefined {
+				type_path,
+				where_clause,
+			} => false,
+		}
+	}
 }
