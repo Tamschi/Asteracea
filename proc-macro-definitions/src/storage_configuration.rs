@@ -1,13 +1,15 @@
 use std::iter;
 
-use quote::ToTokens;
+use proc_macro2::Span;
+use quote::{quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
 	parse2,
 	punctuated::{Pair, Punctuated},
-	AngleBracketedGenericArguments, Error, ExprPath, GenericArgument, GenericParam, Generics,
-	Ident, LifetimeDef, Path, PathArguments, PathSegment, Result, Token, TypeParam, TypePath,
-	Visibility, WhereClause,
+	token::{Brace, Bracket},
+	AngleBracketedGenericArguments, AttrStyle, Attribute, Error, ExprPath, Fields, FieldsNamed,
+	GenericArgument, GenericParam, Generics, Ident, ItemStruct, LifetimeDef, Path, PathArguments,
+	PathSegment, Result, Token, TypeParam, TypePath, Visibility, WhereClause,
 };
 use unquote::unquote;
 use wyz::Pipe;
@@ -37,6 +39,26 @@ pub enum StorageTypeConfiguration {
 		type_path: ExprPath,
 		where_clause: Option<WhereClause>,
 	},
+}
+
+impl StorageTypeConfiguration {
+	pub fn new_component_root(ident: Ident, generics: Generics) -> Self {
+		let span = ident.span();
+		Self::Generated {
+			struct_: Token![struct](span),
+			type_name: ident,
+			generics: (
+				// Never inherits anything, so the generics are always as if explicit.
+				Some(Token![::](span)),
+				Generics {
+					lt_token: generics.lt_token.or_else(|| Some(Token![<](span))),
+					params: generics.params,
+					gt_token: generics.gt_token.or_else(|| Some(Token![>](span))),
+					where_clause: generics.where_clause,
+				},
+			),
+		}
+	}
 }
 
 impl Parse for StorageConfiguration {
@@ -96,43 +118,6 @@ impl Parse for StorageTypeConfiguration {
 		}
 		.pipe(Ok)
 	}
-}
-
-fn strip_params(
-	arguments: &Punctuated<GenericParam, Token![,]>,
-) -> Punctuated<GenericParam, Token![,]> {
-	arguments
-		.pairs()
-		.map(|pair| {
-			Pair::new(
-				match pair.value() {
-					GenericParam::Type(t) => GenericParam::Type(TypeParam {
-						attrs: vec![],
-						ident: t.ident.clone(),
-						colon_token: None,
-						bounds: Punctuated::default(),
-						eq_token: None,
-						default: None,
-					}),
-					GenericParam::Lifetime(l) => GenericParam::Lifetime(LifetimeDef {
-						attrs: vec![],
-						lifetime: l.lifetime.clone(),
-						colon_token: None,
-						bounds: Punctuated::default(),
-					}),
-					GenericParam::Const(c) => GenericParam::Type(TypeParam {
-						attrs: vec![],
-						ident: c.ident.clone(),
-						colon_token: None,
-						bounds: Punctuated::default(),
-						eq_token: None,
-						default: None,
-					}),
-				},
-				pair.punct().cloned().cloned(),
-			)
-		})
-		.collect()
 }
 
 fn generic_arguments_to_generic_params(
@@ -317,14 +302,73 @@ impl StorageTypeConfiguration {
 	pub fn use_implicit_generics(&self) -> bool {
 		match self {
 			StorageTypeConfiguration::Anonymous => true,
-			StorageTypeConfiguration::Generated { generics, .. } => {
-				// One should imply the other.
-				generics.0.is_none() && generics.1.params.is_empty()
-			}
-			StorageTypeConfiguration::Predefined {
-				type_path,
-				where_clause,
-			} => false,
+			StorageTypeConfiguration::Generated { generics, .. } => generics.0.is_none(),
+			StorageTypeConfiguration::Predefined { .. } => false,
 		}
+	}
+
+	pub fn struct_(&self) -> Option<&Token![struct]> {
+		match self {
+			StorageTypeConfiguration::Anonymous => None,
+			StorageTypeConfiguration::Generated { struct_, .. } => Some(&struct_),
+			StorageTypeConfiguration::Predefined { .. } => None,
+		}
+	}
+
+	pub fn struct_definition(
+		&self,
+		mut attributes: Vec<Attribute>,
+		visibility: Visibility,
+		ident: Ident,
+		contents: &StorageContext,
+		parent_generics: &Generics,
+	) -> Result<ItemStruct> {
+		let span = ident.span();
+		let generics = self.generics()?.unwrap_or_else(|| parent_generics.clone());
+
+		let fields = Fields::Named(FieldsNamed {
+			brace_token: Brace(span),
+			named: contents
+				.fields(self, &generics)
+				.into_iter()
+				.map(|f| Pair::Punctuated(f, Token![,](span)))
+				.collect(),
+		});
+
+		#[allow(clippy::blocks_in_if_conditions)]
+		if fields.iter().any(|f| {
+			f.ident
+				.as_ref()
+				.expect("struct definition field ident")
+				.to_string()
+				.contains("__Asteracea__")
+		}) {
+			attributes.push(allow_non_snake_case())
+		}
+
+		ItemStruct {
+			attrs: attributes,
+			vis: visibility,
+			struct_token: self
+				.struct_()
+				.cloned()
+				.unwrap_or_else(|| Token![struct](span)),
+			ident,
+			fields,
+			generics,
+			semi_token: None,
+		}
+		.pipe(Ok)
+	}
+}
+
+fn allow_non_snake_case() -> Attribute {
+	let span = Span::mixed_site();
+	Attribute {
+		pound_token: Token![#](span),
+		style: AttrStyle::Outer,
+		bracket_token: Bracket(span),
+		path: Ident::new("allow", span).into(),
+		tokens: quote_spanned! (span=> (non_snake_case)),
 	}
 }

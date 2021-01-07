@@ -6,6 +6,7 @@ use crate::{
 	asteracea_ident,
 	parse_with_context::{ParseContext, ParseWithContext, StorageContext},
 	part::GenerateContext,
+	storage_configuration::StorageTypeConfiguration,
 	syn_ext::{AddOptionExt, *},
 	warn, Configuration, MapMessage, Part,
 };
@@ -20,8 +21,8 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, Generics, Ident, Lifetime, Pat, PatIdent, PatType, ReturnType, Token, Type,
-	Visibility, WhereClause, WherePredicate,
+	Attribute, Error, Generics, Ident, Item, Lifetime, Pat, PatIdent, PatType, ReturnType, Token,
+	Type, Visibility, WhereClause, WherePredicate,
 };
 use syn_mid::Block;
 use unquote::unquote;
@@ -51,7 +52,7 @@ pub struct ComponentDeclaration {
 	constructor_block: Option<(kw::new, kw::with, Block)>,
 	body: Part<ComponentRenderConfiguration>,
 	rhizome_extractions: Vec<TokenStream>,
-	random_items: Vec<TokenStream>,
+	assorted_items: Vec<Item>,
 }
 
 pub struct FieldDefinition {
@@ -271,7 +272,7 @@ impl Parse for ComponentDeclaration {
 		}
 
 		Ok(Self {
-			random_items: cx.random_items,
+			assorted_items: cx.assorted_items,
 			attributes,
 			storage_context: cx.storage_context,
 			visibility,
@@ -314,16 +315,21 @@ impl ComponentDeclaration {
 			constructor_block,
 			body,
 			rhizome_extractions,
-			random_items,
+			assorted_items: random_items,
 		} = self;
 
 		let asteracea = asteracea_ident(Span::call_site());
 
-		let struct_definition = storage_context.type_definition(
-			attributes.as_slice(),
-			&visibility,
-			&component_name,
-			&component_generics,
+		let struct_definition = StorageTypeConfiguration::new_component_root(
+			component_name.clone(),
+			component_generics.clone(),
+		)
+		.struct_definition(
+			attributes.to_vec(),
+			visibility.clone(),
+			component_name.clone(),
+			&storage_context,
+			&Generics::default(),
 		)?;
 
 		let constructed_value =
