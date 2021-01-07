@@ -105,39 +105,43 @@ impl StorageContext {
 		self.field_definitions.iter()
 	}
 
-	pub fn value(&self, generated_type: bool, type_path: &ExprPath) -> TokenStream {
+	pub fn value(
+		&self,
+		generated_type: bool,
+		type_path: &ExprPath,
+		auto_generics: bool,
+	) -> TokenStream {
 		let (field_names, field_values) = self
 			.field_definitions()
 			.map(|c| (&c.name, &c.initial_value))
 			.unzip::<_, _, Vec<_>, Vec<_>>();
 
-		// Workaround until min_specialization lands. See above.
-		let phantom_pinned = if generated_type
-			&& !type_path
-				.to_token_stream()
-				.to_string()
-				.contains("__Asteracea__")
-			&& type_path
-				.path
-				.segments
-				.last()
-				.expect("StorageContext.value(…): Called with an empty `type_path`, somehow.")
-				.arguments
-				.is_empty() && self
-			.field_definitions
-			.iter()
-			.any(|f| f.structurally_pinned)
-		{
+		let phantom_data = if auto_generics {
 			Some(
-				quote_spanned! {type_path.span().resolved_at(Span::mixed_site())=> __Asteracea__pinned: ::std::marker::PhantomPinned,},
+				quote_spanned! {type_path.span().resolved_at(Span::mixed_site())=>
+					__Asteracea__phantom: ::std::marker::PhantomData,
+				},
 			)
 		} else {
 			None
 		};
 
+		// Workaround until min_specialization lands. See above.
+		let phantom_pinned =
+			if generated_type && self.field_definitions.iter().any(|f| f.structurally_pinned) {
+				Some(
+					quote_spanned! {type_path.span().resolved_at(Span::mixed_site())=>
+						__Asteracea__pinned: ::std::marker::PhantomPinned,
+					},
+				)
+			} else {
+				None
+			};
+
 		quote_spanned! {type_path.span().resolved_at(Span::mixed_site())=>
 			#type_path {
 				#(#field_names: (#field_values),)* // The parentheses around #field_values stop the grammar from breaking as much if no value is provided.
+				#phantom_data
 				#phantom_pinned
 			}
 		}

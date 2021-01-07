@@ -222,12 +222,42 @@ impl StorageConfiguration {
 }
 
 impl StorageTypeConfiguration {
-	pub fn type_path(&self, container: &StorageContext, field_name: &Ident) -> Result<ExprPath> {
+	pub fn type_path(
+		&self,
+		container: &StorageContext,
+		field_name: &Ident,
+		parent_generics: &Generics,
+	) -> Result<ExprPath> {
+		let span = field_name.span();
 		match self {
 			StorageTypeConfiguration::Anonymous => ExprPath {
 				attrs: vec![],
 				qself: None,
-				path: container.generated_type_name(field_name).into(),
+				path: Path {
+					leading_colon: None,
+					segments: iter::once(PathSegment {
+						ident: container.generated_type_name(field_name),
+						arguments: if parent_generics.params.is_empty() {
+							PathArguments::None
+						} else {
+							PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+								colon2_token: Some(Token![::](span)),
+								lt_token: parent_generics
+									.lt_token
+									.as_ref()
+									.cloned()
+									.unwrap_or_else(|| Token![<](span)),
+								args: generic_arguments(&parent_generics)?,
+								gt_token: parent_generics
+									.gt_token
+									.as_ref()
+									.cloned()
+									.unwrap_or_else(|| Token![>](span)),
+							})
+						},
+					})
+					.collect(),
+				},
 			},
 			StorageTypeConfiguration::Generated {
 				type_name,

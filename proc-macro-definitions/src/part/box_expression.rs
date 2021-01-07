@@ -8,7 +8,7 @@ use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
-use syn::{parse::ParseStream, Ident, Item, Result, Token, Visibility};
+use syn::{parse::ParseStream, Ident, Result, Token, Visibility};
 
 #[allow(clippy::type_complexity)]
 #[allow(dead_code)]
@@ -36,9 +36,10 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 
 		let type_configuration = storage_configuration.type_configuration();
 
-		let nested_generics = type_configuration
-			.generics()?
-			.unwrap_or_else(|| cx.storage_generics.clone());
+		let nested_generics = type_configuration.generics()?;
+		let auto_generics = nested_generics.is_none();
+		let nested_generics = nested_generics.unwrap_or_else(|| cx.storage_generics.clone());
+		
 		let mut parse_context = cx.new_nested(
 			cx.storage_context.generated_type_name(&field_name),
 			&nested_generics,
@@ -48,11 +49,14 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			&mut parse_context,
 		)?);
 
-		let type_path = type_configuration.type_path(&cx.storage_context, &field_name)?;
+		let type_path =
+			type_configuration.type_path(&cx.storage_context, &field_name, &cx.storage_generics)?;
 
-		let boxed_value = parse_context
-			.storage_context
-			.value(type_configuration.type_is_generated(), &type_path);
+		let boxed_value = parse_context.storage_context.value(
+			type_configuration.type_is_generated(),
+			&type_path,
+			auto_generics,
+		);
 
 		call2_strict(
 			quote_spanned! {box_.span=>

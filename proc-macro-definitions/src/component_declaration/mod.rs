@@ -332,8 +332,11 @@ impl ComponentDeclaration {
 			&Generics::default(),
 		)?;
 
-		let constructed_value =
-			storage_context.value(true, &parse2(component_name.to_token_stream()).unwrap());
+		let constructed_value = storage_context.value(
+			true,
+			&parse2(component_name.to_token_stream()).unwrap(),
+			false,
+		);
 
 		let bump = quote_spanned! (render_paren.span.resolved_at(Span::call_site())=>
 			bump
