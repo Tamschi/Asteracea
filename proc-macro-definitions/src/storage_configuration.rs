@@ -416,12 +416,28 @@ impl StorageTypeConfiguration {
 				defaultness: None,
 				unsafety: None,
 				impl_token: Token![impl](span),
-				generics,
 				trait_: None,
 				self_ty: Box::new(Type::Path(TypePath {
 					qself: None,
-					path: ident.into(),
+					path: Path {
+						leading_colon: None,
+						segments: iter::once(PathSegment {
+							ident,
+							arguments: if generics.params.is_empty() {
+								PathArguments::None
+							} else {
+								PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+									colon2_token: None,
+									lt_token: generics.lt_token.unwrap(),
+									args: generic_arguments(&generics)?,
+									gt_token: generics.gt_token.unwrap(),
+								})
+							},
+						})
+						.collect(),
+					},
 				})),
+				generics,
 				brace_token: Brace(span),
 				items: structural_pinning_fns,
 			}),
