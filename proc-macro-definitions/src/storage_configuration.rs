@@ -6,6 +6,7 @@ use syn::{
 	parse::{Parse, ParseStream},
 	parse2,
 	punctuated::{Pair, Punctuated},
+	spanned::Spanned,
 	token::{Brace, Bracket},
 	AngleBracketedGenericArguments, AttrStyle, Attribute, Error, ExprPath, Fields, FieldsNamed,
 	GenericArgument, GenericParam, Generics, Ident, ImplItem, ImplItemMethod, Item, ItemImpl,
@@ -15,7 +16,7 @@ use syn::{
 use unquote::unquote;
 use wyz::Pipe;
 
-use crate::{component_declaration::FieldDefinition, storage_context::StorageContext};
+use crate::{asteracea_ident, storage_context::StorageContext};
 
 /// ⟦⦃priv‖⦅Visibility⦆⦄ …⦅StorageTypeConfiguration⦆⟧
 #[allow(clippy::large_enum_variant)]
@@ -362,8 +363,9 @@ impl StorageTypeConfiguration {
 
 		//TODO: Unsound! Restore safety asserts. (I.e.: Assert that the surrounding type isn't `Unpin`!)
 
-		let structural_pinning_fns = contents
+		let structural_pinning_fns: Vec<ImplItem> = contents
 			.field_definitions()
+			.filter(|f| f.structurally_pinned)
 			.map(|f| {
 				let f_visibility = &f.visibility;
 				let f_name = &f.name;
@@ -378,6 +380,12 @@ impl StorageTypeConfiguration {
 			})
 			.map(ImplItem::Method)
 			.collect();
+
+		let assert_not_unpin = !structural_pinning_fns.is_empty();
+		let generic_param_span = generics
+			.params
+			.first()
+			.map(|generic_param| generic_param.span());
 
 		let fields = Fields::Named(FieldsNamed {
 			brace_token: Brace(span),
@@ -398,7 +406,7 @@ impl StorageTypeConfiguration {
 			attributes.push(allow_non_snake_case())
 		}
 
-		vec![
+		let mut items = vec![
 			Item::Struct(ItemStruct {
 				attrs: attributes,
 				vis: visibility,
@@ -422,7 +430,7 @@ impl StorageTypeConfiguration {
 					path: Path {
 						leading_colon: None,
 						segments: iter::once(PathSegment {
-							ident,
+							ident: ident.clone(),
 							arguments: if generics.params.is_empty() {
 								PathArguments::None
 							} else {
@@ -441,8 +449,28 @@ impl StorageTypeConfiguration {
 				brace_token: Brace(span),
 				items: structural_pinning_fns,
 			}),
-		]
-		.pipe(Ok)
+		];
+
+		if assert_not_unpin {
+			// This is a workaround. See https://github.com/Tamschi/Asteracea/pull/31 for more information.
+
+			if ident.to_string().contains("__Asteracea__") {
+				// The type is considered not consumer-accessible and Asteracea won't generate an `Unpin` implementation by itself.
+			} else {
+				items.push(Item::Verbatim(if let Some(span) = generic_param_span {
+				quote_spanned! {span=>
+					::std::compile_error!("Asteracea can't soundly generate named generic storage context types if anything inside requires pinning :(\n(Once min_specialization lands, the required static assert against `Self: Unpin` will become available. For now, please use a `box <…>`-expression with either anonymous or manually defined storage context type to pin any child components in a heap allocation.)\n\nSee also: https://github.com/Tamschi/Asteracea/pull/31");
+				}
+			} else {
+				let asteracea = asteracea_ident(span);
+				quote_spanned! {span=>
+					::#asteracea::static_assertions::assert_not_impl_any!(#ident: ::std::marker::Unpin);
+				}
+			}))
+			}
+		}
+
+		Ok(items)
 	}
 }
 
