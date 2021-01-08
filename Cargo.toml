@@ -32,15 +32,14 @@ services = []
 
 [dependencies]
 asteracea_proc-macro-definitions = { path = "./proc-macro-definitions" } # public
-lazy_static = "1.4.0" # public
-lignin-schema = { version = "0.0.3", features = ["bumpalo-collections"] } # public
+lignin = "0.0.3" #public
+lignin-schema = { version = "0.0.3", features = ["bumpalo-collections"] }
 rhizome = { version = "0.0.1", features = ["macros"] } # public
-static_assertions = "1.1.0" # public
-typed-builder = "0.8.0" # public
+static_assertions = "1.1.0"
+typed-builder = "0.8.0" # semi-public
 
 [dev-dependencies]
 cargo-husky = "1.5.0"
 doc-comment = "0.3.3"
 git_info = "0.1.2"
 version-sync = "0.9.1"
-lignin = "0.0.3" # public

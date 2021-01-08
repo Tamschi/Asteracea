@@ -449,7 +449,7 @@ impl ComponentDeclaration {
 
 		let render_type: ReturnType = match &render_type {
 			ReturnType::Default => parse2(quote_spanned! {render_type.span()=>
-				-> #asteracea::lignin_schema::lignin::Node<'bump>
+				-> #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node<'bump>
 			})
 			.unwrap(),
 			rt @ ReturnType::Type(_, _) => rt.clone(),
@@ -465,12 +465,12 @@ impl ComponentDeclaration {
 
 		Ok(quote_spanned! {Span::mixed_site()=>
 			//TODO: Doc comment referring to associated type.
-			#[derive(#asteracea::typed_builder::TypedBuilder)]
+			#[derive(#asteracea::__Asteracea__implementation_details::typed_builder::TypedBuilder)]
 			#[builder(doc)]
 			#visibility struct #new_args_name#new_args_generics #new_args_body
 
 			//TODO: Doc comment referring to associated type.
-			#[derive(#asteracea::typed_builder::TypedBuilder)]
+			#[derive(#asteracea::__Asteracea__implementation_details::typed_builder::TypedBuilder)]
 			#[builder(doc)]
 			#visibility struct #render_args_name#render_args_generics #render_args_body
 
@@ -514,7 +514,7 @@ impl ComponentDeclaration {
 				#(#render_attributes)*
 				pub fn render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
-					#bump: &'bump #asteracea::lignin_schema::lignin::bumpalo::Bump,
+					#bump: &'bump #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::Bump,
 					#render_args_name {
 						#(#render_args_field_patterns,)*
 						__Asteracea__phantom: _,

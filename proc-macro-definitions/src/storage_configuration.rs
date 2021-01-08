@@ -464,7 +464,7 @@ impl StorageTypeConfiguration {
 			} else {
 				let asteracea = asteracea_ident(span);
 				quote_spanned! {span=>
-					::#asteracea::static_assertions::assert_not_impl_any!(#ident: ::std::marker::Unpin);
+					::#asteracea::__Asteracea__implementation_details::static_assertions::assert_not_impl_any!(#ident: ::std::marker::Unpin);
 				}
 			}))
 			}

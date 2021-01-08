@@ -56,7 +56,7 @@ asteracea::component! {
 is also available, though this means that Asteracea's `if`-`{condition}` is *not* automatically a Rust block. Use `{{ statements }}` if you really need one, though wrapping the `spread if` in a `with { … } <…>`-expression is likely a better idea in terms of code organisation.
 
 ```rust asteracea=Conditioned
-use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
+use lignin::{bumpalo::Bump, Node};
 
 asteracea::component! {
   Conditional()(

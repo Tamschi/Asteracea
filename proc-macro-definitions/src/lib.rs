@@ -73,8 +73,8 @@ impl ToTokens for BumpFormat {
 		} = self;
 		let bump = Ident::new("bump", bump_span.resolved_at(Span::call_site()));
 		output.extend(quote! {
-			#asteracea::lignin_schema::lignin::Node::Text(
-				#asteracea::lignin_schema::lignin::bumpalo::format!(in #bump, #input)
+			#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Text(
+				#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::format!(in #bump, #input)
 					.into_bump_str()
 			)
 		});

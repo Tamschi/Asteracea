@@ -4,11 +4,8 @@
 #![allow(clippy::match_bool)]
 
 pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
-pub use lazy_static;
-pub use lignin_schema;
+pub use lignin;
 pub use rhizome;
-pub use static_assertions;
-pub use typed_builder;
 
 #[cfg(doctest)]
 pub mod readme {
@@ -51,4 +48,12 @@ pub fn unsound_extend_reference<T: ?Sized>(reference: &T) -> &'static T {
 		// UNSOUND
 		::std::mem::transmute(reference)
 	}
+}
+
+#[doc(hidden)]
+#[allow(non_snake_case)]
+pub mod __Asteracea__implementation_details {
+	pub use lignin_schema;
+	pub use static_assertions;
+	pub use typed_builder;
 }

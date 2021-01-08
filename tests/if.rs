@@ -1,4 +1,4 @@
-use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
+use lignin::{bumpalo::Bump, Node};
 
 asteracea::component! {
 	pub Conditional1()(
