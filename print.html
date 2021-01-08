@@ -431,7 +431,7 @@ asteracea::component! {
 <pre><code class="language-html">This is text.
 </code></pre>
 <p>The macro output is largely the same as for the <code>Empty</code> component, but the <code>render</code> method has changed:</p>
-<pre><code class="language-rust no_run noplayground">use asteracea::lignin_schema::lignin::Node;
+<pre><code class="language-rust no_run noplayground">use lignin::Node;
 
 <span class="boring">pub struct Text {}
 </span><span class="boring">impl Text {
@@ -461,7 +461,7 @@ asteracea::component! {
 </span></code></pre></pre>
 <pre><code class="language-html">This is text.This is also text.
 </code></pre>
-<pre><code class="language-rust no_run noplayground">use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
+<pre><code class="language-rust no_run noplayground">use lignin::{bumpalo::Bump, Node};
 
 <span class="boring">pub struct TextMulti {}
 </span><span class="boring">impl TextMulti {
@@ -759,11 +759,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55d097e6d420.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55d097e6d420.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x55d097e6d428.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x55d097e6d420.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x55d097e6d420.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x558c5e5ee140.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x558c5e5ee140.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x558c5e5ee148.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x558c5e5ee140.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x558c5e5ee140.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
@@ -1121,7 +1121,7 @@ I am here&lt;SPAN&gt; and &lt;/SPAN&gt;I like this place.
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
+</span>use lignin::{bumpalo::Bump, Node};
 
 asteracea::component! {
   Conditional()(

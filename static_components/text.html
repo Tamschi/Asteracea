@@ -180,7 +180,7 @@
 <pre><code class="language-html">This is text.
 </code></pre>
 <p>The macro output is largely the same as for the <code>Empty</code> component, but the <code>render</code> method has changed:</p>
-<pre><code class="language-rust no_run noplayground">use asteracea::lignin_schema::lignin::Node;
+<pre><code class="language-rust no_run noplayground">use lignin::Node;
 
 <span class="boring">pub struct Text {}
 </span><span class="boring">impl Text {
@@ -210,7 +210,7 @@
 </span></code></pre></pre>
 <pre><code class="language-html">This is text.This is also text.
 </code></pre>
-<pre><code class="language-rust no_run noplayground">use asteracea::lignin_schema::lignin::{bumpalo::Bump, Node};
+<pre><code class="language-rust no_run noplayground">use lignin::{bumpalo::Bump, Node};
 
 <span class="boring">pub struct TextMulti {}
 </span><span class="boring">impl TextMulti {
