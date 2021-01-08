@@ -32,6 +32,7 @@ services = []
 
 [dependencies]
 asteracea_proc-macro-definitions = { path = "./proc-macro-definitions" } # public
+lazy-init = { git = "https://github.com/Tamschi/lazy-init.git", branch = "patched/for-Asteracea/defer-expressions" } #public
 lignin = "0.0.3" #public
 lignin-schema = { version = "0.0.3", features = ["bumpalo-collections"] }
 rhizome = { version = "0.0.1", features = ["macros"] } # public
