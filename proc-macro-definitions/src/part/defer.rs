@@ -13,6 +13,7 @@ use syn::{parse::ParseStream, Ident, Result, Token, Visibility};
 use wyz::Pipe;
 
 pub mod kw {
+	//TODO: Split this into `lazy` and `init_once` expressions!
 	syn::custom_keyword!(defer);
 }
 
