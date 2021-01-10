@@ -130,7 +130,7 @@ impl<C> ParseWithContext for Component<C> {
 			Ok(Self::Instantiated {
 			capture: call2_strict(
 				quote_spanned! {open_span=>
-						pin |#visibility #field_name = #path::new(&node, #new_params)?|
+						pin |#visibility #field_name = #path::new(&node, #new_params)|
 					},
 					|input| CaptureDefinition::<C>::parse_with_context(input, cx),
 				)

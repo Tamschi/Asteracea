@@ -191,24 +191,18 @@ impl Parse for ComponentDeclaration {
 				let extracted_name: Ident = input.parse()?;
 				let extracted_colon: Token![:] = input.parse()?;
 				let extracted_type: Type = input.parse()?;
-				let extracted_question: Token![?] = input.parse()?;
-				let extracted_semi = quote_spanned!(extracted_question.span=> ;);
+				let extracted_semi: Token![;] = input.parse()?;
 
 				//TODO: Is there a way to write this span more nicely?
-				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type #extracted_question).span();
+				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type).span();
 				let call_site_node =
 					Ident::new("node", ref_statement_span.resolved_at(Span::call_site()));
 				rhizome_extractions.push({
-					let asteracea = asteracea_ident(ref_statement_span);
 					quote_spanned! {
 						ref_statement_span=>
 						#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
 						= <#extracted_type>::extract_from(&#call_site_node)
-							.map_err(|error| #asteracea::error::ExtractableResolutionError{
-								component: core::any::type_name::<Self>(),
-								dependency: core::any::type_name::<#extracted_type>(),
-								source: error,
-							})#extracted_question#extracted_semi
+							.unwrap_or_else(|error| panic!("Dependency resolution error in component {}: {}", ::std::stringify!(#component_name), error))#extracted_semi
 					}
 				})
 			} else {
@@ -485,7 +479,7 @@ impl ComponentDeclaration {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
-				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+				) -> Self where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
 					#(#rhizome_extractions)*
 					let mut #call_site_node = #call_site_node;
@@ -503,7 +497,7 @@ impl ComponentDeclaration {
 					// I really should add benchmarks before trying this, though.
 					let #call_site_node = #call_site_node.into_arc();
 
-					Ok(#constructed_value)
+					#constructed_value
 				}
 
 				pub fn new_args_builder#new_args_builder_generics()

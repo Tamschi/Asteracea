@@ -12,8 +12,6 @@ pub mod readme {
 	doc_comment::doctest!("../README.md");
 }
 
-pub mod error;
-
 #[cfg(feature = "services")]
 pub mod services;
 
