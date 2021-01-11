@@ -1,3 +1,21 @@
+//! # Features
+//!
+//! ## `"backtrace"`
+//!
+//! Enables additional error traces, at the cost of code size and performance.
+//!
+//! ## `"error-abort"`
+//!
+//! Reserved. Will be used to abort-the process on GUI error escalation.
+//!
+//! ## `"force-unwind"`
+//!
+//! Force the use of panics for `GUIError` propagation. This may improve code size and app performance.
+//!
+//! ## `"services"`
+//!
+//! TODO
+
 #![doc(html_root_url = "https://docs.rs/asteracea/0.0.2")]
 #![deny(unsafe_code)]
 #![warn(clippy::pedantic)]
@@ -11,6 +29,9 @@ pub use rhizome;
 pub mod readme {
 	doc_comment::doctest!("../README.md");
 }
+
+mod error;
+pub use error::GUIError;
 
 #[cfg(feature = "services")]
 pub mod services;
