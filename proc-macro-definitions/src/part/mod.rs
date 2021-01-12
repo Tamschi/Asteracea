@@ -385,7 +385,7 @@ impl<C: Configuration> PartBody<C> {
 			PartBody::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span()=>
-					#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Text(#lit_str)
+					#asteracea::lignin::Node::Text(#lit_str)
 				}
 			}
 			PartBody::Html(html_definition) => html_definition.part_tokens(cx)?,
@@ -446,9 +446,11 @@ impl<C: Configuration> PartBody<C> {
 					.collect::<coreResult<Vec<_>, _>>()?;
 				let bump = Ident::new("bump", bracket.span.resolved_at(Span::call_site()));
 				quote_spanned! {bracket.span=>
-					#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Multi(&*#bump.alloc_with(|| [
-						#(#m,)*
-					]))
+					::#asteracea::lignin::Node::Multi(&*#bump.try_alloc_with(
+						|| -> ::std::result::Result::<_, ::#asteracea::error::GUIError> { ::std::result::Result::Ok([
+							#(#m,)*
+						])}
+					)?)
 				}
 			}
 			PartBody::EventBinding(definition) => definition.part_tokens(),

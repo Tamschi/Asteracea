@@ -293,10 +293,10 @@ impl<'a> CodeState<'a> {
 					struct Root;
 					asteracea::rhizome::Node::new_for::<Root>().into()
 				};
-				let component = Box::pin(NAME::new(&root, NAME::new_args_builder()CONSTRUCTOR_BUILD.build()));
+				let component = Box::pin(NAME::new(&root, NAME::new_args_builder()CONSTRUCTOR_BUILD.build()).debugless_unwrap());
 
 				let bump = lignin::bumpalo::Bump::new();
-				let vdom = component.as_ref().render(&bump, NAME::render_args_builder()RENDER_BUILD.build());
+				let vdom = component.as_ref().render(&bump, NAME::render_args_builder()RENDER_BUILD.build()).unwrap();
 				let mut html = String::new();
 				lignin_html::render(&mut html, &vdom, &bump).debugless_unwrap();
 				html

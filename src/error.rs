@@ -3,6 +3,7 @@
 use std::{
 	any::Any,
 	error::Error,
+	fmt::Display,
 	panic::{catch_unwind, UnwindSafe},
 };
 
@@ -24,13 +25,29 @@ use std::{
 /// > Unwinding notably isn't supported on `wasm32-unknown-unknown` as of Rust 1.49. This means any builds targeting the web natively will have to use implicit explicit GUI error escalation for now.
 ///
 /// For expected errors and errors raised off-GUI (incl. in event handlers), [please see the book for recoverable error handling strategies.](`TODO`)
+#[derive(Debug)]
 #[allow(clippy::module_name_repetitions)]
 pub struct GUIError(Impl);
 
+#[derive(Debug)]
 #[allow(clippy::empty_enum)]
 enum Impl {
 	#[cfg(not(feature = "force-unwind"))]
 	Error(Box<dyn Send + Any>),
+}
+
+impl Error for GUIError {}
+impl Display for GUIError {
+	#[allow(unused_variables)]
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		#[allow(clippy::match_single_binding)]
+		match &self.0 {
+			#[cfg(not(feature = "force-unwind"))]
+			Impl::Error(boxed) => "GUIError".fmt(f), //TODO
+			#[cfg(feature = "force-unwind")]
+			_ => unreachable!(),
+		}
+	}
 }
 
 pub trait SendAnyError: Send + Any + Error {}
@@ -55,6 +72,11 @@ impl<E: SendAnyError> IntoGUIError for E {
 
 pub trait IntoGUIResult {
 	type Ok;
+	/// Converts a given value (usually a `Result`) into a `Result<_, GUIError>`
+	///
+	/// # Errors
+	///
+	/// If `self` represents an error.
 	fn into_gui_result(self) -> Result<Self::Ok, GUIError>;
 }
 impl<Ok, E: SendAnyError> IntoGUIResult for Result<Ok, E> {

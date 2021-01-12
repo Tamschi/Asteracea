@@ -21,7 +21,7 @@ use lazy_static::lazy_static;
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use proc_macro_crate::crate_name;
-use quote::{quote, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
 	parse_macro_input, Ident, Result,
@@ -73,8 +73,8 @@ impl ToTokens for BumpFormat {
 		} = self;
 		let bump = Ident::new("bump", bump_span.resolved_at(Span::call_site()));
 		output.extend(quote! {
-			#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Text(
-				#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::format!(in #bump, #input)
+			#asteracea::lignin::Node::Text(
+				#asteracea::lignin::bumpalo::format!(in #bump, #input)
 					.into_bump_str()
 			)
 		});
@@ -89,10 +89,16 @@ impl Configuration for FragmentConfiguration {
 
 #[proc_macro]
 pub fn fragment(input: TokenStream1) -> TokenStream1 {
-	parse_macro_input!(input as Part<FragmentConfiguration>)
+	let asteracea = asteracea_ident(Span::mixed_site());
+	let body = parse_macro_input!(input as Part<FragmentConfiguration>)
 		.part_tokens(&GenerateContext::default())
-		.unwrap_or_else(|error| error.to_compile_error())
-		.into()
+		.unwrap_or_else(|error| error.to_compile_error());
+	(quote_spanned! {Span::mixed_site()=>
+		((|| -> ::std::result::Result<_, ::#asteracea::error::GUIError> {
+			Ok(#body)
+		})())
+	})
+	.into()
 }
 
 // TODO: Accept reexported asteracea module made available via `use`.

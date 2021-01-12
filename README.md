@@ -84,9 +84,10 @@ let root = {
   asteracea::rhizome::Node::new_for::<Root>().into()
 };
 assert!(matches!(
-  Box::pin(Empty::new(&root, Empty::new_args_builder().build()))
+  Box::pin(Empty::new(&root, Empty::new_args_builder().build()).unwrap())
     .as_ref()
-    .render(&mut bump, Empty::render_args_builder().build()),
+    .render(&mut bump, Empty::render_args_builder().build())
+    .unwrap(),
   lignin::Node::Multi(&[]) // Empty node sequence
 ));
 ```
@@ -115,15 +116,17 @@ let root = {
   asteracea::rhizome::Node::new_for::<Root>().into()
 };
 assert_eq!(
-  Box::pin(Unit::new(&root, Unit::new_args_builder().build()))
+  Box::pin(Unit::new(&root, Unit::new_args_builder().build()).unwrap())
     .as_ref()
-    .render(&mut bump, Unit::render_args_builder().build()),
+    .render(&mut bump, Unit::render_args_builder().build())
+    .unwrap(),
   (),
 );
 assert_eq!(
-  Box::pin(Offset::new(&root, Offset::new_args_builder().base(2).build()))
+  Box::pin(Offset::new(&root, Offset::new_args_builder().base(2).build()).unwrap())
     .as_ref()
-    .render(&mut bump, Offset::render_args_builder().offset(3).build()),
+    .render(&mut bump, Offset::render_args_builder().offset(3).build())
+    .unwrap(),
   5,
 );
 ```

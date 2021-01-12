@@ -124,7 +124,7 @@ impl EventBindingDefinition {
 		let self_ident = Ident::new("self", Span::call_site());
 
 		quote_spanned! {name.span()=>
-			#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::EventBinding {
+			#asteracea::lignin::EventBinding {
 				name: #name,
 				context: #asteracea::unsound_extend_reference(self.get_ref()),
 				handler: #self_ident.#field_name.clone(),

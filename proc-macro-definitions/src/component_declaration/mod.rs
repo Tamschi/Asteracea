@@ -443,10 +443,15 @@ impl ComponentDeclaration {
 
 		let render_type: ReturnType = match &render_type {
 			ReturnType::Default => parse2(quote_spanned! {render_type.span()=>
-				-> #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node<'bump>
+				-> ::std::result::Result<::#asteracea::lignin::Node<'bump>, ::#asteracea::error::GUIError>
 			})
 			.unwrap(),
-			rt @ ReturnType::Type(_, _) => rt.clone(),
+			ReturnType::Type(arrow, type_) => ReturnType::Type(
+				*arrow,
+				Box::new(Type::Verbatim(
+					quote_spanned!(arrow.span()=> ::std::result::Result<#type_, ::#asteracea::error::GUIError>),
+				)),
+			),
 		};
 
 		let constructor_block_statements =
@@ -479,7 +484,7 @@ impl ComponentDeclaration {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
-				) -> Self where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+				) -> ::std::result::Result<Self, ::#asteracea::error::GUIError> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
 					#(#rhizome_extractions)*
 					let mut #call_site_node = #call_site_node;
@@ -497,7 +502,7 @@ impl ComponentDeclaration {
 					// I really should add benchmarks before trying this, though.
 					let #call_site_node = #call_site_node.into_arc();
 
-					#constructed_value
+					::std::result::Result::Ok(#constructed_value)
 				}
 
 				pub fn new_args_builder#new_args_builder_generics()
@@ -508,14 +513,14 @@ impl ComponentDeclaration {
 				#(#render_attributes)*
 				pub fn render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
-					#bump: &'bump #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::Bump,
+					#bump: &'bump #asteracea::lignin::bumpalo::Bump,
 					#render_args_name {
 						#(#render_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}: #render_args_name#render_args_generic_args,
 				) #render_type {
 					let this = #render_self;
-					#body
+					::std::result::Result::Ok(#body)
 				}
 
 				pub fn render_args_builder#render_args_builder_generics()

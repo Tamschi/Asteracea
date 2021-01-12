@@ -30,9 +30,9 @@ impl<T> Select for T {
 // 	<B> // #'bump is implicit if any HTML elements are present.
 // 	(
 // 		// &#self, is implicit.
-// 		// #bump: &#'bump #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::Bump, is implicit if any HTML elements are present. Needed for any bump-allocated elements, i.e. HTML elements and formatted text.
+// 		// #bump: &#'bump #asteracea::lignin::bumpalo::Bump, is implicit if any HTML elements are present. Needed for any bump-allocated elements, i.e. HTML elements and formatted text.
 // 		_b: B,
-// 	) // Default: `-> #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node<#'bump>`
+// 	) // Default: `-> #asteracea::lignin::Node<#'bump>`
 
 // 	//TODO: Inversion of control/"DI".
 // 	/*ref for 'NEW, 'RENDER (
