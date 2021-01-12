@@ -191,7 +191,11 @@ impl Parse for ComponentDeclaration {
 				let extracted_name: Ident = input.parse()?;
 				let extracted_colon: Token![:] = input.parse()?;
 				let extracted_type: Type = input.parse()?;
-				let extracted_semi: Token![;] = input.parse()?;
+				let extracted_question: Token![?] = input.parse()?;
+
+				let semi = Token![;](extracted_question.span);
+
+				let asteracea = asteracea_ident(extracted_for.span);
 
 				//TODO: Is there a way to write this span more nicely?
 				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type).span();
@@ -202,7 +206,7 @@ impl Parse for ComponentDeclaration {
 						ref_statement_span=>
 						#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
 						= <#extracted_type>::extract_from(&#call_site_node)
-							.unwrap_or_else(|error| panic!("Dependency resolution error in component {}: {}", ::std::stringify!(#component_name), error))#extracted_semi
+							.map_err(|error| ::#asteracea::error::IntoGUIError2::into_gui_error(::std::format!("Dependency resolution error in component {}: {}", ::std::stringify!(#component_name), error)))#extracted_question#semi
 					}
 				})
 			} else {

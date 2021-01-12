@@ -70,6 +70,36 @@ impl<E: SendAnyError> IntoGUIError for E {
 	}
 }
 
+pub trait IntoGUIError2 {
+	fn into_gui_error(self) -> GUIError;
+}
+impl IntoGUIError2 for &'static str {
+	fn into_gui_error(self) -> GUIError {
+		#[cfg(all(feature = "force-unwind", not(feature = "backtrace")))]
+		//FIXME: Replace this with panic_any once that lands.
+		std::panic::resume_unwind(Box::new(self));
+
+		#[cfg(all(feature = "force-unwind", feature = "backtrace"))]
+		panic!(format!("{:#}", self));
+
+		#[cfg(not(feature = "force-unwind"))]
+		GUIError(Impl::Error(Box::new(self)))
+	}
+}
+impl IntoGUIError2 for String {
+	fn into_gui_error(self) -> GUIError {
+		#[cfg(all(feature = "force-unwind", not(feature = "backtrace")))]
+		//FIXME: Replace this with panic_any once that lands.
+		std::panic::resume_unwind(Box::new(self));
+
+		#[cfg(all(feature = "force-unwind", feature = "backtrace"))]
+		panic!(format!("{:#}", self));
+
+		#[cfg(not(feature = "force-unwind"))]
+		GUIError(Impl::Error(Box::new(self)))
+	}
+}
+
 pub trait IntoGUIResult {
 	type Ok;
 	/// Converts a given value (usually a `Result`) into a `Result<_, GUIError>`
@@ -79,7 +109,7 @@ pub trait IntoGUIResult {
 	/// If `self` represents an error.
 	fn into_gui_result(self) -> Result<Self::Ok, GUIError>;
 }
-impl<Ok, E: SendAnyError> IntoGUIResult for Result<Ok, E> {
+impl<Ok, E: IntoGUIError> IntoGUIResult for Result<Ok, E> {
 	type Ok = Ok;
 
 	fn into_gui_result(self) -> Result<Ok, GUIError> {

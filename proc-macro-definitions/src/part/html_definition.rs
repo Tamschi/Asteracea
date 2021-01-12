@@ -315,19 +315,21 @@ impl<C: Configuration> HtmlDefinition<C> {
 
 		assert_eq!(parts.len(), 0);
 		Ok(match name {
-			ElementName::Custom(name) => quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
-				let children = #children;
-				#asteracea::lignin::Node::Element(
-					#bump.alloc_with(||
-						#asteracea::lignin::Element {
-							name: #name,
-							attributes: #attributes,
-							content: children,
-							event_bindings: #event_bindings,
-						}
+			ElementName::Custom(name) => {
+				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
+					let children = #children;
+					#asteracea::lignin::Node::Element(
+						#bump.alloc_with(||
+							#asteracea::lignin::Element {
+								name: #name,
+								attributes: #attributes,
+								content: children,
+								event_bindings: #event_bindings,
+							}
+						)
 					)
-				)
-			}},
+				}}
+			}
 			ElementName::Known(name) => quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
 				let children = #children;
 				#asteracea::lignin::Node::Element(
