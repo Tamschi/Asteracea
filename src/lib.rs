@@ -20,6 +20,7 @@
 #![deny(unsafe_code)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::match_bool)]
+#![allow(clippy::redundant_closure_for_method_calls)]
 
 pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
 pub use lignin;
@@ -30,8 +31,7 @@ pub mod readme {
 	doc_comment::doctest!("../README.md");
 }
 
-mod error;
-pub use error::GUIError;
+pub mod error;
 
 #[cfg(feature = "services")]
 pub mod services;

@@ -1,3 +1,5 @@
+#![allow(clippy::module_name_repetitions)]
+
 use std::{
 	any::Any,
 	error::Error,
@@ -31,21 +33,35 @@ enum Impl {
 	Error(Box<dyn Send + Any>),
 }
 
-#[allow(clippy::module_name_repetitions)]
 pub trait SendAnyError: Send + Any + Error {}
 impl<E: Send + Any + Error> SendAnyError for E {}
 
-impl<E: SendAnyError> From<E> for GUIError {
-	fn from(error: E) -> Self {
+pub trait IntoGUIError {
+	fn into_gui_error(self) -> GUIError;
+}
+impl<E: SendAnyError> IntoGUIError for E {
+	fn into_gui_error(self) -> GUIError {
 		#[cfg(all(feature = "force-unwind", not(feature = "backtrace")))]
 		//FIXME: Replace this with panic_any once that lands.
-		std::panic::resume_unwind(payload);
+		std::panic::resume_unwind(Box::new(self));
 
 		#[cfg(all(feature = "force-unwind", feature = "backtrace"))]
-		panic!(format!("{:#}", error));
+		panic!(format!("{:#}", self));
 
 		#[cfg(not(feature = "force-unwind"))]
-		Self(Impl::Error(Box::new(error)))
+		GUIError(Impl::Error(Box::new(self)))
+	}
+}
+
+pub trait IntoGUIResult {
+	type Ok;
+	fn into_gui_result(self) -> Result<Self::Ok, GUIError>;
+}
+impl<Ok, E: SendAnyError> IntoGUIResult for Result<Ok, E> {
+	type Ok = Ok;
+
+	fn into_gui_result(self) -> Result<Ok, GUIError> {
+		self.map_err(|e| e.into_gui_error())
 	}
 }
 
