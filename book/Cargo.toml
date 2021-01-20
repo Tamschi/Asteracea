@@ -24,7 +24,7 @@ debugless-unwrap = "0.0.3"
 lignin = "0.0.3"
 lignin-html = "0.0.3"
 line-col = "0.2.1"
-mdbook = { version = "0.4.3", default-features = false, features = ["search"] }
+mdbook = { version = "0.4.5", default-features = false, features = ["search"] }
 proc-macro2 = "1.0.24" #TODO
 pulldown-cmark = "0.7.0" #TODO
 pulldown-cmark-to-cmark = "5.0.0" #TODO
@@ -35,7 +35,7 @@ version-sync = "0.9.1"
 
 [build-dependencies]
 asteracea = { path = ".." }
-mdbook = { version = "0.4.3", default-features = false, features = ["search"] }
+mdbook = { version = "0.4.5", default-features = false, features = ["search"] }
 lignin = "0.0.3"
 lignin-html = "0.0.3"
 line-col = "0.2.1"
