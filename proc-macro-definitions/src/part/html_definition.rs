@@ -292,7 +292,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 			});
 		}
 		let children = quote_spanned! {child_stream.span()=>
-			&*#bump.try_alloc_with(
+			&*#bump.alloc_try_with(
 				|| -> ::std::result::Result<_, ::#asteracea::error::GUIError> {
 					::std::result::Result::Ok([#child_stream])
 				}

@@ -7,4 +7,3 @@ members = [
 [patch.crates-io]
 asteracea = { path = "." }
 asteracea_proc-macro-definitions = { path = "proc-macro-definitions" }
-bumpalo = { git = "https://github.com/Tamschi/bumpalo.git", branch = "patched/for-Asteracea/fallibility-rework" }

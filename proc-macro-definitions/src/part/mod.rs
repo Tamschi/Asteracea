@@ -446,7 +446,7 @@ impl<C: Configuration> PartBody<C> {
 					.collect::<coreResult<Vec<_>, _>>()?;
 				let bump = Ident::new("bump", bracket.span.resolved_at(Span::call_site()));
 				quote_spanned! {bracket.span=>
-					::#asteracea::lignin::Node::Multi(&*#bump.try_alloc_with(
+					::#asteracea::lignin::Node::Multi(&*#bump.alloc_try_with(
 						|| -> ::std::result::Result::<_, ::#asteracea::error::GUIError> { ::std::result::Result::Ok([
 							#(#m,)*
 						])}
