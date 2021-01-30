@@ -3,7 +3,7 @@
 use std::{
 	any::Any,
 	error::Error,
-	fmt::{Debug, Display},
+	fmt::{self, Debug, Display, Formatter},
 	panic::{catch_unwind, UnwindSafe},
 	writeln,
 };
@@ -33,8 +33,8 @@ use std::borrow::Cow;
 #[allow(clippy::module_name_repetitions)]
 pub struct GUIError(Impl);
 
-#[cfg(not(feature = "force-unwind"))]
 impl GUIError {
+	#[cfg(not(feature = "force-unwind"))]
 	#[allow(non_snake_case)]
 	#[doc(hidden)]
 	#[must_use]
@@ -44,6 +44,9 @@ impl GUIError {
 		self
 	}
 }
+
+#[allow(dead_code)]
+struct ErrorWrapper(Box<dyn SendAnyErrorCasting>);
 
 #[derive(Debug)]
 #[allow(clippy::empty_enum)]
@@ -58,7 +61,7 @@ enum Impl {
 impl Error for GUIError {}
 impl Display for GUIError {
 	#[allow(unused_variables)]
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		#[allow(clippy::match_single_binding)]
 		match &self.0 {
 			#[cfg(not(feature = "force-unwind"))]
@@ -82,8 +85,22 @@ impl Display for GUIError {
 	}
 }
 
+//TODO: This *probably* needs some clean-up.
 pub trait SendAnyError: Send + Any + Error {}
 impl<E: Send + Any + Error> SendAnyError for E {}
+trait SendAnyErrorCasting: SendAnyError {
+	fn as_any(&self) -> &'_ (dyn Any + '_);
+	fn into_any_box(self: Box<Self>) -> Box<dyn Any>;
+}
+impl<E: SendAnyError> SendAnyErrorCasting for E {
+	fn as_any(&self) -> &'_ (dyn Any + '_) {
+		self
+	}
+
+	fn into_any_box(self: Box<Self>) -> Box<dyn Any> {
+		self
+	}
+}
 
 pub trait IntoGUIError {
 	fn into_gui_error(self) -> GUIError;
@@ -99,12 +116,14 @@ impl<E: SendAnyError> IntoGUIError for E {
 
 		#[cfg(not(feature = "force-unwind"))]
 		GUIError(Impl::Error {
-			error: Box::new(self),
+			error: Box::new(ErrorWrapper(Box::new(self))),
 			trace: Vec::new(),
 		})
 	}
 }
 
+//TODO: Is this actually necessary?
+// Does this need to be public?
 pub trait IntoGUIError2 {
 	fn into_gui_error(self) -> GUIError;
 }
@@ -115,7 +134,7 @@ impl IntoGUIError2 for &'static str {
 		std::panic::resume_unwind(Box::new(self));
 
 		#[cfg(all(feature = "force-unwind", feature = "backtrace"))]
-		panic!(format!("{:#}", self));
+		panic!(self.to_string());
 
 		#[cfg(not(feature = "force-unwind"))]
 		GUIError(Impl::Error {
@@ -131,7 +150,7 @@ impl IntoGUIError2 for String {
 		std::panic::resume_unwind(Box::new(self));
 
 		#[cfg(all(feature = "force-unwind", feature = "backtrace"))]
-		panic!(format!("{:#}", self));
+		panic!(self);
 
 		#[cfg(not(feature = "force-unwind"))]
 		GUIError(Impl::Error {
@@ -178,12 +197,13 @@ impl<E> Caught<E> {
 	}
 }
 impl Debug for Caught<dyn Send + Any> {
-	#[allow(unused_variables)]
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		if let Some(str) = self.boxed.downcast_ref::<&str>() {
 			Display::fmt(str, f)?
 		} else if let Some(string) = self.boxed.downcast_ref::<String>() {
 			Display::fmt(string, f)?
+		} else if let Some(wrapper) = self.boxed.downcast_ref::<ErrorWrapper>() {
+			Display::fmt(&wrapper.0, f)?
 		} else {
 			writeln!(f, "type ID: {:?}", self.boxed.type_id())?
 		}
@@ -197,7 +217,7 @@ impl Debug for Caught<dyn Send + Any> {
 	}
 }
 impl<E: Debug> Debug for Caught<E> {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		self.boxed.fmt(f)?;
 		#[cfg(not(feature = "force-unwind"))]
 		{
@@ -211,7 +231,7 @@ impl<E: Debug> Debug for Caught<E> {
 }
 impl<E: Display> Display for Caught<E> {
 	#[allow(unused_variables)]
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		self.boxed.fmt(f)?;
 		#[cfg(not(feature = "force-unwind"))]
 		{
@@ -264,7 +284,7 @@ impl GUIError {
 	/// # Errors
 	///
 	/// Iff a [`GUIError`] or panic is caught and successfully downcast to `E`, it is returned in the [`Err`] variant.
-	pub fn catch<F, T, E>(f: F) -> Result<Result<T, GUIError>, Caught<E>>
+	pub fn catch<F, T, E: Error>(f: F) -> Result<Result<T, GUIError>, Caught<E>>
 	where
 		F: UnwindSafe + FnOnce() -> Result<T, GUIError>,
 		E: 'static,
@@ -290,15 +310,35 @@ impl GUIError {
 				#[cfg(not(feature = "force-unwind"))]
 				trace: caught.trace,
 			}),
-			Err(boxed) => {
-				#[cfg(feature = "force-unwind")]
-				std::panic::resume_unwind(boxed);
-				#[cfg(not(feature = "force-unwind"))]
-				Ok(Err(GUIError(Impl::Error {
-					error: boxed,
-					trace: caught.trace.unwrap_or_else(Vec::new),
-				})))
-			}
+			Err(boxed) => match boxed.downcast::<ErrorWrapper>() {
+				Err(boxed) => {
+					#[cfg(feature = "force-unwind")]
+					std::panic::resume_unwind(boxed);
+					#[cfg(not(feature = "force-unwind"))]
+					Ok(Err(GUIError(Impl::Error {
+						error: boxed,
+						trace: caught.trace.unwrap_or_else(Vec::new),
+					})))
+				}
+				Ok(wrapper) => {
+					let can_catch = Any::downcast_ref::<E>(wrapper.0.as_any()).is_some();
+					if can_catch {
+						Err(Caught {
+							boxed: Box::<dyn Any>::downcast(wrapper.0.into_any_box()).unwrap(),
+							#[cfg(not(feature = "force-unwind"))]
+							trace: caught.trace,
+						})
+					} else {
+						#[cfg(feature = "force-unwind")]
+						std::panic::resume_unwind(Box::new(ErrorWrapper(wrapper.0)));
+						#[cfg(not(feature = "force-unwind"))]
+						Ok(Err(GUIError(Impl::Error {
+							error: Box::new(ErrorWrapper(wrapper.0)),
+							trace: caught.trace.unwrap_or_else(Vec::new),
+						})))
+					}
+				}
+			},
 		}
 	}
 }

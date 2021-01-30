@@ -22,7 +22,7 @@
 #![allow(clippy::match_bool)]
 #![allow(clippy::redundant_closure_for_method_calls)]
 
-pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
+pub use asteracea_proc_macro_definitions::{bump_format, component, fragment, gui_tracing};
 pub use lignin;
 pub use rhizome;
 

@@ -479,8 +479,8 @@ impl ComponentDeclaration {
 
 			#(#struct_definition)*
 
-			impl#component_impl_generics #component_name#component_type_generics
-				#component_where_clause {
+			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
+				#[::#asteracea::gui_tracing(#component_name)]
 				#(#constructor_attributes)*
 				pub fn new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
@@ -514,6 +514,7 @@ impl ComponentDeclaration {
 					#new_args_name::builder()
 				}
 
+				#[::#asteracea::gui_tracing(#component_name)]
 				#(#render_attributes)*
 				pub fn render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,

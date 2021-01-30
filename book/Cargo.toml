@@ -19,7 +19,7 @@ doc = false
 
 #TODO: This can be cleaned up a lot with better code organisation.
 [dependencies]
-asteracea = { path = ".." } #, features = ["force-unwind"]
+asteracea = { path = "..", features = ["backtrace"] }
 debugless-unwrap = "0.0.3"
 lignin = "0.0.5"
 lignin-html = "0.0.5"
@@ -34,7 +34,7 @@ quote = "1.0.7"
 version-sync = "0.9.1"
 
 [build-dependencies]
-asteracea = { path = ".." } # , features = ["force-unwind"]
+asteracea = { path = "..", features = ["backtrace"] }
 mdbook = { version = "0.4.5", default-features = false, features = ["search"] }
 lignin = "0.0.5"
 lignin-html = "0.0.5"

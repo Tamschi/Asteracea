@@ -24,6 +24,9 @@ publish = false
 [lib]
 proc-macro = true
 
+[features]
+backtrace = [] # Enables additional error traces, at the cost of code size and performance.
+
 [dependencies]
 call2-for-syn = "2.0.3"
 debugless-unwrap = "0.0.4"
