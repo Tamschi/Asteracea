@@ -372,6 +372,7 @@ impl StorageTypeConfiguration {
 				let f_type = &f.field_type;
 				let fn_name = Ident::new(&format!("{}_pinned", &f_name), span);
 				parse2::<ImplItemMethod>(quote_spanned! {span=>
+					#[allow(non_snake_case)] // It's fine to allow this generally, since custom names will still generate a warning elsewhere.
 					#f_visibility fn #fn_name(self: ::std::pin::Pin<&Self>) -> ::std::pin::Pin<&#f_type> {
 						unsafe { self.map_unchecked(|this| &this.#f_name) }
 					}
