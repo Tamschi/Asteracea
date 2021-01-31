@@ -6,7 +6,7 @@ The `::new(…)` and `.render(…)` functions of Asteracea-components are fallib
 
 As long as Asteracea is compiled with the `"backtrace"` feature, it will trace [`Escalation`]() propagation through any function instrumented via the [`#[asteracea::trace_escalations]`]() attribute, which is automatic for the two mentioned above.
 
-You can escalate any error along the GUI tree as long as it is `Any`, `Error` and `Send`.
+You can escalate any error along the GUI tree as long as it is [`Any`](), [`Error`]() and [`Send`]().
 
 ```rust asteracea=Outer
 use asteracea::error::EscalateResult;
@@ -26,7 +26,7 @@ asteracea::component! {
   Failing()()
 
   {
-    // Raising a `Escalation` means crashing at least part of the app,
+    // Raising an `Escalation` means crashing at least part of the app,
     // so there is a speed bump for this conversion.
     // Think of `.escalate()?` as a Wasm-unrolling version of `.unwrap()`
     // and use it sparingly.
