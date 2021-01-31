@@ -181,7 +181,7 @@ use std::fmt::{Display, Formatter, Result};
 struct AnError;
 impl Display for AnError {
   fn fmt(&amp;self, f: &amp;mut Formatter) -&gt; Result {
-    writeln!(f, &quot;A test error was raised&quot;)
+    write!(f, &quot;A test error was raised&quot;)
   }
 }
 impl Error for AnError {}
@@ -220,13 +220,42 @@ in Outer::render
 </code></pre>
 <p>These backtraces are for human consumption, so please don't parse them. They may change in any release without notice.</p>
 <blockquote>
-<p>Showing line and column information is planned, but <a href="https://doc.rust-lang.org/stable/proc_macro/struct.LineColumn.html">currently not available on stable Rust</a>.</p>
+<p>Showing line and column information is planned, but the necessary API is <a href="https://doc.rust-lang.org/stable/proc_macro/struct.LineColumn.html">currently not available on stable Rust</a>.</p>
 </blockquote>
 <blockquote>
 <p>If the <code>&quot;force-unwind&quot;</code> feature is enabled, <code>Escalation</code> instances are erased and the type itself uses the panic infrastructure for propagation instead of being passed up via <a href=""><code>Err</code></a> variant. This may reduce code size in some cases.</p>
 <p>However, note that <strong>panics cannot be caught on platforms without unwinding, including Wasm</strong> (as of Rust 1.49.0).</p>
 <p>In the future, panic conversion will be activated automatically on compatible platforms, as long as this can be done without compromising backtraces.</p>
 </blockquote>
+<h2><a class="header" href="#handling-panics" id="handling-panics">Handling panics</a></h2>
+<p>Asteracea's error handling will automatically try to pick up on plain Rust panics, and can prevent them from crashing your app as long you use an [<code>Escalation::catch…</code>] function to handle errors. However, <strong>this only works with unwinding enabled (i.e. not under Wasm!)</strong>. The currently active panic hook is invoked regardless, too.</p>
+<p>The following example <em>should</em> display a backtrace rather than failing the book build:</p>
+<pre><pre class="playground"><code class="language-rust no_run ro_playground">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>asteracea::component! {
+  Panicking()()
+
+  {
+    //TODO: Make this conditional on unwinding.
+    panic!(&quot;Avoid doing this!&quot;);
+  }
+}
+
+asteracea::component! {
+  pub Outer()()
+
+  &lt;*Panicking&gt;
+}
+<span class="boring">}
+</span></code></pre></pre>
+<pre><code class="language-text">Avoid doing this!
+
+in Panicking::render
+in Outer::render
+
+</code></pre>
+<p>In general, prefer explicit escalation over plain panics whenever possible!</p>
 
                     </main>
 
