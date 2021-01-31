@@ -5,7 +5,7 @@ use std::{
 	borrow::Cow,
 	error::Error,
 	fmt::{self, Debug, Display, Formatter},
-	panic::{catch_unwind, UnwindSafe},
+	panic::{catch_unwind, resume_unwind, UnwindSafe},
 	writeln,
 };
 
@@ -31,7 +31,7 @@ use std::{
 #[allow(clippy::module_name_repetitions)]
 pub struct Escalation(Impl);
 
-impl Escalation {
+impl<E: ?Sized> Caught<E> {
 	#[allow(
 		non_snake_case,
 		unused_mut,
@@ -39,14 +39,51 @@ impl Escalation {
 		clippy::needless_pass_by_value
 	)]
 	#[doc(hidden)]
-	#[must_use]
 	pub fn __Asteracea__with_traced_frame(mut self, frame: Cow<'static, str>) -> Self {
-		#[cfg(not(feature = "force-unwind"))]
-		{
-			let Escalation(Impl::Error { trace, .. }) = &mut self;
-			trace.push(frame);
+		if let Some(trace) = &mut self.trace {
+			trace.push(frame)
+		} else {
+			self.trace = Some(vec![frame])
 		}
 		self
+	}
+}
+
+impl From<Caught<dyn Send + Any>> for Escalation {
+	fn from(caught: Caught<dyn Send + Any>) -> Self {
+		let throwable = Throwable {
+			source: caught.boxed,
+			trace: caught.trace.unwrap_or_else(Vec::new),
+		};
+		if cfg!(feature = "force-unwind") {
+			resume_unwind(Box::new(throwable))
+		} else {
+			#[cfg(not(feature = "force-unwind"))]
+			return Escalation(Impl::Extant(throwable));
+			{
+				#![allow(unreachable_code)]
+				unreachable!()
+			}
+		}
+	}
+}
+
+impl<E: Send + Any> From<Caught<E>> for Escalation {
+	fn from(caught: Caught<E>) -> Self {
+		let throwable = Throwable {
+			source: caught.boxed,
+			trace: caught.trace.unwrap_or_else(Vec::new),
+		};
+		if cfg!(feature = "force-unwind") {
+			resume_unwind(Box::new(throwable))
+		} else {
+			#[cfg(not(feature = "force-unwind"))]
+			return Escalation(Impl::Extant(throwable));
+			{
+				#![allow(unreachable_code)]
+				unreachable!()
+			}
+		}
 	}
 }
 
@@ -54,13 +91,16 @@ impl Escalation {
 struct ErrorWrapper(Box<dyn SendAnyErrorCasting>);
 
 #[derive(Debug)]
+struct Throwable {
+	source: Box<dyn Send + Any>,
+	trace: Vec<Cow<'static, str>>,
+}
+
+#[derive(Debug)]
 #[allow(clippy::empty_enum)]
 enum Impl {
 	#[cfg(not(feature = "force-unwind"))]
-	Error {
-		error: Box<dyn Send + Any>,
-		trace: Vec<Cow<'static, str>>,
-	},
+	Extant(Throwable),
 }
 
 //TODO: This *probably* needs some clean-up.
@@ -69,6 +109,7 @@ impl<E: Send + Any + Error> SendAnyError for E {}
 trait SendAnyErrorCasting: SendAnyError {
 	fn as_any(&self) -> &'_ (dyn Any + '_);
 	fn into_any_box(self: Box<Self>) -> Box<dyn Any>;
+	fn into_any_send_box(self: Box<Self>) -> Box<dyn Send + Any>;
 }
 impl<E: SendAnyError> SendAnyErrorCasting for E {
 	fn as_any(&self) -> &'_ (dyn Any + '_) {
@@ -76,6 +117,10 @@ impl<E: SendAnyError> SendAnyErrorCasting for E {
 	}
 
 	fn into_any_box(self: Box<Self>) -> Box<dyn Any> {
+		self
+	}
+
+	fn into_any_send_box(self: Box<Self>) -> Box<dyn Send + Any> {
 		self
 	}
 }
@@ -87,56 +132,21 @@ pub trait Escalate {
 impl<E: SendAnyError> Escalate for E {
 	type Output = Escalation;
 	fn escalate(self) -> Self::Output {
-		#[cfg(all(feature = "force-unwind", not(feature = "backtrace")))]
-		//FIXME: Replace this with panic_any once that lands.
-		std::panic::resume_unwind(Box::new(self));
-
-		#[cfg(all(feature = "force-unwind", feature = "backtrace"))]
-		panic!(format!("{:#}", self));
-
-		#[cfg(not(feature = "force-unwind"))]
-		Escalation(Impl::Error {
-			error: Box::new(ErrorWrapper(Box::new(self))),
-			trace: Vec::new(),
-		})
-	}
-}
-
-//TODO: Is this actually necessary?
-// Does this need to be public?
-pub trait Escalate2 {
-	fn escalate(self) -> Escalation;
-}
-impl Escalate2 for &'static str {
-	fn escalate(self) -> Escalation {
-		#[cfg(all(feature = "force-unwind", not(feature = "backtrace")))]
-		//FIXME: Replace this with panic_any once that lands.
-		std::panic::resume_unwind(Box::new(self));
-
-		#[cfg(all(feature = "force-unwind", feature = "backtrace"))]
-		panic!(self.to_string());
-
-		#[cfg(not(feature = "force-unwind"))]
-		Escalation(Impl::Error {
-			error: Box::new(self),
-			trace: Vec::new(),
-		})
-	}
-}
-impl Escalate2 for String {
-	fn escalate(self) -> Escalation {
-		#[cfg(all(feature = "force-unwind", not(feature = "backtrace")))]
-		//FIXME: Replace this with panic_any once that lands.
-		std::panic::resume_unwind(Box::new(self));
-
-		#[cfg(all(feature = "force-unwind", feature = "backtrace"))]
-		panic!(self);
-
-		#[cfg(not(feature = "force-unwind"))]
-		Escalation(Impl::Error {
-			error: Box::new(self),
-			trace: Vec::new(),
-		})
+		let throwable = Throwable {
+			source: Box::new(ErrorWrapper(Box::new(self))),
+			trace: vec![],
+		};
+		if cfg!(feature = "force-unwind") {
+			//FIXME: Replace this with panic_any once that lands.
+			std::panic::resume_unwind(Box::new(throwable));
+		} else {
+			#[cfg(not(feature = "force-unwind"))]
+			return Escalation(Impl::Extant(throwable));
+			{
+				#![allow(unreachable_code)]
+				unreachable!()
+			}
+		}
 	}
 }
 
@@ -156,7 +166,6 @@ impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
 pub struct Caught<E: ?Sized> {
 	// An error or panic.
 	boxed: Box<E>,
-	#[cfg(not(feature = "force-unwind"))]
 	trace: Option<Vec<Cow<'static, str>>>,
 }
 impl<E: ?Sized> Caught<E> {
@@ -182,9 +191,8 @@ impl Debug for Caught<dyn Send + Any> {
 		} else {
 			writeln!(f, "type ID: {:?}", self.boxed.type_id())?
 		}
-		#[cfg(not(feature = "force-unwind"))]
 		writeln!(f)?;
-		#[cfg(not(feature = "force-unwind"))]
+		writeln!(f)?;
 		for frame in self.trace.iter().flatten() {
 			writeln!(f, "in {}", frame)?
 		}
@@ -194,12 +202,10 @@ impl Debug for Caught<dyn Send + Any> {
 impl<E: Debug> Debug for Caught<E> {
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		self.boxed.fmt(f)?;
-		#[cfg(not(feature = "force-unwind"))]
-		{
-			writeln!(f)?;
-			for frame in self.trace.iter().flatten() {
-				writeln!(f, "in {}", frame)?
-			}
+		writeln!(f)?;
+		writeln!(f)?;
+		for frame in self.trace.iter().flatten() {
+			writeln!(f, "in {}", frame)?
 		}
 		Ok(())
 	}
@@ -208,12 +214,10 @@ impl<E: Display> Display for Caught<E> {
 	#[allow(unused_variables)]
 	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 		self.boxed.fmt(f)?;
-		#[cfg(not(feature = "force-unwind"))]
-		{
-			writeln!(f)?;
-			for frame in self.trace.iter().flatten() {
-				writeln!(f, "in {}", frame)?
-			}
+		writeln!(f)?;
+		writeln!(f)?;
+		for frame in self.trace.iter().flatten() {
+			writeln!(f, "in {}", frame)?
 		}
 		Ok(())
 	}
@@ -225,11 +229,14 @@ impl<E: Error> Error for Caught<E> {
 }
 
 impl Escalation {
-	/// Catches any [`Escalation`] or, if possible, any (other) panic currently unwinding the stack.
+	/// Catches any [`Escalation`] currently unwinding the stack.
+	///
+	/// Plain panics are considered to also be escalations,
+	/// and re-escalating them always leads to instrumentation for tracing.
 	///
 	/// # Errors
 	///
-	/// Iff a [`Escalation`] or panic is caught, it is returned in the [`Err`] variant.
+	/// Iff an [`Escalation`] is caught, it is returned in the [`Err`] variant.
 	pub fn catch_any<F, T>(f: F) -> Result<T, Caught<dyn Send + Any>>
 	where
 		F: UnwindSafe + FnOnce() -> Result<T, Escalation>,
@@ -240,14 +247,19 @@ impl Escalation {
 			#[cfg(feature = "force-unwind")]
 			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
-			Ok(Err(Escalation(Impl::Error { error, trace }))) => Err(Caught {
-				boxed: error,
+			Ok(Err(Escalation(Impl::Extant(Throwable { source, trace })))) => Err(Caught {
+				boxed: source,
 				trace: Some(trace),
 			}),
-			Err(panic) => Err(Caught {
-				boxed: panic,
-				#[cfg(not(feature = "force-unwind"))]
-				trace: None,
+			Err(panic) => Err(match Box::<dyn Send + Any>::downcast::<Throwable>(panic) {
+				Ok(thrown) => Caught {
+					boxed: thrown.source,
+					trace: Some(thrown.trace),
+				},
+				Err(panic) => Caught {
+					boxed: panic,
+					trace: None,
+				},
 			}),
 		}
 	}
@@ -264,56 +276,65 @@ impl Escalation {
 		F: UnwindSafe + FnOnce() -> Result<T, Escalation>,
 		E: 'static,
 	{
-		let caught = match catch_unwind(f) {
+		let thrown = match catch_unwind(f) {
 			Ok(Ok(t)) => return Ok(Ok(t)),
 			#[cfg(feature = "force-unwind")]
 			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
-			Ok(Err(Escalation(Impl::Error { error, trace }))) => Caught {
-				boxed: error,
-				trace: Some(trace),
-			},
-			Err(panic) => Caught {
-				boxed: panic,
-				#[cfg(not(feature = "force-unwind"))]
-				trace: None,
-			},
-		};
-		match caught.boxed.downcast() {
-			Ok(boxed) => Err(Caught {
-				boxed,
-				#[cfg(not(feature = "force-unwind"))]
-				trace: caught.trace,
-			}),
-			Err(boxed) => match boxed.downcast::<ErrorWrapper>() {
-				Err(boxed) => {
-					#[cfg(feature = "force-unwind")]
-					std::panic::resume_unwind(boxed);
-					#[cfg(not(feature = "force-unwind"))]
-					Ok(Err(Escalation(Impl::Error {
-						error: boxed,
-						trace: caught.trace.unwrap_or_else(Vec::new),
-					})))
-				}
-				Ok(wrapper) => {
-					let can_catch = Any::downcast_ref::<E>(wrapper.0.as_any()).is_some();
-					if can_catch {
-						Err(Caught {
-							boxed: Box::<dyn Any>::downcast(wrapper.0.into_any_box()).unwrap(),
-							#[cfg(not(feature = "force-unwind"))]
-							trace: caught.trace,
-						})
-					} else {
-						#[cfg(feature = "force-unwind")]
-						std::panic::resume_unwind(Box::new(ErrorWrapper(wrapper.0)));
-						#[cfg(not(feature = "force-unwind"))]
-						Ok(Err(Escalation(Impl::Error {
-							error: Box::new(ErrorWrapper(wrapper.0)),
-							trace: caught.trace.unwrap_or_else(Vec::new),
-						})))
+			Ok(Err(Escalation(Impl::Extant(thrown)))) => thrown,
+			Err(panic) => match Box::<dyn Send + Any>::downcast::<Throwable>(panic) {
+				Ok(thrown) => *thrown,
+				Err(panic) => {
+					// Not instrumented.
+					match Box::<dyn Send + Any>::downcast(panic) {
+						Ok(e) => {
+							return Err(Caught {
+								boxed: e,
+								trace: None,
+							})
+						}
+						Err(panic) => resume_unwind(panic),
 					}
 				}
 			},
+		};
+		let uncaught = match Box::<dyn Send + Any>::downcast::<ErrorWrapper>(thrown.source) {
+			Ok(wrapper) => {
+				let can_catch = wrapper.0.as_any().downcast_ref::<E>().is_some();
+				if can_catch {
+					return Err(Caught {
+						boxed: wrapper.0.into_any_box().downcast().unwrap(),
+						trace: Some(thrown.trace),
+					});
+				} else {
+					wrapper
+				}
+			}
+			Err(other) => match Box::<dyn Send + Any>::downcast(other) {
+				Ok(e) => {
+					return Err(Caught {
+						boxed: e,
+						trace: Some(thrown.trace),
+					})
+				}
+				Err(uncaught) => uncaught,
+			},
+		};
+		let throwable = Throwable {
+			source: uncaught,
+			trace: thrown.trace,
+		};
+		if cfg!(feature = "force-unwind") {
+			resume_unwind(Box::new(throwable))
+		} else {
+			#[cfg(not(feature = "force-unwind"))]
+			{
+				return Ok(Err(Escalation(Impl::Extant(throwable))));
+			}
+			{
+				#![allow(unreachable_code)]
+				unreachable!()
+			}
 		}
 	}
 }
