@@ -169,7 +169,7 @@
 <p>The <code>::new(…)</code> and <code>.render(…)</code> functions of Asteracea-components are fallible, returning a <code>Result&lt;_, Escalation&gt;</code>.</p>
 <p><a href=""><code>Escalation</code></a>s are panic-like: They are not expected during normal execution of a web frontend, are strictly deprioritised compared to the <a href=""><code>Ok</code></a> path and components that catch them are encouraged to implement a &quot;fail once and stop&quot; approach where child components are disposed of on first failure.</p>
 <p>As long as Asteracea is compiled with the <code>&quot;backtrace&quot;</code> feature, it will trace <a href=""><code>Escalation</code></a> propagation through any function instrumented via the <a href=""><code>#[asteracea::trace_escalations]</code></a> attribute, which is automatic for the two mentioned above.</p>
-<p>You can escalate any error along the GUI tree as long as it is <code>Any</code>, <code>Error</code> and <code>Send</code>.</p>
+<p>You can escalate any error along the GUI tree as long as it is <a href=""><code>Any</code></a>, <a href=""><code>Error</code></a> and <a href=""><code>Send</code></a>.</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -190,7 +190,7 @@ asteracea::component! {
   Failing()()
 
   {
-    // Raising a `Escalation` means crashing at least part of the app,
+    // Raising an `Escalation` means crashing at least part of the app,
     // so there is a speed bump for this conversion.
     // Think of `.escalate()?` as a Wasm-unrolling version of `.unwrap()`
     // and use it sparingly.

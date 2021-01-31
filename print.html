@@ -759,11 +759,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x559514b8be30.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x559514b8be30.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x559514b8be38.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x559514b8be30.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x559514b8be30.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x56190f10e650.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x56190f10e650.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x56190f10e658.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x56190f10e650.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x56190f10e650.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
@@ -777,7 +777,7 @@ The compiler is in theory allowed to optimise it away, but this isn't guaranteed
 <p>The <code>::new(…)</code> and <code>.render(…)</code> functions of Asteracea-components are fallible, returning a <code>Result&lt;_, Escalation&gt;</code>.</p>
 <p><a href="dynamic_components/"><code>Escalation</code></a>s are panic-like: They are not expected during normal execution of a web frontend, are strictly deprioritised compared to the <a href="dynamic_components/"><code>Ok</code></a> path and components that catch them are encouraged to implement a &quot;fail once and stop&quot; approach where child components are disposed of on first failure.</p>
 <p>As long as Asteracea is compiled with the <code>&quot;backtrace&quot;</code> feature, it will trace <a href="dynamic_components/"><code>Escalation</code></a> propagation through any function instrumented via the <a href="dynamic_components/"><code>#[asteracea::trace_escalations]</code></a> attribute, which is automatic for the two mentioned above.</p>
-<p>You can escalate any error along the GUI tree as long as it is <code>Any</code>, <code>Error</code> and <code>Send</code>.</p>
+<p>You can escalate any error along the GUI tree as long as it is <a href="dynamic_components/"><code>Any</code></a>, <a href="dynamic_components/"><code>Error</code></a> and <a href="dynamic_components/"><code>Send</code></a>.</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -798,7 +798,7 @@ asteracea::component! {
   Failing()()
 
   {
-    // Raising a `Escalation` means crashing at least part of the app,
+    // Raising an `Escalation` means crashing at least part of the app,
     // so there is a speed bump for this conversion.
     // Think of `.escalate()?` as a Wasm-unrolling version of `.unwrap()`
     // and use it sparingly.
