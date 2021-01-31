@@ -18,6 +18,7 @@ use unquote::unquote;
 
 pub enum Component<C> {
 	Instantiated {
+		open_span: Span,
 		capture: CaptureDefinition<C>,
 		attached_access: AttachedAccessExpression,
 	},
@@ -128,25 +129,26 @@ impl<C> ParseWithContext for Component<C> {
 			);
 
 			Ok(Self::Instantiated {
-			capture: call2_strict(
-				quote_spanned! {open_span=>
-						pin |#visibility #field_name = #path::new(&node, #new_params)?|
-					},
-					|input| CaptureDefinition::<C>::parse_with_context(input, cx),
-				)
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
-				.unwrap(),
-			attached_access: {
-				let render_params = parameter_struct_expression(
-					open_span.resolved_at(Span::mixed_site()),
-					parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
-					render_params.as_slice(),
-				);
-				parse2(quote_spanned! (open_span=> .render(bump, #render_params)?))
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable attached access"))?
-			}
-		})
+				open_span,
+				capture: call2_strict(
+					quote_spanned! {open_span=>
+							pin |#visibility #field_name = #path::new(&node, #new_params)?|
+						},
+						|input| CaptureDefinition::<C>::parse_with_context(input, cx),
+					)
+					.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
+					.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
+					.unwrap(),
+				attached_access: {
+					let render_params = parameter_struct_expression(
+						open_span.resolved_at(Span::mixed_site()),
+						parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
+						render_params.as_slice(),
+					);
+					parse2(quote_spanned! (open_span=> .render(bump, #render_params)?))
+					.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable attached access"))?
+				}
+			})
 		}
 	}
 }
@@ -155,11 +157,12 @@ impl<C> Component<C> {
 	pub fn part_tokens(&self) -> TokenStream {
 		match self {
 			Component::Instantiated {
+				open_span,
 				capture,
 				attached_access,
 			} => {
 				let mut expr = parse_quote!(#capture#attached_access);
-				visit_expr_mut(&mut SelfMassager, &mut expr);
+				visit_expr_mut(&mut SelfMassager(*open_span), &mut expr);
 				quote!(#expr)
 			}
 			Component::Instanced {
@@ -181,7 +184,7 @@ impl<C> Component<C> {
 					reference.render(#bump, #render_params)?
 				}))
 				.unwrap();
-				visit_expr_mut(&mut SelfMassager, &mut expr);
+				visit_expr_mut(&mut SelfMassager(*open_span), &mut expr);
 				quote!(#expr)
 			}
 		}
@@ -189,11 +192,11 @@ impl<C> Component<C> {
 }
 
 //TODO: Find out why this is necessary and possibly a better solution.
-struct SelfMassager;
+struct SelfMassager(Span);
 impl VisitMut for SelfMassager {
 	fn visit_ident_mut(&mut self, i: &mut Ident) {
 		if i == "self" {
-			i.set_span(i.span().resolved_at(Span::call_site()))
+			i.set_span(i.span().resolved_at(self.0))
 		}
 	}
 }

@@ -1,6 +1,6 @@
 use super::{GenerateContext, Part, PartKind};
 use crate::{
-	asteracea_ident,
+	asteracea_crate,
 	storage_context::{ParseContext, ParseWithContext},
 	Configuration,
 };
@@ -207,9 +207,9 @@ impl<C: Configuration> HtmlDefinition<C> {
 			parts,
 		} = self;
 
-		let asteracea = asteracea_ident(lt.span());
+		let asteracea = asteracea_crate();
 
-		let bump = Ident::new("bump", lt.span().resolved_at(Span::call_site()));
+		let bump = Ident::new("bump", lt.span());
 
 		let has_optional_attributes = attributes.iter().any(|a| match a {
 			AttributeDefinition::Assignment(_, _, Some(Question { .. }), _, _) => true,
@@ -293,7 +293,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 		}
 		let children = quote_spanned! {child_stream.span()=>
 			&*#bump.alloc_try_with(
-				|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+				|| -> ::std::result::Result<_, #asteracea::error::Escalation> {
 					::std::result::Result::Ok([#child_stream])
 				}
 			)?

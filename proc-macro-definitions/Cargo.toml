@@ -31,9 +31,7 @@ backtrace = [] # Enables additional error traces, at the cost of code size and p
 call2-for-syn = "2.0.3"
 debugless-unwrap = "0.0.4"
 heck = "0.3.1"
-lazy_static = "1.4.0"
 quote = "1.0.2"
-proc-macro-crate = "0.1.4"
 proc-macro2 = "1.0.7"
 syn-mid = { version = "0.5.0", features = ["clone-impls"] }
 take_mut = "0.2.2"

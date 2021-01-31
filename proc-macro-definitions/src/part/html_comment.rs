@@ -1,5 +1,5 @@
 use crate::{
-	asteracea_ident,
+	asteracea_crate,
 	storage_context::{ParseContext, ParseWithContext},
 };
 use proc_macro2::{Span, TokenStream};
@@ -33,7 +33,7 @@ impl HtmlComment {
 			ref text,
 		} = self;
 
-		let asteracea = asteracea_ident(open_span);
+		let asteracea = asteracea_crate();
 
 		quote_spanned! {open_span=>
 			#asteracea::lignin::Node::Comment(

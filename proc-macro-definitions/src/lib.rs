@@ -18,14 +18,15 @@ use self::{
 	part::{GenerateContext, Part},
 	try_parse::TryParse,
 };
-use lazy_static::lazy_static;
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Span, TokenStream as TokenStream2};
-use proc_macro_crate::crate_name;
 use quote::{quote, quote_spanned, ToTokens};
+use std::cell::RefCell;
 use syn::{
 	parse::{Parse, ParseStream},
-	parse_macro_input, Ident, Result,
+	parse_macro_input,
+	spanned::Spanned,
+	Expr, Ident, Result, Token,
 };
 
 use syn::Error;
@@ -40,7 +41,7 @@ pub fn component(input: TokenStream1) -> TokenStream1 {
 }
 
 struct BumpFormat {
-	asteracea: Ident,
+	asteracea: Expr,
 	bump_span: Span,
 	input: TokenStream2,
 }
@@ -53,10 +54,13 @@ pub fn bump_format(input: TokenStream1) -> TokenStream1 {
 
 impl Parse for BumpFormat {
 	fn parse(input: ParseStream) -> Result<Self> {
+		set_asteracea_crate(input.parse()?);
+		input.parse::<Token![,]>()?;
+
 		//TODO: This is pretty hacky.
 		// Change it to a better location once that feature is stable in proc_macro2.
 		let bump_span = input.cursor().span();
-		let asteracea = asteracea_ident(bump_span);
+		let asteracea = asteracea_crate();
 		Ok(BumpFormat {
 			asteracea,
 			bump_span,
@@ -72,7 +76,7 @@ impl ToTokens for BumpFormat {
 			bump_span,
 			input,
 		} = self;
-		let bump = Ident::new("bump", bump_span.resolved_at(Span::call_site()));
+		let bump = Ident::new("bump", bump_span.resolved_at(input.span()));
 		output.extend(quote! {
 			#asteracea::lignin::Node::Text(
 				#asteracea::lignin::bumpalo::format!(in #bump, #input)
@@ -90,12 +94,12 @@ impl Configuration for FragmentConfiguration {
 
 #[proc_macro]
 pub fn fragment(input: TokenStream1) -> TokenStream1 {
-	let asteracea = asteracea_ident(Span::mixed_site());
 	let body = parse_macro_input!(input as Part<FragmentConfiguration>)
 		.part_tokens(&GenerateContext::default())
 		.unwrap_or_else(|error| error.to_compile_error());
+	let asteracea = asteracea_crate();
 	(quote_spanned! {Span::mixed_site()=>
-		((|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+		((|| -> ::std::result::Result<_, #asteracea::error::Escalation> {
 			Ok(#body)
 		})())
 	})
@@ -106,22 +110,41 @@ pub fn fragment(input: TokenStream1) -> TokenStream1 {
 /// This only works on functions that return `Result<_, Escalation>`.
 #[proc_macro_attribute]
 pub fn trace_escalations(attr: TokenStream1, item: TokenStream1) -> TokenStream1 {
+	let attr = parse_macro_input!(attr as TraceEscalationsAttr);
+	set_asteracea_crate(attr.asteracea_crate);
 	if cfg!(feature = "backtrace") {
 		let mut gui_traced = parse_macro_input!(item as Tracing);
-		gui_traced.prefix = parse_macro_input!(attr as TokenStream2).into();
+		gui_traced.prefix = Some(attr.prefix);
 		gui_traced.into_token_stream().into()
 	} else {
 		item
 	}
 }
 
-// TODO: Accept reexported asteracea module made available via `use`.
-lazy_static! {
-	static ref ASTERACEA_NAME: String =
-		crate_name("asteracea").unwrap_or_else(|_| "asteracea".to_owned());
+struct TraceEscalationsAttr {
+	asteracea_crate: Expr,
+	prefix: TokenStream2,
 }
-fn asteracea_ident(span: Span) -> Ident {
-	Ident::new(&*ASTERACEA_NAME, span)
+impl Parse for TraceEscalationsAttr {
+	fn parse(input: ParseStream) -> Result<Self> {
+		let asteracea_crate = input.parse()?;
+		input.parse::<Token![,]>()?;
+		Ok(Self {
+			asteracea_crate,
+			prefix: input.parse()?,
+		})
+	}
+}
+
+// TODO: Accept reexported asteracea module made available via `use`.
+thread_local! {
+	static ASTERACEA: RefCell<Option<Expr>> = RefCell::default();
+}
+fn set_asteracea_crate(crate_expr: Expr) {
+	ASTERACEA.with(|asteracea| *asteracea.borrow_mut() = Some(crate_expr))
+}
+fn asteracea_crate() -> Expr {
+	ASTERACEA.with(|asteracea| asteracea.borrow().as_ref().unwrap().clone())
 }
 
 /// SEE: <https://github.com/rust-lang/rust/issues/34537#issuecomment-554590043>

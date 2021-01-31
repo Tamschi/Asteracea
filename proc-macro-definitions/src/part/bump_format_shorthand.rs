@@ -1,5 +1,5 @@
 use crate::{
-	asteracea_ident,
+	asteracea_crate,
 	storage_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
 };
@@ -28,7 +28,7 @@ pub fn parse_with_context<C: Configuration>(
 	let arg_block: Block = input.parse()?;
 	let formatted_args = arg_block.stmts;
 	let args = quote_spanned!(arg_block.brace_token.span=> {#format_string, #formatted_args});
-	let asteracea = asteracea_ident(bang.span);
+	let asteracea = asteracea_crate();
 	call2_strict(
 		quote_spanned!(bang.span=> {#asteracea::bump_format!#args}),
 		|input| PartBody::<C>::parse_with_context(input, cx),

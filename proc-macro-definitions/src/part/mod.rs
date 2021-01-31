@@ -18,7 +18,7 @@ use self::{
 	html_definition::HtmlDefinition,
 };
 use crate::{
-	asteracea_ident,
+	asteracea_crate, set_asteracea_crate,
 	storage_context::{ParseContext, ParseWithContext},
 	Configuration,
 };
@@ -155,6 +155,9 @@ pub enum PartBody<C: Configuration> {
 // Or maybe just parse it differently, if that's not too much of an issue.
 impl<C: Configuration> Parse for Part<C> {
 	fn parse(input: ParseStream<'_>) -> Result<Self> {
+		set_asteracea_crate(input.parse()?);
+		input.parse::<Token![,]>()?;
+
 		let span = input.span();
 		Self::parse_with_context(
 			input,
@@ -383,13 +386,20 @@ impl<C: Configuration> PartBody<C> {
 			PartBody::Comment(html_comment) => html_comment.part_tokens(),
 			PartBody::Component(component) => component.part_tokens(),
 			PartBody::Text(lit_str) => {
-				let asteracea = asteracea_ident(lit_str.span());
+				let asteracea = asteracea_crate();
 				quote_spanned! {lit_str.span()=>
 					#asteracea::lignin::Node::Text(#lit_str)
 				}
 			}
 			PartBody::Html(html_definition) => html_definition.part_tokens(cx)?,
-			PartBody::If(InitMode::Dyn(dyn_), if_, condition, then_part, else_, else_part) => {
+			PartBody::If(
+				InitMode::Dyn(_dyn_),
+				_if_,
+				_condition,
+				_then_part,
+				_else_,
+				_else_part,
+			) => {
 				todo!("`dyn if`")
 			}
 			PartBody::If(
@@ -411,7 +421,7 @@ impl<C: Configuration> PartBody<C> {
 					#else_tokens
 				}}
 			}
-			PartBody::Match(InitMode::Dyn(dyn_), match_, on, bracket, arms) => {
+			PartBody::Match(InitMode::Dyn(_dyn_), _match_, _on, _bracket, _arms) => {
 				todo!("`dyn match`")
 			}
 			PartBody::Match(InitMode::Spread(_spread), match_, on, bracket, arms) => {
@@ -439,15 +449,15 @@ impl<C: Configuration> PartBody<C> {
 			PartBody::Expression(brace, expression) => quote_spanned!(brace.span=> {#expression}),
 			PartBody::Capture(capture) => quote!(#capture),
 			PartBody::Multi(bracket, m) => {
-				let asteracea = asteracea_ident(bracket.span);
+				let asteracea = asteracea_crate();
 				let m = m
 					.iter()
 					.map(|part| part.part_tokens(cx))
 					.collect::<coreResult<Vec<_>, _>>()?;
-				let bump = Ident::new("bump", bracket.span.resolved_at(Span::call_site()));
+				let bump = Ident::new("bump", bracket.span);
 				quote_spanned! {bracket.span=>
-					::#asteracea::lignin::Node::Multi(&*#bump.alloc_try_with(
-						|| -> ::std::result::Result::<_, ::#asteracea::error::Escalation> { ::std::result::Result::Ok([
+					#asteracea::lignin::Node::Multi(&*#bump.alloc_try_with(
+						|| -> ::std::result::Result::<_, #asteracea::error::Escalation> { ::std::result::Result::Ok([
 							#(#m,)*
 						])}
 					)?)
