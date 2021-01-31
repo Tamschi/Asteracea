@@ -36,7 +36,7 @@ impl HtmlComment {
 		let asteracea = asteracea_ident(open_span);
 
 		quote_spanned! {open_span=>
-			#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Comment(
+			#asteracea::lignin::Node::Comment(
 				#text
 			)
 		}

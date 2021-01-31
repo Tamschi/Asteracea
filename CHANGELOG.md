@@ -12,6 +12,9 @@ TODO: Date
   * Upgraded `lignin` and `lignin-schema` dependencies to 0.0.3 each
   * Removed all type-level (static) storage declarations. This reduces complexity a lot. Use plain Rust `static` items and, where needed, `new with { …; }` blocks and/or `with { …; } <…>` expressions instead.
   * Reorganised reexported dependencies and made some of them private
+  * Upgraded `lignin` dependency from 0.0.3 to 0.0.5
+    > to support fallible rendering.
+  * Generated `.render(…)` methods are now fallible, returning `Result<_, GUIError>`.
 
 * Features:
   * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.

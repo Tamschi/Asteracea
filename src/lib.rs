@@ -1,9 +1,28 @@
+//! # Features
+//!
+//! ## `"backtrace"`
+//!
+//! Enables additional error traces, at the cost of code size and performance.
+//!
+//! ## `"error-abort"`
+//!
+//! Reserved. Will be used to abort-the process on GUI error escalation.
+//!
+//! ## `"force-unwind"`
+//!
+//! Force the use of panics for `GUIError` propagation. This may improve code size and app performance.
+//!
+//! ## `"services"`
+//!
+//! TODO
+
 #![doc(html_root_url = "https://docs.rs/asteracea/0.0.2")]
 #![deny(unsafe_code)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::match_bool)]
+#![allow(clippy::redundant_closure_for_method_calls)]
 
-pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
+pub use asteracea_proc_macro_definitions::{bump_format, component, fragment, gui_tracing};
 pub use lignin;
 pub use rhizome;
 

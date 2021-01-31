@@ -15,6 +15,7 @@ pub struct AttachedAccessExpression {
 		Ident,
 		Option<(Option<MethodTurbofish>, Paren, TokenStream)>,
 	)>,
+	question: Option<Token![?]>,
 }
 
 impl Parse for AttachedAccessExpression {
@@ -48,6 +49,7 @@ impl Parse for AttachedAccessExpression {
 				}
 				member_chain
 			},
+			question: input.parse()?,
 		})
 	}
 }
@@ -66,5 +68,6 @@ impl ToTokens for AttachedAccessExpression {
 				output.extend(quote_spanned!(paren.span=> (#args)));
 			}
 		}
+		self.question.to_tokens(output)
 	}
 }

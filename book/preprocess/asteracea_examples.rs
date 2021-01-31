@@ -29,7 +29,7 @@ impl AsteraceaExamplesBuild {
 						use lignin::Node;
 						use std::collections::HashMap;
 
-						pub fn get_html(key: &str) -> String
+						pub fn get_html(key: &str) -> Result<String, asteracea::error::GUIError>
 					},
 					quote! {
 						match key
@@ -258,17 +258,23 @@ impl<'a> CodeState<'a> {
 			.chain(iter::once(Event::End(Tag::CodeBlock(
 				CodeBlockKind::Fenced(tag),
 			))))
-			.chain(
+			.chain({
+				let result = asteracea::error::GUIError::catch_any(|| {
+					crate::asteracea_html::get_html(&keygen(chapter_name, line_col))
+				});
+				let kind: CowStr = if result.is_ok() { "html" } else { "text" }.into();
 				vec![
-					Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced("html".into()))),
+					Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(kind.clone()))),
 					Event::Text(
-						crate::asteracea_html::get_html(&keygen(chapter_name, line_col)).into(),
+						result
+							.map(|html| html.into())
+							.unwrap_or_else(|err| format!("{:#?}", err).into()),
 					),
 					Event::Text("\n".into()),
-					Event::End(Tag::CodeBlock(CodeBlockKind::Fenced("html".into()))),
+					Event::End(Tag::CodeBlock(CodeBlockKind::Fenced(kind))),
 				]
-				.into_iter(),
-			),
+				.into_iter()
+			}),
 			formatter,
 			state.take(),
 		)?
@@ -284,7 +290,7 @@ impl<'a> CodeState<'a> {
 	) -> Result<()> {
 		writeln!(
 			asteracea_html,
-			r#""{key}" => {block}"#,
+			r##"r#"{key}"# => {block}"##,
 			key = key,
 			block = quote! {{
 				EXAMPLE_HERE
@@ -293,13 +299,13 @@ impl<'a> CodeState<'a> {
 					struct Root;
 					asteracea::rhizome::Node::new_for::<Root>().into()
 				};
-				let component = Box::pin(NAME::new(&root, NAME::new_args_builder()CONSTRUCTOR_BUILD.build()).unwrap());
+				let component = Box::pin(NAME::new(&root, NAME::new_args_builder()CONSTRUCTOR_BUILD.build())?);
 
 				let bump = lignin::bumpalo::Bump::new();
-				let vdom = component.as_ref().render(&bump, NAME::render_args_builder()RENDER_BUILD.build());
+				let vdom = component.as_ref().render(&bump, NAME::render_args_builder()RENDER_BUILD.build())?;
 				let mut html = String::new();
 				lignin_html::render(&mut html, &vdom, &bump).debugless_unwrap();
-				html
+				Ok(html)
 			}}
 			.to_string()
 			.replace("EXAMPLE_HERE", &self.texts.join(""))

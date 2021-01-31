@@ -192,23 +192,21 @@ impl Parse for ComponentDeclaration {
 				let extracted_colon: Token![:] = input.parse()?;
 				let extracted_type: Type = input.parse()?;
 				let extracted_question: Token![?] = input.parse()?;
-				let extracted_semi = quote_spanned!(extracted_question.span=> ;);
+
+				let semi = Token![;](extracted_question.span);
+
+				let asteracea = asteracea_ident(extracted_for.span);
 
 				//TODO: Is there a way to write this span more nicely?
-				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type #extracted_question).span();
+				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type).span();
 				let call_site_node =
 					Ident::new("node", ref_statement_span.resolved_at(Span::call_site()));
 				rhizome_extractions.push({
-					let asteracea = asteracea_ident(ref_statement_span);
 					quote_spanned! {
 						ref_statement_span=>
 						#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
 						= <#extracted_type>::extract_from(&#call_site_node)
-							.map_err(|error| #asteracea::error::ExtractableResolutionError{
-								component: core::any::type_name::<Self>(),
-								dependency: core::any::type_name::<#extracted_type>(),
-								source: error,
-							})#extracted_question#extracted_semi
+							.map_err(|error| ::#asteracea::error::IntoGUIError2::into_gui_error(::std::format!("Dependency resolution error in component {}: {}", ::std::stringify!(#component_name), error)))#extracted_question#semi
 					}
 				})
 			} else {
@@ -449,10 +447,15 @@ impl ComponentDeclaration {
 
 		let render_type: ReturnType = match &render_type {
 			ReturnType::Default => parse2(quote_spanned! {render_type.span()=>
-				-> #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node<'bump>
+				-> ::std::result::Result<::#asteracea::lignin::Node<'bump>, ::#asteracea::error::GUIError>
 			})
 			.unwrap(),
-			rt @ ReturnType::Type(_, _) => rt.clone(),
+			ReturnType::Type(arrow, type_) => ReturnType::Type(
+				*arrow,
+				Box::new(Type::Verbatim(
+					quote_spanned!(arrow.span()=> ::std::result::Result<#type_, ::#asteracea::error::GUIError>),
+				)),
+			),
 		};
 
 		let constructor_block_statements =
@@ -476,8 +479,8 @@ impl ComponentDeclaration {
 
 			#(#struct_definition)*
 
-			impl#component_impl_generics #component_name#component_type_generics
-				#component_where_clause {
+			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
+				#[::#asteracea::gui_tracing(#component_name)]
 				#(#constructor_attributes)*
 				pub fn new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
@@ -485,7 +488,7 @@ impl ComponentDeclaration {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
-				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+				) -> ::std::result::Result<Self, ::#asteracea::error::GUIError> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
 					#(#rhizome_extractions)*
 					let mut #call_site_node = #call_site_node;
@@ -503,7 +506,7 @@ impl ComponentDeclaration {
 					// I really should add benchmarks before trying this, though.
 					let #call_site_node = #call_site_node.into_arc();
 
-					Ok(#constructed_value)
+					::std::result::Result::Ok(#constructed_value)
 				}
 
 				pub fn new_args_builder#new_args_builder_generics()
@@ -511,17 +514,18 @@ impl ComponentDeclaration {
 					#new_args_name::builder()
 				}
 
+				#[::#asteracea::gui_tracing(#component_name)]
 				#(#render_attributes)*
 				pub fn render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
-					#bump: &'bump #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::Bump,
+					#bump: &'bump #asteracea::lignin::bumpalo::Bump,
 					#render_args_name {
 						#(#render_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}: #render_args_name#render_args_generic_args,
 				) #render_type {
 					let this = #render_self;
-					#body
+					::std::result::Result::Ok(#body)
 				}
 
 				pub fn render_args_builder#render_args_builder_generics()

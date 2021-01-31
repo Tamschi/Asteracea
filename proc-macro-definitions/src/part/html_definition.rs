@@ -236,7 +236,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 							quote_spanned! {value.span().resolved_at(Span::mixed_site())=> {
 								let name = #key; // Always evaluate this.
 								if let Some(value) #eq #value {
-									attrs.push(#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Attribute {
+									attrs.push(#asteracea::lignin::Attribute {
 										name,
 										value,
 									})
@@ -244,13 +244,13 @@ impl<C: Configuration> HtmlDefinition<C> {
 							}}
 						}
 						(true, None) => quote_spanned! {span=>
-							attrs.push(#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Attribute {
+							attrs.push(#asteracea::lignin::Attribute {
 								name: #key,
 								value: #value,
 							});
 						},
 						(false, None) => quote_spanned! {span=>
-							#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Attribute {
+							#asteracea::lignin::Attribute {
 								name: #key,
 								value: #value,
 							}
@@ -272,7 +272,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 			let capacity = attributes.len();
 			quote_spanned! {lt.span.resolved_at(Span::mixed_site())=>
 				{
-					let mut attrs = #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::collections::Vec::with_capacity_in(#capacity, #bump);
+					let mut attrs = #asteracea::lignin::bumpalo::collections::Vec::with_capacity_in(#capacity, #bump);
 					#(#attributes)*
 					attrs.into_bump_slice()
 				}
@@ -292,7 +292,11 @@ impl<C: Configuration> HtmlDefinition<C> {
 			});
 		}
 		let children = quote_spanned! {child_stream.span()=>
-			&*#bump.alloc_with(|| [#child_stream])
+			&*#bump.alloc_try_with(
+				|| -> ::std::result::Result<_, ::#asteracea::error::GUIError> {
+					::std::result::Result::Ok([#child_stream])
+				}
+			)?
 		};
 
 		let (event_bindings, parts): (Vec<&Part<C>>, Vec<_>) = parts
@@ -311,29 +315,33 @@ impl<C: Configuration> HtmlDefinition<C> {
 
 		assert_eq!(parts.len(), 0);
 		Ok(match name {
-			ElementName::Custom(name) => quote_spanned! {lt.span=>
-				#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Element(
-					#bump.alloc_with(||
-						#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Element {
-							name: #name,
-							attributes: #attributes,
-							content: #children,
-							event_bindings: #event_bindings,
-						}
+			ElementName::Custom(name) => {
+				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
+					let children = #children;
+					#asteracea::lignin::Node::Element(
+						#bump.alloc_with(||
+							#asteracea::lignin::Element {
+								name: #name,
+								attributes: #attributes,
+								content: children,
+								event_bindings: #event_bindings,
+							}
+						)
 					)
-				)
-			},
-			ElementName::Known(name) => quote_spanned! {lt.span=>
-				#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Element(
+				}}
+			}
+			ElementName::Known(name) => quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
+				let children = #children;
+				#asteracea::lignin::Node::Element(
 					#bump.alloc_with(||
 						#asteracea::__Asteracea__implementation_details::lignin_schema::#name(
 							#attributes,
-							#children,
+							children,
 							#event_bindings,
 						)
 					)
 				)
-			},
+			}},
 		})
 	}
 }

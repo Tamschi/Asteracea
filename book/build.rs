@@ -14,8 +14,8 @@ use walkdir::WalkDir;
 mod preprocess;
 
 mod asteracea_html {
-	pub fn get_html(_key: &str) -> String {
-		unimplemented!("This is only available when building the book")
+	pub fn get_html(_key: &str) -> Result<String, asteracea::error::GUIError> {
+		unimplemented!("This is only available when running the built book")
 	}
 }
 

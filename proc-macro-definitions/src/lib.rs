@@ -9,6 +9,7 @@ mod part;
 mod storage_configuration;
 mod storage_context;
 mod syn_ext;
+mod trace_instrumentation;
 mod try_parse;
 
 use self::{
@@ -21,7 +22,7 @@ use lazy_static::lazy_static;
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use proc_macro_crate::crate_name;
-use quote::{quote, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
 	parse_macro_input, Ident, Result,
@@ -73,8 +74,8 @@ impl ToTokens for BumpFormat {
 		} = self;
 		let bump = Ident::new("bump", bump_span.resolved_at(Span::call_site()));
 		output.extend(quote! {
-			#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Text(
-				#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::format!(in #bump, #input)
+			#asteracea::lignin::Node::Text(
+				#asteracea::lignin::bumpalo::format!(in #bump, #input)
 					.into_bump_str()
 			)
 		});
@@ -89,10 +90,29 @@ impl Configuration for FragmentConfiguration {
 
 #[proc_macro]
 pub fn fragment(input: TokenStream1) -> TokenStream1 {
-	parse_macro_input!(input as Part<FragmentConfiguration>)
+	let asteracea = asteracea_ident(Span::mixed_site());
+	let body = parse_macro_input!(input as Part<FragmentConfiguration>)
 		.part_tokens(&GenerateContext::default())
-		.unwrap_or_else(|error| error.to_compile_error())
-		.into()
+		.unwrap_or_else(|error| error.to_compile_error());
+	(quote_spanned! {Span::mixed_site()=>
+		((|| -> ::std::result::Result<_, ::#asteracea::error::GUIError> {
+			Ok(#body)
+		})())
+	})
+	.into()
+}
+
+/// Iff the `"backtrace"` feature is enabled, instruments a function to add a trace frame of the form "attr_param::function_name".
+/// This only works on functions that return `Result<_, GUIError>`.
+#[proc_macro_attribute]
+pub fn gui_tracing(attr: TokenStream1, item: TokenStream1) -> TokenStream1 {
+	if cfg!(feature = "backtrace") {
+		let mut gui_traced = parse_macro_input!(item as GuiTraced);
+		gui_traced.prefix = parse_macro_input!(attr as TokenStream2).into();
+		gui_traced.into_token_stream().into()
+	} else {
+		item
+	}
 }
 
 // TODO: Accept reexported asteracea module made available via `use`.
@@ -111,6 +131,7 @@ mod workaround_module {
 		const CAN_CAPTURE: bool;
 	}
 }
+use trace_instrumentation::GuiTraced;
 use workaround_module::Configuration;
 
 fn warn(location: Span, message: &str) -> Result<()> {
