@@ -55,7 +55,7 @@ impl From<Caught<dyn Send + Any>> for Escalation {
 			source: caught.boxed,
 			trace: caught.trace.unwrap_or_else(Vec::new),
 		};
-		if cfg!(feature = "force-unwind") {
+		if cfg!(feature = "force-unwind") || caught.was_panic {
 			resume_unwind(Box::new(throwable))
 		} else {
 			#[cfg(not(feature = "force-unwind"))]
@@ -74,7 +74,7 @@ impl<E: Send + Any> From<Caught<E>> for Escalation {
 			source: caught.boxed,
 			trace: caught.trace.unwrap_or_else(Vec::new),
 		};
-		if cfg!(feature = "force-unwind") {
+		if cfg!(feature = "force-unwind") || caught.was_panic {
 			resume_unwind(Box::new(throwable))
 		} else {
 			#[cfg(not(feature = "force-unwind"))]
@@ -162,11 +162,18 @@ impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
 	}
 }
 
-#[must_use = "Please ignore caught GUI errors explicitly with `let _ =` if this is intentional."]
+/// A caught [`Escalation`], which may have originated as error or panic.
+///
+/// Re-escalating this type always panics if it was created from a panic, in order to presever unwind-safety-related errors.
+///
+/// Panics resumed from this type (including via tracing instrumentation with `"backtrace"` enabled) are wrapped to enable tracing if that was not the case before.
+/// This is transparent towards the `Escalation::catch…` functions and other APIs inside this module, but may affect error handlers from other crates.
+#[must_use = "Please ignore caught escalations explicitly with `let _ =` if this is intentional."]
 pub struct Caught<E: ?Sized> {
 	// An error or panic.
 	boxed: Box<E>,
 	trace: Option<Vec<Cow<'static, str>>>,
+	was_panic: bool,
 }
 impl<E: ?Sized> Caught<E> {
 	#[must_use]
@@ -250,15 +257,18 @@ impl Escalation {
 			Ok(Err(Escalation(Impl::Extant(Throwable { source, trace })))) => Err(Caught {
 				boxed: source,
 				trace: Some(trace),
+				was_panic: false,
 			}),
 			Err(panic) => Err(match Box::<dyn Send + Any>::downcast::<Throwable>(panic) {
 				Ok(thrown) => Caught {
 					boxed: thrown.source,
 					trace: Some(thrown.trace),
+					was_panic: true,
 				},
 				Err(panic) => Caught {
 					boxed: panic,
 					trace: None,
+					was_panic: true,
 				},
 			}),
 		}
@@ -276,14 +286,14 @@ impl Escalation {
 		F: UnwindSafe + FnOnce() -> Result<T, Escalation>,
 		E: 'static,
 	{
-		let thrown = match catch_unwind(f) {
+		let (thrown, was_panic) = match catch_unwind(f) {
 			Ok(Ok(t)) => return Ok(Ok(t)),
 			#[cfg(feature = "force-unwind")]
 			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
-			Ok(Err(Escalation(Impl::Extant(thrown)))) => thrown,
+			Ok(Err(Escalation(Impl::Extant(thrown)))) => (thrown, false),
 			Err(panic) => match Box::<dyn Send + Any>::downcast::<Throwable>(panic) {
-				Ok(thrown) => *thrown,
+				Ok(thrown) => (*thrown, true),
 				Err(panic) => {
 					// Not instrumented.
 					match Box::<dyn Send + Any>::downcast(panic) {
@@ -291,6 +301,7 @@ impl Escalation {
 							return Err(Caught {
 								boxed: e,
 								trace: None,
+								was_panic: true,
 							})
 						}
 						Err(panic) => resume_unwind(panic),
@@ -305,6 +316,7 @@ impl Escalation {
 					return Err(Caught {
 						boxed: wrapper.0.into_any_box().downcast().unwrap(),
 						trace: Some(thrown.trace),
+						was_panic,
 					});
 				} else {
 					wrapper
@@ -315,6 +327,7 @@ impl Escalation {
 					return Err(Caught {
 						boxed: e,
 						trace: Some(thrown.trace),
+						was_panic,
 					})
 				}
 				Err(uncaught) => uncaught,
@@ -324,7 +337,7 @@ impl Escalation {
 			source: uncaught,
 			trace: thrown.trace,
 		};
-		if cfg!(feature = "force-unwind") {
+		if cfg!(feature = "force-unwind") || was_panic {
 			resume_unwind(Box::new(throwable))
 		} else {
 			#[cfg(not(feature = "force-unwind"))]

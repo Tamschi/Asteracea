@@ -33,7 +33,7 @@ impl ToTokens for Tracing {
 				let name = &self.function.sig.ident;
 				let inner = quote_spanned! {self.function.sig.output.span().resolved_at(Span::mixed_site())=>
 					let result = ::#asteracea::error::Escalation::catch_any(::std::panic::AssertUnwindSafe(
-						// UNWIND-SAFETY: Any Escalation caught here is re-escalated.
+						// UNWIND-SAFETY: Any panic caught here is resumed when the captured `Caught` is escalated.
 						|| { #statements }
 					));
 					let ok = result.map_err(|caught| caught.__Asteracea__with_traced_frame(::std::borrow::Cow::Borrowed(::std::concat!(
