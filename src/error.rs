@@ -2,14 +2,12 @@
 
 use std::{
 	any::Any,
+	borrow::Cow,
 	error::Error,
 	fmt::{self, Debug, Display, Formatter},
 	panic::{catch_unwind, UnwindSafe},
 	writeln,
 };
-
-#[cfg(not(feature = "force-unwind"))]
-use std::borrow::Cow;
 
 /// An error propagated along the component tree.
 ///
@@ -34,13 +32,20 @@ use std::borrow::Cow;
 pub struct GUIError(Impl);
 
 impl GUIError {
-	#[cfg(not(feature = "force-unwind"))]
-	#[allow(non_snake_case)]
+	#[allow(
+		non_snake_case,
+		unused_mut,
+		unused_variables,
+		clippy::needless_pass_by_value
+	)]
 	#[doc(hidden)]
 	#[must_use]
 	pub fn __Asteracea__with_traced_frame(mut self, frame: Cow<'static, str>) -> Self {
-		let GUIError(Impl::Error { trace, .. }) = &mut self;
-		trace.push(frame);
+		#[cfg(not(feature = "force-unwind"))]
+		{
+			let GUIError(Impl::Error { trace, .. }) = &mut self;
+			trace.push(frame);
+		}
 		self
 	}
 }
