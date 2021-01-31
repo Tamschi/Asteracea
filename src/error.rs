@@ -63,33 +63,6 @@ enum Impl {
 	},
 }
 
-impl Error for GUIError {}
-impl Display for GUIError {
-	#[allow(unused_variables)]
-	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-		#[allow(clippy::match_single_binding)]
-		match &self.0 {
-			#[cfg(not(feature = "force-unwind"))]
-			Impl::Error { error, trace } => {
-				if let Some(str) = error.downcast_ref::<&str>() {
-					Display::fmt(str, f)?
-				} else if let Some(string) = error.downcast_ref::<String>() {
-					Display::fmt(string, f)?
-				} else {
-					writeln!(f, "GUIError(type ID: {:?})", error.type_id())?
-				}
-				writeln!(f)?;
-				for frame in trace {
-					writeln!(f, "in {}", frame)?
-				}
-				Ok(())
-			}
-			#[cfg(feature = "force-unwind")]
-			_ => unreachable!(),
-		}
-	}
-}
-
 //TODO: This *probably* needs some clean-up.
 pub trait SendAnyError: Send + Any + Error {}
 impl<E: Send + Any + Error> SendAnyError for E {}
