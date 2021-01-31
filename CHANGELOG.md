@@ -14,7 +14,7 @@ TODO: Date
   * Reorganised reexported dependencies and made some of them private
   * Upgraded `lignin` dependency from 0.0.3 to 0.0.5
     > to support fallible rendering.
-  * Generated `.render(…)` methods are now fallible, returning `Result<_, GUIError>`.
+  * Generated `.render(…)` methods are now fallible, returning `Result<_, Escalation>`.
 
 * Features:
   * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.

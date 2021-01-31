@@ -206,7 +206,7 @@ impl Parse for ComponentDeclaration {
 						ref_statement_span=>
 						#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
 						= <#extracted_type>::extract_from(&#call_site_node)
-							.map_err(|error| ::#asteracea::error::IntoGUIError2::into_gui_error(::std::format!("Dependency resolution error in component {}: {}", ::std::stringify!(#component_name), error)))#extracted_question#semi
+							.map_err(|error| ::#asteracea::error::Escalate2::escalate(::std::format!("Dependency resolution error in component {}: {}", ::std::stringify!(#component_name), error)))#extracted_question#semi
 					}
 				})
 			} else {
@@ -447,13 +447,13 @@ impl ComponentDeclaration {
 
 		let render_type: ReturnType = match &render_type {
 			ReturnType::Default => parse2(quote_spanned! {render_type.span()=>
-				-> ::std::result::Result<::#asteracea::lignin::Node<'bump>, ::#asteracea::error::GUIError>
+				-> ::std::result::Result<::#asteracea::lignin::Node<'bump>, ::#asteracea::error::Escalation>
 			})
 			.unwrap(),
 			ReturnType::Type(arrow, type_) => ReturnType::Type(
 				*arrow,
 				Box::new(Type::Verbatim(
-					quote_spanned!(arrow.span()=> ::std::result::Result<#type_, ::#asteracea::error::GUIError>),
+					quote_spanned!(arrow.span()=> ::std::result::Result<#type_, ::#asteracea::error::Escalation>),
 				)),
 			),
 		};
@@ -480,7 +480,7 @@ impl ComponentDeclaration {
 			#(#struct_definition)*
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
-				#[::#asteracea::gui_tracing(#component_name)]
+				#[::#asteracea::trace_escalations(#component_name)]
 				#(#constructor_attributes)*
 				pub fn new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
@@ -488,7 +488,7 @@ impl ComponentDeclaration {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
-				) -> ::std::result::Result<Self, ::#asteracea::error::GUIError> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
 					#(#rhizome_extractions)*
 					let mut #call_site_node = #call_site_node;
@@ -514,7 +514,7 @@ impl ComponentDeclaration {
 					#new_args_name::builder()
 				}
 
-				#[::#asteracea::gui_tracing(#component_name)]
+				#[::#asteracea::trace_escalations(#component_name)]
 				#(#render_attributes)*
 				pub fn render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,

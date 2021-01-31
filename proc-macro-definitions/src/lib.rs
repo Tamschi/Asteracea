@@ -95,7 +95,7 @@ pub fn fragment(input: TokenStream1) -> TokenStream1 {
 		.part_tokens(&GenerateContext::default())
 		.unwrap_or_else(|error| error.to_compile_error());
 	(quote_spanned! {Span::mixed_site()=>
-		((|| -> ::std::result::Result<_, ::#asteracea::error::GUIError> {
+		((|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
 			Ok(#body)
 		})())
 	})
@@ -103,11 +103,11 @@ pub fn fragment(input: TokenStream1) -> TokenStream1 {
 }
 
 /// Iff the `"backtrace"` feature is enabled, instruments a function to add a trace frame of the form "attr_param::function_name".
-/// This only works on functions that return `Result<_, GUIError>`.
+/// This only works on functions that return `Result<_, Escalation>`.
 #[proc_macro_attribute]
-pub fn gui_tracing(attr: TokenStream1, item: TokenStream1) -> TokenStream1 {
+pub fn trace_escalations(attr: TokenStream1, item: TokenStream1) -> TokenStream1 {
 	if cfg!(feature = "backtrace") {
-		let mut gui_traced = parse_macro_input!(item as GuiTraced);
+		let mut gui_traced = parse_macro_input!(item as Tracing);
 		gui_traced.prefix = parse_macro_input!(attr as TokenStream2).into();
 		gui_traced.into_token_stream().into()
 	} else {
@@ -131,7 +131,7 @@ mod workaround_module {
 		const CAN_CAPTURE: bool;
 	}
 }
-use trace_instrumentation::GuiTraced;
+use trace_instrumentation::Tracing;
 use workaround_module::Configuration;
 
 fn warn(location: Span, message: &str) -> Result<()> {

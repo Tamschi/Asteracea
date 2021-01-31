@@ -10,7 +10,7 @@
 //!
 //! ## `"force-unwind"`
 //!
-//! Force the use of panics for `GUIError` propagation. This may improve code size and app performance.
+//! Force the use of panics for `Escalation` propagation. This may improve code size and app performance.
 //!
 //! ## `"services"`
 //!
@@ -22,7 +22,7 @@
 #![allow(clippy::match_bool)]
 #![allow(clippy::redundant_closure_for_method_calls)]
 
-pub use asteracea_proc_macro_definitions::{bump_format, component, fragment, gui_tracing};
+pub use asteracea_proc_macro_definitions::{bump_format, component, fragment, trace_escalations};
 pub use lignin;
 pub use rhizome;
 

@@ -15,12 +15,12 @@ use std::{
 ///
 /// GUI errors (including dependency resolution errors) are, at least in Asteracea, considered to be programming errors and not part of the expected control flow. As such, they are strongly deprioritised for optimisation and any built-in error handling primitives are a variation of 'fail once, fail forever' regarding their operands.
 ///
-/// What this means in practice is that the framework may substitute panics for any [`Err(GUIError)`](`Err`) variant and therefore make all `new` and `render` methods on components effectively infallible. Additionally, panics unwound through the GUI are considered to be GUI errors and caught by Asteracea's error handling expressions.
+/// What this means in practice is that the framework may substitute panics for any [`Err(Escalation)`](`Err`) variant and therefore make all `new` and `render` methods on components effectively infallible. Additionally, panics unwound through the GUI are considered to be GUI errors and caught by Asteracea's error handling expressions.
 ///
 /// *This is largely transparent to application code*, with two exceptions:
 ///
-/// - Errors escalated with [`?`](https://doc.rust-lang.org/stable/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator) on-GUI must be `Send + Any + Error` (or already a `GUIError`), and **iff** Asteracea is **forced** to substitute panics in a `panic = "abort"` environment, such an escalation will immediately abort the process.
-/// - To handle [`GUIError`]s reliably, you **must** use [`GUIError::catch_any`]! This is done automatically by built-in and generated error handlers.
+/// - Errors escalated with [`?`](https://doc.rust-lang.org/stable/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator) on-GUI must be `Send + Any + Error` (or already a `Escalation`), and **iff** Asteracea is **forced** to substitute panics in a `panic = "abort"` environment, such an escalation will immediately abort the process.
+/// - To handle [`Escalation`]s reliably, you **must** use [`Escalation::catch_any`]! This is done automatically by built-in and generated error handlers.
 ///
 /// > The error escalation strategy is determined at compile-time. This will eventually become automatic via [`#[cfg(panic = "…")]`](https://github.com/rust-lang/rust/pull/74754), but until that is available on stable, may have to be chosen via the `"force-unwind"` feature. (When in doubt, enable the feature where you can.)
 ///
@@ -29,9 +29,9 @@ use std::{
 /// For expected errors and errors raised off-GUI (incl. in event handlers), [please see the book for recoverable error handling strategies.](`TODO`)
 #[derive(Debug)]
 #[allow(clippy::module_name_repetitions)]
-pub struct GUIError(Impl);
+pub struct Escalation(Impl);
 
-impl GUIError {
+impl Escalation {
 	#[allow(
 		non_snake_case,
 		unused_mut,
@@ -43,7 +43,7 @@ impl GUIError {
 	pub fn __Asteracea__with_traced_frame(mut self, frame: Cow<'static, str>) -> Self {
 		#[cfg(not(feature = "force-unwind"))]
 		{
-			let GUIError(Impl::Error { trace, .. }) = &mut self;
+			let Escalation(Impl::Error { trace, .. }) = &mut self;
 			trace.push(frame);
 		}
 		self
@@ -80,11 +80,13 @@ impl<E: SendAnyError> SendAnyErrorCasting for E {
 	}
 }
 
-pub trait IntoGUIError {
-	fn into_gui_error(self) -> GUIError;
+pub trait Escalate {
+	type Output;
+	fn escalate(self) -> Self::Output;
 }
-impl<E: SendAnyError> IntoGUIError for E {
-	fn into_gui_error(self) -> GUIError {
+impl<E: SendAnyError> Escalate for E {
+	type Output = Escalation;
+	fn escalate(self) -> Self::Output {
 		#[cfg(all(feature = "force-unwind", not(feature = "backtrace")))]
 		//FIXME: Replace this with panic_any once that lands.
 		std::panic::resume_unwind(Box::new(self));
@@ -93,7 +95,7 @@ impl<E: SendAnyError> IntoGUIError for E {
 		panic!(format!("{:#}", self));
 
 		#[cfg(not(feature = "force-unwind"))]
-		GUIError(Impl::Error {
+		Escalation(Impl::Error {
 			error: Box::new(ErrorWrapper(Box::new(self))),
 			trace: Vec::new(),
 		})
@@ -102,11 +104,11 @@ impl<E: SendAnyError> IntoGUIError for E {
 
 //TODO: Is this actually necessary?
 // Does this need to be public?
-pub trait IntoGUIError2 {
-	fn into_gui_error(self) -> GUIError;
+pub trait Escalate2 {
+	fn escalate(self) -> Escalation;
 }
-impl IntoGUIError2 for &'static str {
-	fn into_gui_error(self) -> GUIError {
+impl Escalate2 for &'static str {
+	fn escalate(self) -> Escalation {
 		#[cfg(all(feature = "force-unwind", not(feature = "backtrace")))]
 		//FIXME: Replace this with panic_any once that lands.
 		std::panic::resume_unwind(Box::new(self));
@@ -115,14 +117,14 @@ impl IntoGUIError2 for &'static str {
 		panic!(self.to_string());
 
 		#[cfg(not(feature = "force-unwind"))]
-		GUIError(Impl::Error {
+		Escalation(Impl::Error {
 			error: Box::new(self),
 			trace: Vec::new(),
 		})
 	}
 }
-impl IntoGUIError2 for String {
-	fn into_gui_error(self) -> GUIError {
+impl Escalate2 for String {
+	fn escalate(self) -> Escalation {
 		#[cfg(all(feature = "force-unwind", not(feature = "backtrace")))]
 		//FIXME: Replace this with panic_any once that lands.
 		std::panic::resume_unwind(Box::new(self));
@@ -131,27 +133,22 @@ impl IntoGUIError2 for String {
 		panic!(self);
 
 		#[cfg(not(feature = "force-unwind"))]
-		GUIError(Impl::Error {
+		Escalation(Impl::Error {
 			error: Box::new(self),
 			trace: Vec::new(),
 		})
 	}
 }
 
-pub trait IntoGUIResult {
-	type Ok;
-	/// Converts a given value (usually a `Result`) into a `Result<_, GUIError>`
-	///
-	/// # Errors
-	///
-	/// If `self` represents an error.
-	fn into_gui_result(self) -> Result<Self::Ok, GUIError>;
+pub trait EscalateResult {
+	type Output;
+	fn escalate(self) -> Self::Output;
 }
-impl<Ok, E: IntoGUIError> IntoGUIResult for Result<Ok, E> {
-	type Ok = Ok;
+impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
+	type Output = Result<Ok, E::Output>;
 
-	fn into_gui_result(self) -> Result<Ok, GUIError> {
-		self.map_err(|e| e.into_gui_error())
+	fn escalate(self) -> Self::Output {
+		self.map_err(|e| e.escalate())
 	}
 }
 
@@ -227,15 +224,15 @@ impl<E: Error> Error for Caught<E> {
 	}
 }
 
-impl GUIError {
-	/// Catches any [`GUIError`] or, if possible, any (other) panic currently unwinding the stack.
+impl Escalation {
+	/// Catches any [`Escalation`] or, if possible, any (other) panic currently unwinding the stack.
 	///
 	/// # Errors
 	///
-	/// Iff a [`GUIError`] or panic is caught, it is returned in the [`Err`] variant.
+	/// Iff a [`Escalation`] or panic is caught, it is returned in the [`Err`] variant.
 	pub fn catch_any<F, T>(f: F) -> Result<T, Caught<dyn Send + Any>>
 	where
-		F: UnwindSafe + FnOnce() -> Result<T, GUIError>,
+		F: UnwindSafe + FnOnce() -> Result<T, Escalation>,
 	{
 		#[allow(clippy::match_same_arms)]
 		match catch_unwind(f) {
@@ -243,7 +240,7 @@ impl GUIError {
 			#[cfg(feature = "force-unwind")]
 			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
-			Ok(Err(GUIError(Impl::Error { error, trace }))) => Err(Caught {
+			Ok(Err(Escalation(Impl::Error { error, trace }))) => Err(Caught {
 				boxed: error,
 				trace: Some(trace),
 			}),
@@ -255,16 +252,16 @@ impl GUIError {
 		}
 	}
 
-	/// Catches [`GUIError`]s and, if possible, (other) panics currently unwinding the stack that are an `E`.
+	/// Catches [`Escalation`]s and, if possible, (other) panics currently unwinding the stack that are an `E`.
 	///
 	/// Even if not caught, panics are converted into [`GuiError`]s (which may re-panic them).
 	///
 	/// # Errors
 	///
-	/// Iff a [`GUIError`] or panic is caught and successfully downcast to `E`, it is returned in the [`Err`] variant.
-	pub fn catch<F, T, E: Error>(f: F) -> Result<Result<T, GUIError>, Caught<E>>
+	/// Iff a [`Escalation`] or panic is caught and successfully downcast to `E`, it is returned in the [`Err`] variant.
+	pub fn catch<F, T, E: Error>(f: F) -> Result<Result<T, Escalation>, Caught<E>>
 	where
-		F: UnwindSafe + FnOnce() -> Result<T, GUIError>,
+		F: UnwindSafe + FnOnce() -> Result<T, Escalation>,
 		E: 'static,
 	{
 		let caught = match catch_unwind(f) {
@@ -272,7 +269,7 @@ impl GUIError {
 			#[cfg(feature = "force-unwind")]
 			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
-			Ok(Err(GUIError(Impl::Error { error, trace }))) => Caught {
+			Ok(Err(Escalation(Impl::Error { error, trace }))) => Caught {
 				boxed: error,
 				trace: Some(trace),
 			},
@@ -293,7 +290,7 @@ impl GUIError {
 					#[cfg(feature = "force-unwind")]
 					std::panic::resume_unwind(boxed);
 					#[cfg(not(feature = "force-unwind"))]
-					Ok(Err(GUIError(Impl::Error {
+					Ok(Err(Escalation(Impl::Error {
 						error: boxed,
 						trace: caught.trace.unwrap_or_else(Vec::new),
 					})))
@@ -310,7 +307,7 @@ impl GUIError {
 						#[cfg(feature = "force-unwind")]
 						std::panic::resume_unwind(Box::new(ErrorWrapper(wrapper.0)));
 						#[cfg(not(feature = "force-unwind"))]
-						Ok(Err(GUIError(Impl::Error {
+						Ok(Err(Escalation(Impl::Error {
 							error: Box::new(ErrorWrapper(wrapper.0)),
 							trace: caught.trace.unwrap_or_else(Vec::new),
 						})))

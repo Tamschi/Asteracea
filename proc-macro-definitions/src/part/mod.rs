@@ -447,7 +447,7 @@ impl<C: Configuration> PartBody<C> {
 				let bump = Ident::new("bump", bracket.span.resolved_at(Span::call_site()));
 				quote_spanned! {bracket.span=>
 					::#asteracea::lignin::Node::Multi(&*#bump.alloc_try_with(
-						|| -> ::std::result::Result::<_, ::#asteracea::error::GUIError> { ::std::result::Result::Ok([
+						|| -> ::std::result::Result::<_, ::#asteracea::error::Escalation> { ::std::result::Result::Ok([
 							#(#m,)*
 						])}
 					)?)

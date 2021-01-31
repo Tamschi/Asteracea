@@ -29,7 +29,7 @@ impl AsteraceaExamplesBuild {
 						use lignin::Node;
 						use std::collections::HashMap;
 
-						pub fn get_html(key: &str) -> Result<String, asteracea::error::GUIError>
+						pub fn get_html(key: &str) -> Result<String, asteracea::error::Escalation>
 					},
 					quote! {
 						match key
@@ -259,7 +259,7 @@ impl<'a> CodeState<'a> {
 				CodeBlockKind::Fenced(tag),
 			))))
 			.chain({
-				let result = asteracea::error::GUIError::catch_any(|| {
+				let result = asteracea::error::Escalation::catch_any(|| {
 					crate::asteracea_html::get_html(&keygen(chapter_name, line_col))
 				});
 				let kind: CowStr = if result.is_ok() { "html" } else { "text" }.into();
