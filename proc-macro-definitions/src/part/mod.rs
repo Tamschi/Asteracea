@@ -389,7 +389,14 @@ impl<C: Configuration> PartBody<C> {
 				}
 			}
 			PartBody::Html(html_definition) => html_definition.part_tokens(cx)?,
-			PartBody::If(InitMode::Dyn(dyn_), if_, condition, then_part, else_, else_part) => {
+			PartBody::If(
+				InitMode::Dyn(_dyn_),
+				_if_,
+				_condition,
+				_then_part,
+				_else_,
+				_else_part,
+			) => {
 				todo!("`dyn if`")
 			}
 			PartBody::If(
@@ -411,7 +418,7 @@ impl<C: Configuration> PartBody<C> {
 					#else_tokens
 				}}
 			}
-			PartBody::Match(InitMode::Dyn(dyn_), match_, on, bracket, arms) => {
+			PartBody::Match(InitMode::Dyn(_dyn_), _match_, _on, _bracket, _arms) => {
 				todo!("`dyn match`")
 			}
 			PartBody::Match(InitMode::Spread(_spread), match_, on, bracket, arms) => {
