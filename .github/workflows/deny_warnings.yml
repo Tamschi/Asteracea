@@ -17,7 +17,6 @@ jobs:
         profile: minimal
         components: clippy
     - run: cat CI.toml >> Cargo.toml
-    - run: sed --in-place 's/#!\[warn(unsafe_code)\]/#!\[allow(unsafe_code)\]/' src/lib.rs # TODO
     - run: cargo +nightly clippy --package asteracea_proc-macro-definitions --no-default-features -- -D warnings
     - run: cargo +nightly clippy --package asteracea --all-features -- -D warnings
     - run: cargo +nightly clippy --package asteracea_proc-macro-definitions --no-default-features -- -D warnings
