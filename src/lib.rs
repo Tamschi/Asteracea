@@ -21,6 +21,7 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::match_bool)]
 #![allow(clippy::redundant_closure_for_method_calls)]
+#![allow(clippy::redundant_else)]
 
 pub use asteracea_proc_macro_definitions::{bump_format, component, fragment, trace_escalations};
 pub use lignin;
