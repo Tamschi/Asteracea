@@ -17,7 +17,9 @@ jobs:
         profile: minimal
         components: clippy
     - run: cat CI.toml >> Cargo.toml
-    - run: cargo +nightly clippy --package asteracea_proc-macro-definitions --no-default-features -- -D warnings
-    - run: cargo +nightly clippy --package asteracea --all-features -- -D warnings
-    - run: cargo +nightly clippy --package asteracea_proc-macro-definitions --no-default-features -- -D warnings
-    - run: cargo +nightly clippy --package asteracea --all-features -- -D warnings
+    - run: cargo +nightly clippy --no-default-features --package asteracea_proc-macro-definitions -- -D warnings
+    - run: cargo +nightly clippy --no-default-features --package asteracea -- -D warnings
+    - run: cargo +nightly clippy --package asteracea_proc-macro-definitions -- -D warnings
+    - run: cargo +nightly clippy --package asteracea -- -D warnings
+    - run: cargo +nightly clippy --all-features --package asteracea_proc-macro-definitions -- -D warnings
+    - run: cargo +nightly clippy --all-features --package asteracea -- -D warnings
