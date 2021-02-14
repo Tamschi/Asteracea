@@ -1,9 +1,10 @@
 use quote::ToTokens;
 use syn::{
 	parse::{Parse, ParseStream},
-	Attribute, Expr, PatType, Result, Token, Visibility,
+	Attribute, Expr, Ident, PatType, Result, Token, Visibility,
 };
 use unquote::unquote;
+use wyz::Pipe;
 
 pub struct ConstructorArgument {
 	pub capture: Capture,
@@ -41,8 +42,10 @@ impl ToTokens for Capture {
 }
 
 pub struct Argument {
+	pub item_name: Option<(Ident, Token![/])>,
 	pub fn_arg: PatType,
-	pub question: Option<Token![?]>,
+	pub repeat_mode: RepeatMode,
+	pub optional: Option<Token![?]>,
 	pub default: Option<(Token![=], Expr)>,
 }
 
@@ -51,21 +54,25 @@ impl Parse for ConstructorArgument {
 		unquote!(input,
 			#do let Attributes::parse_outer => attrs
 			#let capture
+			#do let ItemName::parse => item_name
 			#let pat
-			#let question
+			#let repeat_mode
+			#let optional
 			#let colon_token
 			#let ty
 			#do let DefaultParameter::parse => default
 		);
 		Ok(Self {
 			argument: Argument {
+				item_name: item_name.into_inner(),
 				fn_arg: PatType {
 					attrs: attrs.into_inner(),
 					pat,
 					colon_token,
 					ty,
 				},
-				question,
+				repeat_mode,
+				optional,
 				default: default.into_inner(),
 			},
 			capture,
@@ -77,20 +84,24 @@ impl Parse for Argument {
 	fn parse(input: ParseStream) -> Result<Self> {
 		unquote!(input,
 			#do let Attributes::parse_outer => attrs
+			#do let ItemName::parse => item_name
 			#let pat
-			#let question
+			#let repeat_mode
+			#let optional
 			#let colon_token
 			#let ty
 			#do let DefaultParameter::parse => default
 		);
 		Ok(Self {
+			item_name: item_name.into_inner(),
 			fn_arg: PatType {
 				attrs: attrs.into_inner(),
 				pat,
 				colon_token,
 				ty,
 			},
-			question,
+			repeat_mode,
+			optional,
 			default: default.into_inner(),
 		})
 	}
@@ -109,6 +120,58 @@ impl ToTokens for Attributes {
 	fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
 		for attr in self.0.iter() {
 			attr.to_tokens(tokens)
+		}
+	}
+}
+
+struct ItemName(Option<(Ident, Token![/])>);
+impl ItemName {
+	pub fn into_inner(self) -> Option<(Ident, Token![/])> {
+		self.0
+	}
+}
+impl Parse for ItemName {
+	fn parse(input: ParseStream) -> Result<Self> {
+		input
+			.peek2(Token![/])
+			.then(|| Result::Ok((input.parse()?, input.parse()?)))
+			.transpose()?
+			.pipe(Self)
+			.pipe(Ok)
+	}
+}
+impl ToTokens for ItemName {
+	fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+		if let Some(item_name) = &self.0 {
+			item_name.0.to_tokens(tokens);
+			item_name.1.to_tokens(tokens);
+		}
+	}
+}
+
+pub enum RepeatMode {
+	Single,
+	AtLeastOne(Token![+]),
+	AnyNumber(Token![*]),
+}
+impl Parse for RepeatMode {
+	fn parse(input: ParseStream) -> Result<Self> {
+		if let Some(plus) = input.parse().unwrap() {
+			Self::AtLeastOne(plus)
+		} else if let Some(asterisk) = input.parse().unwrap() {
+			Self::AnyNumber(asterisk)
+		} else {
+			Self::Single
+		}
+		.pipe(Ok)
+	}
+}
+impl ToTokens for RepeatMode {
+	fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+		match self {
+			Self::Single => (),
+			Self::AtLeastOne(plus) => plus.to_tokens(tokens),
+			Self::AnyNumber(asterisk) => asterisk.to_tokens(tokens),
 		}
 	}
 }
