@@ -5,7 +5,7 @@
 TODO: Date
 
 * **Breaking:**
-  * Increased minimum supported Rust version from 1.45.0 to 1.46.0.
+  * Increased minimum supported Rust version from 1.45.0 to 1.50.
   * Removed "rhizome" features (always enabled now)
   * Removed "styles" and "topiary" features. CSS scoping will be enabled through more general means.
   * Reworked generated component interface
@@ -39,6 +39,10 @@ TODO: Date
     ```
 
   * Optional arguments: `pattern?: Type`
+  * Repeat arguments: `item_name/pattern*: Type` or `item_name/pattern+: Type`
+
+    The `item_name/` is optional. Works in combination with `?` and/or defaults.
+
   * Default parameters: `pattern: Type = default`
   * Conditional attributes: `."attribute-name"? = {Option<&'bump str>}`
   * Conditional parameters (like conditional attributes)

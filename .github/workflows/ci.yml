@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         os: [macos, ubuntu, windows]
-        rust: [1.46.0, stable, beta, nightly]
+        rust: [1.50, stable, beta, nightly]
         include:
         - os: ubuntu
           target: wasm32-unknown-unknown
