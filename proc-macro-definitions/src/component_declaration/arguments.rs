@@ -1,4 +1,4 @@
-use quote::{quote_spanned, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
 	parse2, Attribute, Error, Expr, Ident, PatType, Result, Token, Type, Visibility,
@@ -7,6 +7,10 @@ use unquote::unquote;
 use wyz::Pipe;
 
 use crate::asteracea_ident;
+
+pub mod kw {
+	syn::custom_keyword!(flatten);
+}
 
 pub struct ConstructorArgument {
 	pub capture: Capture,
@@ -48,6 +52,7 @@ struct Argument {
 	pub fn_arg: PatType,
 	pub repeat_mode: RepeatMode,
 	pub optional: Option<Token![?]>,
+	pub flatten: Option<(Token![.], kw::flatten)>,
 	pub default: Option<(Token![=], Expr)>,
 }
 impl Argument {
@@ -59,12 +64,21 @@ impl Argument {
 					.unwrap_or_else(|| self.fn_arg.colon_token.span),
 				"Expected repeat mode `*` or `+`, since an item name was specified",
 			))
+		} else if self.flatten.is_some()
+			&& !(matches!(self.repeat_mode, RepeatMode::AnyNumber(_)) && self.optional.is_some())
+		{
+			let (stop, flatten) = self.flatten.unwrap();
+			Err(Error::new_spanned(
+				quote!(#stop #flatten),
+				"`.flatten` is only available here following argument mode `*?`",
+			))
 		} else {
 			let Argument {
 				item_name,
 				fn_arg,
 				repeat_mode,
 				optional,
+				flatten,
 				default,
 			} = self;
 			Ok(ValidatedArgument {
@@ -72,6 +86,7 @@ impl Argument {
 				fn_arg,
 				repeat_mode,
 				optional,
+				flatten,
 				default,
 			})
 		}
@@ -82,6 +97,7 @@ pub struct ValidatedArgument {
 	pub fn_arg: PatType,
 	pub repeat_mode: RepeatMode,
 	pub optional: Option<Token![?]>,
+	pub flatten: Option<(Token![.], kw::flatten)>,
 	pub default: Option<(Token![=], Expr)>,
 }
 impl ValidatedArgument {
@@ -90,11 +106,17 @@ impl ValidatedArgument {
 			self.fn_arg.ty.as_ref().clone(),
 			self.repeat_mode,
 			self.optional,
+			&self.flatten,
 		)
 	}
 }
 
-pub fn effective_type(ty: Type, repeat_mode: RepeatMode, optional: Option<Token![?]>) -> Type {
+pub fn effective_type(
+	ty: Type,
+	repeat_mode: RepeatMode,
+	optional: Option<Token![?]>,
+	flatten: &Option<(Token![.], kw::flatten)>,
+) -> Type {
 	match repeat_mode {
 		RepeatMode::Single => ty,
 		RepeatMode::AtLeastOne(token) => {
@@ -106,7 +128,11 @@ pub fn effective_type(ty: Type, repeat_mode: RepeatMode, optional: Option<Token!
 			.expect("parameter helper definitions any-number type"),
 	}
 	.pipe(|ty| {
-		if let Some(question) = optional {
+		if flatten.is_some() {
+			assert!(repeat_mode != RepeatMode::Single);
+			assert!(optional.is_some());
+			ty
+		} else if let Some(question) = optional {
 			parse2(quote_spanned!(question.span=> ::core::option::Option<#ty>))
 				.expect("parameter helper definitions optional type")
 		} else {
@@ -124,6 +150,7 @@ impl Parse for ConstructorArgument {
 			#let pat
 			#let repeat_mode
 			#let optional
+			#do let Flatten::parse => flatten
 			#let colon_token
 			#let ty
 			#do let DefaultParameter::parse => default
@@ -139,6 +166,7 @@ impl Parse for ConstructorArgument {
 				},
 				repeat_mode,
 				optional,
+				flatten: flatten.into_inner(),
 				default: default.into_inner(),
 			}
 			.validate()?,
@@ -155,6 +183,7 @@ impl Parse for ValidatedArgument {
 			#let pat
 			#let repeat_mode
 			#let optional
+			#do let Flatten::parse => flatten
 			#let colon_token
 			#let ty
 			#do let DefaultParameter::parse => default
@@ -169,6 +198,7 @@ impl Parse for ValidatedArgument {
 			},
 			repeat_mode,
 			optional,
+			flatten: flatten.into_inner(),
 			default: default.into_inner(),
 		}
 		.validate()?)
@@ -241,6 +271,30 @@ impl ToTokens for RepeatMode {
 			Self::Single => (),
 			Self::AtLeastOne(plus) => plus.to_tokens(tokens),
 			Self::AnyNumber(asterisk) => asterisk.to_tokens(tokens),
+		}
+	}
+}
+
+struct Flatten(Option<(Token![.], kw::flatten)>);
+impl Flatten {
+	fn into_inner(self) -> Option<(Token![.], kw::flatten)> {
+		self.0
+	}
+}
+impl Parse for Flatten {
+	fn parse(input: ParseStream) -> Result<Self> {
+		input
+			.peek(Token![.]) // This is slightly imprecise and only works because (`.flatten`) is the only legal match here, but it results in better errors.
+			.then(|| Ok((input.parse()?, input.parse()?)))
+			.transpose()
+			.map(Self)
+	}
+}
+impl ToTokens for Flatten {
+	fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+		if let Some((eq, expr)) = self.0.as_ref() {
+			eq.to_tokens(tokens);
+			expr.to_tokens(tokens);
 		}
 	}
 }

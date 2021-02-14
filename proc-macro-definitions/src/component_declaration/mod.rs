@@ -357,6 +357,7 @@ impl ComponentDeclaration {
 				},
 				repeat_mode: arg.argument.repeat_mode,
 				optional: arg.argument.optional,
+				flatten: &arg.argument.flatten,
 				ty: &*arg.argument.fn_arg.ty,
 				default: &arg.argument.default,
 			}))
@@ -373,6 +374,7 @@ impl ComponentDeclaration {
 				},
 				repeat_mode: arg.repeat_mode,
 				optional: arg.optional,
+				flatten: &arg.flatten,
 				ty: &*arg.fn_arg.ty,
 				default: &arg.default,
 			}))

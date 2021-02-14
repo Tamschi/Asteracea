@@ -41,7 +41,12 @@ TODO: Date
   * Optional arguments: `pattern?: Type`
   * Repeat arguments: `item_name/pattern*: Type` or `item_name/pattern+: Type`
 
-    The `item_name/` is optional. Works in combination with `?` and/or defaults.
+    The `item_name/` is optional.
+
+    Repeat arguments work in combination with `?` and/or defaults.
+
+    When using `*?`, you can flatten the resulting `Option<Vec<_>>` into just `Vec<_>` by writing `*?.flatten`.  
+    The default value defaults to `Vec::default()` in this case.
 
   * Default parameters: `pattern: Type = default`
   * Conditional attributes: `."attribute-name"? = {Option<&'bump str>}`

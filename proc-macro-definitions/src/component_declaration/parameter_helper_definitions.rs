@@ -253,12 +253,18 @@ pub struct CustomArgument<'a> {
 	pub ident: &'a Ident,
 	pub repeat_mode: RepeatMode,
 	pub optional: Option<Token![?]>,
+	pub flatten: &'a Option<(Token![.], arguments::kw::flatten)>,
 	pub ty: &'a Type,
 	pub default: &'a Option<(Token![=], Expr)>,
 }
 impl<'a> CustomArgument<'a> {
 	fn effective_type(&self) -> Type {
-		arguments::effective_type(self.ty.clone(), self.repeat_mode, self.optional)
+		arguments::effective_type(
+			self.ty.clone(),
+			self.repeat_mode,
+			self.optional,
+			self.flatten,
+		)
 	}
 }
 
@@ -375,6 +381,7 @@ impl ParameterHelperDefintions {
 								ident,
 								repeat_mode,
 								optional,
+								flatten,
 								ty: _,
 								default,
 							},
@@ -391,19 +398,27 @@ impl ParameterHelperDefintions {
 											quote_spanned!(ident.span()=>)
 										}
 										(None, Some((eq, default))) => {
-											quote_spanned!(eq.span=> default = #default,)
+											quote_spanned!(eq.span=> default #eq #default,)
 										}
 										(Some(optional), None) => {
 											quote_spanned!(optional.span=> default,)
 										}
 										(Some(optional), Some((eq, default))) => {
-											let some = quote_spanned!(optional.span=> ::core::option::Option::Some(#default));
-											quote_spanned!(eq.span=> default = #some,)
+											if let Some((_, flatten)) = flatten {
+												quote_spanned!(flatten.span=> default #eq #default)
+											} else {
+												let some = quote_spanned!(optional.span=> ::core::option::Option::Some(#default));
+												quote_spanned!(eq.span=> default #eq #some,)
+											}
 										}
 									};
-									let strip_option = optional.map(
-										|optional| quote_spanned!(optional.span=> strip_option,),
-									);
+									let strip_option = optional.and_then(|optional| {
+										if flatten.is_some() {
+											None
+										} else {
+											Some(quote_spanned!(optional.span=> strip_option,))
+										}
+									});
 									let item_name = item_name.as_ref().map(|(item_name, slash)| {
 										assert!(repeat_mode != RepeatMode::Single);
 										quote_spanned!(slash.span=> item_name = #item_name,)
