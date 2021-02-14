@@ -1,5 +1,5 @@
 asteracea::component! {
-	Simple()()
+	pub Simple()()
 
 	<button
 		+"click" {}

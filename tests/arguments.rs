@@ -1,7 +1,9 @@
 use asteracea::component;
+use lignin::bumpalo::Bump;
+use rhizome::Node;
 
 component! {
-	Greeting()(
+	pub Greeting()(
 		greeting: &str = "Hello!",
 	)
 
@@ -12,7 +14,7 @@ component! {
 }
 
 asteracea::component! {
-	Classic()(
+	pub Classic()(
 		class?: &'bump str,
 	)
 
@@ -46,4 +48,19 @@ asteracea::component! {
   ]
 }
 
-// TODO: Test output.
+#[test]
+fn test() {
+	let outer = Box::pin(
+		Outer::new(
+			&Node::new_for::<()>().into_arc(),
+			Outer::new_args_builder().build(),
+		)
+		.unwrap(),
+	);
+	outer
+		.as_ref()
+		.render(&Bump::new(), Outer::render_args_builder().build())
+		.unwrap();
+
+	// TODO: Test output.
+}

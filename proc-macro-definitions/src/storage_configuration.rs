@@ -373,6 +373,7 @@ impl StorageTypeConfiguration {
 				let fn_name = Ident::new(&format!("{}_pinned", &f_name), span);
 				parse2::<ImplItemMethod>(quote_spanned! {span=>
 					#[allow(non_snake_case)] // It's fine to allow this generally, since custom names will still generate a warning elsewhere.
+					#[allow(dead_code)] // This is largely an implementation detail. FIXME: It found be much better to get this warning on `.render(…)`.
 					#f_visibility fn #fn_name(self: ::std::pin::Pin<&Self>) -> ::std::pin::Pin<&#f_type> {
 						unsafe { self.map_unchecked(|this| &this.#f_name) }
 					}
@@ -395,6 +396,10 @@ impl StorageTypeConfiguration {
 				.map(|f| Pair::Punctuated(f, Token![,](span)))
 				.collect(),
 		});
+
+		if ident.to_string().contains("__Asteracea__") {
+			attributes.push(allow_non_camel_case_types());
+		}
 
 		#[allow(clippy::blocks_in_if_conditions)]
 		if fields.iter().any(|f| {
@@ -472,6 +477,17 @@ impl StorageTypeConfiguration {
 		}
 
 		Ok(items)
+	}
+}
+
+fn allow_non_camel_case_types() -> Attribute {
+	let span = Span::mixed_site();
+	Attribute {
+		pound_token: Token![#](span),
+		style: AttrStyle::Outer,
+		bracket_token: Bracket(span),
+		path: Ident::new("allow", span).into(),
+		tokens: quote_spanned! (span=> (non_camel_case_types)),
 	}
 }
 

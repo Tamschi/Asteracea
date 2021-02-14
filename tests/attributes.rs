@@ -1,3 +1,5 @@
+#![allow(dead_code)] //TODO: Test output.
+
 use asteracea::component;
 
 component! {
@@ -42,5 +44,3 @@ asteracea::component! {
 	"#"
   >
 }
-
-//TODO: Test output.

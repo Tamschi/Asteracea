@@ -1,8 +1,5 @@
-use asteracea::{bump_format, component, fragment};
-use lignin::{Attribute, Node};
-use std::fmt::Display;
-
 // Just for illustration purposes:
+#[allow(dead_code)]
 fn do_anything_here() {}
 trait Select: Sized {
 	fn select<R, S: FnOnce(Self) -> R>(self, selector: S) -> R;

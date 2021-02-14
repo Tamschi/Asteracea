@@ -71,7 +71,7 @@ impl EventBindingDefinition {
 			.expect("Component name not set in ParseContext");
 		let handler = quote_spanned! {brace.span =>
 			#move_token |#[allow(non_snake_case)] asteracea__self| {
-				#[allow(non_snake_case)]
+				#[allow(non_snake_case, unused_variables)]
 				let asteracea__self = asteracea__self
 					.downcast_ref::<#component_name>()
 					.expect(
