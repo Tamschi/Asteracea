@@ -381,7 +381,6 @@ impl ComponentDeclaration {
 			for_function_args: new_args_generic_args,
 			on_builder_function: new_args_builder_generics,
 			for_builder_function_return: new_args_builder_generic_args,
-			has_impl_generics: _new_has_impl_generics,
 		} = ParameterHelperDefintions::new(
 			&component_generics,
 			&parse2(quote_spanned!(constructor_paren.span=> <'a: '_>)).unwrap(),
@@ -397,7 +396,6 @@ impl ComponentDeclaration {
 			for_function_args: render_args_generic_args,
 			on_builder_function: render_args_builder_generics,
 			for_builder_function_return: render_args_builder_generic_args,
-			has_impl_generics: _render_has_impl_generics,
 		} = ParameterHelperDefintions::new(
 			&component_generics,
 			&parse2(quote_spanned!(render_paren.span=> <'a, 'bump: '_>)).unwrap(),
@@ -405,15 +403,6 @@ impl ComponentDeclaration {
 			custom_render_args.as_slice(),
 			&render_lifetime,
 		);
-
-		// FIXME:
-		// let constructor_allow_non_camel_case_types = new_has_impl_generics.then(|| {
-		// 	quote!(#[allow(non_camel_case_types)])
-		// });
-
-		// let render_allow_non_camel_case_types = render_has_impl_generics.then(|| {
-		// 	quote!(#[allow(non_camel_case_types)])
-		// });
 
 		let constructor_args_field_patterns = constructor_args
 			.into_iter()
@@ -485,13 +474,11 @@ impl ComponentDeclaration {
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__Asteracea__implementation_details::typed_builder::TypedBuilder)]
 			#[builder(doc)]
-			// FIXME: #constructor_allow_non_camel_case_types
 			#visibility struct #new_args_name#new_args_generics #new_args_body
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__Asteracea__implementation_details::typed_builder::TypedBuilder)]
 			#[builder(doc)]
-			// FIXME: #render_allow_non_camel_case_types
 			#visibility struct #render_args_name#render_args_generics #render_args_body
 
 			#(#struct_definition)*
@@ -499,7 +486,6 @@ impl ComponentDeclaration {
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
 				#[::#asteracea::trace_escalations(#component_name)]
 				#(#constructor_attributes)*
-				// FIXME: #constructor_allow_non_camel_case_types
 				pub fn #new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
 					#new_args_name {
@@ -534,7 +520,6 @@ impl ComponentDeclaration {
 
 				#[::#asteracea::trace_escalations(#component_name)]
 				#(#render_attributes)*
-				// FIXME: #render_allow_non_camel_case_types
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
 					#bump: &'bump #asteracea::lignin::bumpalo::Bump,
