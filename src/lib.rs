@@ -26,6 +26,7 @@
 pub use asteracea_proc_macro_definitions::{bump_format, component, fragment, trace_escalations};
 pub use lignin;
 pub use rhizome;
+pub use vec1;
 
 #[cfg(doctest)]
 pub mod readme {

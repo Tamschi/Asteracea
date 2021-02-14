@@ -21,8 +21,8 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, Generics, Ident, Item, Lifetime, Pat, PatIdent, PatType, ReturnType, Token,
-	Type, Visibility, WhereClause, WherePredicate,
+	Attribute, Error, Generics, Ident, Item, Lifetime, Pat, PatIdent, ReturnType, Token, Type,
+	Visibility, WhereClause, WherePredicate,
 };
 use syn_mid::Block;
 use unquote::unquote;
@@ -236,9 +236,10 @@ impl Parse for ComponentDeclaration {
 		for constructor_argument in constructor_args.iter() {
 			if let ConstructorArgument {
 				capture: arguments::Capture::Yes(visibility),
-				argument: Argument { fn_arg, .. },
+				argument,
 			} = constructor_argument
 			{
+				let fn_arg = &argument.fn_arg;
 				let span = match visibility {
 					Visibility::Inherited => fn_arg.span(),
 					visibility => visibility.span(),
@@ -246,9 +247,8 @@ impl Parse for ComponentDeclaration {
 				let attrs = &fn_arg.attrs;
 				let pat = &fn_arg.pat;
 				let arg = {
-					let PatType {
-						colon_token, ty, ..
-					} = fn_arg;
+					let colon_token = fn_arg.colon_token;
+					let ty = argument.effective_type();
 					quote!(#pat#colon_token #ty)
 				};
 				call2_strict(
@@ -350,10 +350,12 @@ impl ComponentDeclaration {
 			.iter()
 			.map(|arg| Ok(CustomArgument {
 				attrs: arg.argument.fn_arg.attrs.as_slice(),
+				item_name: &arg.argument.item_name,
 				ident: match &*arg.argument.fn_arg.pat {
 				    Pat::Ident(PatIdent{ ident, .. }) => ident,
 				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
+				repeat_mode: arg.argument.repeat_mode,
 				optional: arg.argument.optional,
 				ty: &*arg.argument.fn_arg.ty,
 				default: &arg.argument.default,
@@ -364,10 +366,12 @@ impl ComponentDeclaration {
 			.iter()
 			.map(|arg| Ok(CustomArgument {
 				attrs: arg.fn_arg.attrs.as_slice(),
+				item_name: &arg.item_name,
 				ident: match &*arg.fn_arg.pat {
 				    Pat::Ident(PatIdent{ ident, .. }) => ident,
 				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
+				repeat_mode: arg.repeat_mode,
 				optional: arg.optional,
 				ty: &*arg.fn_arg.ty,
 				default: &arg.default,

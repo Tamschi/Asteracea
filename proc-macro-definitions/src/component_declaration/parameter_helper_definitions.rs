@@ -1,10 +1,10 @@
-use crate::syn_ext::*;
+use crate::{asteracea_ident, syn_ext::*};
 use call2_for_syn::call2_strict;
 use proc_macro2::Span;
 use quote::quote_spanned;
 use std::{iter, mem};
 use syn::{
-	parse2, parse_quote,
+	parse_quote,
 	punctuated::Punctuated,
 	spanned::Spanned as _,
 	token::{Brace, Paren},
@@ -15,6 +15,8 @@ use syn::{
 	TypeSlice, TypeTraitObject, TypeTuple, Visibility,
 };
 use wyz::Tap as _;
+
+use super::arguments::{self, RepeatMode};
 
 fn transform_lifetime(
 	existing_lifetime: &mut Lifetime,
@@ -244,13 +246,20 @@ pub struct ParameterHelperDefintions {
 	pub for_builder_function_return: AngleBracketedGenericArguments,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct CustomArgument<'a> {
 	pub attrs: &'a [Attribute],
+	pub item_name: &'a Option<(Ident, Token![/])>,
 	pub ident: &'a Ident,
+	pub repeat_mode: RepeatMode,
 	pub optional: Option<Token![?]>,
 	pub ty: &'a Type,
 	pub default: &'a Option<(Token![=], Expr)>,
+}
+impl<'a> CustomArgument<'a> {
+	fn effective_type(&self) -> Type {
+		arguments::effective_type(self.ty.clone(), self.repeat_mode, self.optional)
+	}
 }
 
 #[allow(clippy::needless_collect)] // Inaccurate lint, apparently.
@@ -266,15 +275,8 @@ impl ParameterHelperDefintions {
 		let argument_types = custom_arguments
 			.iter()
 			.map(|arg| {
-				let ty = arg
-					.ty
-					.clone()
-					.tap_mut(|ty| transform_type(ty, transient_lifetime, &mut impl_generics, true));
-				if let Some(question) = arg.optional {
-					parse2(quote_spanned!(question.span()=> Option<#ty>)).unwrap()
-				} else {
-					ty
-				}
+				arg.effective_type()
+					.tap_mut(|ty| transform_type(ty, transient_lifetime, &mut impl_generics, true))
 			})
 			.collect::<Vec<_>>();
 
@@ -369,7 +371,9 @@ impl ParameterHelperDefintions {
 						|(
 							&CustomArgument {
 								attrs,
+								item_name,
 								ident,
+								repeat_mode,
 								optional,
 								ty: _,
 								default,
@@ -381,29 +385,46 @@ impl ParameterHelperDefintions {
 								//TODO?: Better optionals. Something like `ident?: Type` to express `ident: Option<Type> = None` but with the Option stripped for the setter?
 								//   Of course the counter-argument here is that I'd like to transition to native Rust named and default parameters eventually,
 								//   and it's unlikely that the language will get an option-stripping workaround that doesn't interfere with generic type inference.
-								attrs: iter::once(
+								attrs: iter::once({
+									let default = match (optional, default) {
+										(None, None) => {
+											quote_spanned!(ident.span()=>)
+										}
+										(None, Some((eq, default))) => {
+											quote_spanned!(eq.span=> default = #default,)
+										}
+										(Some(optional), None) => {
+											quote_spanned!(optional.span=> default,)
+										}
+										(Some(optional), Some((eq, default))) => {
+											let some = quote_spanned!(optional.span=> ::core::option::Option::Some(#default));
+											quote_spanned!(eq.span=> default = #some,)
+										}
+									};
+									let strip_option = optional.map(
+										|optional| quote_spanned!(optional.span=> strip_option,),
+									);
+									let item_name = item_name.as_ref().map(|(item_name, slash)| {
+										assert!(repeat_mode != RepeatMode::Single);
+										quote_spanned!(slash.span=> item_name = #item_name,)
+									});
+									let extend = match repeat_mode {
+									    RepeatMode::Single => {None}
+									    RepeatMode::AtLeastOne(token) => {
+											let asteracea = asteracea_ident(token.span);
+											Some(quote_spanned!(token.span=> extend(from_first = |first| ::#asteracea::vec1::vec1![first], #item_name),))
+										}
+									    RepeatMode::AnyNumber(token) => {
+											Some(quote_spanned!(token.span=> extend(from_first, from_iter, #item_name),))
+										}
+									};
 									call2_strict(
-										match (optional, default) {
-											(None, None) => {
-												quote_spanned!(ident.span()=> #[builder()])
-											}
-											(None, Some((eq, default))) => {
-												quote_spanned!(eq.span=> #[builder(default = #default)])
-											}
-											(Some(optional), None) => {
-												quote_spanned!(optional.span()=> #[builder(setter(strip_option), default)])
-											}
-											(Some(optional), Some((eq, default))) => {
-												quote_spanned! {optional.span.join(eq.span).unwrap_or(optional.span)=>
-													#[builder(setter(strip_option), default = Some(#default))]
-												}
-											}
-										},
+										quote_spanned!(ident.span()=> #[builder(#default setter(#strip_option #extend))]),
 										Attribute::parse_outer,
 									)
 									.unwrap()
-									.unwrap(),
-								)
+									.unwrap()
+								})
 								.flatten()
 								.chain(attrs.iter().cloned())
 								.collect(),

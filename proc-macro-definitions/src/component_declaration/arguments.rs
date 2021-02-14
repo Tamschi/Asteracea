@@ -1,10 +1,12 @@
-use quote::ToTokens;
+use quote::{quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
-	Attribute, Expr, Ident, PatType, Result, Token, Visibility,
+	parse2, Attribute, Expr, Ident, PatType, Result, Token, Type, Visibility,
 };
 use unquote::unquote;
 use wyz::Pipe;
+
+use crate::asteracea_ident;
 
 pub struct ConstructorArgument {
 	pub capture: Capture,
@@ -47,6 +49,36 @@ pub struct Argument {
 	pub repeat_mode: RepeatMode,
 	pub optional: Option<Token![?]>,
 	pub default: Option<(Token![=], Expr)>,
+}
+impl Argument {
+	pub fn effective_type(&self) -> Type {
+		effective_type(
+			self.fn_arg.ty.as_ref().clone(),
+			self.repeat_mode,
+			self.optional,
+		)
+	}
+}
+
+pub fn effective_type(ty: Type, repeat_mode: RepeatMode, optional: Option<Token![?]>) -> Type {
+	match repeat_mode {
+		RepeatMode::Single => ty,
+		RepeatMode::AtLeastOne(token) => {
+			let asteracea = asteracea_ident(token.span);
+			parse2(quote_spanned!(token.span=> ::#asteracea::vec1::Vec1<#ty>))
+				.expect("parameter helper definitions at-least-one type")
+		}
+		RepeatMode::AnyNumber(token) => parse2(quote_spanned!(token.span=> ::std::vec::Vec<#ty>))
+			.expect("parameter helper definitions any-number type"),
+	}
+	.pipe(|ty| {
+		if let Some(question) = optional {
+			parse2(quote_spanned!(question.span=> ::core::option::Option<#ty>))
+				.expect("parameter helper definitions optional type")
+		} else {
+			ty
+		}
+	})
 }
 
 impl Parse for ConstructorArgument {
@@ -149,6 +181,7 @@ impl ToTokens for ItemName {
 	}
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RepeatMode {
 	Single,
 	AtLeastOne(Token![+]),
