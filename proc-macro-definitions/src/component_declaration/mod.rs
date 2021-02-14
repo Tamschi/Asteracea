@@ -1,5 +1,5 @@
 use self::{
-	arguments::{ValidatedArgument, ConstructorArgument},
+	arguments::{ConstructorArgument, ValidatedArgument},
 	parameter_helper_definitions::{CustomArgument, ParameterHelperDefintions},
 };
 use crate::{
