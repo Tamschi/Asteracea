@@ -56,7 +56,7 @@ impl<C: Configuration> Part<C> {
 			| PartBody::Capture(_)
 			| PartBody::Comment(_)
 			| PartBody::Component(_)
-			| PartBody::Expression(_, _)
+			| PartBody::RustBlock(_, _)
 			| PartBody::Html(_)
 			| PartBody::If(_, _, _, _, _, _)
 			| PartBody::Match(_, _, _, _, _)
@@ -123,7 +123,7 @@ pub enum PartBody<C: Configuration> {
 	Comment(HtmlComment),
 	Component(Component<C>),
 	EventBinding(EventBindingDefinition),
-	Expression(Brace, TokenStream),
+	RustBlock(Brace, TokenStream),
 	Html(HtmlDefinition<C>),
 	If(
 		InitMode,
@@ -318,7 +318,7 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 		} else if lookahead.peek(Brace) {
 			let expression;
 			#[allow(clippy::eval_order_dependence)]
-			Some(PartBody::Expression(
+			Some(PartBody::RustBlock(
 				braced!(expression in input),
 				expression.parse()?,
 			))
@@ -410,7 +410,7 @@ impl<C: Configuration> PartBody<C> {
 				let then_tokens = then_part.part_tokens(cx)?;
 				let else_tokens = {
 					let else_part = else_part.part_tokens(cx)?;
-					quote_spanned!(else_.span()=> { #else_part })
+					quote_spanned!(else_.span().resolved_at(Span::mixed_site())=> ::core::convert::identity( #else_part ))
 				};
 				quote_spanned! {if_.span.resolved_at(Span::mixed_site())=> if #condition {
 					#then_tokens
@@ -443,7 +443,11 @@ impl<C: Configuration> PartBody<C> {
 				let body = quote_spanned!(bracket.span => { #(#arms)* });
 				quote_spanned!(match_.span=> #match_ #on_tokens #body)
 			}
-			PartBody::Expression(brace, expression) => quote_spanned!(brace.span=> {#expression}),
+			PartBody::RustBlock(brace, statements) => {
+				// Why not just parentheses? Because those could be turned into a tuple.
+				// Making each of these a full Rust block is a bit strange too, but likely the lesser issue.
+				quote_spanned!(brace.span.resolved_at(Span::mixed_site())=> { #statements })
+			}
 			PartBody::Capture(capture) => quote!(#capture),
 			PartBody::Multi(bracket, m) => {
 				let asteracea = asteracea_ident(bracket.span);

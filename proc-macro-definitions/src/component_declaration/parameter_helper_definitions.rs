@@ -242,6 +242,7 @@ pub struct ParameterHelperDefintions {
 	pub for_function_args: AngleBracketedGenericArguments,
 	pub on_builder_function: Generics,
 	pub for_builder_function_return: AngleBracketedGenericArguments,
+	pub has_impl_generics: bool,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -496,6 +497,7 @@ impl ParameterHelperDefintions {
 				},
 				gt_token: <Token![>]>::default(),
 			},
+			has_impl_generics: !impl_generics.is_empty(),
 		}
 	}
 }

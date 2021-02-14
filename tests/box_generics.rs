@@ -1,13 +1,13 @@
 use std::{fmt::Debug, pin::Pin};
 
 asteracea::component! {
-	Boxed<T>()()
+	pub Boxed<T>()()
 
 	box <*Boxed::<T>>
 }
 
 asteracea::component! {
-	Boxedd<S, T>()()
+	pub Boxedd<S, T>()()
 
 	[
 		box <*Boxed::<S>>
@@ -26,7 +26,7 @@ impl<T> Predefined<T> {
 }
 
 asteracea::component! {
-	Predefinedd<S, T>()()
+	pub Predefinedd<S, T>()()
 
 	[
 		box priv a: Predefined::<S> <*Boxed::<S> priv boxed>
@@ -35,18 +35,19 @@ asteracea::component! {
 }
 
 asteracea::component! {
-	Claused<T: Debug>()()
+	pub Claused<T: Debug>()()
 
 	box <*Claused::<T>>
 }
 
 asteracea::component! {
-	Whered<T> where T: Debug, ()()
+	pub Whered<T> where T: Debug, ()()
 
 	box <*Whered::<T>>
 }
 
 asteracea::component! {
+	#[allow(dead_code)] // Used below; Waiting on min_specialization.
 	Picky<T: Debug>()()
 
 	box []

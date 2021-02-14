@@ -151,7 +151,7 @@ fn reused() {
 }
 
 asteracea::component! {
-	VisIgnored()()
+	pub VisIgnored()()
 
 	box priv b: BoxContainer
 		// There's no good way to check the visibility here (since the declaration isn't emitted),
@@ -180,7 +180,7 @@ fn multi() {
 }
 
 asteracea::component! {
-	Nested()()
+	pub Nested()()
 
 	[
 		box [
