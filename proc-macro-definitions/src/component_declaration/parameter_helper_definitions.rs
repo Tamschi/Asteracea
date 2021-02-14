@@ -132,7 +132,10 @@ fn transform_type(
 				_ => unreachable!(),
 			};
 
-			let impl_ident = Ident::new(&format!("IMPL_{}", impl_generics.len()), impl_span);
+			let impl_ident = Ident::new(
+				&format!("IMPL_{}", impl_generics.len()),
+				impl_span.resolved_at(Span::mixed_site()),
+			);
 
 			let impl_trait = match mem::replace(
 				ty,

@@ -505,7 +505,6 @@ impl ComponentDeclaration {
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
 				#[::#asteracea::trace_escalations(#component_name)]
 				#(#constructor_attributes)*
-				// FIXME: #constructor_allow_non_camel_case_types
 				pub fn #new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
 					#new_args_name {
@@ -540,7 +539,6 @@ impl ComponentDeclaration {
 
 				#[::#asteracea::trace_escalations(#component_name)]
 				#(#render_attributes)*
-				// FIXME: #render_allow_non_camel_case_types
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
 					#bump: &'bump #asteracea::lignin::bumpalo::Bump,
