@@ -1,6 +1,6 @@
 use rhizome::Node;
-use std::{iter, sync::Arc};
-use vec1::vec1;
+use std::iter;
+use vec1::{vec1, Vec1};
 
 asteracea::component! {
 	Any(
@@ -10,7 +10,12 @@ asteracea::component! {
 		pub always+: usize,
 	)()
 
-	new with {}
+	new with {
+		let _: &Option<Vec<usize>> = &sometimes;
+		let _: &Option<Vec1<usize>> = &many;
+		let _: &Vec<usize> = &any;
+		let _: &Vec1<usize> = &always;
+	}
 
 	[]
 }
