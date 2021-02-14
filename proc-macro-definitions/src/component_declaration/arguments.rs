@@ -1,7 +1,7 @@
 use quote::{quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
-	parse2, Attribute, Expr, Ident, PatType, Result, Token, Type, Visibility,
+	parse2, Attribute, Error, Expr, Ident, PatType, Result, Token, Type, Visibility,
 };
 use unquote::unquote;
 use wyz::Pipe;
@@ -10,7 +10,7 @@ use crate::asteracea_ident;
 
 pub struct ConstructorArgument {
 	pub capture: Capture,
-	pub argument: Argument,
+	pub argument: ValidatedArgument,
 }
 
 pub enum Capture {
@@ -43,7 +43,7 @@ impl ToTokens for Capture {
 	}
 }
 
-pub struct Argument {
+struct Argument {
 	pub item_name: Option<(Ident, Token![/])>,
 	pub fn_arg: PatType,
 	pub repeat_mode: RepeatMode,
@@ -51,6 +51,40 @@ pub struct Argument {
 	pub default: Option<(Token![=], Expr)>,
 }
 impl Argument {
+	pub fn validate(self) -> Result<ValidatedArgument> {
+		if self.item_name.is_some() && self.repeat_mode == RepeatMode::Single {
+			Err(Error::new(
+				self.optional
+					.map(|o| o.span)
+					.unwrap_or_else(|| self.fn_arg.colon_token.span),
+				"Expected repeat mode `*` or `+`, since an item name was specified",
+			))
+		} else {
+			let Argument {
+				item_name,
+				fn_arg,
+				repeat_mode,
+				optional,
+				default,
+			} = self;
+			Ok(ValidatedArgument {
+				item_name,
+				fn_arg,
+				repeat_mode,
+				optional,
+				default,
+			})
+		}
+	}
+}
+pub struct ValidatedArgument {
+	pub item_name: Option<(Ident, Token![/])>,
+	pub fn_arg: PatType,
+	pub repeat_mode: RepeatMode,
+	pub optional: Option<Token![?]>,
+	pub default: Option<(Token![=], Expr)>,
+}
+impl ValidatedArgument {
 	pub fn effective_type(&self) -> Type {
 		effective_type(
 			self.fn_arg.ty.as_ref().clone(),
@@ -106,13 +140,14 @@ impl Parse for ConstructorArgument {
 				repeat_mode,
 				optional,
 				default: default.into_inner(),
-			},
+			}
+			.validate()?,
 			capture,
 		})
 	}
 }
 
-impl Parse for Argument {
+impl Parse for ValidatedArgument {
 	fn parse(input: ParseStream) -> Result<Self> {
 		unquote!(input,
 			#do let Attributes::parse_outer => attrs
@@ -124,7 +159,7 @@ impl Parse for Argument {
 			#let ty
 			#do let DefaultParameter::parse => default
 		);
-		Ok(Self {
+		Ok(Argument {
 			item_name: item_name.into_inner(),
 			fn_arg: PatType {
 				attrs: attrs.into_inner(),
@@ -135,7 +170,8 @@ impl Parse for Argument {
 			repeat_mode,
 			optional,
 			default: default.into_inner(),
-		})
+		}
+		.validate()?)
 	}
 }
 

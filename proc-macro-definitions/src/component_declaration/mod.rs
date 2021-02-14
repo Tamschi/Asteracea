@@ -1,5 +1,5 @@
 use self::{
-	arguments::{Argument, ConstructorArgument},
+	arguments::{ValidatedArgument, ConstructorArgument},
 	parameter_helper_definitions::{CustomArgument, ParameterHelperDefintions},
 };
 use crate::{
@@ -47,7 +47,7 @@ pub struct ComponentDeclaration {
 	render_attributes: Vec<Attribute>,
 	render_generics: Generics,
 	render_paren: Paren,
-	render_args: Punctuated<Argument, Token![,]>,
+	render_args: Punctuated<ValidatedArgument, Token![,]>,
 	render_type: ReturnType,
 	constructor_block: Option<(kw::new, kw::with, Block)>,
 	body: Part<ComponentRenderConfiguration>,

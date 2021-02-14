@@ -25,18 +25,16 @@ fn check_values() {
 	asteracea::component! {
 		Outer()()
 
-		[
-			<*Any pub any
-				*sometimes = {iter::once(1)}
-				*sometimes_item = {2}
-				*some = {3}
-				*many = {iter::once(4)}
-				*any = {iter::once(5)}
-				*one = {6}
-				*always_item = {7}
-				*always = {iter::once(8)}
-			>
-		]
+		<*Any pub any
+			*sometimes = {iter::once(1)}
+			*sometimes_item = {2}
+			*some = {3}
+			*many = {iter::once(4)}
+			*any = {iter::once(5)}
+			*one = {6}
+			*always_item = {7}
+			*always = {iter::once(8)}
+		>
 	}
 
 	let any = Outer::new(
@@ -58,11 +56,9 @@ fn can_omit_optional() {
 		#[allow(dead_code)]
 		Outer()()
 
-		[
-			<*Any
-				*one = {6}
-				*always_item = {7}
-			>
-		]
+		<*Any
+			*one = {6}
+			*always_item = {7}
+		>
 	};
 }
