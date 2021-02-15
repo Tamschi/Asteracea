@@ -310,18 +310,16 @@ impl Escalation {
 			},
 		};
 		let uncaught = match Box::<dyn Send + Any>::downcast::<ErrorWrapper>(thrown.source) {
-			Ok(wrapper) => {
-				let can_catch = wrapper.0.as_any().downcast_ref::<E>().is_some();
-				if can_catch {
+			Ok(wrapper) => match Box::<dyn Send + Any>::downcast::<E>(wrapper) {
+				Ok(caught) => {
 					return Err(Caught {
-						boxed: wrapper.0.into_any_box().downcast().unwrap(),
+						boxed: caught,
 						trace: Some(thrown.trace),
 						was_panic,
-					});
-				} else {
-					wrapper
+					})
 				}
-			}
+				Err(wrapper) => wrapper,
+			},
 			Err(other) => match Box::<dyn Send + Any>::downcast(other) {
 				Ok(e) => {
 					return Err(Caught {
@@ -346,7 +344,9 @@ impl Escalation {
 			}
 			{
 				#![allow(unreachable_code)]
-				unreachable!()
+				Err(()).expect(
+					"Workaround for clippy::missing_panic_docs. Only reachable if the \"force-unwind\" feature is both active and not active.",
+				)
 			}
 		}
 	}
