@@ -188,7 +188,7 @@ impl Parse for ValidatedArgument {
 			#let ty
 			#do let DefaultParameter::parse => default
 		);
-		Ok(Argument {
+		Argument {
 			item_name: item_name.into_inner(),
 			fn_arg: PatType {
 				attrs: attrs.into_inner(),
@@ -201,7 +201,7 @@ impl Parse for ValidatedArgument {
 			flatten: flatten.into_inner(),
 			default: default.into_inner(),
 		}
-		.validate()?)
+		.validate()
 	}
 }
 
