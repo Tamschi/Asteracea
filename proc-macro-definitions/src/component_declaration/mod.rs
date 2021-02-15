@@ -1,5 +1,5 @@
 use self::{
-	arguments::{Argument, ConstructorArgument},
+	arguments::{ConstructorArgument, ValidatedArgument},
 	parameter_helper_definitions::{CustomArgument, ParameterHelperDefintions},
 };
 use crate::{
@@ -21,8 +21,8 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, Generics, Ident, Item, Lifetime, Pat, PatIdent, PatType, ReturnType, Token,
-	Type, Visibility, WhereClause, WherePredicate,
+	Attribute, Error, Generics, Ident, Item, Lifetime, Pat, PatIdent, ReturnType, Token, Type,
+	Visibility, WhereClause, WherePredicate,
 };
 use syn_mid::Block;
 use unquote::unquote;
@@ -47,7 +47,7 @@ pub struct ComponentDeclaration {
 	render_attributes: Vec<Attribute>,
 	render_generics: Generics,
 	render_paren: Paren,
-	render_args: Punctuated<Argument, Token![,]>,
+	render_args: Punctuated<ValidatedArgument, Token![,]>,
 	render_type: ReturnType,
 	constructor_block: Option<(kw::new, kw::with, Block)>,
 	body: Part<ComponentRenderConfiguration>,
@@ -236,9 +236,10 @@ impl Parse for ComponentDeclaration {
 		for constructor_argument in constructor_args.iter() {
 			if let ConstructorArgument {
 				capture: arguments::Capture::Yes(visibility),
-				argument: Argument { fn_arg, .. },
+				argument,
 			} = constructor_argument
 			{
+				let fn_arg = &argument.fn_arg;
 				let span = match visibility {
 					Visibility::Inherited => fn_arg.span(),
 					visibility => visibility.span(),
@@ -246,9 +247,8 @@ impl Parse for ComponentDeclaration {
 				let attrs = &fn_arg.attrs;
 				let pat = &fn_arg.pat;
 				let arg = {
-					let PatType {
-						colon_token, ty, ..
-					} = fn_arg;
+					let colon_token = fn_arg.colon_token;
+					let ty = argument.effective_type();
 					quote!(#pat#colon_token #ty)
 				};
 				call2_strict(
@@ -350,11 +350,14 @@ impl ComponentDeclaration {
 			.iter()
 			.map(|arg| Ok(CustomArgument {
 				attrs: arg.argument.fn_arg.attrs.as_slice(),
+				item_name: &arg.argument.item_name,
 				ident: match &*arg.argument.fn_arg.pat {
 				    Pat::Ident(PatIdent{ ident, .. }) => ident,
 				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
-				optional: arg.argument.question,
+				repeat_mode: arg.argument.repeat_mode,
+				optional: arg.argument.optional,
+				flatten: &arg.argument.flatten,
 				ty: &*arg.argument.fn_arg.ty,
 				default: &arg.argument.default,
 			}))
@@ -364,11 +367,14 @@ impl ComponentDeclaration {
 			.iter()
 			.map(|arg| Ok(CustomArgument {
 				attrs: arg.fn_arg.attrs.as_slice(),
+				item_name: &arg.item_name,
 				ident: match &*arg.fn_arg.pat {
 				    Pat::Ident(PatIdent{ ident, .. }) => ident,
 				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
-				optional: arg.question,
+				repeat_mode: arg.repeat_mode,
+				optional: arg.optional,
+				flatten: &arg.flatten,
 				ty: &*arg.fn_arg.ty,
 				default: &arg.default,
 			}))
@@ -381,6 +387,7 @@ impl ComponentDeclaration {
 			for_function_args: new_args_generic_args,
 			on_builder_function: new_args_builder_generics,
 			for_builder_function_return: new_args_builder_generic_args,
+			has_impl_generics: _new_has_impl_generics,
 		} = ParameterHelperDefintions::new(
 			&component_generics,
 			&parse2(quote_spanned!(constructor_paren.span=> <'a: '_>)).unwrap(),
@@ -396,6 +403,7 @@ impl ComponentDeclaration {
 			for_function_args: render_args_generic_args,
 			on_builder_function: render_args_builder_generics,
 			for_builder_function_return: render_args_builder_generic_args,
+			has_impl_generics: _render_has_impl_generics,
 		} = ParameterHelperDefintions::new(
 			&component_generics,
 			&parse2(quote_spanned!(render_paren.span=> <'a, 'bump: '_>)).unwrap(),
@@ -403,6 +411,15 @@ impl ComponentDeclaration {
 			custom_render_args.as_slice(),
 			&render_lifetime,
 		);
+
+		// FIXME:
+		// let constructor_allow_non_camel_case_types = new_has_impl_generics.then(|| {
+		// 	quote!(#[allow(non_camel_case_types)])
+		// });
+
+		// let render_allow_non_camel_case_types = render_has_impl_generics.then(|| {
+		// 	quote!(#[allow(non_camel_case_types)])
+		// });
 
 		let constructor_args_field_patterns = constructor_args
 			.into_iter()
@@ -474,11 +491,13 @@ impl ComponentDeclaration {
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__Asteracea__implementation_details::typed_builder::TypedBuilder)]
 			#[builder(doc)]
+			// FIXME: #constructor_allow_non_camel_case_types
 			#visibility struct #new_args_name#new_args_generics #new_args_body
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__Asteracea__implementation_details::typed_builder::TypedBuilder)]
 			#[builder(doc)]
+			// FIXME: #render_allow_non_camel_case_types
 			#visibility struct #render_args_name#render_args_generics #render_args_body
 
 			#(#struct_definition)*

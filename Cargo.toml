@@ -39,7 +39,8 @@ lignin = "0.0.5" #public
 lignin-schema = { version = "0.0.4", features = ["bumpalo-collections"] }
 rhizome = { version = "0.0.1", features = ["macros"] } # public
 static_assertions = "1.1.0"
-typed-builder = "0.9.0" # semi-public
+typed-builder = { git = "https://github.com/Tamschi/rust-typed-builder.git", branch = "patched/for-Asteracea/repeat-arguments" } # semi-public
+vec1 = "1.6.0" #public
 
 [dev-dependencies]
 cargo-husky = "1.5.0"
