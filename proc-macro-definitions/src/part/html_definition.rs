@@ -281,24 +281,28 @@ impl<C: Configuration> HtmlDefinition<C> {
 			quote_spanned!(lt.span=> &*#bump.alloc_with(|| [#(#attributes),*]))
 		};
 
-		let has_content = !parts.is_empty();
-
 		let (children, parts): (Vec<_>, Vec<_>) = parts
 			.iter()
 			.partition(|part| (*part).kind() == PartKind::Child);
-		let mut child_stream = TokenStream::new();
-		for child in children.into_iter() {
-			let child = child.part_tokens(&cx)?;
-			child_stream.extend(quote_spanned! {child.span()=>
-				#child,
-			});
-		}
-		let children = quote_spanned! {child_stream.span()=>
-			&*#bump.alloc_try_with(
-				|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
-					::std::result::Result::Ok([#child_stream])
-				}
-			)?
+
+		let has_content = !children.is_empty();
+		let children = if children.len() == 1 {
+			children[0].part_tokens(&cx)?
+		} else {
+			let mut child_stream = TokenStream::new();
+			for child in children.into_iter() {
+				let child = child.part_tokens(&cx)?;
+				child_stream.extend(quote_spanned! {child.span()=>
+					#child,
+				});
+			}
+			quote_spanned! {child_stream.span()=>
+				::#asteracea::lignin::Node::Multi(&*#bump.alloc_try_with(
+					|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+						::std::result::Result::Ok([#child_stream])
+					}
+				)?)
+			}
 		};
 
 		let (event_bindings, parts): (Vec<&Part<C>>, Vec<_>) = parts
@@ -343,7 +347,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> &#asteracea::__Asteracea__implementation_details::lignin_schema::NoContent)
 				};
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
-					let children = ::#asteracea::lignin::Node::Multi(#children);
+					let children = #children;
 					//TODO: Add MathML and SVG support.
 					::#asteracea::lignin::Node::HtmlElement {
 						element: #bump.alloc_with(||
