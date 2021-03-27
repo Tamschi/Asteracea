@@ -2,6 +2,6 @@ asteracea::component! {
 	pub Simple()()
 
 	<button
-		+"click" {}
+		//TODO +"click" {}
 	>
 }

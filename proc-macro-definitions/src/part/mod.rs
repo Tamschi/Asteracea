@@ -385,7 +385,10 @@ impl<C: Configuration> PartBody<C> {
 			PartBody::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span()=>
-					#asteracea::lignin::Node::Text(#lit_str)
+					#asteracea::lignin::Node::Text {
+						text: #lit_str,
+						dom_binding: None, //TODO: Add text dom binding support.
+					}
 				}
 			}
 			PartBody::Html(html_definition) => html_definition.part_tokens(cx)?,

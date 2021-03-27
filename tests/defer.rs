@@ -1,4 +1,4 @@
-// use lignin::bumpalo::Bump;
+// use bumpalo::Bump;
 // use rhizome::Node;
 
 // asteracea::component! {

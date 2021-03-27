@@ -24,6 +24,7 @@
 #![allow(clippy::redundant_else)]
 
 pub use asteracea_proc_macro_definitions::{bump_format, component, fragment, trace_escalations};
+pub use bumpalo;
 pub use lignin;
 pub use rhizome;
 

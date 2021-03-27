@@ -1,7 +1,7 @@
 use std::pin::Pin;
 
 use debugless_unwrap::DebuglessUnwrap;
-use lignin::bumpalo::Bump;
+use bumpalo::Bump;
 use rhizome::Node;
 
 asteracea::component! {

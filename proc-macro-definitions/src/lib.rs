@@ -74,10 +74,11 @@ impl ToTokens for BumpFormat {
 		} = self;
 		let bump = Ident::new("bump", bump_span.resolved_at(Span::call_site()));
 		output.extend(quote! {
-			#asteracea::lignin::Node::Text(
-				#asteracea::lignin::bumpalo::format!(in #bump, #input)
-					.into_bump_str()
-			)
+			#asteracea::lignin::Node::Text {
+				text: #asteracea::bumpalo::format!(in #bump, #input)
+					.into_bump_str(),
+				dom_binding: None, //TODO?: Add DOM binding support.
+			}
 		});
 	}
 }

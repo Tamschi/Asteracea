@@ -27,7 +27,7 @@ impl<T> Select for T {
 // 	<B> // #'bump is implicit if any HTML elements are present.
 // 	(
 // 		// &#self, is implicit.
-// 		// #bump: &#'bump #asteracea::lignin::bumpalo::Bump, is implicit if any HTML elements are present. Needed for any bump-allocated elements, i.e. HTML elements and formatted text.
+// 		// #bump: &#'bump #asteracea::bumpalo::Bump, is implicit if any HTML elements are present. Needed for any bump-allocated elements, i.e. HTML elements and formatted text.
 // 		_b: B,
 // 	) // Default: `-> #asteracea::lignin::Node<#'bump>`
 
@@ -152,7 +152,7 @@ impl<T> Select for T {
 
 // #[test]
 // fn test() {
-// 	use asteracea::lignin_schema::lignin::bumpalo::Bump;
+// 	use asteracea::lignin_schema::bumpalo::Bump;
 // 	use std::sync::Arc;
 
 // 	enum RootTag {}

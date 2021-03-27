@@ -447,9 +447,10 @@ impl ComponentDeclaration {
 
 		let render_type: ReturnType = match &render_type {
 			ReturnType::Default => parse2(quote_spanned! {render_type.span()=>
-				-> ::std::result::Result<::#asteracea::lignin::Node<'bump>, ::#asteracea::error::Escalation>
+				-> ::std::result::Result<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>, ::#asteracea::error::Escalation>
 			})
 			.unwrap(),
+			//TODO:Check for Send/!Send and use a matching Node type accordingly.
 			ReturnType::Type(arrow, type_) => ReturnType::Type(
 				*arrow,
 				Box::new(Type::Verbatim(
@@ -522,7 +523,7 @@ impl ComponentDeclaration {
 				#(#render_attributes)*
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
-					#bump: &'bump #asteracea::lignin::bumpalo::Bump,
+					#bump: &'bump #asteracea::bumpalo::Bump,
 					#render_args_name {
 						#(#render_args_field_patterns,)*
 						__Asteracea__phantom: _,

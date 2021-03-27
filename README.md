@@ -78,7 +78,7 @@ asteracea::component! {
 
 // Render into a bump allocator:
 // This is generally only this explicit at the application root.
-let mut bump = lignin::bumpalo::Bump::new();
+let mut bump = bumpalo::Bump::new();
 let root = {
   struct Root;
   asteracea::rhizome::Node::new_for::<Root>().into()
@@ -110,7 +110,7 @@ asteracea::component! {
 }
 
 // This is generally only this explicit at the application root.
-let mut bump = lignin::bumpalo::Bump::new();
+let mut bump = bumpalo::Bump::new();
 let root = {
   struct Root;
   asteracea::rhizome::Node::new_for::<Root>().into()
@@ -168,10 +168,11 @@ component! {
     <button
       ."disabled"? = {!self.enabled} // boolean attribute from `bool`
       "+" !{self.step} // shorthand `bump_format` call
-      +"click" { // event handler
-        self.value.set(self.value() + self.step);
-        schedule_render();
-      }
+      //TODO
+      // +"click" { // event handler
+      //   self.value.set(self.value() + self.step);
+      //   schedule_render();
+      // }
     >
   >
 }

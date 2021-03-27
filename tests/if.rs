@@ -1,4 +1,5 @@
-use lignin::{bumpalo::Bump, Node};
+use bumpalo::Bump;
+use lignin::{Node, ThreadBound};
 
 asteracea::component! {
 	pub Conditional1()(
@@ -25,7 +26,7 @@ asteracea::component! {
 
 asteracea::component! {
 	pub Conditional3()(
-		content?: impl for<'b> FnOnce(&'b Bump) -> Node<'b>,
+		content?: impl for<'b> FnOnce(&'b Bump) -> Node<'b, ThreadBound>,
 	)
 
 	[

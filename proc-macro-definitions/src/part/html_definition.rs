@@ -272,7 +272,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 			let capacity = attributes.len();
 			quote_spanned! {lt.span.resolved_at(Span::mixed_site())=>
 				{
-					let mut attrs = #asteracea::lignin::bumpalo::collections::Vec::with_capacity_in(#capacity, #bump);
+					let mut attrs = #asteracea::bumpalo::collections::Vec::with_capacity_in(#capacity, #bump);
 					#(#attributes)*
 					attrs.into_bump_slice()
 				}
@@ -280,6 +280,8 @@ impl<C: Configuration> HtmlDefinition<C> {
 		} else {
 			quote_spanned!(lt.span=> &*#bump.alloc_with(|| [#(#attributes),*]))
 		};
+
+		let has_content = !parts.is_empty();
 
 		let (children, parts): (Vec<_>, Vec<_>) = parts
 			.iter()
@@ -318,30 +320,49 @@ impl<C: Configuration> HtmlDefinition<C> {
 			ElementName::Custom(name) => {
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
 					let children = #children;
-					#asteracea::lignin::Node::Element(
-						#bump.alloc_with(||
-							#asteracea::lignin::Element {
-								name: #name,
-								attributes: #attributes,
-								content: children,
-								event_bindings: #event_bindings,
-							}
-						)
-					)
+					//TODO: Add MathML and SVG support.
+					::#asteracea::lignin::Node::HtmlElement {
+						element: #bump.alloc_with(||
+								#asteracea::lignin::Element {
+									name: #name,
+									creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
+									attributes: #attributes,
+									content: children,
+									event_bindings: #event_bindings,
+								}
+							),
+						//TODO: Add DOM binding support.
+						dom_binding: None,
+					}
 				}}
 			}
-			ElementName::Known(name) => quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
-				let children = #children;
-				#asteracea::lignin::Node::Element(
-					#bump.alloc_with(||
-						#asteracea::__Asteracea__implementation_details::lignin_schema::#name(
-							#attributes,
-							children,
-							#event_bindings,
-						)
-					)
-				)
-			}},
+			ElementName::Known(name) => {
+				let content_flag = if has_content {
+					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> &#asteracea::__Asteracea__implementation_details::lignin_schema::SomeContent)
+				} else {
+					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> &#asteracea::__Asteracea__implementation_details::lignin_schema::NoContent)
+				};
+				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
+					let children = ::#asteracea::lignin::Node::Multi(#children);
+					//TODO: Add MathML and SVG support.
+					::#asteracea::lignin::Node::HtmlElement {
+						element: #bump.alloc_with(||
+								::#asteracea::lignin::Element {
+									name: #asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name(
+											#content_flag,
+											&[], //TODO: Validate attributes and events.
+										),
+									creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
+									attributes: #attributes,
+									content: children,
+									event_bindings: #event_bindings,
+								}
+							),
+						//TODO: Add DOM binding support.
+						dom_binding: None,
+					}
+				}}
+			}
 		})
 	}
 }
