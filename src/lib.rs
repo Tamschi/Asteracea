@@ -62,16 +62,6 @@ impl<'a> ConditionalAttributeValue<'a> for Option<&'a str> {
 	}
 }
 
-//FIXME: This is a patchfix to make event bindings compile again... But it's obviously a bad idea to do it like this.
-pub fn unsound_extend_reference<T: ?Sized>(reference: &T) -> &'static T {
-	#[warn(unsafe_code)]
-	#[warn(warnings)]
-	unsafe {
-		// UNSOUND
-		::std::mem::transmute(reference)
-	}
-}
-
 #[doc(hidden)]
 #[allow(non_snake_case)]
 pub mod __Asteracea__implementation_details {
