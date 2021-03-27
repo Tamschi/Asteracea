@@ -27,7 +27,8 @@ asteracea::component! {
     <button
       ."disabled"? = {!self.enabled}
       "+" !{self.step}
-      +"click" {self.step()}
+      //TODO
+      // +"click" {self.step()}
     >
   >
 }

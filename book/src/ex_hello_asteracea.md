@@ -30,10 +30,11 @@ component! {
 
     <button
       "+" !{self.step} // shorthand bump_format call
-      +"click" {
-        self.value.set(self.value() + self.step);
-        schedule_render();
-      }
+      //TODO
+      // +"click" {
+      //   self.value.set(self.value() + self.step);
+      //   schedule_render();
+      // }
     >
   >
 }

@@ -36,9 +36,10 @@ impl HtmlComment {
 		let asteracea = asteracea_ident(open_span);
 
 		quote_spanned! {open_span=>
-			#asteracea::lignin::Node::Comment(
-				#text
-			)
+			#asteracea::lignin::Node::Comment {
+				comment: #text,
+				dom_binding: None, //TODO: Add DOM binding support.
+			}
 		}
 	}
 }

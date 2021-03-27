@@ -46,7 +46,8 @@ asteracea::component! {
 ```
 
 ```rust no_run noplayground
-use lignin::{bumpalo::Bump, Node};
+use asteracea::bumpalo::Bump;
+use lignin::{Node, ThreadBound};
 
 # pub struct TextMulti {}
 # impl TextMulti {
@@ -57,11 +58,11 @@ use lignin::{bumpalo::Bump, Node};
 pub fn render<'bump>(
     &self,
     bump: &'bump Bump,
-) -> Node<'bump> {
+) -> Node<'bump, ThreadBound> { //TODO: Adjust to correct threading model once implemented.
     (Node::Multi(&*bump.alloc_with(|| {
         [
-            Node::Text("This is text."),
-            Node::Text("This is also text."),
+            Node::Text { text: "This is text.", dom_binding: None },
+            Node::Text { text: "This is also text.", dom_binding: None },
         ]
     })))
 }
