@@ -354,7 +354,8 @@ impl<C: Configuration> HtmlDefinition<C> {
 								::#asteracea::lignin::Element {
 									name: #asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name(
 											#content_flag,
-											&[], //TODO: Validate attributes and events.
+											&[], //TODO: Validate attributes.
+											&[], //TODO: Validate events.
 										),
 									creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
 									attributes: #attributes,
