@@ -342,27 +342,27 @@ impl<C: Configuration> HtmlDefinition<C> {
 			}
 			ElementName::Known(name) => {
 				let content_flag = if has_content {
-					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> &#asteracea::__Asteracea__implementation_details::lignin_schema::SomeContent)
+					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #asteracea::__Asteracea__implementation_details::lignin_schema::HasContent)
 				} else {
-					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> &#asteracea::__Asteracea__implementation_details::lignin_schema::NoContent)
+					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #asteracea::__Asteracea__implementation_details::lignin_schema::Empty)
 				};
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
 					let children = #children;
 					//TODO: Add MathML and SVG support.
 					::#asteracea::lignin::Node::HtmlElement {
-						element: #bump.alloc_with(||
-								::#asteracea::lignin::Element {
-									name: #asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name(
-											#content_flag,
-											&[], //TODO: Validate attributes.
-											&[], //TODO: Validate events.
-										),
-									creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
-									attributes: #attributes,
-									content: children,
-									event_bindings: #event_bindings,
-								}
-							),
+						element: #bump.alloc_with(|| {
+							::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name::static_validate(#content_flag);
+							//TODO: Validate attributes.
+							//TODO: Validate events.
+
+							::#asteracea::lignin::Element {
+								name: <dyn #asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name<()>>::TAG_NAME,
+								creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
+								attributes: #attributes,
+								content: children,
+								event_bindings: #event_bindings,
+							}
+						}),
 						//TODO: Add DOM binding support.
 						dom_binding: None,
 					}
