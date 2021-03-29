@@ -344,7 +344,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 				let validate_has_content = if has_content {
 					Some(
 						quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
-							#asteracea::__Asteracea__implementation_details::lignin_schema::HasContent::static_validate_on(::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name);
+							::#asteracea::__Asteracea__implementation_details::lignin_schema::HasContent::static_validate_on(::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name);
 						},
 					)
 				} else {
@@ -360,7 +360,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 							//TODO: Validate events.
 
 							::#asteracea::lignin::Element {
-								name: #asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name::TAG_NAME,
+								name: ::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name::TAG_NAME,
 								creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
 								attributes: #attributes,
 								content: children,
