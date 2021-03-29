@@ -341,22 +341,26 @@ impl<C: Configuration> HtmlDefinition<C> {
 				}}
 			}
 			ElementName::Known(name) => {
-				let content_flag = if has_content {
-					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #asteracea::__Asteracea__implementation_details::lignin_schema::HasContent)
+				let validate_has_content = if has_content {
+					Some(
+						quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+							#asteracea::__Asteracea__implementation_details::lignin_schema::HasContent::static_validate_on(::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name);
+						},
+					)
 				} else {
-					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #asteracea::__Asteracea__implementation_details::lignin_schema::Empty)
+					None
 				};
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
 					let children = #children;
 					//TODO: Add MathML and SVG support.
 					::#asteracea::lignin::Node::HtmlElement {
 						element: #bump.alloc_with(|| {
-							::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name::static_validate(#content_flag);
+							#validate_has_content
 							//TODO: Validate attributes.
 							//TODO: Validate events.
 
 							::#asteracea::lignin::Element {
-								name: <dyn #asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name<()>>::TAG_NAME,
+								name: #asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name::TAG_NAME,
 								creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
 								attributes: #attributes,
 								content: children,
