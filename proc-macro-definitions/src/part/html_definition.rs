@@ -4,6 +4,7 @@ use crate::{
 	storage_context::{ParseContext, ParseWithContext},
 	Configuration,
 };
+use either::Either;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 use syn::{
@@ -92,7 +93,7 @@ impl Parse for AttributeValue {
 //TODO: Add a Dynamic(Block) variant.
 enum ElementName {
 	Custom(LitStr),
-	Known(Ident),
+	Known(Ident, Option<Ident>),
 }
 
 pub struct HtmlDefinition<C: Configuration> {
@@ -113,9 +114,9 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 					"Element names must not contain spaces",
 				));
 			}
-			ElementName::Custom(name)
+			Either::Left(name) // custom
 		} else if let Some(name) = input.parse().unwrap() {
-			ElementName::Known(name)
+			Either::Right(name) // known
 		} else {
 			return Err(Error::new(
 				input.cursor().span(),
@@ -163,9 +164,9 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 			}
 		}
 
-		if input.parse::<Token![/]>().is_ok() {
-			match &name {
-				ElementName::Custom(name) => {
+		let name = if input.parse::<Token![/]>().is_ok() {
+			match name {
+				Either::Left(name) => {
 					let close_name: LitStr = input.parse()?;
 					// Named close.
 					if close_name.value() != name.value() {
@@ -174,19 +175,26 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 							format_args!("Expected {:?}", name.value()),
 						));
 					}
+					ElementName::Custom(name)
 				}
-				ElementName::Known(name) => {
-					let close_name: Ident = input.parse()?;
+				Either::Right(name) => {
+					let closing_name: Ident = input.parse()?;
 					// Named close.
-					if close_name != *name {
+					if closing_name != name {
 						return Err(Error::new_spanned(
-							close_name,
+							closing_name,
 							format_args!("Expected `{}`", name),
 						));
 					}
+					ElementName::Known(name, Some(closing_name))
 				}
 			}
-		}
+		} else {
+			match name {
+				Either::Left(name) => ElementName::Custom(name),
+				Either::Right(name) => ElementName::Known(name, None),
+			}
+		};
 		input.parse::<Token![>]>()?;
 
 		Ok(Self {
@@ -340,7 +348,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 					}
 				}}
 			}
-			ElementName::Known(name) => {
+			ElementName::Known(name, closing_name) => {
 				let validate_has_content = if has_content {
 					Some(
 						quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
@@ -350,12 +358,18 @@ impl<C: Configuration> HtmlDefinition<C> {
 				} else {
 					None
 				};
+				let document_closing = closing_name.as_ref().map(|closing_name| {
+					quote_spanned! {closing_name.span().resolved_at(Span::mixed_site())=>
+						let _ = ::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#closing_name;
+					}
+				});
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
 					let children = #children;
 					//TODO: Add MathML and SVG support.
 					::#asteracea::lignin::Node::HtmlElement {
 						element: #bump.alloc_with(|| {
 							#validate_has_content
+							#document_closing
 							//TODO: Validate attributes.
 							//TODO: Validate events.
 
