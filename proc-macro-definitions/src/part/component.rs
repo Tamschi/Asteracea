@@ -1,6 +1,6 @@
 use std::{collections::HashSet, iter};
 
-use super::{AttachedAccessExpression, CaptureDefinition};
+use super::CaptureDefinition;
 use crate::storage_context::{ParseContext, ParseWithContext};
 use call2_for_syn::call2_strict;
 use proc_macro2::{Punct, Span, TokenStream};
@@ -19,7 +19,7 @@ use unquote::unquote;
 pub enum Component<C> {
 	Instantiated {
 		capture: CaptureDefinition<C>,
-		attached_access: AttachedAccessExpression,
+		render_call: TokenStream,
 	},
 	Instanced {
 		open_span: Span,
@@ -136,15 +136,14 @@ impl<C> ParseWithContext for Component<C> {
 				)
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
-				.unwrap(),
-			attached_access: {
+				.expect("Component::parse_with_context capture"),
+			render_call: {
 				let render_params = parameter_struct_expression(
 					open_span.resolved_at(Span::mixed_site()),
 					parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
 					render_params.as_slice(),
 				);
-				parse2(quote_spanned! (open_span=> .render(bump, #render_params)?))
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable attached access"))?
+				quote_spanned! (open_span=> .render(bump, #render_params)? )
 			}
 		})
 		}
@@ -156,9 +155,9 @@ impl<C> Component<C> {
 		match self {
 			Component::Instantiated {
 				capture,
-				attached_access,
+				render_call,
 			} => {
-				let mut expr = parse_quote!(#capture#attached_access);
+				let mut expr = parse_quote!(#capture#render_call);
 				visit_expr_mut(&mut SelfMassager, &mut expr);
 				quote!(#expr)
 			}
@@ -180,7 +179,7 @@ impl<C> Component<C> {
 					#binding
 					reference.render(#bump, #render_params)?
 				}))
-				.unwrap();
+				.expect("Component::part_tokens Instanced expr");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
 				quote!(#expr)
 			}

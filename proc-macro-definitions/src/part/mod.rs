@@ -1,4 +1,3 @@
-mod attached_access_expression;
 mod box_expression;
 mod bump_format_shorthand;
 mod capture_definition;
@@ -10,9 +9,7 @@ mod html_definition;
 //TODO: Renamed module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
 //TODO: Rust expressions shouldn't automatically be blocks except for ones after `with`.
 
-pub use self::{
-	attached_access_expression::AttachedAccessExpression, capture_definition::CaptureDefinition,
-};
+pub use self::capture_definition::CaptureDefinition;
 use self::{
 	box_expression::BoxExpression, component::Component, html_comment::HtmlComment,
 	html_definition::HtmlDefinition,
@@ -39,8 +36,7 @@ use unquote::unquote;
 use wyz::Pipe as _;
 
 pub struct Part<C: Configuration> {
-	body: PartBody<C>,
-	attached_access: AttachedAccessExpression, //TODO: Clean this up.
+	body: PartBody<C>, //TODO: Unify this.
 }
 
 #[derive(PartialEq, Eq)]
@@ -73,10 +69,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		Ok(
 			if let Some(body) = PartBody::parse_with_context(input, cx)? {
-				Some(Self {
-					body,
-					attached_access: input.parse()?,
-				})
+				Some(Self { body })
 			} else {
 				None
 			},
@@ -85,9 +78,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 }
 impl<C: Configuration> Part<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
-		let body = self.body.part_tokens(cx)?;
-		let attached_access = &self.attached_access;
-		Ok(quote!(#body#attached_access))
+		self.body.part_tokens(cx)
 	}
 }
 
