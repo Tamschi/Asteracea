@@ -239,7 +239,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 					AttributeDefinition::Assignment(_, AttributeKey::Known(name), _, _, _) => {
 						// Move validation errors onto the attribute name.
 						let tag_name = Ident::new(&tag_name.to_string(), name.span());
-						Some(quote_spanned! {name.span()=> //FIXME: Add `.resolved_at(Span::mixed_site())` once rust-analyzer locates that more precisely.
+						Some(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
 							// Already flagged where the attribute name is resolved.
 							// Ignored here so a deprecated element isn't warned about on the attribute.
 							#[allow(deprecated)]
