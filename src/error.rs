@@ -5,7 +5,7 @@ use std::{
 	borrow::Cow,
 	error::Error,
 	fmt::{self, Debug, Display, Formatter},
-	panic::{catch_unwind, resume_unwind, UnwindSafe},
+	panic::{catch_unwind, panic_any, resume_unwind, UnwindSafe},
 	writeln,
 };
 
@@ -137,8 +137,7 @@ impl<E: SendAnyError> Escalate for E {
 			trace: vec![],
 		};
 		if cfg!(feature = "force-unwind") {
-			//FIXME: Replace this with panic_any once that lands.
-			std::panic::resume_unwind(Box::new(throwable));
+			panic_any(Box::new(throwable));
 		} else {
 			#[cfg(not(feature = "force-unwind"))]
 			return Escalation(Impl::Extant(throwable));

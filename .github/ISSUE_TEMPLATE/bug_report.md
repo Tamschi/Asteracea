@@ -26,7 +26,7 @@ If applicable, add screenshots to help explain your problem.
 
 **please complete the following information:**
 
-- `rustc --version`: [e.g. 1.46.0]
+- `rustc --version`: [e.g. 1.51.0]
 - Crate version (if applicable): [e.g. 0.0.2]
 
 **Additional context**
