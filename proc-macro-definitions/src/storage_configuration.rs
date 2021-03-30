@@ -1,7 +1,6 @@
-use std::iter;
-
 use proc_macro2::Span;
 use quote::{quote_spanned, ToTokens};
+use std::iter;
 use syn::{
 	parse::{Parse, ParseStream},
 	parse2,
@@ -13,8 +12,8 @@ use syn::{
 	ItemStruct, LifetimeDef, Path, PathArguments, PathSegment, Result, Token, TypeParam, TypePath,
 	Visibility, WhereClause,
 };
+use tap::Pipe as _;
 use unquote::unquote;
-use wyz::Pipe;
 
 use crate::{asteracea_ident, storage_context::StorageContext};
 

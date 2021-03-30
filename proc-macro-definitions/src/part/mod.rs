@@ -32,8 +32,8 @@ use syn::{
 	Attribute, Error, Expr, Generics, Ident, LitStr, Pat, Token, Visibility,
 };
 use syn_mid::Block;
+use tap::Pipe as _;
 use unquote::unquote;
-use wyz::Pipe as _;
 
 #[allow(clippy::large_enum_variant, clippy::type_complexity)]
 pub enum Part<C: Configuration> {
