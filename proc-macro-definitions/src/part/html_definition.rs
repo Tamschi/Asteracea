@@ -35,29 +35,36 @@ enum AttributeDefinition {
 }
 
 enum AttributeKey {
-	//TODO: Known(Ident),
+	Known(Ident),
 	Literal(LitStr),
 }
 
 impl ToTokens for AttributeKey {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		match self {
-			AttributeKey::Literal(l) => l.to_tokens(tokens),
+			AttributeKey::Known(name) => {
+				let asteracea = asteracea_ident(name.span());
+				(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+					<dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::html::attributes::#name>::NAME
+				}).to_tokens(tokens)
+			}
+			AttributeKey::Literal(name) => name.to_tokens(tokens),
 		}
 	}
 }
 
 impl Parse for AttributeKey {
 	fn parse(input: ParseStream) -> Result<Self> {
-		Ok(match input.parse() {
-			Ok(lit_str) => AttributeKey::Literal(lit_str),
-			Err(err) => {
-				return Err(Error::new(
-					err.span(),
-					"Expected HTML attribute key (str literal)",
-				))
-			}
-		})
+		if let Some(name) = input.parse().unwrap() {
+			Ok(AttributeKey::Known(name))
+		} else if let Some(name) = input.parse().unwrap() {
+			Ok(AttributeKey::Literal(name))
+		} else {
+			Err(Error::new(
+				input.span(),
+				"Expected HTML attribute key (str literal)",
+			))
+		}
 	}
 }
 
@@ -127,7 +134,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 		let attributes = {
 			let mut attributes = Vec::new();
 			while let Ok(dot) = input.parse::<Token![.]>() {
-				attributes.push(if input.peek(LitStr) {
+				attributes.push(if input.peek(Ident) || input.peek(LitStr) {
 					let key;
 					let question: Option<Token![?]>;
 					let eq;
@@ -150,7 +157,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 				} else {
 					return Err(Error::new(
 						input.span(),
-						"Expected Rust block (Attribute) or a string literal (HTML attribute name)",
+						"Expected Rust block (Attribute) or an identifier or string literal (HTML attribute name)",
 					));
 				});
 			}
@@ -224,6 +231,27 @@ impl<C: Configuration> HtmlDefinition<C> {
 			AttributeDefinition::Assignment(_, _, None, _, _) => false,
 			AttributeDefinition::RustBlock(_, _) => false,
 		});
+		let validate_attributes = match name {
+			ElementName::Custom(_) => vec![],
+			ElementName::Known(tag_name, _) => attributes
+				.iter()
+				.filter_map(|attribute| match attribute {
+					AttributeDefinition::Assignment(_, AttributeKey::Known(name), _, _, _) => {
+						// Move validation errors onto the attribute name.
+						let tag_name = Ident::new(&tag_name.to_string(), name.span());
+						Some(quote_spanned! {name.span()=> //FIXME: Add `.resolved_at(Span::mixed_site())` once rust-analyzer locates that more precisely.
+							// Already flagged where the attribute name is resolved.
+							// Ignored here so a deprecated element isn't warned about on the attribute.
+							#[allow(deprecated)]
+							::#asteracea::__Asteracea__implementation_details::lignin_schema::html::attributes::#name::<_>::static_validate_on(
+								::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#tag_name
+							);
+						})
+					}
+					_ => None,
+				})
+				.collect::<Vec<_>>(),
+		};
 		let attributes = attributes
 			.iter()
 			.map(|a| match a {
@@ -369,6 +397,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 					::#asteracea::lignin::Node::HtmlElement {
 						element: #bump.alloc_with(|| {
 							#validate_has_content
+							#(#validate_attributes)*
 							#document_closing
 							//TODO: Validate attributes.
 							//TODO: Validate events.
