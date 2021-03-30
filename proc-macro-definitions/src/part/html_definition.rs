@@ -91,7 +91,7 @@ impl Parse for AttributeValue {
 		} else {
 			return Err(Error::new(
 				input.span(),
-				"Expected HTML attribte value (string literal or Rust block)",
+				"Expected HTML attribute value (string literal or Rust block)",
 			));
 		})
 	}
