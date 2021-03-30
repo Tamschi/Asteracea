@@ -165,7 +165,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#chapter-1-static-components" id="chapter-1-static-components">Chapter 1: Static Components</a></h1>
+                        <h1 id="chapter-1-static-components"><a class="header" href="#chapter-1-static-components">Chapter 1: Static Components</a></h1>
 <p>Asteracea, <a href="https://reactjs.org/docs/components-and-props.html#function-and-class-components">unlike for example React</a>, does not have multiple ways to define a component depending on whether you'd like to use instance state or not¹. Instead, due to low syntactic overhead and Rust's efficiency, <code>struct</code> components are generated throughout.</p>
 <p>Stateless <code>struct</code> components have zero runtime overhead compared to functions equivalent <a href="TK"><code>fragment!</code></a> use. This, along with less boilerplate and for consistency, is why I generally recommend <a href="TK"><code>component!</code></a> for all reusable GUI elements.</p>
 <p>In this chapter, I will introduce the basics of generating various virtual DOM nodes in Asteracea, which can then be translated into (e.g.!) HTML or browser DOM elements.</p>

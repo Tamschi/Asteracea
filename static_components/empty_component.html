@@ -165,7 +165,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#an-empty-component" id="an-empty-component">An Empty Component</a></h1>
+                        <h1 id="an-empty-component"><a class="header" href="#an-empty-component">An Empty Component</a></h1>
 <p>As mentioned in the introduction, the simplest Asteracea component is <code>E()()[]</code>.</p>
 <p>In context, and written more like what you'd see in the wild:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
@@ -188,25 +188,25 @@
 <p>(The macro can currently, under certain circumstances, create colliding definitions of structs called <code>NewStatics</code> and <code>RenderStatics</code>. This is a bug and will be fixed prior to release.</p>
 <p>If this happens to you, place your components in different modules. These types are not part of the public interface, and strictly speaking not something you're supposed to touch explicitly, and won't interfere further than this.)</p>
 <p>The parentheses around the body of render aren't strictly needed here... and you may find small bits of similar useless syntax in other positions too. The most simple explanation is that they're leftovers that will be cleaned up eventually (when more tests exist), but sometimes these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet.</p>
-<h2><a class="header" href="#the-breakdown" id="the-breakdown">The breakdown</a></h2>
+<h2 id="the-breakdown"><a class="header" href="#the-breakdown">The breakdown</a></h2>
 <p>There are five distinct pieces of syntax that are translated into the output here: <code>pub</code>, <code>Empty</code>, <code>()</code>, <code>()</code> and <code>[]</code>.</p>
-<h3><a class="header" href="#pub-visibility" id="pub-visibility"><code>pub</code> (visibility)</a></h3>
+<h3 id="pub-visibility"><a class="header" href="#pub-visibility"><code>pub</code> (visibility)</a></h3>
 <p>This is a plain <a href="https://doc.rust-lang.org/stable/reference/visibility-and-privacy.html?highlight=pub#visibility-and-privacy">Rust visibility</a> and inserted just before the <code>struct</code> keyword in the macro output above, controlling where the component can be used directly. Leave it out to for current-module-only visibility.</p>
 <p><code>new</code> and <code>render</code> are always declared <code>pub</code>; They inherit their visibility from the component structure.</p>
-<h3><a class="header" href="#empty-component-name" id="empty-component-name"><code>Empty</code> (component name)</a></h3>
+<h3 id="empty-component-name"><a class="header" href="#empty-component-name"><code>Empty</code> (component name)</a></h3>
 <p>This identifier is inserted verbatim into the output as shown.</p>
 <p>There aren't any requirements regarding <em>which</em> identifier to use, but I encourage you to avoid generic suffixes like &quot;<code>…Component</code>&quot;.</p>
 <p>Consider e.g. &quot;<code>…ListItem</code>&quot;, &quot;<code>…Button</code>&quot; or, if nothing more specific applies, &quot;<code>…Panel</code>&quot; as more descriptive alternatives, or leave the suffix off entirefly if there's no confusion regarding which types are components and which are not.</p>
-<h3><a class="header" href="#-constructor-argument-list" id="-constructor-argument-list"><code>()</code> (constructor argument list)</a></h3>
+<h3 id="-constructor-argument-list"><a class="header" href="#-constructor-argument-list"><code>()</code> (constructor argument list)</a></h3>
 <p>This is the first pair of parenthese in the input and also appears before the other in the output. As you can see, it is inserted verbatim after <code>new</code> here.</p>
 <p>You can use any normal argument declaration here, with the exception of <code>self</code> parameters.</p>
 <p>The constructor argument list also supports a shorthand to declare and assign fields on the component instance, but more on that [later].</p>
-<h3><a class="header" href="#-render-argument-list" id="-render-argument-list"><code>()</code> (render argument list)</a></h3>
+<h3 id="-render-argument-list"><a class="header" href="#-render-argument-list"><code>()</code> (render argument list)</a></h3>
 <p>The second pair of parentheses is used to declare <strong>additional</strong> render arguments.</p>
 <p>This one is never pasted verbatim into the resulting component, despite supporting only plain Rust argument declarations (with the exception of <code>self</code> parameters and, usually, <code>bump</code>).</p>
 <p>Instead, its items are inserted at the end of <code>render</code>'s argument list above, after the implicit arguments <code>&amp;self</code> and <code>bump: &amp;'bump Bump</code>. You can access instance fields through <code>self</code> in the component body (more on that later) and <code>bump</code> is a <a href="https://docs.rs/bumpalo/3/bumpalo/struct.Bump.html"><code>Bump</code></a> from <a href="https://github.com/fitzgen/bumpalo"><code>bumpalo</code></a>, a bump allocation arena that makes the VDOM more efficient.</p>
 <p><strong>Do not place anything into <code>bump</code> that needs to be dropped!</strong> Bump allocators are speedy, but this speed is bought by not running any logic before the memory is reused. Some workarounds for common use cases exist, but for the most part Asteracea handles this for you. See <a href="https://github.com/fitzgen/bumpalo"><code>bumpalo</code></a>'s documentation for more information.</p>
-<h3><a class="header" href="#-body--empty-multi-node" id="-body--empty-multi-node"><code>[]</code> (body / empty Multi Node)</a></h3>
+<h3 id="-body--empty-multi-node"><a class="header" href="#-body--empty-multi-node"><code>[]</code> (body / empty Multi Node)</a></h3>
 <p>The location of <code>[]</code> in this example component is called the <strong>body</strong> of the component.</p>
 <p><code>[]</code> itself is an <strong>empty Multi Node</strong>, which expands to <code>Node::Multi(&amp;*bump.alloc_with(|| []))</code>.</p>
 <p>The contents of this node are placed in the bump allocation arena which, in this case, is effectively no operation. Location and length of this list are stored in the containing [<code>Node</code>], which here is returned directly from <code>render</code>.</p>

@@ -165,7 +165,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#child-components" id="child-components">Child Components</a></h1>
+                        <h1 id="child-components"><a class="header" href="#child-components">Child Components</a></h1>
 <p>Asteracea components can be used inside other templates using asterisk syntax:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -279,7 +279,7 @@ asteracea::component! {
 </span></code></pre></pre>
 <pre><code class="language-html">Inner body.Inner body.
 </code></pre>
-<h2><a class="header" href="#child-component-instancing" id="child-component-instancing">Child Component Instancing</a></h2>
+<h2 id="child-component-instancing"><a class="header" href="#child-component-instancing">Child Component Instancing</a></h2>
 <blockquote>
 <p>Note: Rust is good at erasing empty instances!</p>
 <p>If your reused component is stateless, please restate the component's type name instead of using instancing. This will keep your code clearer and less interdependent.</p>

@@ -167,18 +167,18 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
 <p>Welcome to the Asteracea guide book!</p>
 <blockquote>
 <p><strong>This book is a work in progress!</strong></p>
 <p>Until the first minor version stabilisation, there likely will only be this <code>develop</code>-branch version published online as rendered version, which usually won't mach a version of the crate published to crates.io. (Respective versions are tagged and can be rendered offline using (from the repository's root directory) <code>cd book</code> and <code>cargo run</code>.)</p>
 <p>In addition to the missing chapters, URLs are subject to change, links have have not been filled in and code blocks without highlighting or rendered HTML output may show unimplemented features.</p>
 </blockquote>
-<h2><a class="header" href="#audience" id="audience">Audience</a></h2>
+<h2 id="audience"><a class="header" href="#audience">Audience</a></h2>
 <p>While using Asteracea effectively requires knowledge of Rust, this book is written also with non-Rustaceans in mind.</p>
 <p>If you have experience with more traditional front-end frameworks like Angular or React, quite a few of the presented concepts should be familiar to you. I will also try to highlight these connections where they appear. By the end of the book, you should be able to read Asteracea's component templates and make modifications to them.</p>
 <p>If you are already familiar with Rust, you can use the samples from <a href="TK">Chapter 6: Integrating Asteracea</a> to create a complete web site or application including static site generation, server-side rendering and/or a (primary or optional) client-side approach.</p>
-<h2><a class="header" href="#background" id="background">Background</a></h2>
+<h2 id="background"><a class="header" href="#background">Background</a></h2>
 <p>When I started using Rust privately in 2019, I had worked as a consultant on multiple web projects, mainly as front-end developer using TypeScript, Angular and React. I had grown increasingly frustrated with the failure classes of this weakly typed ecosystem: Aside from (rare but in those cases often destructive) run-ins with outdated or wrong type definitions for external packages, it was too easy to accidentally turn off type checking. It was often easy to forget to handle certain failure cases. React was quick to prototype in, but would often spiral in complexity and unchecked definitions on larger projects. Angular applications were comparatively robust but required manual subscription management to prevent memory leaks and required a significant amount of boilerplate that couldn't be abstracted away due to compiler limitations.</p>
 <p>Meanwhile on the server side, Spring Boot was resource-hungry as a microservice platform, requiring powerful development systems to run a local test instance of the platform even without any data added to it. Using the documentation was also frustrating to me, since it was difficult to look up the various implicit behaviours. I wouldn't be able to work efficiently with such a system on my slower home computer that also needed to handle a considerable amount of browser tabs at the same time. To top it off, DTOs couldn't be easily shared through the various layers of the application.</p>
 <p>I originally got into Rust to have another go at game development. This didn't go well at the time due to lack of high-level frameworks I could prototype something in quickly, but I liked the language and ended up writing several smaller utility programs. Then I had to switch Android ROMs to still get updates and lost the data stored in the finance tracker app I was using. (Backups were only available by uploading my data to the manufacturer's servers, which I decided against.) I took this as an opportunity to write my own tracker, to be hosted on a Pi Zero W so I could make entries from my phone. In part to learn about technologies I had seen but not used myself at work, I decided to use a network of Docker containers, with Postgres for storage and Nginx to serve static files and act as reverse proxy.</p>
@@ -186,7 +186,7 @@
 <p>However, here is where I hit a snag: I was used to relatively mature web frameworks that make it easy to write reusable components and test them in isolation via dependency injection. I was also looking for CSS scoping and to ideally <em>never</em> touch JavaScript myself (ideally skipping its build ecosystem entirely). I used version <code>0.1.0</code> of <a href="https://lib.rs/crates/dodrio"><code>dodrio</code></a> for a while, but as stated on its project page, it's not intended as complete GUI solution. <a href="https://github.com/hecrj/iced">Iced</a> wasn't a good fit due to being more high-level than what I was going for. <a href="https://github.com/bodil/typed-html"><code>typed-html</code></a> seemed close to what React does, but I was looking for more stateful component tooling. (<code>dodrio</code> inspired Asteracea's use of a bump allocator.)</p>
 <p>(<a href="https://github.com/extraymond/afterglow">Afterglow</a> did not exist at that point. You will probably want to look at it as an alternative before deciding what to go with. Its design goals seem different from Asteracea's, at a glance.)</p>
 <p>I decided to write my own solution to this problem, which is where things started to escalate.</p>
-<h2><a class="header" href="#asteraceas-design-goals" id="asteraceas-design-goals">Asteracea's Design Goals</a></h2>
+<h2 id="asteraceas-design-goals"><a class="header" href="#asteraceas-design-goals">Asteracea's Design Goals</a></h2>
 <p>Asteracea is, as of October 2020, still early in development and subject to change. However, there are a few main goals I want to enable with this framework that can be put into writing already:</p>
 <ul>
 <li>
@@ -216,7 +216,7 @@
 <p>Asteracea is named after the family of <a href="https://en.wikipedia.org/w/index.php?title=Asteraceae&amp;oldid=982133740">Asteraceae</a>, which contains very spectacular as well as very inconspicuous, but generally quite practical flowers. My hope is that this set of libraries will eventually be used for a similarly wide range of applications.</p>
 </li>
 </ul>
-<h1><a class="header" href="#chapter-0-sneak-peek" id="chapter-0-sneak-peek">Chapter 0: Sneak Peek</a></h1>
+<h1 id="chapter-0-sneak-peek"><a class="header" href="#chapter-0-sneak-peek">Chapter 0: Sneak Peek</a></h1>
 <p>Before I begin to explain in earnest, here is a relatively complex dynamic component using many of Asteracea's features, along with its resulting HTML representation:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -290,12 +290,12 @@ asteracea::component! {
 <p>This actually isn't mandatory - Asteracea is quite flexible and lets you mix them when appropriate - but it's a good way to clean up larger components that otherwise wouldn't fit on the screen well.</p>
 <p>There's also syntax highlighting without extra tools! The version here in the book is simplified, but if you use <a href="https://rust-analyzer.github.io/">rust-analyzer</a>, then it's really quite smart.</p>
 <p>The following chapters will teach you how to read and write these components, though becoming fluent may require a little bit of practice.</p>
-<h1><a class="header" href="#chapter-1-static-components" id="chapter-1-static-components">Chapter 1: Static Components</a></h1>
+<h1 id="chapter-1-static-components"><a class="header" href="#chapter-1-static-components">Chapter 1: Static Components</a></h1>
 <p>Asteracea, <a href="https://reactjs.org/docs/components-and-props.html#function-and-class-components">unlike for example React</a>, does not have multiple ways to define a component depending on whether you'd like to use instance state or not¹. Instead, due to low syntactic overhead and Rust's efficiency, <code>struct</code> components are generated throughout.</p>
 <p>Stateless <code>struct</code> components have zero runtime overhead compared to functions equivalent <a href="static_components/TK"><code>fragment!</code></a> use. This, along with less boilerplate and for consistency, is why I generally recommend <a href="static_components/TK"><code>component!</code></a> for all reusable GUI elements.</p>
 <p>In this chapter, I will introduce the basics of generating various virtual DOM nodes in Asteracea, which can then be translated into (e.g.!) HTML or browser DOM elements.</p>
 <p>¹ The distinction has weakened in React recently. Asteracea's approach to stateful components is <a href="static_components/./2_5_body_captures.html">partially inspired</a> by React's Hooks in terms of UX, but is implemented very differently below the surface.</p>
-<h1><a class="header" href="#an-empty-component" id="an-empty-component">An Empty Component</a></h1>
+<h1 id="an-empty-component"><a class="header" href="#an-empty-component">An Empty Component</a></h1>
 <p>As mentioned in the introduction, the simplest Asteracea component is <code>E()()[]</code>.</p>
 <p>In context, and written more like what you'd see in the wild:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
@@ -318,32 +318,32 @@ asteracea::component! {
 <p>(The macro can currently, under certain circumstances, create colliding definitions of structs called <code>NewStatics</code> and <code>RenderStatics</code>. This is a bug and will be fixed prior to release.</p>
 <p>If this happens to you, place your components in different modules. These types are not part of the public interface, and strictly speaking not something you're supposed to touch explicitly, and won't interfere further than this.)</p>
 <p>The parentheses around the body of render aren't strictly needed here... and you may find small bits of similar useless syntax in other positions too. The most simple explanation is that they're leftovers that will be cleaned up eventually (when more tests exist), but sometimes these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet.</p>
-<h2><a class="header" href="#the-breakdown" id="the-breakdown">The breakdown</a></h2>
+<h2 id="the-breakdown"><a class="header" href="#the-breakdown">The breakdown</a></h2>
 <p>There are five distinct pieces of syntax that are translated into the output here: <code>pub</code>, <code>Empty</code>, <code>()</code>, <code>()</code> and <code>[]</code>.</p>
-<h3><a class="header" href="#pub-visibility" id="pub-visibility"><code>pub</code> (visibility)</a></h3>
+<h3 id="pub-visibility"><a class="header" href="#pub-visibility"><code>pub</code> (visibility)</a></h3>
 <p>This is a plain <a href="https://doc.rust-lang.org/stable/reference/visibility-and-privacy.html?highlight=pub#visibility-and-privacy">Rust visibility</a> and inserted just before the <code>struct</code> keyword in the macro output above, controlling where the component can be used directly. Leave it out to for current-module-only visibility.</p>
 <p><code>new</code> and <code>render</code> are always declared <code>pub</code>; They inherit their visibility from the component structure.</p>
-<h3><a class="header" href="#empty-component-name" id="empty-component-name"><code>Empty</code> (component name)</a></h3>
+<h3 id="empty-component-name"><a class="header" href="#empty-component-name"><code>Empty</code> (component name)</a></h3>
 <p>This identifier is inserted verbatim into the output as shown.</p>
 <p>There aren't any requirements regarding <em>which</em> identifier to use, but I encourage you to avoid generic suffixes like &quot;<code>…Component</code>&quot;.</p>
 <p>Consider e.g. &quot;<code>…ListItem</code>&quot;, &quot;<code>…Button</code>&quot; or, if nothing more specific applies, &quot;<code>…Panel</code>&quot; as more descriptive alternatives, or leave the suffix off entirefly if there's no confusion regarding which types are components and which are not.</p>
-<h3><a class="header" href="#-constructor-argument-list" id="-constructor-argument-list"><code>()</code> (constructor argument list)</a></h3>
+<h3 id="-constructor-argument-list"><a class="header" href="#-constructor-argument-list"><code>()</code> (constructor argument list)</a></h3>
 <p>This is the first pair of parenthese in the input and also appears before the other in the output. As you can see, it is inserted verbatim after <code>new</code> here.</p>
 <p>You can use any normal argument declaration here, with the exception of <code>self</code> parameters.</p>
 <p>The constructor argument list also supports a shorthand to declare and assign fields on the component instance, but more on that [later].</p>
-<h3><a class="header" href="#-render-argument-list" id="-render-argument-list"><code>()</code> (render argument list)</a></h3>
+<h3 id="-render-argument-list"><a class="header" href="#-render-argument-list"><code>()</code> (render argument list)</a></h3>
 <p>The second pair of parentheses is used to declare <strong>additional</strong> render arguments.</p>
 <p>This one is never pasted verbatim into the resulting component, despite supporting only plain Rust argument declarations (with the exception of <code>self</code> parameters and, usually, <code>bump</code>).</p>
 <p>Instead, its items are inserted at the end of <code>render</code>'s argument list above, after the implicit arguments <code>&amp;self</code> and <code>bump: &amp;'bump Bump</code>. You can access instance fields through <code>self</code> in the component body (more on that later) and <code>bump</code> is a <a href="https://docs.rs/bumpalo/3/bumpalo/struct.Bump.html"><code>Bump</code></a> from <a href="https://github.com/fitzgen/bumpalo"><code>bumpalo</code></a>, a bump allocation arena that makes the VDOM more efficient.</p>
 <p><strong>Do not place anything into <code>bump</code> that needs to be dropped!</strong> Bump allocators are speedy, but this speed is bought by not running any logic before the memory is reused. Some workarounds for common use cases exist, but for the most part Asteracea handles this for you. See <a href="https://github.com/fitzgen/bumpalo"><code>bumpalo</code></a>'s documentation for more information.</p>
-<h3><a class="header" href="#-body--empty-multi-node" id="-body--empty-multi-node"><code>[]</code> (body / empty Multi Node)</a></h3>
+<h3 id="-body--empty-multi-node"><a class="header" href="#-body--empty-multi-node"><code>[]</code> (body / empty Multi Node)</a></h3>
 <p>The location of <code>[]</code> in this example component is called the <strong>body</strong> of the component.</p>
 <p><code>[]</code> itself is an <strong>empty Multi Node</strong>, which expands to <code>Node::Multi(&amp;*bump.alloc_with(|| []))</code>.</p>
 <p>The contents of this node are placed in the bump allocation arena which, in this case, is effectively no operation. Location and length of this list are stored in the containing [<code>Node</code>], which here is returned directly from <code>render</code>.</p>
 <p>It's legal to reuse [<code>Node</code>] instances in multiple places in the VDOM tree. You can also cache long-lived [<code>Node</code>]s and then refer to them across multiple render cycles, to avoid re-rendering part of the VDOM.</p>
 <p><strong>Multi Nodes</strong> are a VDOM concept that doesn't translate into DOM: Their contents are replicated without nesting in the surrounding DOM structure. You can use them, for example, to return multiple elements at the top level of a component.</p>
 <p>Another use is to represent a variable number of elements, including none. The diffing algorithm in <a href="https://github.com/Tamschi/lignin-dom"><code>lignin-dom</code></a> advances by a single VDOM sibling when processing a multi node. This means that you can avoid shifting any following sibling nodes, which can avoid expensively recreating their DOM representation or confusing the user by moving their selection to an unexpected place.</p>
-<h1><a class="header" href="#rust-comments" id="rust-comments">Rust Comments</a></h1>
+<h1 id="rust-comments"><a class="header" href="#rust-comments">Rust Comments</a></h1>
 <p>You can use three distinct types of comments in Asteracea macros, all serving different purposes:</p>
 <p>First, standard Rust comments can be placed anywhere in Asteracea components (or any other place in a Rust program), and are not included in the compiled binary:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
@@ -380,7 +380,7 @@ asteracea::component! {
 </code></pre>
 <p>These <code>///</code> (or <code>//!</code>) annotations are not included in the compiled binary either¹, but can be picked up by standard Rust tooling like <a href="https://rust-analyzer.github.io/">rust-analyzer</a>.</p>
 <p>¹ Rare exceptions in combination with other macros apply.</p>
-<h1><a class="header" href="#html-comments" id="html-comments">HTML comments</a></h1>
+<h1 id="html-comments"><a class="header" href="#html-comments">HTML comments</a></h1>
 <p>The third kind of comment is specific to Asteracea and does affect program output:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -416,7 +416,7 @@ asteracea::component! {
     not too annoying.
   --&gt;
 </code></pre>
-<h1><a class="header" href="#text" id="text">Text</a></h1>
+<h1 id="text"><a class="header" href="#text">Text</a></h1>
 <p>To output a static plain <a href="https://developer.mozilla.org/en-US/docs/Web/API/Text"><code>Text</code></a> element in Asteracea, simply use a text literal in your component's body:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -444,7 +444,7 @@ asteracea::component! {
 <span class="boring">}
 </span></code></pre>
 <p>(Click the eye icon to view the rest of the macro output. Note that this also displays a hidden <code>main</code> method inserted by mdBook which isn't part of <code>component!</code>'s output.)</p>
-<h2><a class="header" href="#multiple-text-elements" id="multiple-text-elements">Multiple <code>Text</code> elements</a></h2>
+<h2 id="multiple-text-elements"><a class="header" href="#multiple-text-elements">Multiple <code>Text</code> elements</a></h2>
 <p>Text nodes can be used as children of other nodes, for example a Multi Node:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -490,7 +490,7 @@ pub fn render&lt;'bump&gt;(
 <p>(<strong>Please don't render into <code>&lt;body&gt;</code> directly!</strong> Many browser extensions insert their own scripts or overlays as child elements here.</p>
 <p>While it's not too likely that these additions will make your app crash, the GUI may glitch and appear for example duplicated. Rendering into, for example, a <code>&lt;div id=app&gt;</code> instead is more reliable.)</p>
 <p>Multi Nodes generated by Asteracea macros always place their contents in the bump allocation arena, even if those contents are theoretically immutable.</p>
-<h1><a class="header" href="#elements" id="elements">Elements</a></h1>
+<h1 id="elements"><a class="header" href="#elements">Elements</a></h1>
 <p>To define elements and their contents, Asteracea provides a syntax similar to HTML:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -577,7 +577,7 @@ pub fn render&lt;'bump&gt;(
 </span></code></pre></pre>
 <pre><code class="language-html">&lt;custom-element&gt;&lt;/custom-element&gt;
 </code></pre>
-<h1><a class="header" href="#child-components" id="child-components">Child Components</a></h1>
+<h1 id="child-components"><a class="header" href="#child-components">Child Components</a></h1>
 <p>Asteracea components can be used inside other templates using asterisk syntax:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -691,7 +691,7 @@ asteracea::component! {
 </span></code></pre></pre>
 <pre><code class="language-html">Inner body.Inner body.
 </code></pre>
-<h2><a class="header" href="#child-component-instancing" id="child-component-instancing">Child Component Instancing</a></h2>
+<h2 id="child-component-instancing"><a class="header" href="#child-component-instancing">Child Component Instancing</a></h2>
 <blockquote>
 <p>Note: Rust is good at erasing empty instances!</p>
 <p>If your reused component is stateless, please restate the component's type name instead of using instancing. This will keep your code clearer and less interdependent.</p>
@@ -720,7 +720,7 @@ asteracea::component! {
 </code></pre>
 <p>The component's <code>.render(…)</code> method is called for each of these appearances, but <code>::new(…)</code> is called only once.</p>
 <p>Component instancing is especially useful when rendering alternates, since the child instance is available everywhere in the parent component's body (regardless which <code>.render(…)</code> path is taken).</p>
-<h1><a class="header" href="#ex-stateless-components-are-zero-sized" id="ex-stateless-components-are-zero-sized">EX: Stateless Components are Zero-Sized</a></h1>
+<h1 id="ex-stateless-components-are-zero-sized"><a class="header" href="#ex-stateless-components-are-zero-sized">EX: Stateless Components are Zero-Sized</a></h1>
 <details>
 <summary>This is an optional chapter.</summary>
 <blockquote>
@@ -759,11 +759,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x557c9613e3f0.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x557c9613e3f0.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x557c9613e3f8.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x557c9613e3f0.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x557c9613e3f0.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x561c931953f0.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x561c931953f0.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x561c931953f8.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x561c931953f0.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x561c931953f0.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
@@ -773,7 +773,7 @@ The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x557c9613e3f0.
 The compiler is in theory allowed to optimise it away, but this isn't guaranteed.</p>
 <p>If you have an idea how to make this process meaningfully conditional without changing Asteracea's macro syntax, I'd like to hear about it!</p>
 </blockquote>
-<h1><a class="header" href="#escalation-and-backtrace" id="escalation-and-backtrace"><code>Escalation</code> and <code>&quot;backtrace&quot;</code></a></h1>
+<h1 id="escalation-and-backtrace"><a class="header" href="#escalation-and-backtrace"><code>Escalation</code> and <code>&quot;backtrace&quot;</code></a></h1>
 <p>The <code>::new(…)</code> and <code>.render(…)</code> functions of Asteracea-components are fallible, returning a <code>Result&lt;_, Escalation&gt;</code>.</p>
 <p><a href="dynamic_components/"><code>Escalation</code></a>s are panic-like: They are not expected during normal execution of a web frontend, are strictly deprioritised compared to the <a href="dynamic_components/"><code>Ok</code></a> path and components that catch them are encouraged to implement a &quot;fail once and stop&quot; approach where child components are disposed of on first failure.</p>
 <p>As long as Asteracea is compiled with the <code>&quot;backtrace&quot;</code> feature, it will trace <a href="dynamic_components/"><code>Escalation</code></a> propagation through any function instrumented via the <a href="dynamic_components/"><code>#[asteracea::trace_escalations]</code></a> attribute, which is automatic for the two mentioned above.</p>
@@ -835,7 +835,7 @@ in Outer::render
 <p>However, note that <strong>panics cannot be caught on platforms without unwinding, including Wasm</strong> (as of Rust 1.49.0).</p>
 <p>In the future, panic conversion will be activated automatically on compatible platforms, as long as this can be done without compromising backtraces.</p>
 </blockquote>
-<h2><a class="header" href="#handling-panics" id="handling-panics">Handling panics</a></h2>
+<h2 id="handling-panics"><a class="header" href="#handling-panics">Handling panics</a></h2>
 <p>Asteracea's error handling will automatically try to pick up on plain Rust panics, and can prevent them from crashing your app as long you use an [<code>Escalation::catch…</code>] function to handle errors. However, <strong>this only works with unwinding enabled (i.e. not under Wasm!)</strong>. The currently active panic hook is invoked regardless, too.</p>
 <p>The following example <em>should</em> display a backtrace rather than failing the book build:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
@@ -864,7 +864,7 @@ in Outer::render
 
 </code></pre>
 <p>In general, prefer explicit escalation over plain panics whenever possible!</p>
-<h1><a class="header" href="#new-with---" id="new-with---"><code>new with { …; }</code></a></h1>
+<h1 id="new-with---"><a class="header" href="#new-with---"><code>new with { …; }</code></a></h1>
 <!-- The reason for not placing this block after the constructor arguments (without keyword) is that this would create a lot of separation between constructor and render arguments, which should both be visible at a glance when peeking at a component's source code. -->
 <p>Arbitrary Rust code can be inserted into a component's constructor using a <code>new with</code>-block:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
@@ -913,7 +913,7 @@ asteracea::component! {
 </span></code></pre></pre>
 <pre><code class="language-html">‘This text is quoted.’
 </code></pre>
-<h1><a class="header" href="#predefined-lifetimes" id="predefined-lifetimes">Predefined Lifetimes</a></h1>
+<h1 id="predefined-lifetimes"><a class="header" href="#predefined-lifetimes">Predefined Lifetimes</a></h1>
 <p>Asteracea implicitly defines certain user-accessible lifetimes:</p>
 <ul>
 <li>
@@ -930,7 +930,7 @@ asteracea::component! {
 <li><code>'a</code> ≥ <code>'bump</code></li>
 </ul>
 <p>TODO: More details, especially regarding event handlers. Remove <code>Self: 'static</code> constraint.</p>
-<h1><a class="header" href="#conditional-attributes" id="conditional-attributes">Conditional Attributes</a></h1>
+<h1 id="conditional-attributes"><a class="header" href="#conditional-attributes">Conditional Attributes</a></h1>
 <p>Asteracea supports conditionally setting optional attributes with the following syntax:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -961,7 +961,7 @@ asteracea::component! {
 </code></pre>
 <p>Instead of <a href="dynamic_components/"><code>&amp;'bump str</code></a>, the attribute value type here is <a href="dynamic_components/"><code>Option&lt;&amp;'bump str&gt;</code></a>. If <a href="dynamic_components/"><code>None</code></a> is provided, the attribute is omitted entirely from the rendered VDOM.</p>
 <p>This can be used to conditionally render a <a href="https://www.w3.org/TR/html52/infrastructure.html#sec-boolean-attributes">boolean attribute</a> like <code>checked</code>, providing <a href="dynamic_components/"><code>Some(&quot;&quot;)</code></a> to enable the attribute. However, it is usually more convenient to use a <a href="dynamic_components/"><code>bool</code></a> directly:</p>
-<h2><a class="header" href="#boolean-attributes" id="boolean-attributes">Boolean Attributes</a></h2>
+<h2 id="boolean-attributes"><a class="header" href="#boolean-attributes">Boolean Attributes</a></h2>
 <p>To make dynamic boolean attributes like <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/hidden"><code>hidden</code></a> more convenient to use, conditional attributes also accept <a href="dynamic_components/"><code>bool</code></a> values directly:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -995,7 +995,7 @@ asteracea::component! {
 <p>Which types are compatible with conditional attributes is controlled by the <a href="dynamic_components/"><code>ConditionalAttributeValue</code></a> trait.</p>
 <p>It is by default implemented for <code>bool</code> and <code>Option&lt;&amp;'bump str&gt;</code>, and I recommend <strong>not</strong> extending this list unless the conversion is very fast.</p>
 </blockquote>
-<h1><a class="header" href="#argument-defaults" id="argument-defaults">Argument Defaults</a></h1>
+<h1 id="argument-defaults"><a class="header" href="#argument-defaults">Argument Defaults</a></h1>
 <p>Asteracea provides multiple ways to make working with optional arguments easier.</p>
 <p>Like in for example TypeScript, you can specify default parameters for constructor and render arguments:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
@@ -1026,7 +1026,7 @@ asteracea::component! {
 &lt;DIV class=&quot;classicist&quot;&gt;&lt;/DIV&gt;
 </code></pre>
 <p>Default parameter expressions are normal Rust expressions, and are evaluated as needed if the parameter was not specified.</p>
-<!-- TODO: Figure out if default parameter expressions can see other parameters, if yes which, and then clarify that here. --><h1><a class="header" href="#optional-arguments" id="optional-arguments">Optional Arguments</a></h1>
+<!-- TODO: Figure out if default parameter expressions can see other parameters, if yes which, and then clarify that here. --><h1 id="optional-arguments"><a class="header" href="#optional-arguments">Optional Arguments</a></h1>
 <p>When working with values that may or may not be provided, where the default is outside the range of possible provided values, you can improve your component's interface towards consumers by using optional arguments:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -1055,7 +1055,7 @@ asteracea::component! {
 &lt;DIV class=&quot;classicist&quot;&gt;&lt;/DIV&gt;
 </code></pre>
 <p><code>class</code> is an <code>Option&lt;&amp;'bump str&gt;</code> within <code>Classic</code>s <code>.render(…)</code> method, but the parameter is provided from outside as <code>&amp;'bump str</code>.</p>
-<h1><a class="header" href="#conditional-child-component-parameters" id="conditional-child-component-parameters">Conditional Child Component Parameters</a></h1>
+<h1 id="conditional-child-component-parameters"><a class="header" href="#conditional-child-component-parameters">Conditional Child Component Parameters</a></h1>
 <p>Note that providing optional argument values without <a href="dynamic_components/"><code>Some</code></a> means that <a href="dynamic_components/"><code>None</code></a> can only be specfied by not setting the parameter at all! Fortunately, it's easy to do this conditionally in the same way as for optional attributes on HTML elements:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -1096,14 +1096,14 @@ asteracea::component! {
 <p><strong>Parameter value evaluation order</strong>, assignment order among any unconditionally set parameters, assignment order among conditional parameters <strong>and the order of assignments to the same name are preserved regardless</strong>.</p>
 <p>As long as your program compiles, this optimisation is unobservable when handling child component types created using <code>asteracea::component! { … }</code>. You may still want to keep it in mind for components with custom argument builders.</p>
 </blockquote>
-<h1><a class="header" href="#persistence-2-body-captures" id="persistence-2-body-captures">Persistence 2: Body Captures</a></h1>
+<h1 id="persistence-2-body-captures"><a class="header" href="#persistence-2-body-captures">Persistence 2: Body Captures</a></h1>
 <p>TODO: Renamed this to <code>⟦pin⟧ |etc.|</code></p>
 <p>TODO</p>
-<h1><a class="header" href="#dependency-extraction" id="dependency-extraction">Dependency Extraction</a></h1>
+<h1 id="dependency-extraction"><a class="header" href="#dependency-extraction">Dependency Extraction</a></h1>
 <p>Asteracea natively supports inversion of control via dependency extraction, which is functionally identical to dependency injection but implemented a bit differently.</p>
 <p>To define an extractable trait, you can for example write:</p>
 <p>TODO</p>
-<h1><a class="header" href="#with----" id="with----"><code>with { …; } &lt;…&gt;</code></a></h1>
+<h1 id="with----"><a class="header" href="#with----"><code>with { …; } &lt;…&gt;</code></a></h1>
 <p>While you can in theory place nearly any Rust code inside <code>{}</code>-braces as part of Asteracea's grammar, this can be disorderly for more complex calculations or cumbersome where you want to reuse parts of a calculation.</p>
 <p>Instead, you can use a <code>with { …; } &lt;…&gt;</code>-expression to run a number of Rust statements procedurally:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
@@ -1149,7 +1149,7 @@ The oak's leaves are fallen.&lt;/DIV&gt;
 <pre><code class="language-html">&lt;DIV&gt;The tree in the garden is an oak.
 The oak's leaves are fallen.&lt;/DIV&gt;
 </code></pre>
-<h1><a class="header" href="#spread-if--" id="spread-if--"><code>spread if {…} &lt;…&gt;</code></a></h1>
+<h1 id="spread-if--"><a class="header" href="#spread-if--"><code>spread if {…} &lt;…&gt;</code></a></h1>
 <p>To conditionally render a node, you can use <code>spread if</code>-expressions whenever a <a href="conditional_content/"><code>Node&lt;'bump&gt;</code></a> is expected:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -1207,7 +1207,7 @@ asteracea::component! {
 <pre><code class="language-html">I like this place.
 I am here&lt;SPAN&gt; and &lt;/SPAN&gt;I like this place.
 </code></pre>
-<h2><a class="header" href="#pattern-matching-with-let" id="pattern-matching-with-let">Pattern-matching with <code>let</code></a></h2>
+<h2 id="pattern-matching-with-let"><a class="header" href="#pattern-matching-with-let">Pattern-matching with <code>let</code></a></h2>
 <p>is also available, though this means that Asteracea's <code>if</code>-<code>{condition}</code> is <em>not</em> automatically a Rust block. Use <code>{{ statements }}</code> if you really need one, though wrapping the <code>spread if</code> in a <code>with { … } &lt;…&gt;</code>-expression is likely a better idea in terms of code organisation.</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -1251,7 +1251,7 @@ asteracea::component! {
 <p>Unlike React Hooks, Asteracea's captures (including <code>&lt;*ChildComponent&gt;</code>s) are generally fine to use in conditional <code>spread if</code>-branches, even if which branch is taken changes during the component's lifetime.</p>
 <p>The tradeoff for this is that their initialisers always run during component instantiation and that fields are created for any declared captures.</p>
 </blockquote>
-<h1><a class="header" href="#spread-if--else-" id="spread-if--else-"><code>spread if …… else &lt;…&gt;</code></a></h1>
+<h1 id="spread-if--else-"><a class="header" href="#spread-if--else-"><code>spread if …… else &lt;…&gt;</code></a></h1>
 <p>You can explicitly specify alternative content with an <code>else</code> branch:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -1285,7 +1285,7 @@ asteracea::component! {
 <pre><code class="language-html">Alternative
 Default
 </code></pre>
-<h1><a class="header" href="#spread-match----" id="spread-match----"><code>spread match &lt;…&gt; [ … ]</code></a></h1>
+<h1 id="spread-match----"><a class="header" href="#spread-match----"><code>spread match &lt;…&gt; [ … ]</code></a></h1>
 <p>Rust's <code>match</code> statements are available in Asteracea contexts, with slightly changed syntax:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -1346,7 +1346,7 @@ asteracea::component! {
 </span></code></pre></pre>
 <pre><code class="language-html">Index
 </code></pre>
-<h1><a class="header" href="#box-priv--struct--where--" id="box-priv--struct--where--"><code>box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ &lt;…&gt;</code></a></h1>
+<h1 id="box-priv--struct--where--"><a class="header" href="#box-priv--struct--where--"><code>box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ &lt;…&gt;</code></a></h1>
 <p>A <code>box &lt;…&gt;</code> expression moves its parameter's backing storage into a new heap object, bound to a field of the current <a href="conditional_content/*">storage context</a>.</p>
 <p>The field can be named using <code>box priv …</code> syntax. If the field is named, its type can be specified using <code>: …</code>.</p>
 <p>If you don't name the type or specify its name using <code>: struct …</code>, it is generated automatically.</p>
@@ -1365,7 +1365,7 @@ asteracea::component! {
 <p><strong>Recursion becomes possible.</strong></p>
 </li>
 </ul>
-<h2><a class="header" href="#component-recursion" id="component-recursion">Component recursion</a></h2>
+<h2 id="component-recursion"><a class="header" href="#component-recursion">Component recursion</a></h2>
 <p>Infinite recursive (storage) inlining isn't possible (except <em>theoretically</em> for zero-sized-types, but Rust makes no distinction here).</p>
 <p>This means the following requires boxing:</p>
 <pre><code class="language-TODOrust TODOasteracea=Countdown asteracea::render=.i(6)">asteracea::component! {
@@ -1389,7 +1389,7 @@ If you have a better example to demonstrate recursion with, please <a href="cond
 </blockquote>
 <p>Note the use of <code>dyn if</code> to prevent infinite eager initialisation.</p>
 <p>You can alternatively combine <code>spread if</code> with <code>lazy ⟦move⟧</code> to avoid throwing away heap allocations once they exist. This is better in cases where the recursion depth changes quickly or </p>
-<h2><a class="header" href="#memory-savings" id="memory-savings">Memory savings</a></h2>
+<h2 id="memory-savings"><a class="header" href="#memory-savings">Memory savings</a></h2>
 <p>The container component size reduction isn't very useful in most cases, since Asteracea initialises child components eagerly, but can be used to great effect with <strong><code>dyn</code> branching if certain arms require especially large storage</strong>.</p>
 <!-- TODO: Check if it's possible to let Clippy warn about that. -->
 <p>Consider the following:</p>
@@ -1451,7 +1451,7 @@ asteracea::component! {
 </code></pre>
 <p>As <code>dyn if</code> won't initialise its branches unless necessary, no heap allocation happens in this case either.</p>
 <!-- TODO: Is there any way to demo this? -->
-<h1><a class="header" href="#defer-move-as--" id="defer-move-as--"><code>defer ⟦move⟧ ⟦as …⟧ &lt;…&gt;</code></a></h1>
+<h1 id="defer-move-as--"><a class="header" href="#defer-move-as--"><code>defer ⟦move⟧ ⟦as …⟧ &lt;…&gt;</code></a></h1>
 <p>An alternative method of breaking up recursive component initialisation is to defer it for the recursive part of the template until it is rendered.</p>
 <p>As such, the recursive example from the <a href="conditional_content/./box_as.html"><code>box ⟦as …⟧ &lt;…&gt;</code> chapter</a> can be written as:</p>
 <pre><code class="language-TODOrust TODOasteracea=Countdown asteracea::render=.i(6)">asteracea::component! {
@@ -1470,10 +1470,10 @@ asteracea::component! {
 </code></pre>
 <p>This has different runtime characteristics:</p>
 <p><code>spread if</code> doesn't drop branches that aren't active, and <code>defer</code> only ever runs initialisers once. This means that <strong>state persists</strong> and <strong>heap allocations are cached</strong>. Useful for (very) frequently updated content!</p>
-<h1><a class="header" href="#glossary" id="glossary">Glossary</a></h1>
-<h2><a class="header" href="#element-expression" id="element-expression">element expression</a></h2>
+<h1 id="glossary"><a class="header" href="#glossary">Glossary</a></h1>
+<h2 id="element-expression"><a class="header" href="#element-expression">element expression</a></h2>
 <p>Asteracea's most generic template building block. Placeholder: <code>&lt;…&gt;</code></p>
-<h1><a class="header" href="#chapter-1-hello-asteracea" id="chapter-1-hello-asteracea">Chapter 1: Hello Asteracea</a></h1>
+<h1 id="chapter-1-hello-asteracea"><a class="header" href="#chapter-1-hello-asteracea">Chapter 1: Hello Asteracea</a></h1>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {

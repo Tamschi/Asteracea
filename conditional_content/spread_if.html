@@ -165,7 +165,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#spread-if--" id="spread-if--"><code>spread if {…} &lt;…&gt;</code></a></h1>
+                        <h1 id="spread-if--"><a class="header" href="#spread-if--"><code>spread if {…} &lt;…&gt;</code></a></h1>
 <p>To conditionally render a node, you can use <code>spread if</code>-expressions whenever a <a href=""><code>Node&lt;'bump&gt;</code></a> is expected:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]
@@ -223,7 +223,7 @@ asteracea::component! {
 <pre><code class="language-html">I like this place.
 I am here&lt;SPAN&gt; and &lt;/SPAN&gt;I like this place.
 </code></pre>
-<h2><a class="header" href="#pattern-matching-with-let" id="pattern-matching-with-let">Pattern-matching with <code>let</code></a></h2>
+<h2 id="pattern-matching-with-let"><a class="header" href="#pattern-matching-with-let">Pattern-matching with <code>let</code></a></h2>
 <p>is also available, though this means that Asteracea's <code>if</code>-<code>{condition}</code> is <em>not</em> automatically a Rust block. Use <code>{{ statements }}</code> if you really need one, though wrapping the <code>spread if</code> in a <code>with { … } &lt;…&gt;</code>-expression is likely a better idea in terms of code organisation.</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">
 <span class="boring">#![allow(unused)]

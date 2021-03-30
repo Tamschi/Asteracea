@@ -165,7 +165,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#escalation-and-backtrace" id="escalation-and-backtrace"><code>Escalation</code> and <code>&quot;backtrace&quot;</code></a></h1>
+                        <h1 id="escalation-and-backtrace"><a class="header" href="#escalation-and-backtrace"><code>Escalation</code> and <code>&quot;backtrace&quot;</code></a></h1>
 <p>The <code>::new(…)</code> and <code>.render(…)</code> functions of Asteracea-components are fallible, returning a <code>Result&lt;_, Escalation&gt;</code>.</p>
 <p><a href=""><code>Escalation</code></a>s are panic-like: They are not expected during normal execution of a web frontend, are strictly deprioritised compared to the <a href=""><code>Ok</code></a> path and components that catch them are encouraged to implement a &quot;fail once and stop&quot; approach where child components are disposed of on first failure.</p>
 <p>As long as Asteracea is compiled with the <code>&quot;backtrace&quot;</code> feature, it will trace <a href=""><code>Escalation</code></a> propagation through any function instrumented via the <a href=""><code>#[asteracea::trace_escalations]</code></a> attribute, which is automatic for the two mentioned above.</p>
@@ -227,7 +227,7 @@ in Outer::render
 <p>However, note that <strong>panics cannot be caught on platforms without unwinding, including Wasm</strong> (as of Rust 1.49.0).</p>
 <p>In the future, panic conversion will be activated automatically on compatible platforms, as long as this can be done without compromising backtraces.</p>
 </blockquote>
-<h2><a class="header" href="#handling-panics" id="handling-panics">Handling panics</a></h2>
+<h2 id="handling-panics"><a class="header" href="#handling-panics">Handling panics</a></h2>
 <p>Asteracea's error handling will automatically try to pick up on plain Rust panics, and can prevent them from crashing your app as long you use an [<code>Escalation::catch…</code>] function to handle errors. However, <strong>this only works with unwinding enabled (i.e. not under Wasm!)</strong>. The currently active panic hook is invoked regardless, too.</p>
 <p>The following example <em>should</em> display a backtrace rather than failing the book build:</p>
 <pre><pre class="playground"><code class="language-rust no_run ro_playground">

@@ -165,18 +165,18 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
 <p>Welcome to the Asteracea guide book!</p>
 <blockquote>
 <p><strong>This book is a work in progress!</strong></p>
 <p>Until the first minor version stabilisation, there likely will only be this <code>develop</code>-branch version published online as rendered version, which usually won't mach a version of the crate published to crates.io. (Respective versions are tagged and can be rendered offline using (from the repository's root directory) <code>cd book</code> and <code>cargo run</code>.)</p>
 <p>In addition to the missing chapters, URLs are subject to change, links have have not been filled in and code blocks without highlighting or rendered HTML output may show unimplemented features.</p>
 </blockquote>
-<h2><a class="header" href="#audience" id="audience">Audience</a></h2>
+<h2 id="audience"><a class="header" href="#audience">Audience</a></h2>
 <p>While using Asteracea effectively requires knowledge of Rust, this book is written also with non-Rustaceans in mind.</p>
 <p>If you have experience with more traditional front-end frameworks like Angular or React, quite a few of the presented concepts should be familiar to you. I will also try to highlight these connections where they appear. By the end of the book, you should be able to read Asteracea's component templates and make modifications to them.</p>
 <p>If you are already familiar with Rust, you can use the samples from <a href="TK">Chapter 6: Integrating Asteracea</a> to create a complete web site or application including static site generation, server-side rendering and/or a (primary or optional) client-side approach.</p>
-<h2><a class="header" href="#background" id="background">Background</a></h2>
+<h2 id="background"><a class="header" href="#background">Background</a></h2>
 <p>When I started using Rust privately in 2019, I had worked as a consultant on multiple web projects, mainly as front-end developer using TypeScript, Angular and React. I had grown increasingly frustrated with the failure classes of this weakly typed ecosystem: Aside from (rare but in those cases often destructive) run-ins with outdated or wrong type definitions for external packages, it was too easy to accidentally turn off type checking. It was often easy to forget to handle certain failure cases. React was quick to prototype in, but would often spiral in complexity and unchecked definitions on larger projects. Angular applications were comparatively robust but required manual subscription management to prevent memory leaks and required a significant amount of boilerplate that couldn't be abstracted away due to compiler limitations.</p>
 <p>Meanwhile on the server side, Spring Boot was resource-hungry as a microservice platform, requiring powerful development systems to run a local test instance of the platform even without any data added to it. Using the documentation was also frustrating to me, since it was difficult to look up the various implicit behaviours. I wouldn't be able to work efficiently with such a system on my slower home computer that also needed to handle a considerable amount of browser tabs at the same time. To top it off, DTOs couldn't be easily shared through the various layers of the application.</p>
 <p>I originally got into Rust to have another go at game development. This didn't go well at the time due to lack of high-level frameworks I could prototype something in quickly, but I liked the language and ended up writing several smaller utility programs. Then I had to switch Android ROMs to still get updates and lost the data stored in the finance tracker app I was using. (Backups were only available by uploading my data to the manufacturer's servers, which I decided against.) I took this as an opportunity to write my own tracker, to be hosted on a Pi Zero W so I could make entries from my phone. In part to learn about technologies I had seen but not used myself at work, I decided to use a network of Docker containers, with Postgres for storage and Nginx to serve static files and act as reverse proxy.</p>
@@ -184,7 +184,7 @@
 <p>However, here is where I hit a snag: I was used to relatively mature web frameworks that make it easy to write reusable components and test them in isolation via dependency injection. I was also looking for CSS scoping and to ideally <em>never</em> touch JavaScript myself (ideally skipping its build ecosystem entirely). I used version <code>0.1.0</code> of <a href="https://lib.rs/crates/dodrio"><code>dodrio</code></a> for a while, but as stated on its project page, it's not intended as complete GUI solution. <a href="https://github.com/hecrj/iced">Iced</a> wasn't a good fit due to being more high-level than what I was going for. <a href="https://github.com/bodil/typed-html"><code>typed-html</code></a> seemed close to what React does, but I was looking for more stateful component tooling. (<code>dodrio</code> inspired Asteracea's use of a bump allocator.)</p>
 <p>(<a href="https://github.com/extraymond/afterglow">Afterglow</a> did not exist at that point. You will probably want to look at it as an alternative before deciding what to go with. Its design goals seem different from Asteracea's, at a glance.)</p>
 <p>I decided to write my own solution to this problem, which is where things started to escalate.</p>
-<h2><a class="header" href="#asteraceas-design-goals" id="asteraceas-design-goals">Asteracea's Design Goals</a></h2>
+<h2 id="asteraceas-design-goals"><a class="header" href="#asteraceas-design-goals">Asteracea's Design Goals</a></h2>
 <p>Asteracea is, as of October 2020, still early in development and subject to change. However, there are a few main goals I want to enable with this framework that can be put into writing already:</p>
 <ul>
 <li>

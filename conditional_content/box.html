@@ -165,7 +165,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#box-priv--struct--where--" id="box-priv--struct--where--"><code>box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ &lt;…&gt;</code></a></h1>
+                        <h1 id="box-priv--struct--where--"><a class="header" href="#box-priv--struct--where--"><code>box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ &lt;…&gt;</code></a></h1>
 <p>A <code>box &lt;…&gt;</code> expression moves its parameter's backing storage into a new heap object, bound to a field of the current <a href="*">storage context</a>.</p>
 <p>The field can be named using <code>box priv …</code> syntax. If the field is named, its type can be specified using <code>: …</code>.</p>
 <p>If you don't name the type or specify its name using <code>: struct …</code>, it is generated automatically.</p>
@@ -184,7 +184,7 @@
 <p><strong>Recursion becomes possible.</strong></p>
 </li>
 </ul>
-<h2><a class="header" href="#component-recursion" id="component-recursion">Component recursion</a></h2>
+<h2 id="component-recursion"><a class="header" href="#component-recursion">Component recursion</a></h2>
 <p>Infinite recursive (storage) inlining isn't possible (except <em>theoretically</em> for zero-sized-types, but Rust makes no distinction here).</p>
 <p>This means the following requires boxing:</p>
 <pre><code class="language-TODOrust TODOasteracea=Countdown asteracea::render=.i(6)">asteracea::component! {
@@ -208,7 +208,7 @@ If you have a better example to demonstrate recursion with, please <a href="">le
 </blockquote>
 <p>Note the use of <code>dyn if</code> to prevent infinite eager initialisation.</p>
 <p>You can alternatively combine <code>spread if</code> with <code>lazy ⟦move⟧</code> to avoid throwing away heap allocations once they exist. This is better in cases where the recursion depth changes quickly or </p>
-<h2><a class="header" href="#memory-savings" id="memory-savings">Memory savings</a></h2>
+<h2 id="memory-savings"><a class="header" href="#memory-savings">Memory savings</a></h2>
 <p>The container component size reduction isn't very useful in most cases, since Asteracea initialises child components eagerly, but can be used to great effect with <strong><code>dyn</code> branching if certain arms require especially large storage</strong>.</p>
 <!-- TODO: Check if it's possible to let Clippy warn about that. -->
 <p>Consider the following:</p>
