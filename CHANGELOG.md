@@ -5,7 +5,8 @@
 TODO: Date
 
 * **Breaking:**
-  * Increased minimum supported Rust version from 1.45.0 to 1.46.0.
+  * Increased minimum supported Rust version from 1.45.0 to 1.51.0
+    > since `asteracea::error` uses `std::panic::panic_any(…)`.
   * Removed "rhizome" features (always enabled now)
   * Removed "styles" and "topiary" features. CSS scoping will be enabled through more general means.
   * Reworked generated component interface
