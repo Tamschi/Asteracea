@@ -35,80 +35,8 @@ use syn_mid::Block;
 use unquote::unquote;
 use wyz::Pipe as _;
 
-pub struct Part<C: Configuration> {
-	body: PartBody<C>, //TODO: Unify this.
-}
-
-#[derive(PartialEq, Eq)]
-enum PartKind {
-	Child,
-	EventBinding,
-}
-
-impl<C: Configuration> Part<C> {
-	fn kind(&self) -> PartKind {
-		match self.body {
-			PartBody::Box(_)
-			| PartBody::Capture(_)
-			| PartBody::Comment(_)
-			| PartBody::Component(_)
-			| PartBody::RustBlock(_, _)
-			| PartBody::Html(_)
-			| PartBody::If(_, _, _, _, _, _)
-			| PartBody::Match(_, _, _, _, _)
-			| PartBody::Multi(_, _)
-			| PartBody::Text(_)
-			| PartBody::With(_, _, _) => PartKind::Child,
-			PartBody::EventBinding(_) => PartKind::EventBinding,
-		}
-	}
-}
-
-impl<C: Configuration> ParseWithContext for Part<C> {
-	type Output = Option<Self>;
-	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
-		Ok(
-			if let Some(body) = PartBody::parse_with_context(input, cx)? {
-				Some(Self { body })
-			} else {
-				None
-			},
-		)
-	}
-}
-impl<C: Configuration> Part<C> {
-	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
-		self.body.part_tokens(cx)
-	}
-}
-
-mod kw {
-	syn::custom_keyword!(with);
-	syn::custom_keyword!(spread);
-}
-
-pub enum InitMode {
-	Dyn(Token![dyn]),
-	Spread(kw::spread),
-}
-
-impl Parse for InitMode {
-	fn parse(input: ParseStream) -> Result<Self> {
-		Ok(if let Some(dyn_) = input.parse().unwrap() {
-			InitMode::Dyn(dyn_)
-		} else if let Some(spread) = input.parse().unwrap() {
-			InitMode::Spread(spread)
-		} else {
-			return Err(Error::new(
-				input.span(),
-				"Expected one of `dyn` or `spread`",
-			));
-		})
-	}
-}
-
 #[allow(clippy::large_enum_variant, clippy::type_complexity)]
-pub enum PartBody<C: Configuration> {
+pub enum Part<C: Configuration> {
 	Box(BoxExpression<C>),
 	Capture(CaptureDefinition<C>),
 	Comment(HtmlComment),
@@ -142,7 +70,57 @@ pub enum PartBody<C: Configuration> {
 	With(kw::with, Block, Option<Box<Part<C>>>),
 }
 
-//TODO: Split this off onto a wrapper (FragmetRootPart?) to avoid confusion.
+#[derive(PartialEq, Eq)]
+enum PartKind {
+	Child,
+	EventBinding,
+}
+
+impl<C: Configuration> Part<C> {
+	fn kind(&self) -> PartKind {
+		match self {
+			Part::Box(_)
+			| Part::Capture(_)
+			| Part::Comment(_)
+			| Part::Component(_)
+			| Part::RustBlock(_, _)
+			| Part::Html(_)
+			| Part::If(_, _, _, _, _, _)
+			| Part::Match(_, _, _, _, _)
+			| Part::Multi(_, _)
+			| Part::Text(_)
+			| Part::With(_, _, _) => PartKind::Child,
+			Part::EventBinding(_) => PartKind::EventBinding,
+		}
+	}
+}
+
+mod kw {
+	syn::custom_keyword!(with);
+	syn::custom_keyword!(spread);
+}
+
+pub enum InitMode {
+	Dyn(Token![dyn]),
+	Spread(kw::spread),
+}
+
+impl Parse for InitMode {
+	fn parse(input: ParseStream) -> Result<Self> {
+		Ok(if let Some(dyn_) = input.parse().unwrap() {
+			InitMode::Dyn(dyn_)
+		} else if let Some(spread) = input.parse().unwrap() {
+			InitMode::Spread(spread)
+		} else {
+			return Err(Error::new(
+				input.span(),
+				"Expected one of `dyn` or `spread`",
+			));
+		})
+	}
+}
+
+//TODO: Split this off onto a wrapper (FragmentRootPart?) to avoid confusion.
 // Or maybe just parse it differently, if that's not too much of an issue.
 impl<C: Configuration> Parse for Part<C> {
 	fn parse(input: ParseStream<'_>) -> Result<Self> {
@@ -183,27 +161,27 @@ impl<C: Configuration> Part<C> {
 	}
 }
 
-impl<C: Configuration> ParseWithContext for PartBody<C> {
+impl<C: Configuration> ParseWithContext for Part<C> {
 	type Output = Option<Self>;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let lookahead = input.lookahead1();
 		Ok(if lookahead.peek(Token![box]) {
-			Some(PartBody::Box(BoxExpression::parse_with_context(input, cx)?))
+			Some(Part::Box(BoxExpression::parse_with_context(input, cx)?))
 		} else if lookahead.peek(LitStr) {
-			Some(PartBody::Text(input.parse()?))
+			Some(Part::Text(input.parse()?))
 		} else if lookahead.peek(Token![<]) {
 			match {
 				let input = input.fork();
 				input.parse::<Token![<]>().unwrap();
 				input.parse::<TokenTree>()?
 			} {
-				TokenTree::Punct(punct) if punct.as_char() == '!' => Some(PartBody::Comment(
-					HtmlComment::parse_with_context(input, cx)?,
-				)),
-				TokenTree::Punct(punct) if punct.as_char() == '*' => Some(PartBody::Component(
-					Component::parse_with_context(input, cx)?,
-				)),
-				_ => Some(PartBody::Html(HtmlDefinition::<C>::parse_with_context(
+				TokenTree::Punct(punct) if punct.as_char() == '!' => {
+					Some(Part::Comment(HtmlComment::parse_with_context(input, cx)?))
+				}
+				TokenTree::Punct(punct) if punct.as_char() == '*' => {
+					Some(Part::Component(Component::parse_with_context(input, cx)?))
+				}
+				_ => Some(Part::Html(HtmlDefinition::<C>::parse_with_context(
 					input, cx,
 				)?)),
 			}
@@ -251,7 +229,7 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 					.pipe(Box::new),
 				)
 			};
-			Some(PartBody::If(
+			Some(Part::If(
 				init_mode,
 				if_,
 				condition,
@@ -299,17 +277,11 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 				}
 				arms
 			};
-			Some(PartBody::Match(
-				init_mode,
-				match_,
-				Box::new(on),
-				bracket,
-				arms,
-			))
+			Some(Part::Match(init_mode, match_, Box::new(on), bracket, arms))
 		} else if lookahead.peek(Brace) {
 			let expression;
 			#[allow(clippy::eval_order_dependence)]
-			Some(PartBody::RustBlock(
+			Some(Part::RustBlock(
 				braced!(expression in input),
 				expression.parse()?,
 			))
@@ -318,7 +290,7 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 			|| lookahead.peek(Token![|])
 		{
 			if C::CAN_CAPTURE {
-				CaptureDefinition::parse_with_context(input, cx)?.map(PartBody::Capture)
+				CaptureDefinition::parse_with_context(input, cx)?.map(Part::Capture)
 			} else {
 				return Err(Error::new(
 					lookahead.error().span(),
@@ -334,9 +306,9 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 					inner_parts.push(inner_part);
 				}
 			}
-			Some(PartBody::Multi(bracket, inner_parts))
+			Some(Part::Multi(bracket, inner_parts))
 		} else if lookahead.peek(Add) {
-			Some(PartBody::EventBinding(
+			Some(Part::EventBinding(
 				EventBindingDefinition::parse_with_context(input, cx)?,
 			))
 		} else if bump_format_shorthand::peek_from(input) {
@@ -347,7 +319,7 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 				#let block
 			};
 			let part = Part::parse_with_context(input, cx)?.map(Box::new);
-			Some(PartBody::With(with, block, part))
+			Some(Part::With(with, block, part))
 		} else {
 			return Err(Error::new(
 				lookahead.error().span(),
@@ -367,13 +339,13 @@ impl<C: Configuration> ParseWithContext for PartBody<C> {
 #[derive(Default)]
 pub struct GenerateContext {}
 
-impl<C: Configuration> PartBody<C> {
+impl<C: Configuration> Part<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		Ok(match self {
-			PartBody::Box(box_expression) => box_expression.part_tokens(cx)?,
-			PartBody::Comment(html_comment) => html_comment.part_tokens(),
-			PartBody::Component(component) => component.part_tokens(),
-			PartBody::Text(lit_str) => {
+			Part::Box(box_expression) => box_expression.part_tokens(cx)?,
+			Part::Comment(html_comment) => html_comment.part_tokens(),
+			Part::Component(component) => component.part_tokens(),
+			Part::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span()=>
 					#asteracea::lignin::Node::Text {
@@ -382,25 +354,11 @@ impl<C: Configuration> PartBody<C> {
 					}
 				}
 			}
-			PartBody::Html(html_definition) => html_definition.part_tokens(cx)?,
-			PartBody::If(
-				InitMode::Dyn(_dyn_),
-				_if_,
-				_condition,
-				_then_part,
-				_else_,
-				_else_part,
-			) => {
+			Part::Html(html_definition) => html_definition.part_tokens(cx)?,
+			Part::If(InitMode::Dyn(_dyn_), _if_, _condition, _then_part, _else_, _else_part) => {
 				todo!("`dyn if`")
 			}
-			PartBody::If(
-				InitMode::Spread(_spread),
-				if_,
-				condition,
-				then_part,
-				else_,
-				else_part,
-			) => {
+			Part::If(InitMode::Spread(_spread), if_, condition, then_part, else_, else_part) => {
 				let then_tokens = then_part.part_tokens(cx)?;
 				let else_tokens = {
 					let else_part = else_part.part_tokens(cx)?;
@@ -412,10 +370,10 @@ impl<C: Configuration> PartBody<C> {
 					#else_tokens
 				}}
 			}
-			PartBody::Match(InitMode::Dyn(_dyn_), _match_, _on, _bracket, _arms) => {
+			Part::Match(InitMode::Dyn(_dyn_), _match_, _on, _bracket, _arms) => {
 				todo!("`dyn match`")
 			}
-			PartBody::Match(InitMode::Spread(_spread), match_, on, bracket, arms) => {
+			Part::Match(InitMode::Spread(_spread), match_, on, bracket, arms) => {
 				let on_tokens = on.part_tokens(cx)?;
 				let arms = arms
 					.iter()
@@ -437,13 +395,13 @@ impl<C: Configuration> PartBody<C> {
 				let body = quote_spanned!(bracket.span => { #(#arms)* });
 				quote_spanned!(match_.span=> #match_ #on_tokens #body)
 			}
-			PartBody::RustBlock(brace, statements) => {
+			Part::RustBlock(brace, statements) => {
 				// Why not just parentheses? Because those could be turned into a tuple.
 				// Making each of these a full Rust block is a bit strange too, but likely the lesser issue.
 				quote_spanned!(brace.span.resolved_at(Span::mixed_site())=> { #statements })
 			}
-			PartBody::Capture(capture) => quote!(#capture),
-			PartBody::Multi(bracket, m) => {
+			Part::Capture(capture) => quote!(#capture),
+			Part::Multi(bracket, m) => {
 				let asteracea = asteracea_ident(bracket.span);
 				let m = m
 					.iter()
@@ -458,8 +416,8 @@ impl<C: Configuration> PartBody<C> {
 					)?)
 				}
 			}
-			PartBody::EventBinding(definition) => definition.part_tokens(),
-			PartBody::With(with, block, part) => {
+			Part::EventBinding(definition) => definition.part_tokens(),
+			Part::With(with, block, part) => {
 				let isolate = quote_spanned!(with.span=> {});
 				let statements = &block.stmts;
 				let part_tokens = part.as_ref().map(|part| part.part_tokens(cx)).transpose()?;
