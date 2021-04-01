@@ -13,7 +13,7 @@ use std::{
 ///
 /// # About GUI Errors
 ///
-/// GUI errors (including dependency resolution errors) are, at least in Asteracea, considered to be programming errors and not part of the expected control flow. As such, they are strongly deprioritised for optimisation and any built-in error handling primitives are a variation of 'fail once, fail forever' regarding their operands.
+/// GUI errors (including dependency resolution errors) are, at least in Asteracea, considered to be programming errors and not part of the expected control flow. As such, they are strongly deprioritized for optimization and any built-in error handling primitives are a variation of 'fail once, fail forever' regarding their operands.
 ///
 /// What this means in practice is that the framework may substitute panics for any [`Err(Escalation)`](`Err`) variant and therefore make all `new` and `render` methods on components effectively infallible. Additionally, panics unwound through the GUI are considered to be GUI errors and caught by Asteracea's error handling expressions.
 ///
@@ -163,7 +163,7 @@ impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
 
 /// A caught [`Escalation`], which may have originated as error or panic.
 ///
-/// Re-escalating this type always panics if it was created from a panic, in order to presever unwind-safety-related errors.
+/// Re-escalating this type always panics if it was created from a panic, in order to preserve unwind-safety-related errors.
 ///
 /// Panics resumed from this type (including via tracing instrumentation with `"backtrace"` enabled) are wrapped to enable tracing if that was not the case before.
 /// This is transparent towards the `Escalation::catch…` functions and other APIs inside this module, but may affect error handlers from other crates.
