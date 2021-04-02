@@ -41,6 +41,7 @@ asteracea::component! {
 
   <div
 	.hidden? = {!visible}
+	.role = ""
 	"#"
   >
 }
