@@ -1,0 +1,5 @@
+asteracea::component! {
+	Empty()()
+
+	[]
+}

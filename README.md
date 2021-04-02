@@ -72,7 +72,7 @@ The most simple (`Node`-rendering) component can be written like this:
 
 ```rust
 asteracea::component! {
-  Empty()()
+  pub Empty()() -> Sync
   [] // Empty node sequence
 }
 
@@ -91,6 +91,8 @@ assert!(matches!(
   lignin::Node::Multi(&[]) // Empty node sequence
 ));
 ```
+
+VDOM [`Sync`-ness](https://doc.rust-lang.org/stable/std/marker/trait.Sync.html) can be inferred (even transitively) at zero runtime cost by omitting `-> Sync` (or `-> !Sync`), except for components visible outside their crate.
 
 ### Unit component
 
@@ -144,7 +146,7 @@ use std::cell::Cell;
 fn schedule_render() { /* ... */ }
 
 component! {
-  pub Counter(
+  Counter(
     /// The counter's starting value.
     initial: i32,
     priv step: i32, // field from argument
