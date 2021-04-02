@@ -1,5 +1,5 @@
 asteracea::component! {
-	pub Simple()()
+	pub Simple()() -> !Sync
 
 	<button
 		//TODO +"click" {}

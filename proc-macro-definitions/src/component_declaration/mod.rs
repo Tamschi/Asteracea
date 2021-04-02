@@ -25,12 +25,14 @@ use syn::{
 	Type, Visibility, WhereClause, WherePredicate,
 };
 use syn_mid::Block;
+use tap::Pipe as _;
 use unquote::unquote;
 
 mod arguments;
 mod parameter_helper_definitions;
 mod kw {
 	syn::custom_keyword!(new);
+	syn::custom_keyword!(Sync);
 	syn::custom_keyword!(with);
 }
 
@@ -48,11 +50,18 @@ pub struct ComponentDeclaration {
 	render_generics: Generics,
 	render_paren: Paren,
 	render_args: Punctuated<Argument, Token![,]>,
-	render_type: ReturnType,
+	render_type: RenderType,
 	constructor_block: Option<(kw::new, kw::with, Block)>,
 	body: Part<ComponentRenderConfiguration>,
 	rhizome_extractions: Vec<TokenStream>,
 	assorted_items: Vec<Item>,
+}
+
+pub enum RenderType {
+	AutoSafe,
+	Explicit(Token![->], Box<Type>),
+	Sync(Token![->], kw::Sync),
+	UnSync(Token![->], Token![!], kw::Sync),
 }
 
 pub struct FieldDefinition {
@@ -292,6 +301,22 @@ impl Parse for ComponentDeclaration {
 	}
 }
 
+impl Parse for RenderType {
+	fn parse(input: ParseStream) -> Result<Self> {
+		match input.parse().unwrap() {
+			None => Self::AutoSafe,
+			Some(r_arrow) => match input.parse().unwrap() {
+				Some(bang) => Self::UnSync(r_arrow, bang, input.parse()?),
+				None => match input.parse().unwrap() {
+					Some(sync) => Self::Sync(r_arrow, sync),
+					None => Self::Explicit(r_arrow, input.parse()?),
+				},
+			},
+		}
+		.pipe(Ok)
+	}
+}
+
 impl ComponentDeclaration {
 	#[allow(clippy::cognitive_complexity)]
 	pub fn into_tokens(self) -> Result<TokenStream> {
@@ -313,7 +338,7 @@ impl ComponentDeclaration {
 			constructor_block,
 			body,
 			rhizome_extractions,
-			assorted_items: random_items,
+			assorted_items: mut random_items,
 		} = self;
 
 		let asteracea = asteracea_ident(Span::call_site());
@@ -340,7 +365,26 @@ impl ComponentDeclaration {
 			bump
 		);
 
-		let body = body.part_tokens(&GenerateContext::default())?;
+		let cx = match render_type {
+			RenderType::AutoSafe => GenerateContext {
+				thread_safety: quote!(_),
+				prefer_thread_safe: Some(quote!(.prefer_thread_safe())),
+			},
+			RenderType::Explicit(_, _) => GenerateContext {
+				thread_safety: quote!(_),
+				prefer_thread_safe: None,
+			},
+			RenderType::Sync(_, _) => GenerateContext {
+				thread_safety: quote!(::#asteracea::lignin::ThreadSafe),
+				prefer_thread_safe: None,
+			},
+			RenderType::UnSync(_, _, _) => GenerateContext {
+				thread_safety: quote!(::#asteracea::lignin::ThreadBound),
+				prefer_thread_safe: None,
+			},
+		};
+
+		let body = body.part_tokens(&cx)?;
 
 		let new_lifetime: Lifetime = parse2(quote_spanned!(Span::call_site()=> 'NEW)).unwrap();
 		let render_lifetime: Lifetime =
@@ -445,18 +489,41 @@ impl ComponentDeclaration {
 
 		let render_self: Token![self] = parse2(quote_spanned!(render_paren.span=> self)).unwrap();
 
-		let render_type: ReturnType = match &render_type {
-			ReturnType::Default => parse2(quote_spanned! {render_type.span()=>
-				-> ::std::result::Result<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>, ::#asteracea::error::Escalation>
-			})
-			.unwrap(),
-			//TODO:Check for Send/!Send and use a matching Node type accordingly.
-			ReturnType::Type(arrow, type_) => ReturnType::Type(
-				*arrow,
-				Box::new(Type::Verbatim(
-					quote_spanned!(arrow.span()=> ::std::result::Result<#type_, ::#asteracea::error::Escalation>),
-				)),
+		let render_type: ReturnType = match render_type {
+			RenderType::AutoSafe => {
+				let auto_safe = Ident::new(
+					&(component_name.to_string() + "__Asteracea__AutoSafe")
+						.trim_start_matches("r#"),
+					Span::mixed_site(),
+				);
+				random_items.push(
+					parse2(quote! {
+						::#asteracea::lignin::auto_safety::AutoSafe_alias!(#auto_safe);
+					})
+					.expect("RenderType::AutoSafe __Asteracea__AutoSafe"),
+				);
+				parse2(quote! {
+					-> ::std::result::Result<
+						impl #auto_safe<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>>,
+						::#asteracea::error::Escalation,
+					>
+				})
+				.expect("render_type AutoSafe")
+			}
+			RenderType::Explicit(r_arrow, type_) => ReturnType::Type(
+				r_arrow,
+				parse2(quote_spanned! {r_arrow.span()=>
+					::std::result::Result<#type_, ::#asteracea::error::Escalation>
+				})
+				.expect("RenderType::Explicit"),
 			),
+			RenderType::Sync(r_arrow, _) | RenderType::UnSync(r_arrow, _, _) => {
+				let thread_safety = &cx.thread_safety;
+				parse2(quote_spanned! {r_arrow.span()=>
+					-> ::std::result::Result<::#asteracea::lignin::Node<'bump, #thread_safety>, ::#asteracea::error::Escalation>
+				})
+				.expect("render_type explicit thread safety")
+			}
 		};
 
 		let constructor_block_statements =

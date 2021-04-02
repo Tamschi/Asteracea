@@ -27,7 +27,7 @@ asteracea::component! {
 asteracea::component! {
 	pub Conditional3()(
 		content?: impl for<'b> FnOnce(&'b Bump) -> Node<'b, ThreadBound>,
-	)
+	) -> !Sync
 
 	[
 		"["

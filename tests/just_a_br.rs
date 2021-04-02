@@ -1,5 +1,5 @@
 asteracea::component! {
-	pub Br()()
+	pub Br()() -> Sync
 
 	<br>
 }

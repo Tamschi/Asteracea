@@ -3,7 +3,7 @@
 use asteracea::component;
 
 component! {
-	Attributed()()
+	Attributed()() -> Sync
 	<div
 		.id = "Hello!"
 		.class = {"a-class"}

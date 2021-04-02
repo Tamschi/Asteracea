@@ -23,7 +23,7 @@ use core::result::Result as coreResult;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapErr as _};
 use event_binding::EventBindingDefinition;
 use proc_macro2::{Span, TokenStream, TokenTree};
-use quote::{quote, quote_spanned};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
@@ -55,7 +55,7 @@ pub enum Part<C: Configuration> {
 	Match(
 		InitMode,
 		Token![match],
-		Box<Part<C>>,
+		Box<Block>,
 		Bracket,
 		Vec<(
 			Vec<Attribute>,
@@ -243,8 +243,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 		{
 			//FIXME: This will be possible much more nicely once unquote is better.
 			let mut init_mode = input.parse()?;
-			unquote!(input, #let match_);
-			let on = Part::parse_required_with_context(input, cx)?;
+			unquote!(input, #let match_ #let on);
 			let body;
 			let bracket = bracketed!(body in input);
 			let arms = {
@@ -336,19 +335,22 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 	}
 }
 
-#[derive(Default)]
-pub struct GenerateContext {}
+pub struct GenerateContext {
+	pub thread_safety: TokenStream,
+	pub prefer_thread_safe: Option<TokenStream>,
+}
 
 impl<C: Configuration> Part<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
-		Ok(match self {
+		let thread_safety = &cx.thread_safety;
+		let mut part_tokens = match self {
 			Part::Box(box_expression) => box_expression.part_tokens(cx)?,
 			Part::Comment(html_comment) => html_comment.part_tokens(),
 			Part::Component(component) => component.part_tokens(),
 			Part::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span()=>
-					#asteracea::lignin::Node::Text {
+					::#asteracea::lignin::Node::<'bump, #thread_safety>::Text {
 						text: #lit_str,
 						dom_binding: None, //TODO: Add text dom binding support.
 					}
@@ -359,22 +361,22 @@ impl<C: Configuration> Part<C> {
 				todo!("`dyn if`")
 			}
 			Part::If(InitMode::Spread(_spread), if_, condition, then_part, else_, else_part) => {
+				let asteracea = asteracea_ident(if_.span);
 				let then_tokens = then_part.part_tokens(cx)?;
 				let else_tokens = {
 					let else_part = else_part.part_tokens(cx)?;
 					quote_spanned!(else_.span().resolved_at(Span::mixed_site())=> ::core::convert::identity( #else_part ))
 				};
 				quote_spanned! {if_.span.resolved_at(Span::mixed_site())=> if #condition {
-					#then_tokens
+					::#asteracea::lignin::auto_safety::Align::align(#then_tokens)
 				} else {
-					#else_tokens
+					::#asteracea::lignin::auto_safety::Align::align(#else_tokens)
 				}}
 			}
 			Part::Match(InitMode::Dyn(_dyn_), _match_, _on, _bracket, _arms) => {
 				todo!("`dyn match`")
 			}
 			Part::Match(InitMode::Spread(_spread), match_, on, bracket, arms) => {
-				let on_tokens = on.part_tokens(cx)?;
 				let arms = arms
 					.iter()
 					.map(|(attrs, pats, guard, fat_arrow, part)| {
@@ -393,7 +395,7 @@ impl<C: Configuration> Part<C> {
 					})
 					.collect::<Result<Vec<_>>>()?;
 				let body = quote_spanned!(bracket.span => { #(#arms)* });
-				quote_spanned!(match_.span=> #match_ #on_tokens #body)
+				quote_spanned!(match_.span=> #match_ #on #body)
 			}
 			Part::RustBlock(brace, statements) => {
 				// Why not just parentheses? Because those could be turned into a tuple.
@@ -409,9 +411,11 @@ impl<C: Configuration> Part<C> {
 					.collect::<coreResult<Vec<_>, _>>()?;
 				let bump = Ident::new("bump", bracket.span.resolved_at(Span::call_site()));
 				quote_spanned! {bracket.span=>
-					::#asteracea::lignin::Node::Multi(&*#bump.alloc_try_with(
+					::#asteracea::lignin::Node::<'bump, #thread_safety>::Multi(&*#bump.alloc_try_with(
 						|| -> ::std::result::Result::<_, ::#asteracea::error::Escalation> { ::std::result::Result::Ok([
-							#(#m,)*
+							#(
+								::#asteracea::lignin::auto_safety::Align::align(#m),
+							)*
 						])}
 					)?)
 				}
@@ -427,6 +431,8 @@ impl<C: Configuration> Part<C> {
 					#part_tokens
 				})
 			}
-		})
+		};
+		cx.prefer_thread_safe.to_tokens(&mut part_tokens);
+		Ok(part_tokens)
 	}
 }

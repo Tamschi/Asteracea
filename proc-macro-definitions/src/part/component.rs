@@ -1,13 +1,16 @@
 use std::{collections::HashSet, iter};
 
 use super::CaptureDefinition;
-use crate::storage_context::{ParseContext, ParseWithContext};
+use crate::{
+	asteracea_ident,
+	storage_context::{ParseContext, ParseWithContext},
+};
 use call2_for_syn::call2_strict;
 use proc_macro2::{Punct, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
-	parse2, parse_quote,
+	parse2,
 	token::{Brace, Paren},
 	visit_mut::{visit_expr_mut, VisitMut},
 	Error, Expr, ExprPath, Ident, Pat, PatIdent, PatTuple, PatTupleStruct, Result, Token,
@@ -157,7 +160,17 @@ impl<C> Component<C> {
 				capture,
 				render_call,
 			} => {
-				let mut expr = parse_quote!(#capture#render_call);
+				let asteracea = asteracea_ident(Span::mixed_site());
+				let mut expr = parse2(quote!({
+					let rendered = #capture#render_call;
+
+					{
+						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
+						#[allow(deprecated)]
+						rendered.deanonymize()
+					}
+				}))
+				.expect("Component::Instantiated");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
 				quote!(#expr)
 			}
@@ -166,6 +179,7 @@ impl<C> Component<C> {
 				reference,
 				render_params,
 			} => {
+				let asteracea = asteracea_ident(*open_span);
 				let binding = quote_spanned!(reference.brace_token.span.resolved_at(Span::mixed_site())=> let reference: ::std::pin::Pin<&_> = #reference;);
 				let bump = quote_spanned!(*open_span=> bump);
 				let render_params = parameter_struct_expression(
@@ -177,7 +191,13 @@ impl<C> Component<C> {
 				);
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					#binding
-					reference.render(#bump, #render_params)?
+					let rendered = reference.render(#bump, #render_params)?;
+
+					{
+						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
+						#[allow(deprecated)]
+						rendered.deanonymize()
+					}
 				}))
 				.expect("Component::part_tokens Instanced expr");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
