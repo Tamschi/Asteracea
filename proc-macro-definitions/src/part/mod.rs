@@ -17,7 +17,7 @@ use self::{
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
-	Configuration,
+	BumpFormat, Configuration,
 };
 use core::result::Result as coreResult;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapErr as _};
@@ -36,8 +36,9 @@ use tap::Pipe as _;
 use unquote::unquote;
 
 #[allow(clippy::large_enum_variant, clippy::type_complexity)]
-pub enum Part<C: Configuration> {
+pub(crate) enum Part<C: Configuration> {
 	Box(BoxExpression<C>),
+	BumpFormat(BumpFormat),
 	Capture(CaptureDefinition<C>),
 	Comment(HtmlComment),
 	Component(Component<C>),
@@ -80,6 +81,7 @@ impl<C: Configuration> Part<C> {
 	fn kind(&self) -> PartKind {
 		match self {
 			Part::Box(_)
+			| Part::BumpFormat(_)
 			| Part::Capture(_)
 			| Part::Comment(_)
 			| Part::Component(_)
@@ -311,7 +313,9 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 				EventBindingDefinition::parse_with_context(input, cx)?,
 			))
 		} else if bump_format_shorthand::peek_from(input) {
-			bump_format_shorthand::parse_with_context(input, cx)?
+			Some(Part::<C>::BumpFormat(
+				bump_format_shorthand::parse_with_context::<C>(input, cx)?,
+			))
 		} else if input.peek(kw::with) {
 			unquote! {input,
 				#let with
@@ -346,6 +350,11 @@ impl<C: Configuration> Part<C> {
 		let prefer_thread_safe = &cx.prefer_thread_safe;
 		let mut part_tokens = match self {
 			Part::Box(box_expression) => box_expression.part_tokens(cx)?,
+			Part::BumpFormat(bump_format) => {
+				let mut tokens = TokenStream::new();
+				bump_format.to_tokens_with_context(&mut tokens, cx);
+				tokens
+			}
 			Part::Comment(html_comment) => html_comment.part_tokens(),
 			Part::Component(component) => component.part_tokens(),
 			Part::Text(lit_str) => {

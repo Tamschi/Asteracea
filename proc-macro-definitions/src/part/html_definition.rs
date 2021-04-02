@@ -103,7 +103,7 @@ enum ElementName {
 	Known(Ident, Option<Ident>),
 }
 
-pub struct HtmlDefinition<C: Configuration> {
+pub(crate) struct HtmlDefinition<C: Configuration> {
 	lt: Token![<],
 	name: ElementName,
 	attributes: Vec<AttributeDefinition>,
@@ -223,6 +223,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 		} = self;
 
 		let asteracea = asteracea_ident(lt.span());
+		let thread_safety = &cx.thread_safety;
 
 		let bump = Ident::new("bump", lt.span().resolved_at(Span::call_site()));
 
@@ -333,7 +334,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 				});
 			}
 			quote_spanned! {child_stream.span()=>
-				::#asteracea::lignin::Node::Multi(&*#bump.alloc_try_with(
+				::#asteracea::lignin::Node::Multi::<'bump, #thread_safety>(&*#bump.alloc_try_with(
 					|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
 						::std::result::Result::Ok([#child_stream])
 					}
@@ -361,7 +362,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
 					let children = #children;
 					//TODO: Add MathML and SVG support.
-					::#asteracea::lignin::Node::HtmlElement {
+					::#asteracea::lignin::Node::HtmlElement::<'bump, #thread_safety> {
 						element: #bump.alloc_with(||
 								#asteracea::lignin::Element {
 									name: #name,
@@ -394,7 +395,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
 					let children = #children;
 					//TODO: Add MathML and SVG support.
-					::#asteracea::lignin::Node::HtmlElement {
+					::#asteracea::lignin::Node::HtmlElement::<'bump, #thread_safety> {
 						element: #bump.alloc_with(|| {
 							#validate_has_content
 							#(#validate_attributes)*

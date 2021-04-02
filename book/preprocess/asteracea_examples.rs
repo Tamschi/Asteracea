@@ -302,7 +302,13 @@ impl<'a> CodeState<'a> {
 				let component = Box::pin(NAME::new(&root, NAME::new_args_builder()CONSTRUCTOR_BUILD.build())?);
 
 				let bump = asteracea::bumpalo::Bump::new();
-				let vdom = component.as_ref().render(&bump, NAME::render_args_builder()RENDER_BUILD.build())?;
+				let rendered = component.as_ref().render(&bump, NAME::render_args_builder()RENDER_BUILD.build())?;
+				let vdom = {
+					#[allow(unused_imports)]
+					use asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
+					#[allow(deprecated)]
+					rendered.deanonymize()
+				};
 				let mut html = String::new();
 				lignin_html::render_fragment(&vdom, &mut html, 1000).debugless_unwrap();
 				Ok(html)

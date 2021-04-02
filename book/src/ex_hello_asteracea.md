@@ -14,7 +14,7 @@ use std::cell::Cell;
 fn schedule_render() { /* ... */ }
 
 component! {
-  pub Counter(
+  Counter(
     initial: i32,
     priv step: i32,
   )(

@@ -23,7 +23,7 @@ impl Display for AnError {
 impl Error for AnError {}
 
 asteracea::component! {
-  Failing()()
+  Failing()() -> Sync
 
   {
     // Raising an `Escalation` means crashing at least part of the app,
@@ -65,7 +65,7 @@ The following example *should* display a backtrace rather than failing the book 
 
 ```rust asteracea=Outer
 asteracea::component! {
-  Panicking()()
+  Panicking()() -> Sync
 
   {
     //TODO: Make this conditional on unwinding.

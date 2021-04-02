@@ -8,13 +8,13 @@ use std::cell::Cell;
 fn schedule_render() { /* ... */ }
 
 asteracea::component! {
-  pub Counter(
+  Counter(
     initial: i32,
     priv step: i32,
     pub enabled: bool = true,
   )(
     class?: &'bump str,
-  )
+  ) -> !Sync
 
   |value = Cell::<i32>::new(initial)|;
 
@@ -52,7 +52,7 @@ impl Counter {
 }
 
 asteracea::component! {
-  pub CounterUser()()
+  CounterUser()() -> !Sync
 
   <"counter-user" "\n\t"
     <*Counter

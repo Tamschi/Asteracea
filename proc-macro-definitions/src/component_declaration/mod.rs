@@ -498,7 +498,7 @@ impl ComponentDeclaration {
 				);
 				random_items.push(
 					parse2(quote! {
-						::#asteracea::lignin::auto_safety::AutoSafe_alias!(#auto_safe);
+						::#asteracea::lignin::auto_safety::AutoSafe_alias!(pub(crate) #auto_safe);
 					})
 					.expect("RenderType::AutoSafe __Asteracea__AutoSafe"),
 				);

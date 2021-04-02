@@ -1,4 +1,4 @@
-# `spread match <…> [ … ]`
+# `spread match { … } [ … ]`
 
 Rust's `match` statements are available in Asteracea contexts, with slightly changed syntax:
 
@@ -20,35 +20,11 @@ asteracea::component! {
 }
 
 asteracea::component! {
-  pub Matched()()
+  pub Matched()() -> Sync
 
   [
     <*MatchEnum .enum_value = { Enum::Text("Hello!") }> "\n"
     <*MatchEnum .enum_value = { Enum::Other }>
-  ]
-}
-```
-
-Note that the match expression accepts an element expression (`<…>`) as parameter! If an element renders into something other than a [`Node`](), you can branch on that result this way:
-
-```rust asteracea=RouterUser
-asteracea::component!{
-  Router()() -> &str
-
-  //TODO: Retrieve from fragment.
-  { "\0" }
-}
-
-impl Router {
-  const INDEX: &'static str = "\0";
-}
-
-asteracea::component! {
-  RouterUser()()
-
-  spread match <*Router> [
-    Router::INDEX | "" => "Index"
-    _ => {unreachable!()}
   ]
 }
 ```

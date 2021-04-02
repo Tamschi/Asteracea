@@ -71,7 +71,15 @@ struct BumpFormat {
 #[proc_macro]
 pub fn bump_format(input: TokenStream1) -> TokenStream1 {
 	let bump_format = parse_macro_input!(input as BumpFormat);
-	quote!(#bump_format).into()
+	let mut tokens = TokenStream2::new();
+	bump_format.to_tokens_with_context(
+		&mut tokens,
+		&GenerateContext {
+			thread_safety: quote!(_),
+			prefer_thread_safe: None,
+		},
+	);
+	tokens.into()
 }
 
 impl Parse for BumpFormat {
@@ -88,16 +96,17 @@ impl Parse for BumpFormat {
 	}
 }
 
-impl ToTokens for BumpFormat {
-	fn to_tokens(&self, output: &mut TokenStream2) {
+impl BumpFormat {
+	fn to_tokens_with_context(&self, output: &mut TokenStream2, cx: &GenerateContext) {
 		let BumpFormat {
 			asteracea,
 			bump_span,
 			input,
 		} = self;
+		let thread_safety = &cx.thread_safety;
 		let bump = Ident::new("bump", bump_span.resolved_at(Span::call_site()));
 		output.extend(quote! {
-			#asteracea::lignin::Node::Text {
+			#asteracea::lignin::Node::Text::<#thread_safety> {
 				text: #asteracea::bumpalo::format!(in #bump, #input)
 					.into_bump_str(),
 				dom_binding: None, //TODO?: Add DOM binding support.
