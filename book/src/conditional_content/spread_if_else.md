@@ -20,7 +20,7 @@ asteracea::component! {
 }
 
 asteracea::component! {
-  pub Alternated()()
+  pub Alternated()() -> Sync
 
   [
     <*Alternates> "\n"

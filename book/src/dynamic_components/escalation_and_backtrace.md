@@ -41,7 +41,7 @@ asteracea::component! {
 }
 
 asteracea::component! {
-  pub Outer()()
+  pub Outer()() -> Sync
 
   <*Containing>
 }
@@ -74,7 +74,7 @@ asteracea::component! {
 }
 
 asteracea::component! {
-  pub Outer()()
+  pub Outer()() -> Sync
 
   <*Panicking>
 }

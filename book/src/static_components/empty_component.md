@@ -6,7 +6,7 @@ In context, and written more like what you'd see in the wild:
 
 ```rust asteracea=Empty
 asteracea::component! {
-  pub Empty()()
+  Empty()()
 
   []
 }

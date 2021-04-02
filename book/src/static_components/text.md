@@ -6,7 +6,7 @@ To output a static plain [`Text`] element in Asteracea, simply use a text litera
 
 ```rust asteracea=Text
 asteracea::component! {
-  pub Text()()
+  Text()()
 
   "This is text."
 }
@@ -36,7 +36,7 @@ Text nodes can be used as children of other nodes, for example a Multi Node:
 
 ```rust asteracea=TextMulti
 asteracea::component! {
-  pub TextMulti()()
+  TextMulti()()
 
   [
     "This is text."
