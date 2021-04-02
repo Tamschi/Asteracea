@@ -343,6 +343,7 @@ pub struct GenerateContext {
 impl<C: Configuration> Part<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		let thread_safety = &cx.thread_safety;
+		let prefer_thread_safe = &cx.prefer_thread_safe;
 		let mut part_tokens = match self {
 			Part::Box(box_expression) => box_expression.part_tokens(cx)?,
 			Part::Comment(html_comment) => html_comment.part_tokens(),
@@ -350,7 +351,7 @@ impl<C: Configuration> Part<C> {
 			Part::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span()=>
-					::#asteracea::lignin::Node::<'bump, #thread_safety>::Text {
+					::#asteracea::lignin::Node::Text::<'bump, #thread_safety> {
 						text: #lit_str,
 						dom_binding: None, //TODO: Add text dom binding support.
 					}
@@ -367,11 +368,14 @@ impl<C: Configuration> Part<C> {
 					let else_part = else_part.part_tokens(cx)?;
 					quote_spanned!(else_.span().resolved_at(Span::mixed_site())=> ::core::convert::identity( #else_part ))
 				};
-				quote_spanned! {if_.span.resolved_at(Span::mixed_site())=> if #condition {
-					::#asteracea::lignin::auto_safety::Align::align(#then_tokens)
-				} else {
-					::#asteracea::lignin::auto_safety::Align::align(#else_tokens)
-				}}
+				quote_spanned!(if_.span.resolved_at(Span::mixed_site())=> {
+					let if_: ::#asteracea::lignin::Node::<'bump, #thread_safety> = if #condition {
+						::#asteracea::lignin::auto_safety::Align::align(#then_tokens)
+					} else {
+						::#asteracea::lignin::auto_safety::Align::align(#else_tokens)
+					};
+					if_
+				})
 			}
 			Part::Match(InitMode::Dyn(_dyn_), _match_, _on, _bracket, _arms) => {
 				todo!("`dyn match`")
@@ -395,7 +399,7 @@ impl<C: Configuration> Part<C> {
 					})
 					.collect::<Result<Vec<_>>>()?;
 				let body = quote_spanned!(bracket.span => { #(#arms)* });
-				quote_spanned!(match_.span=> #match_ #on #body)
+				quote_spanned!(match_.span=> #match_ #on #body #prefer_thread_safe)
 			}
 			Part::RustBlock(brace, statements) => {
 				// Why not just parentheses? Because those could be turned into a tuple.
@@ -411,7 +415,7 @@ impl<C: Configuration> Part<C> {
 					.collect::<coreResult<Vec<_>, _>>()?;
 				let bump = Ident::new("bump", bracket.span.resolved_at(Span::call_site()));
 				quote_spanned! {bracket.span=>
-					::#asteracea::lignin::Node::<'bump, #thread_safety>::Multi(&*#bump.alloc_try_with(
+					::#asteracea::lignin::Node::Multi::<'bump, #thread_safety>(&*#bump.alloc_try_with(
 						|| -> ::std::result::Result::<_, ::#asteracea::error::Escalation> { ::std::result::Result::Ok([
 							#(
 								::#asteracea::lignin::auto_safety::Align::align(#m),
