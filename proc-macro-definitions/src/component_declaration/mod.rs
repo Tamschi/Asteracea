@@ -60,6 +60,7 @@ pub struct ComponentDeclaration {
 pub enum RenderType {
 	AutoSafe,
 	Explicit(Token![->], Box<Type>),
+	ExplicitAutoSync(Token![->], kw::Sync, Token![?]),
 	Sync(Token![->], kw::Sync),
 	UnSync(Token![->], Token![!], kw::Sync),
 }
@@ -308,7 +309,10 @@ impl Parse for RenderType {
 			Some(r_arrow) => match input.parse().unwrap() {
 				Some(bang) => Self::UnSync(r_arrow, bang, input.parse()?),
 				None => match input.parse().unwrap() {
-					Some(sync) => Self::Sync(r_arrow, sync),
+					Some(sync) => match input.parse().unwrap() {
+						Some(question) => Self::ExplicitAutoSync(r_arrow, sync, question),
+						None => Self::Sync(r_arrow, sync),
+					},
 					None => Self::Explicit(r_arrow, input.parse()?),
 				},
 			},
@@ -370,16 +374,20 @@ impl ComponentDeclaration {
 				thread_safety: quote!(_),
 				prefer_thread_safe: Some(quote!(.prefer_thread_safe())),
 			},
-			RenderType::Explicit(_, _) => GenerateContext {
-				thread_safety: quote!(_),
+			RenderType::Explicit(r_arrow, _) => GenerateContext {
+				thread_safety: quote_spanned!(r_arrow.span()=> _),
 				prefer_thread_safe: None,
 			},
-			RenderType::Sync(_, _) => GenerateContext {
-				thread_safety: quote!(::#asteracea::lignin::ThreadSafe),
+			RenderType::ExplicitAutoSync(r_arrow, _, sync) => GenerateContext {
+				thread_safety: quote_spanned!(sync.span.resolved_at(Span::mixed_site())=> _),
+				prefer_thread_safe: Some(quote_spanned!(r_arrow.span()=> .prefer_thread_safe())),
+			},
+			RenderType::Sync(_, sync) => GenerateContext {
+				thread_safety: quote_spanned!(sync.span.resolved_at(Span::mixed_site())=> ::#asteracea::lignin::ThreadSafe),
 				prefer_thread_safe: None,
 			},
-			RenderType::UnSync(_, _, _) => GenerateContext {
-				thread_safety: quote!(::#asteracea::lignin::ThreadBound),
+			RenderType::UnSync(_, _, sync) => GenerateContext {
+				thread_safety: quote_spanned!(sync.span.resolved_at(Span::mixed_site())=> ::#asteracea::lignin::ThreadBound),
 				prefer_thread_safe: None,
 			},
 		};
@@ -517,6 +525,15 @@ impl ComponentDeclaration {
 				})
 				.expect("RenderType::Explicit"),
 			),
+			RenderType::ExplicitAutoSync(_, _, question) => {
+				parse2(quote_spanned! {question.span=>
+					-> ::std::result::Result<
+						impl ::#asteracea::lignin::auto_safety::AutoSafe::<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>>,
+						::#asteracea::error::Escalation,
+					>
+				})
+				.expect("render_type AutoSafe")
+			}
 			RenderType::Sync(r_arrow, _) | RenderType::UnSync(r_arrow, _, _) => {
 				let thread_safety = &cx.thread_safety;
 				parse2(quote_spanned! {r_arrow.span()=>
