@@ -3,8 +3,9 @@ use self::{
 	parameter_helper_definitions::{CustomArgument, ParameterHelperDefintions},
 };
 use crate::{
-	asteracea_ident,
+	asteracea_crate,
 	part::GenerateContext,
+	set_asteracea_crate,
 	storage_configuration::StorageTypeConfiguration,
 	storage_context::{ParseContext, ParseWithContext, StorageContext},
 	syn_ext::{AddOptionExt, *},
@@ -72,6 +73,9 @@ impl Configuration for ComponentRenderConfiguration {
 
 impl Parse for ComponentDeclaration {
 	fn parse(input: ParseStream<'_>) -> Result<Self> {
+		set_asteracea_crate(input.parse()?);
+		input.parse::<Token![,]>()?;
+
 		let attributes = input.call(Attribute::parse_outer)?;
 		let visibility = input.parse()?;
 
@@ -195,18 +199,18 @@ impl Parse for ComponentDeclaration {
 
 				let semi = Token![;](extracted_question.span);
 
-				let asteracea = asteracea_ident(extracted_for.span);
+				let asteracea = asteracea_crate();
 
 				//TODO: Is there a way to write this span more nicely?
 				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type).span();
 				let call_site_node =
-					Ident::new("node", ref_statement_span.resolved_at(Span::call_site()));
+					Ident::new("node", ref_statement_span.resolved_at(ref_token.span));
 				rhizome_extractions.push({
 					quote_spanned! {
 						ref_statement_span=>
 						#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
 						= <#extracted_type>::extract_from(&#call_site_node)
-							.map_err(|error| ::#asteracea::error::Escalate2::escalate(::std::format!("Dependency resolution error in component {}: {}", ::std::stringify!(#component_name), error)))#extracted_question#semi
+							.map_err(|error| #asteracea::error::Escalate2::escalate(::std::format!("Dependency resolution error in component {}: {}", ::std::stringify!(#component_name), error)))#extracted_question#semi
 					}
 				})
 			} else {
@@ -316,7 +320,7 @@ impl ComponentDeclaration {
 			assorted_items: random_items,
 		} = self;
 
-		let asteracea = asteracea_ident(Span::call_site());
+		let asteracea = asteracea_crate();
 
 		let struct_definition = StorageTypeConfiguration::new_component_root(
 			component_name.clone(),
@@ -336,9 +340,7 @@ impl ComponentDeclaration {
 			false,
 		);
 
-		let bump = quote_spanned! (render_paren.span.resolved_at(Span::call_site())=>
-			bump
-		);
+		let bump = Ident::new("bump", render_paren.span);
 
 		let body = body.part_tokens(&GenerateContext::default())?;
 
@@ -447,13 +449,13 @@ impl ComponentDeclaration {
 
 		let render_type: ReturnType = match &render_type {
 			ReturnType::Default => parse2(quote_spanned! {render_type.span()=>
-				-> ::std::result::Result<::#asteracea::lignin::Node<'bump>, ::#asteracea::error::Escalation>
+				-> ::std::result::Result<#asteracea::lignin::Node<'bump>, #asteracea::error::Escalation>
 			})
 			.unwrap(),
 			ReturnType::Type(arrow, type_) => ReturnType::Type(
 				*arrow,
 				Box::new(Type::Verbatim(
-					quote_spanned!(arrow.span()=> ::std::result::Result<#type_, ::#asteracea::error::Escalation>),
+					quote_spanned!(arrow.span()=> ::std::result::Result<#type_, #asteracea::error::Escalation>),
 				)),
 			),
 		};
@@ -461,7 +463,7 @@ impl ComponentDeclaration {
 		let constructor_block_statements =
 			constructor_block.map(|(_new, _with, block)| block.stmts);
 
-		let call_site_node = Ident::new("node", Span::call_site());
+		let call_site_node = Ident::new("node", constructor_paren.span);
 
 		let (component_impl_generics, component_type_generics, component_where_clause) =
 			component_generics.split_for_impl();
@@ -484,7 +486,7 @@ impl ComponentDeclaration {
 			#(#struct_definition)*
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
-				#[::#asteracea::trace_escalations(#component_name)]
+				#[#asteracea::trace_escalations(#asteracea, #component_name)]
 				#(#constructor_attributes)*
 				pub fn #new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
@@ -492,7 +494,7 @@ impl ComponentDeclaration {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
-				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+				) -> ::std::result::Result<Self, #asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
 					#(#rhizome_extractions)*
 					let mut #call_site_node = #call_site_node;
@@ -509,6 +511,7 @@ impl ComponentDeclaration {
 					// data structure as needed.
 					// I really should add benchmarks before trying this, though.
 					let #call_site_node = #call_site_node.into_arc();
+					let _ = &#call_site_node; // Suppress unused variable warning.
 
 					::std::result::Result::Ok(#constructed_value)
 				}
@@ -518,7 +521,7 @@ impl ComponentDeclaration {
 					#new_args_name::builder()
 				}
 
-				#[::#asteracea::trace_escalations(#component_name)]
+				#[#asteracea::trace_escalations(#asteracea, #component_name)]
 				#(#render_attributes)*
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,

@@ -1,4 +1,4 @@
-use crate::asteracea_ident;
+use crate::asteracea_crate;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 use syn::{parse::Parse, spanned::Spanned, token::Brace, Token};
@@ -22,7 +22,7 @@ impl ToTokens for Tracing {
 	fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
 		ItemFn {
 			block: {
-				let asteracea = asteracea_ident(Span::mixed_site());
+				let asteracea = asteracea_crate();
 				let statements = &self.function.block.stmts;
 				let prefix = &self.prefix;
 				let joiner = prefix.as_ref().map(|p| if p.is_empty() {
@@ -32,7 +32,7 @@ impl ToTokens for Tracing {
 				}).flatten();
 				let name = &self.function.sig.ident;
 				let inner = quote_spanned! {self.function.sig.output.span().resolved_at(Span::mixed_site())=>
-					let result = ::#asteracea::error::Escalation::catch_any(::std::panic::AssertUnwindSafe(
+					let result = #asteracea::error::Escalation::catch_any(::std::panic::AssertUnwindSafe(
 						// UNWIND-SAFETY: Any panic caught here is resumed when the captured `Caught` is escalated.
 						|| { #statements }
 					));

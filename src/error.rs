@@ -172,6 +172,7 @@ pub struct Caught<E: ?Sized> {
 	// An error or panic.
 	boxed: Box<E>,
 	trace: Option<Vec<Cow<'static, str>>>,
+	/// This (in general) exists to preserve unwind safety speed bumps.
 	was_panic: bool,
 }
 impl<E: ?Sized> Caught<E> {

@@ -1,11 +1,11 @@
 use super::capture_definition::CaptureDefinition;
 use crate::{
-	asteracea_ident,
+	asteracea_crate,
 	storage_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote_spanned;
 use syn::{
 	braced,
@@ -120,8 +120,8 @@ impl EventBindingDefinition {
 			name,
 			field_name,
 		} = self;
-		let asteracea = asteracea_ident(prefix.span);
-		let self_ident = Ident::new("self", Span::call_site());
+		let asteracea = asteracea_crate();
+		let self_ident = Ident::new("self", prefix.span);
 
 		quote_spanned! {name.span()=>
 			#asteracea::lignin::EventBinding {

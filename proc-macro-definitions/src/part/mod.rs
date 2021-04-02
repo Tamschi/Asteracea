@@ -18,7 +18,7 @@ use self::{
 	html_definition::HtmlDefinition,
 };
 use crate::{
-	asteracea_ident,
+	asteracea_crate, set_asteracea_crate,
 	storage_context::{ParseContext, ParseWithContext},
 	Configuration,
 };
@@ -155,6 +155,9 @@ pub enum PartBody<C: Configuration> {
 // Or maybe just parse it differently, if that's not too much of an issue.
 impl<C: Configuration> Parse for Part<C> {
 	fn parse(input: ParseStream<'_>) -> Result<Self> {
+		set_asteracea_crate(input.parse()?);
+		input.parse::<Token![,]>()?;
+
 		let span = input.span();
 		Self::parse_with_context(
 			input,
@@ -383,7 +386,7 @@ impl<C: Configuration> PartBody<C> {
 			PartBody::Comment(html_comment) => html_comment.part_tokens(),
 			PartBody::Component(component) => component.part_tokens(),
 			PartBody::Text(lit_str) => {
-				let asteracea = asteracea_ident(lit_str.span());
+				let asteracea = asteracea_crate();
 				quote_spanned! {lit_str.span()=>
 					#asteracea::lignin::Node::Text(#lit_str)
 				}
@@ -450,15 +453,15 @@ impl<C: Configuration> PartBody<C> {
 			}
 			PartBody::Capture(capture) => quote!(#capture),
 			PartBody::Multi(bracket, m) => {
-				let asteracea = asteracea_ident(bracket.span);
+				let asteracea = asteracea_crate();
 				let m = m
 					.iter()
 					.map(|part| part.part_tokens(cx))
 					.collect::<coreResult<Vec<_>, _>>()?;
-				let bump = Ident::new("bump", bracket.span.resolved_at(Span::call_site()));
+				let bump = Ident::new("bump", bracket.span);
 				quote_spanned! {bracket.span=>
-					::#asteracea::lignin::Node::Multi(&*#bump.alloc_try_with(
-						|| -> ::std::result::Result::<_, ::#asteracea::error::Escalation> { ::std::result::Result::Ok([
+					#asteracea::lignin::Node::Multi(&*#bump.alloc_try_with(
+						|| -> ::std::result::Result::<_, #asteracea::error::Escalation> { ::std::result::Result::Ok([
 							#(#m,)*
 						])}
 					)?)

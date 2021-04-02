@@ -23,7 +23,6 @@
 #![allow(clippy::redundant_closure_for_method_calls)]
 #![allow(clippy::redundant_else)]
 
-pub use asteracea_proc_macro_definitions::{bump_format, component, fragment, trace_escalations};
 pub use lignin;
 pub use rhizome;
 
@@ -33,6 +32,34 @@ pub mod readme {
 }
 
 pub mod error;
+
+#[doc(hidden)]
+pub mod macros {
+	pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
+}
+
+pub use asteracea_proc_macro_definitions::trace_escalations;
+
+#[macro_export]
+macro_rules! bump_format {
+	($($tokens:tt)*) => {
+		$crate::macros::bump_format!($crate, $($tokens)*)
+	};
+}
+
+#[macro_export]
+macro_rules! component {
+	($($tokens:tt)*) => {
+		$crate::macros::component!($crate, $($tokens)*);
+	};
+}
+
+#[macro_export]
+macro_rules! fragment {
+	($($tokens:tt)*) => {
+		$crate::macros::fragment!($crate, $($tokens)*)
+	};
+}
 
 #[cfg(feature = "services")]
 pub mod services;
