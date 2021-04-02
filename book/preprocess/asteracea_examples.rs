@@ -16,6 +16,7 @@ pub struct AsteraceaExamplesBuild {
 pub struct AsteraceaExamples;
 
 impl AsteraceaExamplesBuild {
+	#[allow(dead_code)] //FIXME
 	pub fn new() -> Result<Self, Box<dyn Error>> {
 		let out_dir = Path::new(&env::var_os("OUT_DIR").ok_or("Missing OUT_DIR.")?).to_owned();
 		Ok(Self {
@@ -26,8 +27,6 @@ impl AsteraceaExamplesBuild {
 					"{} {{ {} {{",
 					quote! {
 						use debugless_unwrap::DebuglessUnwrap as _;
-						use lignin::Node;
-						use std::collections::HashMap;
 
 						pub fn get_html(key: &str) -> Result<String, asteracea::error::Escalation>
 					},

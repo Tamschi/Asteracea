@@ -14,13 +14,13 @@ use std::cell::Cell;
 fn schedule_render() { /* ... */ }
 
 component! {
-  Counter(
+  pub Counter(
     initial: i32,
     priv step: i32,
   )(
     /// This component's class attribute value.
     class?: &'bump str,
-  )
+  ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
   |value = Cell::<i32>::new(initial)|; // shorthand capture
 

@@ -3,11 +3,6 @@
 You can explicitly specify alternative content with an `else` branch:
 
 ```rust asteracea=Alternated
-enum Which {
-  First,
-  Second,
-}
-
 asteracea::component! {
   Alternates()(
     show_alternative: bool = false,

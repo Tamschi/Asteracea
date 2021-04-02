@@ -146,7 +146,7 @@ use std::cell::Cell;
 fn schedule_render() { /* ... */ }
 
 component! {
-  Counter(
+  pub Counter(
     /// The counter's starting value.
     initial: i32,
     priv step: i32, // field from argument
@@ -155,7 +155,7 @@ component! {
     // optional argument;
     // `class` is `Option<&'bump str>` only inside this component, not its API.
     class?: &'bump str,
-  )
+  ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
   // shorthand capture; Defines a struct field.
   |value = Cell::<i32>::new(initial)|;
