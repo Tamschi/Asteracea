@@ -5,21 +5,70 @@ use crate::{
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote_spanned;
 use syn::{
-	braced,
-	parse::ParseStream,
-	parse_quote,
-	token::{Add, Move},
-	visit_mut::{self, VisitMut},
-	Expr, ExprPath, ForeignItemFn, Ident, ItemFn, LitStr, Result,
+	parenthesized,
+	parse::{Parse, ParseStream},
+	Error, Ident, LitStr, Result, Token,
 };
+use syn_mid::Block;
+use tap::Pipe as _;
+use unquote::unquote;
+
+pub mod kw {
+	use syn::custom_keyword;
+	custom_keyword!(on);
+	custom_keyword!(capture);
+	custom_keyword!(bubble);
+	custom_keyword!(active);
+}
 
 pub struct EventBindingDefinition {
-	prefix: Add,
-	name: LitStr,
-	field_name: Ident,
+	on: kw::on,
+	mode: EventMode,
+	name: EventName,
+	eq: Token![=],
+	active: Option<kw::active>,
+	inline_handler: Option<(Ident, Token![self], Ident)>,
+	body: Block,
+	component_name: Ident,
+	registration_field_name: Ident,
+}
+
+enum EventMode {
+	None,
+	Capture(kw::capture),
+	Bubble(kw::bubble),
+}
+impl Parse for EventMode {
+	fn parse(input: ParseStream) -> Result<Self> {
+		if let Some(capture) = input.parse().unwrap() {
+			Self::Capture(capture)
+		} else if let Some(bubble) = input.parse().unwrap() {
+			Self::Bubble(bubble)
+		} else {
+			Self::None
+		}
+		.pipe(Ok)
+	}
+}
+
+enum EventName {
+	Known(Ident),
+	Custom(LitStr),
+}
+impl Parse for EventName {
+	fn parse(input: ParseStream) -> Result<Self> {
+		let lookahead = input.lookahead1();
+		if lookahead.peek(Ident) {
+			Ok(Self::Known(input.parse().unwrap()))
+		} else if lookahead.peek(LitStr) {
+			Ok(Self::Custom(input.parse().unwrap()))
+		} else {
+			Err(lookahead.error())
+		}
+	}
 }
 
 impl EventBindingDefinition {
@@ -27,69 +76,53 @@ impl EventBindingDefinition {
 		input: ParseStream<'_>,
 		cx: &mut ParseContext,
 	) -> Result<EventBindingDefinition> {
-		let prefix: Add = input.parse()?;
-		let name: LitStr = input.parse()?;
-		let move_token: Option<Move> = input.parse().ok();
-		let handler_body;
-		let brace = braced!(handler_body in input);
-		let handler_body: TokenStream = handler_body.parse()?;
+		let on: kw::on;
+		unquote! {input,
+			#on
+			#let mode
+			#let name
+			#let eq
+			#let active
+		};
 
-		struct ReplaceSelf;
-		impl VisitMut for ReplaceSelf {
-			fn visit_expr_mut(&mut self, node: &mut Expr) {
-				if let Expr::Path(ExprPath { path, .. }) = node {
-					if path.leading_colon.is_none() && path.segments.len() == 1 {
-						let segment = path.segments.first().unwrap();
-						if segment.arguments.is_empty() {
-							let ident = &segment.ident;
-							if format!("{}", ident).starts_with("asteracea__") {
-								//TODO: Handle this more gracefully and also check other custom identifiers.
-								panic!("User-provided identifier starting with asteracea__ found in event handler")
-							}
-							if format!("{}", ident) == "self" {
-								let replacement = Ident::new("asteracea__self", ident.span());
-								*node = parse_quote!(#replacement);
-								return;
-							}
-						}
-					}
-				}
-				visit_mut::visit_expr_mut(self, node)
-			}
+		let inline_handler = input
+			.parse::<Option<Ident>>()
+			.unwrap()
+			.map(|handler_name| {
+				let args_list;
+				parenthesized!(args_list in input);
+				unquote! {args_list,
+					#let self_
+					,
+					#let event
+				};
+				Ok((handler_name, self_, event))
+			})
+			.transpose()?;
 
-			// Ignore function definitions, since they can redeclare `self` and an outer `self` isn't valid there.
-			fn visit_foreign_item_fn_mut(&mut self, _: &mut ForeignItemFn) {}
-			fn visit_item_fn_mut(&mut self, _: &mut ItemFn) {}
-		}
-		let handler = quote_spanned! (brace.span=> { #handler_body });
-		let mut handler = parse_quote!(#handler);
-		ReplaceSelf.visit_expr_block_mut(&mut handler);
+		let body = input.parse()?;
 
 		let component_name = cx
 			.component_name
-			.as_ref()
-			.expect("Component name not set in ParseContext");
-		let handler = quote_spanned! {brace.span =>
-			#move_token |#[allow(non_snake_case)] asteracea__self| {
-				#[allow(non_snake_case, unused_variables)]
-				let asteracea__self = asteracea__self
-					.downcast_ref::<#component_name>()
-					.expect(
-						concat!(
-							"Failed to downcast reference to component ",
-							stringify!(#component_name)
-						)
-					);
-				#handler
-			}
-		};
+			.ok_or_else(|| {
+				Error::new(
+					on.span,
+					"Event bindings are only available within full components.",
+				)
+			})?
+			.clone();
+		let registration_field_name = cx.storage_context.next_field(on.span);
 
-		let field_name = cx.storage_context.next_field(name.span());
-
+		let asteracea = asteracea_ident(on.span);
 		call2_strict(
-			quote_spanned! {prefix.span=>
+			quote_spanned! {on.span=>
 				#[allow(non_snake_case)] // This currently has no effect, hence `allow_non_snake_case_on_structure_workaround`.
-				|#field_name: ::std::pin::Pin<::std::rc::Rc<dyn ::std::ops::Fn(&dyn ::core::any::Any)>> = { ::std::rc::Rc::pin(#handler) }|;
+				|#field_name = ::#asteracea::__Asteracea__implementation_details::lazy_init::Lazy::<
+					::#asteracea::lignin::CallbackRegistration::<
+						#component_name,
+						fn(event: ::#asteracea::lignin::web::Event),
+					>
+				>::new() |;
 			},
 			|input| {
 				enum EventBindingConfiguration {}
@@ -107,28 +140,37 @@ impl EventBindingDefinition {
 		)
 		.unwrap();
 
+		if let Some((handler_name, self_, event)) = inline_handler {
+			todo!("generated event handler method");
+		}
+
 		Ok(EventBindingDefinition {
-			prefix,
+			on,
+			mode,
 			name,
-			field_name,
+			eq,
+			active,
+			inline_handler,
+			body,
+			component_name,
+			registration_field_name,
 		})
 	}
 
 	pub fn part_tokens(&self) -> TokenStream {
 		let EventBindingDefinition {
-			prefix,
+			on,
+			mode,
 			name,
-			field_name,
+			eq,
+			active,
+			inline_handler,
+			body,
+			component_name,
+			registration_field_name,
 		} = self;
-		let asteracea = asteracea_ident(prefix.span);
-		let self_ident = Ident::new("self", Span::call_site());
+		let asteracea = asteracea_ident(on.span);
 
-		quote_spanned! {name.span()=>
-			#asteracea::lignin::EventBinding {
-				name: #name,
-				context: #asteracea::unsound_extend_reference(self.get_ref()),
-				handler: #self_ident.#field_name.clone(),
-			}
-		}
+		todo!("event binding")
 	}
 }

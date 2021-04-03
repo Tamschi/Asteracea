@@ -2,6 +2,6 @@ asteracea::component! {
 	pub Simple()() -> !Sync
 
 	<button
-		//TODO +"click" {}
+		on capture click = active (self, event) {}
 	>
 }

@@ -36,6 +36,7 @@ services = []
 [dependencies]
 asteracea_proc-macro-definitions = { path = "./proc-macro-definitions" } # public
 bumpalo = { version = "3.6.1", features = ["collections"] } # public
+lazy-init = "0.5.0"
 lignin = { git = "https://github.com/Tamschi/lignin.git", branch = "rework-2021-02" } # public
 lignin-schema = { git = "https://github.com/Tamschi/lignin-schema.git", branch = "develop" } # semi-public
 rhizome = { version = "0.0.1", features = ["macros"] } # public

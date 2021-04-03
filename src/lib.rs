@@ -65,6 +65,7 @@ impl<'a> ConditionalAttributeValue<'a> for Option<&'a str> {
 #[doc(hidden)]
 #[allow(non_snake_case)]
 pub mod __Asteracea__implementation_details {
+	pub use lazy_init;
 	pub use lignin_schema;
 	pub use static_assertions;
 	pub use typed_builder;

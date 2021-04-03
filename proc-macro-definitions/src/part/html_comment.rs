@@ -21,7 +21,7 @@ impl ParseWithContext for HtmlComment {
 	) -> syn::Result<Self::Output> {
 		let open_span;
 		let text;
-		unquote!(input, #^'open_span <!-- #$'open_span #text -->);
+		unquote!(input, #'open_span <!-- #text -->);
 		Ok(Self { open_span, text })
 	}
 }

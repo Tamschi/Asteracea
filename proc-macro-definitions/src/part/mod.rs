@@ -308,7 +308,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 				}
 			}
 			Some(Part::Multi(bracket, inner_parts))
-		} else if lookahead.peek(Add) {
+		} else if lookahead.peek(event_binding::kw::on) {
 			Some(Part::EventBinding(
 				EventBindingDefinition::parse_with_context(input, cx)?,
 			))

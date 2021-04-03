@@ -35,7 +35,7 @@ impl<C> ParseWithContext for Component<C> {
 
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let open_span;
-		unquote!(input, #^'open_span <* #$'open_span);
+		unquote!(input, #'open_span <*);
 
 		if input.peek(Brace) {
 			let mut reference: Block;
