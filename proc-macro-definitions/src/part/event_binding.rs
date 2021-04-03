@@ -5,12 +5,14 @@ use crate::{
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
+use either::Either;
 use proc_macro2::TokenStream;
 use quote::quote_spanned;
 use syn::{
 	parenthesized,
 	parse::{Parse, ParseStream},
-	Error, Ident, LitStr, Result, Token,
+	token::Paren,
+	Error, ExprPath, Ident, LitStr, Result, Token,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -30,8 +32,7 @@ pub struct EventBindingDefinition {
 	name: EventName,
 	eq: Token![=],
 	active: Option<kw::active>,
-	inline_handler: Option<(Ident, Token![self], Ident)>,
-	body: Block,
+	handler: Either<(Token![fn], Ident, Paren, Token![self], Ident, Block), ExprPath>,
 	component_name: Ident,
 	registration_field_name: Ident,
 }
@@ -85,22 +86,27 @@ impl EventBindingDefinition {
 			#let active
 		};
 
-		let inline_handler = input
-			.parse::<Option<Ident>>()
-			.unwrap()
-			.map(|handler_name| {
+		let handler = {
+			if let Some(fn_) = input.parse().unwrap() {
+				let handler_name = input.parse()?;
 				let args_list;
-				parenthesized!(args_list in input);
-				unquote! {args_list,
+				let paren = parenthesized!(args_list in input);
+				unquote! {&args_list,
 					#let self_
 					,
 					#let event
 				};
-				Ok((handler_name, self_, event))
-			})
-			.transpose()?;
-
-		let body = input.parse()?;
+				if !args_list.is_empty() {
+					return Err(Error::new(args_list.span(), "Unexpected token"));
+				}
+				let body = input.parse()?;
+				Either::Left((fn_, handler_name, paren, self_, event, body))
+			} else {
+				Either::Right(input.parse().map_err(|error| {
+					Error::new(error.span(), "Expected `fn` or path of event handler")
+				})?)
+			}
+		};
 
 		let component_name = cx
 			.component_name
@@ -117,7 +123,7 @@ impl EventBindingDefinition {
 		call2_strict(
 			quote_spanned! {on.span=>
 				#[allow(non_snake_case)] // This currently has no effect, hence `allow_non_snake_case_on_structure_workaround`.
-				|#field_name = ::#asteracea::__Asteracea__implementation_details::lazy_init::Lazy::<
+				|#registration_field_name = ::#asteracea::__Asteracea__implementation_details::lazy_init::Lazy::<
 					::#asteracea::lignin::CallbackRegistration::<
 						#component_name,
 						fn(event: ::#asteracea::lignin::web::Event),
@@ -140,18 +146,13 @@ impl EventBindingDefinition {
 		)
 		.unwrap();
 
-		if let Some((handler_name, self_, event)) = inline_handler {
-			todo!("generated event handler method");
-		}
-
 		Ok(EventBindingDefinition {
 			on,
 			mode,
 			name,
 			eq,
 			active,
-			inline_handler,
-			body,
+			handler,
 			component_name,
 			registration_field_name,
 		})
@@ -164,13 +165,12 @@ impl EventBindingDefinition {
 			name,
 			eq,
 			active,
-			inline_handler,
-			body,
+			handler,
 			component_name,
 			registration_field_name,
 		} = self;
 		let asteracea = asteracea_ident(on.span);
 
-		todo!("event binding")
+		quote_spanned!(on.span=> todo!("event binding"))
 	}
 }
