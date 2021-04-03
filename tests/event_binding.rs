@@ -26,4 +26,5 @@ asteracea::component! {
 	>
 }
 
-fn detached(_: std::pin::Pin<&Detached>, _: lignin::web::Event) {}
+// Both the signature with the pinned receiver and with a plain reference should work.
+fn detached(_: &Detached, _: lignin::web::Event) {}
