@@ -12,7 +12,7 @@ use syn::{
 	parenthesized,
 	parse::{Parse, ParseStream},
 	token::Paren,
-	Error, ExprPath, Ident, LitStr, Result, Token,
+	Error, ExprPath, Ident, LitStr, Pat, Result, Token,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -32,7 +32,7 @@ pub struct EventBindingDefinition {
 	name: EventName,
 	eq: Token![=],
 	active: Option<kw::active>,
-	handler: Either<(Token![fn], Ident, Paren, Token![self], Ident, Block), ExprPath>,
+	handler: Either<(Token![fn], Ident, Paren, Token![self], Pat, Block), ExprPath>,
 	component_name: Ident,
 	registration_field_name: Ident,
 }

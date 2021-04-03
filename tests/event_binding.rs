@@ -2,7 +2,7 @@ asteracea::component! {
 	pub Inline()() -> !Sync
 
 	<button
-		on capture click = active fn on_click(self, event) {}
+		on capture click = fn on_click(self, _) {}
 	>
 }
 
