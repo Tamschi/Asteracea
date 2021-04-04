@@ -30,9 +30,8 @@ component! {
 
     <button
       "+" !{self.step} // shorthand bump_format call
-      //TODO
-      // +"click" {
-      //   self.value.set(self.value() + self.step);
+      // on bubble click = fn on_click_plus(self, _) {
+      //   self.value.set(self.value() + self.step)
       //   schedule_render();
       // }
     >
@@ -46,6 +45,7 @@ impl Counter {
 
   pub fn set_value(&self, value: i32) {
     self.value.set(value);
+    schedule_render();
   }
 }
 ```

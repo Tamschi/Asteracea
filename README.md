@@ -141,6 +141,7 @@ For a relatively complex example, see this parametrised counter:
 
 ```rust
 use asteracea::component;
+use lignin::web::Event;
 use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
@@ -170,11 +171,7 @@ component! {
     <button
       ."disabled"? = {!self.enabled} // boolean attribute from `bool`
       "+" !{self.step} // shorthand `bump_format` call
-      //TODO
-      // +"click" { // event handler
-      //   self.value.set(self.value() + self.step);
-      //   schedule_render();
-      // }
+      on bubble click = Self::on_click_plus
     >
   >
 }
@@ -187,6 +184,13 @@ impl Counter {
 
   pub fn set_value(&self, value: i32) {
     self.value.set(value);
+  }
+
+  // This may alternative take a `*const Self` or `Pin<&Self>`.
+  // Inline handlers are also possible, but not much less verbose.
+  fn on_click_plus(&self, _: Event) {
+    self.value.set(self.value() + self.step);
+    schedule_render();
   }
 }
 
