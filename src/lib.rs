@@ -17,6 +17,7 @@
 //! TODO
 
 #![doc(html_root_url = "https://docs.rs/asteracea/0.0.2")]
+#![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::match_bool)]
 #![allow(clippy::redundant_closure_for_method_calls)]
@@ -64,32 +65,17 @@ impl<'a> ConditionalAttributeValue<'a> for Option<&'a str> {
 #[doc(hidden)]
 #[allow(non_snake_case)]
 pub mod __Asteracea__implementation_details {
-	use std::{mem, pin::Pin};
+	use std::pin::Pin;
 
 	pub use lazy_init;
 	pub use lignin_schema;
 	pub use static_assertions;
 	pub use typed_builder;
 
-	pub trait CallbackHandler<R: ?Sized, T> {
-		fn cast(self) -> fn(*const R, T);
-	}
-
-	impl<R: ?Sized, T> CallbackHandler<R, T> for fn(*const R, T) {
-		fn cast(self) -> fn(*const R, T) {
-			self
-		}
-	}
-
-	impl<R: ?Sized, T> CallbackHandler<R, T> for fn(&R, T) {
-		fn cast(self) -> fn(*const R, T) {
-			unsafe { mem::transmute(self) }
-		}
-	}
-
-	impl<R: ?Sized, T> CallbackHandler<R, T> for fn(Pin<&R>, T) {
-		fn cast(self) -> fn(*const R, T) {
-			unsafe { mem::transmute(self) }
-		}
-	}
+	/// Only implemented for functions that have a signature ABI-compatible with `fn(*const R, T)`!
+	/// See `event_binding.rs` is the asteracea_proc-macro-definition crate for more information.
+	pub trait CallbackHandler<R: ?Sized, T, Disambiguate> {}
+	impl<R: ?Sized, T, F> CallbackHandler<R, T, *const R> for F where F: FnOnce(*const R, T) {}
+	impl<R: ?Sized, T, F> CallbackHandler<R, T, &'static R> for F where F: FnOnce(&R, T) {}
+	impl<R: ?Sized, T, F> CallbackHandler<R, T, Pin<&'static R>> for F where F: FnOnce(Pin<&R>, T) {}
 }

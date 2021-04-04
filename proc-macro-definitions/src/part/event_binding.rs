@@ -194,12 +194,18 @@ impl EventBindingDefinition {
 			Either::Right(predefined) => {
 				quote_spanned!(predefined.span().resolved_at(Span::mixed_site())=> {
 					// Deny using component state, since this isn't evaluated more than once.
-					let get_handler: fn() -> _ = || (
-						::#asteracea::__Asteracea__implementation_details::CallbackHandler::<Self, ::#asteracea::lignin::web::Event>::cast(
-							#predefined as fn(_, _)
-						)
-					);
-					get_handler()
+					let _: fn() = || {
+						// Make sure the signature matches
+						let _: &dyn ::#asteracea::__Asteracea__implementation_details::CallbackHandler::<Self, ::#asteracea::lignin::web::Event, _> = &#predefined;
+					};
+					// Make sure it's a function, not a closure
+					let handler: fn(_, _) = #predefined;
+					unsafe {
+						// SAFETY: This is validated to be
+						// - signature-matching (via the trait implementation)
+						// - not a closure (via the coercion above)
+						::std::mem::transmute(handler)
+					}
 				})
 			}
 		};
