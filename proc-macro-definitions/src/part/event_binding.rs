@@ -188,8 +188,18 @@ impl EventBindingDefinition {
 		let self_ = quote_spanned!(on.span=> self);
 
 		let handler = match handler {
-			Either::Left((_, handler_name, _, _, _, _)) => {
-				quote_spanned!(handler_name.span().resolved_at(Span::mixed_site())=> Self::#handler_name)
+			Either::Left((fn_, handler_name, _, self_, event, body)) => {
+				quote_spanned!(fn_.span.resolved_at(Span::mixed_site())=> {
+					impl #component_name {
+						fn #handler_name(#self_: ::std::pin::Pin<&Self>, #event: ::#asteracea::lignin::web::Event) #body
+					}
+
+					unsafe {
+						//SAFETY: Defined with a compatible signature directly above.
+						// `Pin` is transparent, `&Self` is compatible with `*const Self` for valid pointers.
+						::std::mem::transmute(Self::#handler_name as fn(_, _))
+					}
+				})
 			}
 			Either::Right(predefined) => {
 				quote_spanned!(predefined.span().resolved_at(Span::mixed_site())=> {
@@ -210,6 +220,9 @@ impl EventBindingDefinition {
 			}
 		};
 
+		//TODO: Mode.
+		//TODO: Validate mode.
+		//TODO: Active flag.
 		quote_spanned!(on.span.resolved_at(Span::mixed_site())=> {
 			let registration = this.#registration_field_name.get_or_create(|| {
 				::#asteracea::lignin::CallbackRegistration::<Self, fn(::#asteracea::lignin::web::Event)>::new(

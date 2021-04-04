@@ -30,10 +30,10 @@ component! {
 
     <button
       "+" !{self.step} // shorthand bump_format call
-      // on bubble click = fn on_click_plus(self, _) {
-      //   self.value.set(self.value() + self.step)
-      //   schedule_render();
-      // }
+      on bubble click = fn on_click_plus(self, _) {
+        self.value.set(self.value() + self.step);
+        schedule_render();
+      }
     >
   >
 }

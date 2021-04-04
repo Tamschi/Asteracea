@@ -1,10 +1,10 @@
-// asteracea::component! {
-// 	pub Inline()() -> !Sync
+asteracea::component! {
+	pub Inline()() -> !Sync
 
-// 	<button
-// 		on capture click = fn on_click(self, _) {}
-// 	>
-// }
+	<button
+		on capture click = fn on_click(self, _) {}
+	>
+}
 
 asteracea::component! {
 	pub Mvc()() -> !Sync
