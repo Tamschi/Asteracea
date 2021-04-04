@@ -6,11 +6,12 @@ use crate::{
 };
 use call2_for_syn::call2_strict;
 use either::Either;
-use proc_macro2::TokenStream;
-use quote::quote_spanned;
+use proc_macro2::{Span, TokenStream};
+use quote::{quote_spanned, ToTokens};
 use syn::{
 	parenthesized,
 	parse::{Parse, ParseStream},
+	spanned::Spanned,
 	token::Paren,
 	Error, ExprPath, Ident, LitStr, Pat, Result, Token,
 };
@@ -68,6 +69,20 @@ impl Parse for EventName {
 			Ok(Self::Custom(input.parse().unwrap()))
 		} else {
 			Err(lookahead.error())
+		}
+	}
+}
+impl ToTokens for EventName {
+	fn to_tokens(&self, tokens: &mut TokenStream) {
+		match self {
+			EventName::Known(name) => {
+				let asteracea = asteracea_ident(name.span());
+				(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+					<dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::events::#name::<_> as ::#asteracea::__Asteracea__implementation_details::lignin_schema::EventInfo>::NAME
+				})
+				.to_tokens(tokens)
+			}
+			EventName::Custom(name) => name.to_tokens(tokens),
 		}
 	}
 }
@@ -170,7 +185,44 @@ impl EventBindingDefinition {
 			registration_field_name,
 		} = self;
 		let asteracea = asteracea_ident(on.span);
+		let self_ = quote_spanned!(on.span=> self);
 
-		quote_spanned!(on.span=> todo!("event binding"))
+		let handler = match handler {
+			Either::Left((_, handler_name, _, _, _, _)) => {
+				quote_spanned!(handler_name.span().resolved_at(Span::mixed_site())=> Self::#handler_name)
+			}
+			Either::Right(predefined) => {
+				quote_spanned!(predefined.span().resolved_at(Span::mixed_site())=> {
+					// Deny using component state, since this isn't evaluated more than once.
+					let get_handler: fn() -> _ = || (
+						::#asteracea::__Asteracea__implementation_details::CallbackHandler::<Self, ::#asteracea::lignin::web::Event>::cast(
+							#predefined as fn(_, _)
+						)
+					);
+					get_handler()
+				})
+			}
+		};
+
+		quote_spanned!(on.span.resolved_at(Span::mixed_site())=> {
+			let registration = this.#registration_field_name.get_or_create(|| {
+				::#asteracea::lignin::CallbackRegistration::<Self, fn(::#asteracea::lignin::web::Event)>::new(
+					#self_,
+					#handler,
+				)
+			});
+
+			::#asteracea::lignin::EventBinding {
+				name: #name,
+				options: ::#asteracea::lignin::EventBindingOptions::new(), //TODO
+				callback: {
+					use ::#asteracea::lignin::{
+						auto_safety::Align as _,
+						callback_registry::ToRefThreadBoundFallback as _,
+					};
+					registration.to_ref().align()
+				}
+			}
+		})
 	}
 }
