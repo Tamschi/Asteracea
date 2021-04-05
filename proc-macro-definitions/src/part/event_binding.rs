@@ -222,7 +222,8 @@ impl EventBindingDefinition {
 
 		//TODO: Mode.
 		//TODO: Validate mode.
-		//TODO: Active flag.
+		let active = active.map(|active| quote_spanned!(active.span=> .with_passive(false)));
+
 		quote_spanned!(on.span.resolved_at(Span::mixed_site())=> {
 			let registration = this.#registration_field_name.get_or_create(|| {
 				::#asteracea::lignin::CallbackRegistration::<Self, fn(::#asteracea::lignin::web::Event)>::new(
@@ -233,7 +234,7 @@ impl EventBindingDefinition {
 
 			::#asteracea::lignin::EventBinding {
 				name: #name,
-				options: ::#asteracea::lignin::EventBindingOptions::new(), //TODO
+				options: ::#asteracea::lignin::EventBindingOptions::new()#active, //TODO
 				callback: {
 					use ::#asteracea::lignin::{
 						auto_safety::Align as _,

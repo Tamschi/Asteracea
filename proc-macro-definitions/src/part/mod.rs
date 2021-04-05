@@ -28,7 +28,7 @@ use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
 	spanned::Spanned as _,
-	token::{Add, Brace, Bracket},
+	token::{Brace, Bracket},
 	Attribute, Error, Expr, Generics, Ident, LitStr, Pat, Token, Visibility,
 };
 use syn_mid::Block;
