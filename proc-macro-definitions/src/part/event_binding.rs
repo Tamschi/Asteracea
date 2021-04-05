@@ -31,7 +31,6 @@ pub struct EventBindingDefinition {
 	on: kw::on,
 	mode: EventMode,
 	name: EventName,
-	eq: Token![=],
 	active: Option<kw::active>,
 	handler: Either<(Token![fn], Ident, Paren, Token![self], Pat, Block), ExprPath>,
 	component_name: Ident,
@@ -97,7 +96,7 @@ impl EventBindingDefinition {
 			#on
 			#let mode
 			#let name
-			#let eq
+			=
 			#let active
 		};
 
@@ -166,7 +165,6 @@ impl EventBindingDefinition {
 			on,
 			mode,
 			name,
-			eq,
 			active,
 			handler,
 			component_name,
@@ -179,7 +177,6 @@ impl EventBindingDefinition {
 			on,
 			mode,
 			name,
-			eq,
 			active,
 			handler,
 			component_name,
