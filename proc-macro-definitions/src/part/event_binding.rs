@@ -138,6 +138,7 @@ impl EventBindingDefinition {
 		call2_strict(
 			quote_spanned! {on.span=>
 				#[allow(non_snake_case)] // This currently has no effect, hence `allow_non_snake_case_on_structure_workaround`.
+				//TODO: If the return type is `!Sync`, this can be an `Option<…>`, which may be smaller and faster.
 				|#registration_field_name = ::#asteracea::__Asteracea__implementation_details::lazy_init::Lazy::<
 					::#asteracea::lignin::CallbackRegistration::<
 						#component_name,
