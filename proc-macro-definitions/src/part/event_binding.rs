@@ -25,6 +25,7 @@ pub mod kw {
 	custom_keyword!(capture);
 	custom_keyword!(bubble);
 	custom_keyword!(active);
+	custom_keyword!(once);
 }
 
 pub struct EventBindingDefinition {
@@ -32,6 +33,7 @@ pub struct EventBindingDefinition {
 	mode: EventMode,
 	name: EventName,
 	active: Option<kw::active>,
+	once: Option<kw::once>,
 	handler: Either<(Token![fn], Ident, Paren, Token![self], Pat, Block), ExprPath>,
 	component_name: Ident,
 	registration_field_name: Ident,
@@ -98,6 +100,7 @@ impl EventBindingDefinition {
 			#let name
 			=
 			#let active
+			#let once
 		};
 
 		let handler = {
@@ -166,6 +169,7 @@ impl EventBindingDefinition {
 			mode,
 			name,
 			active,
+			once,
 			handler,
 			component_name,
 			registration_field_name,
@@ -178,6 +182,7 @@ impl EventBindingDefinition {
 			mode,
 			name,
 			active,
+			once,
 			handler,
 			component_name,
 			registration_field_name,
@@ -218,11 +223,55 @@ impl EventBindingDefinition {
 			}
 		};
 
-		//TODO: Mode.
-		//TODO: Validate mode.
+		let validate_mode = if let EventName::Known(name) = name {
+			match mode {
+				EventMode::None => {
+					quote_spanned! {name.span()=>
+						let _ = <
+							dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::events::#name::<_>
+							as ::#asteracea::__Asteracea__implementation_details::lignin_schema::NoBubbles
+						>::OK;
+					}
+				}
+				EventMode::Capture(kw::capture { span })
+				| EventMode::Bubble(kw::bubble { span }) => {
+					quote_spanned! {span.resolved_at(Span::mixed_site())=>
+						let _ = <
+							dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::events::#name::<_>
+							as ::#asteracea::__Asteracea__implementation_details::lignin_schema::YesBubbles
+						>::OK;
+					}
+				}
+			}
+			.pipe(Some)
+		} else {
+			None
+		};
+		let mode = match mode {
+			EventMode::None => None,
+			EventMode::Capture(capture) => Some(quote_spanned!(capture.span=> .with_capture(true))),
+			EventMode::Bubble(bubble) => Some(quote_spanned!(bubble.span=> .with_capture(false))),
+		};
+
+		let validate_active = if let EventName::Known(name) = name {
+			active.map(|active| {
+				quote_spanned! {active.span=>
+					let _ = <
+						dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::events::#name::<_>
+						as ::#asteracea::__Asteracea__implementation_details::lignin_schema::YesCancelable
+					>::OK;
+				}
+			})
+		} else {
+			None
+		};
 		let active = active.map(|active| quote_spanned!(active.span=> .with_passive(false)));
 
+		let once = once.map(|once| quote_spanned!(once.span=> .with_once(true)));
+
 		quote_spanned!(on.span.resolved_at(Span::mixed_site())=> {
+			#validate_active
+			#validate_mode
 			let registration = this.#registration_field_name.get_or_create(|| {
 				::#asteracea::lignin::CallbackRegistration::<Self, fn(::#asteracea::lignin::web::Event)>::new(
 					#self_,
@@ -232,7 +281,7 @@ impl EventBindingDefinition {
 
 			::#asteracea::lignin::EventBinding {
 				name: #name,
-				options: ::#asteracea::lignin::EventBindingOptions::new()#active, //TODO
+				options: ::#asteracea::lignin::EventBindingOptions::new()#active#once#mode,
 				callback: {
 					use ::#asteracea::lignin::{
 						auto_safety::Align as _,
