@@ -1,5 +1,5 @@
 asteracea::component! {
-	pub Inline()() -> !Sync
+	pub Inline()() -> Sync?
 
 	<button
 		on capture click = once fn on_click(self, _) {}
@@ -8,7 +8,7 @@ asteracea::component! {
 }
 
 asteracea::component! {
-	pub Mvc()() -> !Sync
+	pub Mvc()() -> Sync
 
 	<button
 		on bubble click = active Self::on_click

@@ -46,7 +46,8 @@ impl ToTokens for AttributeKey {
 				let asteracea = asteracea_ident(name.span());
 				(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
 					<dyn ::#asteracea::__::lignin_schema::html::attributes::#name>::NAME
-				}).to_tokens(tokens)
+				})
+				.to_tokens(tokens)
 			}
 			AttributeKey::Literal(name) => name.to_tokens(tokens),
 		}
@@ -240,14 +241,16 @@ impl<C: Configuration> HtmlDefinition<C> {
 					AttributeDefinition::Assignment(_, AttributeKey::Known(name), _, _, _) => {
 						// Move validation errors onto the attribute name.
 						let tag_name = Ident::new(&tag_name.to_string(), name.span());
-						Some(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
-							// Already flagged where the attribute name is resolved.
-							// Ignored here so a deprecated element isn't warned about on the attribute.
-							#[allow(deprecated)]
-							::#asteracea::__::lignin_schema::html::attributes::#name::<_>::static_validate_on(
-								::#asteracea::__::lignin_schema::html::elements::#tag_name
-							);
-						})
+						Some(
+							quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+								// Already flagged where the attribute name is resolved.
+								// Ignored here so a deprecated element isn't warned about on the attribute.
+								#[allow(deprecated)]
+								::#asteracea::__::lignin_schema::html::attributes::#name::<_>::static_validate_on(
+									::#asteracea::__::lignin_schema::html::elements::#tag_name
+								);
+							},
+						)
 					}
 					_ => None,
 				})

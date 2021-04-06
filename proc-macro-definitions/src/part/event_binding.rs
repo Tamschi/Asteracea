@@ -226,21 +226,49 @@ impl EventBindingDefinition {
 		let validate_mode = if let EventName::Known(name) = name {
 			match mode {
 				EventMode::None => {
-					quote_spanned! {name.span()=>
-						let _ = <
-							dyn ::#asteracea::__::lignin_schema::events::#name::<_>
-							as ::#asteracea::__::lignin_schema::NoBubbles
-						>::OK;
-					}
+					let forbid = quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #[forbid(deprecated)]);
+					quote_spanned!(name.span()=> {
+						#[allow(unused_imports)]
+						use ::#asteracea::__::errors::PhaseExpected;
+						#[allow(deprecated)]
+						type CheckNoBubbles = ::#asteracea::__::errors::CheckNoBubbles::<
+							dyn ::#asteracea::__::lignin_schema::events::#name::<
+								::#asteracea::__::lignin_schema::aspects::Event
+							>
+						>;
+						#forbid
+						CheckNoBubbles::check();
+					})
 				}
-				EventMode::Capture(kw::capture { span })
-				| EventMode::Bubble(kw::bubble { span }) => {
-					quote_spanned! {span.resolved_at(Span::mixed_site())=>
-						let _ = <
-							dyn ::#asteracea::__::lignin_schema::events::#name::<_>
-							as ::#asteracea::__::lignin_schema::YesBubbles
-						>::OK;
-					}
+				EventMode::Capture(capture) => {
+					let forbid = quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #[forbid(deprecated)]);
+					quote_spanned!(capture.span=> {
+						#[allow(unused_imports)]
+						use ::#asteracea::__::errors::CaptureNotValid;
+						#[allow(deprecated)]
+						type CheckYesBubbles = ::#asteracea::__::errors::CheckYesBubbles::<
+							dyn ::#asteracea::__::lignin_schema::events::#name::<
+								::#asteracea::__::lignin_schema::aspects::Event
+							>
+						>;
+						#forbid
+						CheckYesBubbles::check();
+					})
+				}
+				EventMode::Bubble(bubble) => {
+					let forbid = quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #[forbid(deprecated)]);
+					quote_spanned!(bubble.span=> {
+						#[allow(unused_imports)]
+						use ::#asteracea::__::errors::BubbleNotValid;
+						#[allow(deprecated)]
+						type CheckYesBubbles = ::#asteracea::__::errors::CheckYesBubbles::<
+							dyn ::#asteracea::__::lignin_schema::events::#name::<
+								::#asteracea::__::lignin_schema::aspects::Event
+							>
+						>;
+						#forbid
+						CheckYesBubbles::check();
+					})
 				}
 			}
 			.pipe(Some)
