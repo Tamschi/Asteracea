@@ -255,12 +255,19 @@ impl EventBindingDefinition {
 
 		let validate_active = if let EventName::Known(name) = name {
 			active.map(|active| {
-				quote_spanned! {active.span=>
-					let _ = <
-						dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::events::#name::<_>
-						as ::#asteracea::__Asteracea__implementation_details::lignin_schema::YesCancelable
-					>::OK;
-				}
+				let forbid = quote_spanned!(name.span()=> #[forbid(deprecated)]);
+				quote_spanned!(active.span=> {
+					#[allow(unused_imports)]
+					use ::#asteracea::__Asteracea__implementation_details::better_errors::ActiveNotValidForEventNotCancelable;
+					#[allow(deprecated)]
+					type CheckYesCancelable = ::#asteracea::__Asteracea__implementation_details::better_errors::CheckYesCancelable::<
+						dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::events::#name::<
+							::#asteracea::__Asteracea__implementation_details::lignin_schema::aspects::Event
+						>
+					>;
+					#forbid
+					CheckYesCancelable::check();
+				})
 			})
 		} else {
 			None
