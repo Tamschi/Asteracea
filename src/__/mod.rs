@@ -12,4 +12,4 @@ impl<R: ?Sized, T, F> CallbackHandler<R, T, *const R> for F where F: FnOnce(*con
 impl<R: ?Sized, T, F> CallbackHandler<R, T, &'static R> for F where F: FnOnce(&R, T) {}
 impl<R: ?Sized, T, F> CallbackHandler<R, T, Pin<&'static R>> for F where F: FnOnce(Pin<&R>, T) {}
 
-pub mod better_errors;
+pub mod errors;

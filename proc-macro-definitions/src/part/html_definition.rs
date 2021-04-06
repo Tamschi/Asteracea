@@ -45,7 +45,7 @@ impl ToTokens for AttributeKey {
 			AttributeKey::Known(name) => {
 				let asteracea = asteracea_ident(name.span());
 				(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
-					<dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::html::attributes::#name>::NAME
+					<dyn ::#asteracea::__::lignin_schema::html::attributes::#name>::NAME
 				}).to_tokens(tokens)
 			}
 			AttributeKey::Literal(name) => name.to_tokens(tokens),
@@ -244,8 +244,8 @@ impl<C: Configuration> HtmlDefinition<C> {
 							// Already flagged where the attribute name is resolved.
 							// Ignored here so a deprecated element isn't warned about on the attribute.
 							#[allow(deprecated)]
-							::#asteracea::__Asteracea__implementation_details::lignin_schema::html::attributes::#name::<_>::static_validate_on(
-								::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#tag_name
+							::#asteracea::__::lignin_schema::html::attributes::#name::<_>::static_validate_on(
+								::#asteracea::__::lignin_schema::html::elements::#tag_name
 							);
 						})
 					}
@@ -381,7 +381,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 				let validate_has_content = if has_content {
 					Some(
 						quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
-							::#asteracea::__Asteracea__implementation_details::lignin_schema::HasContent::static_validate_on(::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name);
+							::#asteracea::__::lignin_schema::HasContent::static_validate_on(::#asteracea::__::lignin_schema::html::elements::#name);
 						},
 					)
 				} else {
@@ -389,7 +389,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 				};
 				let document_closing = closing_name.as_ref().map(|closing_name| {
 					quote_spanned! {closing_name.span().resolved_at(Span::mixed_site())=>
-						let _ = ::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#closing_name;
+						let _ = ::#asteracea::__::lignin_schema::html::elements::#closing_name;
 					}
 				});
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
@@ -404,7 +404,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 							//TODO: Validate events.
 
 							::#asteracea::lignin::Element {
-								name: ::#asteracea::__Asteracea__implementation_details::lignin_schema::html::elements::#name::TAG_NAME,
+								name: ::#asteracea::__::lignin_schema::html::elements::#name::TAG_NAME,
 								creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
 								attributes: #attributes,
 								content: children,

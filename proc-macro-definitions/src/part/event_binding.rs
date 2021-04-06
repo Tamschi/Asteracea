@@ -79,7 +79,7 @@ impl ToTokens for EventName {
 			EventName::Known(name) => {
 				let asteracea = asteracea_ident(name.span());
 				(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
-					<dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::events::#name::<_> as ::#asteracea::__Asteracea__implementation_details::lignin_schema::EventInfo>::NAME
+					<dyn ::#asteracea::__::lignin_schema::events::#name::<_> as ::#asteracea::__::lignin_schema::EventInfo>::NAME
 				})
 				.to_tokens(tokens)
 			}
@@ -141,7 +141,7 @@ impl EventBindingDefinition {
 			quote_spanned! {on.span=>
 				#[allow(non_snake_case)] // This currently has no effect, hence `allow_non_snake_case_on_structure_workaround`.
 				//TODO: If the return type is `!Sync`, this can be an `Option<…>`, which may be smaller and faster.
-				|#registration_field_name = ::#asteracea::__Asteracea__implementation_details::lazy_init::Lazy::<
+				|#registration_field_name = ::#asteracea::__::lazy_init::Lazy::<
 					::#asteracea::lignin::CallbackRegistration::<
 						#component_name,
 						fn(event: ::#asteracea::lignin::web::Event),
@@ -209,7 +209,7 @@ impl EventBindingDefinition {
 					// Deny using component state, since this isn't evaluated more than once.
 					let _: fn() = || {
 						// Make sure the signature matches
-						let _: &dyn ::#asteracea::__Asteracea__implementation_details::CallbackHandler::<Self, ::#asteracea::lignin::web::Event, _> = &#predefined;
+						let _: &dyn ::#asteracea::__::CallbackHandler::<Self, ::#asteracea::lignin::web::Event, _> = &#predefined;
 					};
 					// Make sure it's a function, not a closure
 					let handler: fn(_, _) = #predefined;
@@ -228,8 +228,8 @@ impl EventBindingDefinition {
 				EventMode::None => {
 					quote_spanned! {name.span()=>
 						let _ = <
-							dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::events::#name::<_>
-							as ::#asteracea::__Asteracea__implementation_details::lignin_schema::NoBubbles
+							dyn ::#asteracea::__::lignin_schema::events::#name::<_>
+							as ::#asteracea::__::lignin_schema::NoBubbles
 						>::OK;
 					}
 				}
@@ -237,8 +237,8 @@ impl EventBindingDefinition {
 				| EventMode::Bubble(kw::bubble { span }) => {
 					quote_spanned! {span.resolved_at(Span::mixed_site())=>
 						let _ = <
-							dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::events::#name::<_>
-							as ::#asteracea::__Asteracea__implementation_details::lignin_schema::YesBubbles
+							dyn ::#asteracea::__::lignin_schema::events::#name::<_>
+							as ::#asteracea::__::lignin_schema::YesBubbles
 						>::OK;
 					}
 				}
@@ -255,14 +255,14 @@ impl EventBindingDefinition {
 
 		let validate_active = if let EventName::Known(name) = name {
 			active.map(|active| {
-				let forbid = quote_spanned!(name.span()=> #[forbid(deprecated)]);
+				let forbid = quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #[forbid(deprecated)]);
 				quote_spanned!(active.span=> {
 					#[allow(unused_imports)]
-					use ::#asteracea::__Asteracea__implementation_details::better_errors::ActiveNotValidForEventNotCancelable;
+					use ::#asteracea::__::errors::ActiveNotValid;
 					#[allow(deprecated)]
-					type CheckYesCancelable = ::#asteracea::__Asteracea__implementation_details::better_errors::CheckYesCancelable::<
-						dyn ::#asteracea::__Asteracea__implementation_details::lignin_schema::events::#name::<
-							::#asteracea::__Asteracea__implementation_details::lignin_schema::aspects::Event
+					type CheckYesCancelable = ::#asteracea::__::errors::CheckYesCancelable::<
+						dyn ::#asteracea::__::lignin_schema::events::#name::<
+							::#asteracea::__::lignin_schema::aspects::Event
 						>
 					>;
 					#forbid

@@ -11,9 +11,9 @@ where
 	pub fn check() {}
 }
 
-pub trait ActiveNotValidForEventNotCancelable {
+pub trait ActiveNotValid {
 	#[deprecated = "Keyword `active` is not valid for this event; the event is not cancelable."]
 	#[inline(always)]
 	fn check() {}
 }
-impl<T> ActiveNotValidForEventNotCancelable for T {}
+impl<T> ActiveNotValid for T {}

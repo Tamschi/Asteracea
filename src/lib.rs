@@ -64,4 +64,4 @@ impl<'a> ConditionalAttributeValue<'a> for Option<&'a str> {
 
 #[allow(non_snake_case)]
 #[doc(hidden)]
-pub mod __Asteracea__implementation_details;
+pub mod __;

@@ -557,12 +557,12 @@ impl ComponentDeclaration {
 
 		Ok(quote_spanned! {Span::mixed_site()=>
 			//TODO: Doc comment referring to associated type.
-			#[derive(#asteracea::__Asteracea__implementation_details::typed_builder::TypedBuilder)]
+			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
 			#[builder(doc)]
 			#visibility struct #new_args_name#new_args_generics #new_args_body
 
 			//TODO: Doc comment referring to associated type.
-			#[derive(#asteracea::__Asteracea__implementation_details::typed_builder::TypedBuilder)]
+			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
 			#[builder(doc)]
 			#visibility struct #render_args_name#render_args_generics #render_args_body
 
