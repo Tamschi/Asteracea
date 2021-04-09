@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)] //TODO: The macro should suppress this automatically.
+
 asteracea::component! {
 	pub Inline()() -> Sync?
 
