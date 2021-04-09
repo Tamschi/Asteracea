@@ -363,9 +363,9 @@ impl ComponentDeclaration {
 
 		let asteracea = asteracea_ident(Span::call_site());
 
-		for (name, parameter_type) in callback_registrations.iter().rev() {
-			// Unshifting in order reverses this, so I also reversed it above to maybe make it a little easier to debug.
-			storage_context.unshift(FieldDefinition {
+		let mut unsafe_drop_early = TokenStream::new();
+		for (name, parameter_type) in callback_registrations {
+			storage_context.push(FieldDefinition {
 				attributes: vec![],
 				visibility: Visibility::Inherited,
 				name: name.clone(),
@@ -383,20 +383,19 @@ impl ComponentDeclaration {
 					::std::mem::ManuallyDrop::default()
 				},
 				structurally_pinned: true, // This isn't quite clean, but it implies asserting `!Unpin` on the component type.
-			})
-		}
+			});
 
-		let mut unsafe_drop_early = TokenStream::new();
-		for (name, _) in callback_registrations {
 			// IMPORTANT: These fields must be dropped FIRST, before any other drop logic!
 			// Dropping callback registrations synchronises callbacks to make sure they aren't newly invoked,
 			// and that all running ones have exited already.
 
 			// Dropping these callback registrations early also means they mustn't be considered user-accessible.
 			assert!(name.to_string().contains("__Asteracea__"));
-			unsafe_drop_early.extend(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
-				::std::mem::ManuallyDrop::drop(&mut self.#name);
-			})
+			unsafe_drop_early.extend(
+				quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+					::std::mem::ManuallyDrop::drop(&mut self.#name);
+				},
+			)
 		}
 
 		let struct_definition = StorageTypeConfiguration::new_component_root(

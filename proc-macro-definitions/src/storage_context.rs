@@ -107,10 +107,6 @@ impl StorageContext {
 		self.field_definitions.push(field_definition)
 	}
 
-	pub fn unshift(&mut self, field_definition: FieldDefinition) {
-		self.field_definitions.insert(0, field_definition)
-	}
-
 	pub fn field_definitions(&self) -> impl Iterator<Item = &FieldDefinition> {
 		self.field_definitions.iter()
 	}
