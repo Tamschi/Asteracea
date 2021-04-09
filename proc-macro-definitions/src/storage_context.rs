@@ -27,7 +27,6 @@ impl<'a> ParseContext<'a> {
 		component_visibility: &'a Visibility,
 		component_name: &'a Ident,
 		component_generics: &'a Generics,
-		callback_registrations: Rc<RefCell<Vec<(Ident, Type)>>>,
 	) -> Self {
 		Self {
 			item_visibility: component_visibility,
@@ -39,7 +38,7 @@ impl<'a> ParseContext<'a> {
 				generated_names: 0,
 			},
 			assorted_items: vec![],
-			callback_registrations,
+			callback_registrations: Rc::default(),
 		}
 	}
 

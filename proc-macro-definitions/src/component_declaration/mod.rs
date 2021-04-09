@@ -184,18 +184,7 @@ impl Parse for ComponentDeclaration {
 
 		let mut rhizome_extractions = Vec::new();
 
-		let callback_registrations = Rc::default();
-
-		let mut cx = ParseContext::new_root(
-			&visibility,
-			&component_name,
-			&component_generics,
-			Rc::clone(&callback_registrations),
-		);
-
-		let callback_registrations = Rc::try_unwrap(callback_registrations)
-			.expect("Internal Asteracea error: `callback_registrations` still referenced elsewhere")
-			.into_inner();
+		let mut cx = ParseContext::new_root(&visibility, &component_name, &component_generics);
 
 		// Dependency extraction:
 		while let Some(ref_token) = input.parse::<Token![ref]>().ok() {
@@ -293,10 +282,17 @@ impl Parse for ComponentDeclaration {
 			));
 		}
 
+		let ParseContext {
+			assorted_items,
+			storage_context,
+			callback_registrations,
+			..
+		} = cx;
+
 		Ok(Self {
-			assorted_items: cx.assorted_items,
+			assorted_items,
 			attributes,
-			storage_context: cx.storage_context,
+			storage_context,
 			visibility,
 			name: component_name,
 			component_generics,
@@ -312,7 +308,11 @@ impl Parse for ComponentDeclaration {
 			constructor_block,
 			body,
 			rhizome_extractions,
-			callback_registrations,
+			callback_registrations: Rc::try_unwrap(callback_registrations)
+				.expect(
+					"Internal Asteracea error: `callback_registrations` still referenced elsewhere",
+				)
+				.into_inner(),
 		})
 	}
 }
