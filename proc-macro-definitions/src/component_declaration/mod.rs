@@ -343,7 +343,7 @@ impl ComponentDeclaration {
 			attributes,
 			visibility,
 			name: component_name,
-			storage_context,
+			mut storage_context,
 			component_generics,
 			constructor_attributes,
 			constructor_generics,
@@ -362,6 +362,33 @@ impl ComponentDeclaration {
 		} = self;
 
 		let asteracea = asteracea_ident(Span::call_site());
+
+		for (name, parameter_type) in callback_registrations.iter().rev() {
+			// Unshifting in order reverses this, so I also reversed it above to maybe make it a little easier to debug.
+
+			// IMPORTANT: These fields must come FIRST!
+			// Dropping callback registrations synchronises callbacks to make sure they aren't newly invoked,
+			// and that all running ones have exited already.
+			//
+			// Note that if user-defined Drop implementations are allowed, these must be dropped early via ManuallyDrop instead.
+			storage_context.unshift(FieldDefinition {
+				attributes: vec![],
+				visibility: Visibility::Inherited,
+				name: name.clone(),
+				field_type: quote_spanned! {parameter_type.span().resolved_at(Span::mixed_site())=>
+					::#asteracea::__::lazy_init::Lazy::<
+						::#asteracea::lignin::CallbackRegistration::<
+							#component_name,
+							fn(event: ::#parameter_type),
+						>
+					>
+				},
+				initial_value: quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+					::#asteracea::__::lazy_init::Lazy::new()
+				},
+				structurally_pinned: true, // This isn't quite clean, but it implies asserting `!Unpin` on the component type.
+			})
+		}
 
 		let struct_definition = StorageTypeConfiguration::new_component_root(
 			component_name.clone(),
