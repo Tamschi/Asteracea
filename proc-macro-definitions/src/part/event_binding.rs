@@ -20,7 +20,6 @@ use tap::Pipe as _;
 use unquote::unquote;
 
 //FIXME: This is currently unsound, as `CallbackRegistration`s must be destroyed before any state (user-)accessible through the receiver reference.
-// As such, components will need a generated `Drop` implementation and drop them ahead of time..
 
 pub mod kw {
 	use syn::custom_keyword;

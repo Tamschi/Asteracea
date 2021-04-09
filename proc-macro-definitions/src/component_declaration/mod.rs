@@ -365,28 +365,37 @@ impl ComponentDeclaration {
 
 		for (name, parameter_type) in callback_registrations.iter().rev() {
 			// Unshifting in order reverses this, so I also reversed it above to maybe make it a little easier to debug.
-
-			// IMPORTANT: These fields must come FIRST!
-			// Dropping callback registrations synchronises callbacks to make sure they aren't newly invoked,
-			// and that all running ones have exited already.
-			//
-			// Note that if user-defined Drop implementations are allowed, these must be dropped early via ManuallyDrop instead.
 			storage_context.unshift(FieldDefinition {
 				attributes: vec![],
 				visibility: Visibility::Inherited,
 				name: name.clone(),
 				field_type: quote_spanned! {parameter_type.span().resolved_at(Span::mixed_site())=>
-					::#asteracea::__::lazy_init::Lazy::<
-						::#asteracea::lignin::CallbackRegistration::<
-							#component_name,
-							fn(event: ::#parameter_type),
+					::std::mem::ManuallyDrop::<
+						::#asteracea::__::lazy_init::Lazy::<
+							::#asteracea::lignin::CallbackRegistration::<
+								#component_name,
+								fn(event: ::#parameter_type),
+							>
 						>
 					>
 				},
 				initial_value: quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
-					::#asteracea::__::lazy_init::Lazy::new()
+					::std::mem::ManuallyDrop::default()
 				},
 				structurally_pinned: true, // This isn't quite clean, but it implies asserting `!Unpin` on the component type.
+			})
+		}
+
+		let mut unsafe_drop_early = TokenStream::new();
+		for (name, _) in callback_registrations {
+			// IMPORTANT: These fields must be dropped FIRST, before any other drop logic!
+			// Dropping callback registrations synchronises callbacks to make sure they aren't newly invoked,
+			// and that all running ones have exited already.
+
+			// Dropping these callback registrations early also means they mustn't be considered user-accessible.
+			assert!(name.to_string().contains("__Asteracea__"));
+			unsafe_drop_early.extend(quote_spanned! {name.span()=>
+				::std::mem::ManuallyDrop::drop(&mut self.#name);
 			})
 		}
 
@@ -675,6 +684,16 @@ impl ComponentDeclaration {
 			}
 
 			#(#random_items)*
+
+			/// Asteracea components do not currently support custom [`Drop`](`::std::ops::Drop`) implementations.
+			impl#component_impl_generics ::std::ops::Drop for #component_name#component_type_generics #component_where_clause {
+				fn drop(&mut self) {
+					unsafe {
+						#unsafe_drop_early
+					}
+					//TODO: Undo DOM bindings.
+				}
+			}
 		})
 	}
 }
