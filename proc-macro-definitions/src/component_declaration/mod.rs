@@ -374,7 +374,7 @@ impl ComponentDeclaration {
 						::#asteracea::__::lazy_init::Lazy::<
 							::#asteracea::lignin::CallbackRegistration::<
 								#component_name,
-								fn(event: ::#parameter_type),
+								fn(#parameter_type),
 							>
 						>
 					>
@@ -394,7 +394,7 @@ impl ComponentDeclaration {
 
 			// Dropping these callback registrations early also means they mustn't be considered user-accessible.
 			assert!(name.to_string().contains("__Asteracea__"));
-			unsafe_drop_early.extend(quote_spanned! {name.span()=>
+			unsafe_drop_early.extend(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
 				::std::mem::ManuallyDrop::drop(&mut self.#name);
 			})
 		}
