@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use crate::{
 	component_declaration::FieldDefinition, storage_configuration::StorageTypeConfiguration,
 };
@@ -17,6 +19,7 @@ pub struct ParseContext<'a> {
 	pub storage_generics: &'a Generics,
 	pub storage_context: StorageContext,
 	pub assorted_items: Vec<Item>,
+	pub callback_registrations: Rc<RefCell<Vec<(Ident, Type)>>>,
 }
 
 impl<'a> ParseContext<'a> {
@@ -24,6 +27,7 @@ impl<'a> ParseContext<'a> {
 		component_visibility: &'a Visibility,
 		component_name: &'a Ident,
 		component_generics: &'a Generics,
+		callback_registrations: Rc<RefCell<Vec<(Ident, Type)>>>,
 	) -> Self {
 		Self {
 			item_visibility: component_visibility,
@@ -35,6 +39,7 @@ impl<'a> ParseContext<'a> {
 				generated_names: 0,
 			},
 			assorted_items: vec![],
+			callback_registrations,
 		}
 	}
 
@@ -49,6 +54,7 @@ impl<'a> ParseContext<'a> {
 				generated_names: 0,
 			},
 			assorted_items: vec![],
+			callback_registrations: Rc::default(),
 		}
 	}
 
@@ -67,6 +73,7 @@ impl<'a> ParseContext<'a> {
 				generated_names: 0,
 			},
 			assorted_items: vec![],
+			callback_registrations: Rc::clone(&self.callback_registrations),
 		}
 	}
 }

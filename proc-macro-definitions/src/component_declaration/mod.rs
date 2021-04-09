@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use self::{
 	arguments::{Argument, ConstructorArgument},
 	parameter_helper_definitions::{CustomArgument, ParameterHelperDefintions},
@@ -55,6 +57,7 @@ pub struct ComponentDeclaration {
 	body: Part<ComponentRenderConfiguration>,
 	rhizome_extractions: Vec<TokenStream>,
 	assorted_items: Vec<Item>,
+	callback_registrations: Vec<(Ident, Type)>,
 }
 
 pub enum RenderType {
@@ -181,7 +184,18 @@ impl Parse for ComponentDeclaration {
 
 		let mut rhizome_extractions = Vec::new();
 
-		let mut cx = ParseContext::new_root(&visibility, &component_name, &component_generics);
+		let callback_registrations = Rc::default();
+
+		let mut cx = ParseContext::new_root(
+			&visibility,
+			&component_name,
+			&component_generics,
+			Rc::clone(&callback_registrations),
+		);
+
+		let callback_registrations = Rc::try_unwrap(callback_registrations)
+			.expect("Internal Asteracea error: `callback_registrations` still referenced elsewhere")
+			.into_inner();
 
 		// Dependency extraction:
 		while let Some(ref_token) = input.parse::<Token![ref]>().ok() {
@@ -298,6 +312,7 @@ impl Parse for ComponentDeclaration {
 			constructor_block,
 			body,
 			rhizome_extractions,
+			callback_registrations,
 		})
 	}
 }
@@ -343,6 +358,7 @@ impl ComponentDeclaration {
 			body,
 			rhizome_extractions,
 			assorted_items: mut random_items,
+			callback_registrations,
 		} = self;
 
 		let asteracea = asteracea_ident(Span::call_site());
