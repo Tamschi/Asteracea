@@ -35,9 +35,12 @@ asteracea::component! {
 	pub Detached()() -> Sync
 
 	<button
-		on bubble click = active detached
+		on bubble click = active detached1
+		on bubble click = active detached2
+		on bubble click = active detached3
 	>
 }
 
-// Both the signature with the pinned receiver and with a plain reference should work.
-fn detached(_: *const Detached, _: lignin::web::Event) {}
+fn detached1(_: *const Detached, _: lignin::web::Event) {}
+fn detached2(_: &Detached, _: lignin::web::Event) {}
+fn detached3(_: std::pin::Pin<&Detached>, _: lignin::web::Event) {}
