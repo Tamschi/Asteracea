@@ -1,4 +1,6 @@
-use std::pin::Pin;
+use lazy_init::Lazy;
+use lignin::CallbackRegistration;
+use std::{mem::ManuallyDrop, pin::Pin};
 
 pub use lazy_init;
 pub use lignin_schema;
@@ -13,3 +15,7 @@ impl<R: ?Sized, T, F> CallbackHandler<R, T, &'static R> for F where F: FnOnce(&R
 impl<R: ?Sized, T, F> CallbackHandler<R, T, Pin<&'static R>> for F where F: FnOnce(Pin<&R>, T) {}
 
 pub mod errors;
+
+// Clippy complains about the type complexity of this if it appears directly as component field.
+pub type DroppableLazyCallbackRegistration<Component, ParameterFn> =
+	ManuallyDrop<Lazy<CallbackRegistration<Component, ParameterFn>>>;

@@ -370,17 +370,13 @@ impl ComponentDeclaration {
 				visibility: Visibility::Inherited,
 				name: name.clone(),
 				field_type: quote_spanned! {parameter_type.span().resolved_at(Span::mixed_site())=>
-					::std::mem::ManuallyDrop::<
-						::#asteracea::__::lazy_init::Lazy::<
-							::#asteracea::lignin::CallbackRegistration::<
-								#component_name,
-								fn(#parameter_type),
-							>
-						>
+					::#asteracea::__::DroppableLazyCallbackRegistration::<
+						#component_name,
+						fn(#parameter_type),
 					>
 				},
 				initial_value: quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
-					::std::mem::ManuallyDrop::default()
+					::#asteracea::__::DroppableLazyCallbackRegistration::default()
 				},
 				structurally_pinned: true, // This isn't quite clean, but it implies asserting `!Unpin` on the component type.
 			});
@@ -393,7 +389,7 @@ impl ComponentDeclaration {
 			assert!(name.to_string().contains("__Asteracea__"));
 			unsafe_drop_early.extend(
 				quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
-					::std::mem::ManuallyDrop::drop(&mut self.#name);
+					::#asteracea::__::DroppableLazyCallbackRegistration::drop(&mut self.#name);
 				},
 			)
 		}
