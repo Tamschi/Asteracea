@@ -1,5 +1,4 @@
 use crate::{asteracea_ident, storage_context::ParseContext};
-use either::Either;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 use syn::{
@@ -28,7 +27,7 @@ pub struct EventBindingDefinition {
 	name: EventName,
 	active: Option<kw::active>,
 	once: Option<kw::once>,
-	handler: Either<(Token![fn], Ident, Paren, Token![self], Pat, Block), ExprPath>,
+	handler: Handler,
 	component_name: Ident,
 	registration_field_name: Ident,
 }
@@ -93,6 +92,19 @@ impl EventName {
 	}
 }
 
+enum Handler {
+	Inline {
+		fn_: Token![fn],
+		handler_name: Option<Ident>,
+		paren: Paren,
+		self_: Token![self],
+		comma: Token![,],
+		event: Pat,
+		body: Block,
+	},
+	Predefined(ExprPath),
+}
+
 impl EventBindingDefinition {
 	pub fn parse_with_context(
 		input: ParseStream<'_>,
@@ -109,23 +121,31 @@ impl EventBindingDefinition {
 			#let once
 		};
 
-		let handler: Either<(Token![fn], Ident, Paren, Token![self], Pat, Block), ExprPath> = {
+		let handler: Handler = {
 			if let Some(fn_) = input.parse().unwrap() {
 				let handler_name = input.parse()?;
 				let args_list;
 				let paren = parenthesized!(args_list in input);
 				unquote! {&args_list,
 					#let self_
-					,
+					#let comma
 					#let event
 				};
 				if !args_list.is_empty() {
 					return Err(Error::new(args_list.span(), "Unexpected token"));
 				}
 				let body = input.parse()?;
-				Either::Left((fn_, handler_name, paren, self_, event, body))
+				Handler::Inline {
+					fn_,
+					handler_name,
+					paren,
+					self_,
+					comma,
+					event,
+					body,
+				}
 			} else {
-				Either::Right(input.parse().map_err(|error| {
+				Handler::Predefined(input.parse().map_err(|error| {
 					Error::new(error.span(), "Expected `fn` or path of event handler")
 				})?)
 			}
@@ -143,17 +163,20 @@ impl EventBindingDefinition {
 
 		let registration_field_name = Ident::new(
 			&format!(
-				"__Asteracea__event_binding_{}_{}_{}",
+				"__Asteracea__event_binding_{}_on_{}_{}",
 				cx.callback_registrations.borrow().len(),
 				name.to_partial_identifier_string(),
 				match &handler {
-					Either::Left((_, handler_name, _, _, _, _)) => {
+					Handler::Inline { handler_name, .. } => {
 						handler_name
-							.to_string()
-							.trim_start_matches("r#")
-							.to_string()
+							.as_ref()
+							.map(|handler_name| {
+								"run_".to_string()
+									+ handler_name.to_string().trim_start_matches("r#")
+							})
+							.unwrap_or_else(|| "anonymous_inline_handler".to_string())
 					}
-					Either::Right(path) => {
+					Handler::Predefined(path) => {
 						path.to_token_stream()
 							.to_string()
 							.replace(' ', "")
@@ -162,7 +185,7 @@ impl EventBindingDefinition {
 					}
 				}
 			),
-			on.span,
+			on.span.resolved_at(Span::mixed_site()),
 		);
 
 		let asteracea = asteracea_ident(on.span);
@@ -201,10 +224,23 @@ impl EventBindingDefinition {
 		let self_ = quote_spanned!(on.span=> self);
 
 		let handler = match handler {
-			Either::Left((fn_, handler_name, _, self_, event, body)) => {
+			Handler::Inline {
+				fn_,
+				handler_name,
+				paren,
+				self_,
+				comma,
+				event,
+				body,
+			} => {
+				let handler_name = handler_name.as_ref().unwrap_or(registration_field_name);
+
+				let args = quote_spanned! {paren.span.resolved_at(Span::mixed_site())=>
+					(#self_: ::std::pin::Pin<&Self>#comma #event: ::#asteracea::lignin::web::Event)
+				};
 				quote_spanned!(fn_.span.resolved_at(Span::mixed_site())=> {
 					impl #component_name {
-						fn #handler_name(#self_: ::std::pin::Pin<&Self>, #event: ::#asteracea::lignin::web::Event) #body
+						fn #handler_name#args #body
 					}
 
 					unsafe {
@@ -214,7 +250,7 @@ impl EventBindingDefinition {
 					}
 				})
 			}
-			Either::Right(predefined) => {
+			Handler::Predefined(predefined) => {
 				quote_spanned!(predefined.span().resolved_at(Span::mixed_site())=> {
 					// Deny using component state, since this isn't evaluated more than once.
 					let _: fn() = || {

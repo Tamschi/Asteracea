@@ -4,7 +4,7 @@ asteracea::component! {
 	pub Inline()() -> Sync?
 
 	<button
-		on capture click = once fn on_click(self, _) {}
+		on capture click = once fn (self, _) {}
 		on error = fn on_error(self, _) {}
 	>
 }
