@@ -82,22 +82,34 @@ impl ToTokens for EventName {
 	}
 }
 
+impl EventName {
+	fn to_partial_identifier_string(&self) -> String {
+		match self {
+			EventName::Known(name) => name.to_string().trim_start_matches("r#").to_string(),
+			EventName::Custom(name) => name
+				.value()
+				.replace(|c: char| !c.is_ascii_alphanumeric(), "_"),
+		}
+	}
+}
+
 impl EventBindingDefinition {
 	pub fn parse_with_context(
 		input: ParseStream<'_>,
 		cx: &mut ParseContext,
 	) -> Result<EventBindingDefinition> {
 		let on: kw::on;
+		let name: EventName;
 		unquote! {input,
 			#on
 			#let mode
-			#let name
+			#name
 			=
 			#let active
 			#let once
 		};
 
-		let handler = {
+		let handler: Either<(Token![fn], Ident, Paren, Token![self], Pat, Block), ExprPath> = {
 			if let Some(fn_) = input.parse().unwrap() {
 				let handler_name = input.parse()?;
 				let args_list;
@@ -131,8 +143,24 @@ impl EventBindingDefinition {
 
 		let registration_field_name = Ident::new(
 			&format!(
-				"__Asteracea__event_binding_registration_{}",
-				cx.callback_registrations.borrow().len()
+				"__Asteracea__event_binding_{}_{}_{}",
+				cx.callback_registrations.borrow().len(),
+				name.to_partial_identifier_string(),
+				match &handler {
+					Either::Left((_, handler_name, _, _, _, _)) => {
+						handler_name
+							.to_string()
+							.trim_start_matches("r#")
+							.to_string()
+					}
+					Either::Right(path) => {
+						path.to_token_stream()
+							.to_string()
+							.replace(' ', "")
+							.replace("::", "_")
+							.replace(|c: char| !c.is_ascii_alphanumeric(), "_")
+					}
+				}
 			),
 			on.span,
 		);
