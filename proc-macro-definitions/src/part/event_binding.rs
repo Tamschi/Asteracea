@@ -181,6 +181,7 @@ impl EventBindingDefinition {
 							.to_string()
 							.replace(' ', "")
 							.replace("::", "_")
+							.replace("r#", "")
 							.replace(|c: char| !c.is_ascii_alphanumeric(), "_")
 					}
 				}
