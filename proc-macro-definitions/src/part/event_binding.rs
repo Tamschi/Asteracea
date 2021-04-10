@@ -233,7 +233,11 @@ impl EventBindingDefinition {
 				event,
 				body,
 			} => {
-				let handler_name = handler_name.as_ref().unwrap_or(registration_field_name);
+				let handler_name = handler_name.as_ref().cloned().unwrap_or_else(|| {
+					let mut handler_name = registration_field_name.clone();
+					handler_name.set_span(fn_.span.resolved_at(Span::mixed_site()));
+					handler_name
+				});
 
 				let args = quote_spanned! {paren.span.resolved_at(Span::mixed_site())=>
 					(#self_: ::std::pin::Pin<&Self>#comma #event: ::#asteracea::lignin::web::Event)
