@@ -311,9 +311,102 @@ asteracea::component! {
 <pre><code class="language-html">
 </code></pre>
 <p>(All Asteracea component examples are followed by their output as rendered by <a href="https://github.com/Tamschi/lignin-html"><code>lignin-html</code></a>, but in this case it's an empty string.)</p>
-<p>This component expands to the following Rust code, with <code>use</code> imports extracted by hand and a little manual formatting:</p>
-<pre><code class="language-rust no_run noplayground">//TODO
-</code></pre>
+<p>This component expands to the following Rust code, with <code>use</code> imports extracted by hand to improve readability:</p>
+<pre><code class="language-rust no_run noplayground"><span class="boring">#[allow(
+</span><span class="boring">    dead_code,
+</span><span class="boring">    non_camel_case_types,
+</span><span class="boring">    non_snake_case,
+</span><span class="boring">    unused_mut,
+</span><span class="boring">    unused_unsafe,
+</span><span class="boring">    unused_variables,
+</span><span class="boring">)] {
+</span>use ::asteracea::{
+    bumpalo::Bump,
+    error::Escalation,
+    lignin::auto_safety::AutoSafe_alias,
+    lignin::{Node, ThreadBound},
+    rhizome::{self, extensions::TypeTaggedNodeArc},
+    __::typed_builder::TypedBuilder,
+};
+use ::std::{
+    marker::PhantomData,
+    pin::Pin,
+    result::Result::{self, Ok},
+    sync::Arc,
+};
+
+#[derive(TypedBuilder)]
+#[builder(doc)]
+struct EmptyNewArgs&lt;'NEW, 'a: 'NEW&gt; {
+    #[builder(default, setter(skip))]
+    __Asteracea__phantom: PhantomData&lt;(&amp;'NEW (), &amp;'a ())&gt;,
+}
+
+#[derive(TypedBuilder)]
+#[builder(doc)]
+struct EmptyRenderArgs&lt;'RENDER, 'a, 'bump: 'RENDER&gt; {
+    #[builder(default, setter(skip))]
+    __Asteracea__phantom: PhantomData&lt;(&amp;'RENDER (), &amp;'a (), &amp;'bump ())&gt;,
+}
+
+struct Empty {}
+impl Empty {}
+impl Empty {
+    pub fn new&lt;'a&gt;(
+        parent_node: &amp;Arc&lt;rhizome::Node&gt;,
+        EmptyNewArgs {
+            __Asteracea__phantom: _,
+        }: EmptyNewArgs&lt;'_, 'a&gt;,
+    ) -&gt; Result&lt;Self, Escalation&gt;
+    where
+        Self: 'a + 'static,
+    {
+        let node = TypeTaggedNodeArc::derive_for::&lt;Self&gt;(parent_node);
+        let mut node = node;
+        {}
+        {}
+        let node = node.into_arc();
+        Ok(Empty {})
+    }
+    pub fn new_args_builder&lt;'NEW, 'a: 'NEW&gt;() -&gt; EmptyNewArgsBuilder&lt;'NEW, 'a, ()&gt; {
+        EmptyNewArgs::builder()
+    }
+    pub fn render&lt;'a, 'bump&gt;(
+        self: Pin&lt;&amp;'a Self&gt;,
+        bump: &amp;'bump Bump,
+        EmptyRenderArgs {
+            __Asteracea__phantom: _,
+        }: EmptyRenderArgs&lt;'_, 'a, 'bump&gt;,
+    ) -&gt; Result&lt;impl Empty__Asteracea__AutoSafe&lt;Node&lt;'bump, ThreadBound&gt;&gt;, Escalation&gt; {
+        let this = self;
+        Ok(
+            Node::Multi::&lt;'bump, _&gt;(&amp;*bump.alloc_try_with(|| -&gt; Result&lt;_, Escalation&gt; { Ok([]) })?)
+                .prefer_thread_safe(),
+        )
+    }
+    pub fn render_args_builder&lt;'RENDER, 'a, 'bump: 'RENDER&gt;(
+    ) -&gt; EmptyRenderArgsBuilder&lt;'RENDER, 'a, 'bump, ()&gt; {
+        EmptyRenderArgs::builder()
+    }
+    #[doc(hidden)]
+    pub fn __Asteracea__ref_render_args_builder&lt;'RENDER, 'a, 'bump: 'RENDER&gt;(
+        &amp;self,
+    ) -&gt; EmptyRenderArgsBuilder&lt;'RENDER, 'a, 'bump, ()&gt; {
+        let _ = self;
+        EmptyRenderArgs::builder()
+    }
+}
+
+AutoSafe_alias!(Empty__Asteracea__AutoSafe);
+
+/// Asteracea components do not currently support custom [`Drop`](`::std::ops::Drop`) implementations.
+impl ::std::ops::Drop for Empty {
+    fn drop(&amp;mut self) {
+        unsafe {}
+    }
+}
+<span class="boring">}
+</span></code></pre>
 <p>As you can see, the <code>component!</code> macro created one <code>struct</code> type, with one constructor called <code>new</code> and one method called <code>render</code>. The output of <code>component!</code>, as far as you're supposed to touch it, <strong>always</strong> has this shape. No exceptions.</p>
 <p>(The macro can currently, under certain circumstances, create colliding definitions of structs called <code>NewStatics</code> and <code>RenderStatics</code>. This is a bug and will be fixed prior to release.</p>
 <p>If this happens to you, place your components in different modules. These types are not part of the public interface, and strictly speaking not something you're supposed to touch explicitly, and won't interfere further than this.)</p>
@@ -470,19 +563,52 @@ use lignin::{Node, ThreadBound};
 </span><span class="boring">        Self {}
 </span><span class="boring">    }
 </span>// …
-pub fn render&lt;'bump&gt;(
-    &amp;self,
-    bump: &amp;'bump Bump,
-) -&gt; Node&lt;'bump, ThreadBound&gt; { //TODO: Adjust to correct threading model once implemented.
-    (Node::Multi(&amp;*bump.alloc_with(|| {
-        [
-            Node::Text { text: &quot;This is text.&quot;, dom_binding: None },
-            Node::Text { text: &quot;This is also text.&quot;, dom_binding: None },
-        ]
-    })))
+pub fn render&lt;'a, 'bump&gt;(
+    self: ::std::pin::Pin&lt;&amp;'a Self&gt;,
+    bump: &amp;'bump asteracea::bumpalo::Bump,
+    TextMultiRenderArgs {
+        __Asteracea__phantom: _,
+    }: TextMultiRenderArgs&lt;'_, 'a, 'bump&gt;,
+) -&gt; ::std::result::Result&lt;
+    impl TextMulti__Asteracea__AutoSafe&lt;
+        ::asteracea::lignin::Node&lt;'bump, ::asteracea::lignin::ThreadBound&gt;,
+    &gt;,
+    ::asteracea::error::Escalation,
+&gt; {
+    let this = self;
+    ::std::result::Result::Ok(
+        ::asteracea::lignin::Node::Multi::&lt;'bump, _&gt;(&amp;*bump.alloc_try_with(
+            || -&gt; ::std::result::Result&lt;_, ::asteracea::error::Escalation&gt; {
+                ::std::result::Result::Ok([
+                    ::asteracea::lignin::auto_safety::Align::align(
+                        ::asteracea::lignin::Node::Text::&lt;'bump, _&gt; {
+                            text: &quot;This is text.&quot;,
+                            dom_binding: None,
+                        }
+                        .prefer_thread_safe(),
+                    ),
+                    ::asteracea::lignin::auto_safety::Align::align(
+                        ::asteracea::lignin::Node::Text::&lt;'bump, _&gt; {
+                            text: &quot;This is also text.&quot;,
+                            dom_binding: None,
+                        }
+                        .prefer_thread_safe(),
+                    ),
+                ])
+            },
+        )?)
+        .prefer_thread_safe(),
+    )
 }
 // …
 <span class="boring">}
+</span><span class="boring">
+</span><span class="boring">#[allow(non_camel_case_types)]
+</span><span class="boring">lignin::auto_safety::AutoSafe_alias!(pub TextMulti__Asteracea__AutoSafe);
+</span><span class="boring">
+</span><span class="boring">pub struct TextMultiRenderArgs&lt;'render, 'a, 'bump&gt; {
+</span><span class="boring">    __Asteracea__phantom: ::core::marker::PhantomData&lt;(&amp;'render (), &amp;'a (), &amp;'bump ())&gt;,
+</span><span class="boring">}
 </span></code></pre>
 <p>Note that there is no space between the sentences in the generated HTML.</p>
 <p>Asteracea gives you fairly precise control over the output, but that also means it won't make changes to the document's whitespace for you. If there's no whitespace in the literal in the input, then there won't be whitespace in the content of the output (when rendering with <a href="https://github.com/Tamschi/lignin-html">lignin-html</a> or <a href="https://github.com/Tamschi/lignin-dom">lignin-dom</a>).</p>
@@ -766,11 +892,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x561280888d90.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x561280888d90.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x561280888d98.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x561280888d90.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x561280888d90.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55ff682ed550.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55ff682ed550.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x55ff682ed558.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x55ff682ed550.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x55ff682ed550.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>

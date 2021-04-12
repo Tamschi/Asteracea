@@ -219,19 +219,52 @@ use lignin::{Node, ThreadBound};
 </span><span class="boring">        Self {}
 </span><span class="boring">    }
 </span>// …
-pub fn render&lt;'bump&gt;(
-    &amp;self,
-    bump: &amp;'bump Bump,
-) -&gt; Node&lt;'bump, ThreadBound&gt; { //TODO: Adjust to correct threading model once implemented.
-    (Node::Multi(&amp;*bump.alloc_with(|| {
-        [
-            Node::Text { text: &quot;This is text.&quot;, dom_binding: None },
-            Node::Text { text: &quot;This is also text.&quot;, dom_binding: None },
-        ]
-    })))
+pub fn render&lt;'a, 'bump&gt;(
+    self: ::std::pin::Pin&lt;&amp;'a Self&gt;,
+    bump: &amp;'bump asteracea::bumpalo::Bump,
+    TextMultiRenderArgs {
+        __Asteracea__phantom: _,
+    }: TextMultiRenderArgs&lt;'_, 'a, 'bump&gt;,
+) -&gt; ::std::result::Result&lt;
+    impl TextMulti__Asteracea__AutoSafe&lt;
+        ::asteracea::lignin::Node&lt;'bump, ::asteracea::lignin::ThreadBound&gt;,
+    &gt;,
+    ::asteracea::error::Escalation,
+&gt; {
+    let this = self;
+    ::std::result::Result::Ok(
+        ::asteracea::lignin::Node::Multi::&lt;'bump, _&gt;(&amp;*bump.alloc_try_with(
+            || -&gt; ::std::result::Result&lt;_, ::asteracea::error::Escalation&gt; {
+                ::std::result::Result::Ok([
+                    ::asteracea::lignin::auto_safety::Align::align(
+                        ::asteracea::lignin::Node::Text::&lt;'bump, _&gt; {
+                            text: &quot;This is text.&quot;,
+                            dom_binding: None,
+                        }
+                        .prefer_thread_safe(),
+                    ),
+                    ::asteracea::lignin::auto_safety::Align::align(
+                        ::asteracea::lignin::Node::Text::&lt;'bump, _&gt; {
+                            text: &quot;This is also text.&quot;,
+                            dom_binding: None,
+                        }
+                        .prefer_thread_safe(),
+                    ),
+                ])
+            },
+        )?)
+        .prefer_thread_safe(),
+    )
 }
 // …
 <span class="boring">}
+</span><span class="boring">
+</span><span class="boring">#[allow(non_camel_case_types)]
+</span><span class="boring">lignin::auto_safety::AutoSafe_alias!(pub TextMulti__Asteracea__AutoSafe);
+</span><span class="boring">
+</span><span class="boring">pub struct TextMultiRenderArgs&lt;'render, 'a, 'bump&gt; {
+</span><span class="boring">    __Asteracea__phantom: ::core::marker::PhantomData&lt;(&amp;'render (), &amp;'a (), &amp;'bump ())&gt;,
+</span><span class="boring">}
 </span></code></pre>
 <p>Note that there is no space between the sentences in the generated HTML.</p>
 <p>Asteracea gives you fairly precise control over the output, but that also means it won't make changes to the document's whitespace for you. If there's no whitespace in the literal in the input, then there won't be whitespace in the content of the output (when rendering with <a href="https://github.com/Tamschi/lignin-html">lignin-html</a> or <a href="https://github.com/Tamschi/lignin-dom">lignin-dom</a>).</p>

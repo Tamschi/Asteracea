@@ -181,9 +181,102 @@
 <pre><code class="language-html">
 </code></pre>
 <p>(All Asteracea component examples are followed by their output as rendered by <a href="https://github.com/Tamschi/lignin-html"><code>lignin-html</code></a>, but in this case it's an empty string.)</p>
-<p>This component expands to the following Rust code, with <code>use</code> imports extracted by hand and a little manual formatting:</p>
-<pre><code class="language-rust no_run noplayground">//TODO
-</code></pre>
+<p>This component expands to the following Rust code, with <code>use</code> imports extracted by hand to improve readability:</p>
+<pre><code class="language-rust no_run noplayground"><span class="boring">#[allow(
+</span><span class="boring">    dead_code,
+</span><span class="boring">    non_camel_case_types,
+</span><span class="boring">    non_snake_case,
+</span><span class="boring">    unused_mut,
+</span><span class="boring">    unused_unsafe,
+</span><span class="boring">    unused_variables,
+</span><span class="boring">)] {
+</span>use ::asteracea::{
+    bumpalo::Bump,
+    error::Escalation,
+    lignin::auto_safety::AutoSafe_alias,
+    lignin::{Node, ThreadBound},
+    rhizome::{self, extensions::TypeTaggedNodeArc},
+    __::typed_builder::TypedBuilder,
+};
+use ::std::{
+    marker::PhantomData,
+    pin::Pin,
+    result::Result::{self, Ok},
+    sync::Arc,
+};
+
+#[derive(TypedBuilder)]
+#[builder(doc)]
+struct EmptyNewArgs&lt;'NEW, 'a: 'NEW&gt; {
+    #[builder(default, setter(skip))]
+    __Asteracea__phantom: PhantomData&lt;(&amp;'NEW (), &amp;'a ())&gt;,
+}
+
+#[derive(TypedBuilder)]
+#[builder(doc)]
+struct EmptyRenderArgs&lt;'RENDER, 'a, 'bump: 'RENDER&gt; {
+    #[builder(default, setter(skip))]
+    __Asteracea__phantom: PhantomData&lt;(&amp;'RENDER (), &amp;'a (), &amp;'bump ())&gt;,
+}
+
+struct Empty {}
+impl Empty {}
+impl Empty {
+    pub fn new&lt;'a&gt;(
+        parent_node: &amp;Arc&lt;rhizome::Node&gt;,
+        EmptyNewArgs {
+            __Asteracea__phantom: _,
+        }: EmptyNewArgs&lt;'_, 'a&gt;,
+    ) -&gt; Result&lt;Self, Escalation&gt;
+    where
+        Self: 'a + 'static,
+    {
+        let node = TypeTaggedNodeArc::derive_for::&lt;Self&gt;(parent_node);
+        let mut node = node;
+        {}
+        {}
+        let node = node.into_arc();
+        Ok(Empty {})
+    }
+    pub fn new_args_builder&lt;'NEW, 'a: 'NEW&gt;() -&gt; EmptyNewArgsBuilder&lt;'NEW, 'a, ()&gt; {
+        EmptyNewArgs::builder()
+    }
+    pub fn render&lt;'a, 'bump&gt;(
+        self: Pin&lt;&amp;'a Self&gt;,
+        bump: &amp;'bump Bump,
+        EmptyRenderArgs {
+            __Asteracea__phantom: _,
+        }: EmptyRenderArgs&lt;'_, 'a, 'bump&gt;,
+    ) -&gt; Result&lt;impl Empty__Asteracea__AutoSafe&lt;Node&lt;'bump, ThreadBound&gt;&gt;, Escalation&gt; {
+        let this = self;
+        Ok(
+            Node::Multi::&lt;'bump, _&gt;(&amp;*bump.alloc_try_with(|| -&gt; Result&lt;_, Escalation&gt; { Ok([]) })?)
+                .prefer_thread_safe(),
+        )
+    }
+    pub fn render_args_builder&lt;'RENDER, 'a, 'bump: 'RENDER&gt;(
+    ) -&gt; EmptyRenderArgsBuilder&lt;'RENDER, 'a, 'bump, ()&gt; {
+        EmptyRenderArgs::builder()
+    }
+    #[doc(hidden)]
+    pub fn __Asteracea__ref_render_args_builder&lt;'RENDER, 'a, 'bump: 'RENDER&gt;(
+        &amp;self,
+    ) -&gt; EmptyRenderArgsBuilder&lt;'RENDER, 'a, 'bump, ()&gt; {
+        let _ = self;
+        EmptyRenderArgs::builder()
+    }
+}
+
+AutoSafe_alias!(Empty__Asteracea__AutoSafe);
+
+/// Asteracea components do not currently support custom [`Drop`](`::std::ops::Drop`) implementations.
+impl ::std::ops::Drop for Empty {
+    fn drop(&amp;mut self) {
+        unsafe {}
+    }
+}
+<span class="boring">}
+</span></code></pre>
 <p>As you can see, the <code>component!</code> macro created one <code>struct</code> type, with one constructor called <code>new</code> and one method called <code>render</code>. The output of <code>component!</code>, as far as you're supposed to touch it, <strong>always</strong> has this shape. No exceptions.</p>
 <p>(The macro can currently, under certain circumstances, create colliding definitions of structs called <code>NewStatics</code> and <code>RenderStatics</code>. This is a bug and will be fixed prior to release.</p>
 <p>If this happens to you, place your components in different modules. These types are not part of the public interface, and strictly speaking not something you're supposed to touch explicitly, and won't interfere further than this.)</p>
