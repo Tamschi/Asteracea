@@ -278,9 +278,10 @@ impl ::std::ops::Drop for Empty {
 <span class="boring">}
 </span></code></pre>
 <p>As you can see, the <code>component!</code> macro created one <code>struct</code> type, with one constructor called <code>new</code> and one method called <code>render</code>. The output of <code>component!</code>, as far as you're supposed to touch it, <strong>always</strong> has this shape. No exceptions.</p>
-<p>(The macro can currently, under certain circumstances, create colliding definitions of structs called <code>NewStatics</code> and <code>RenderStatics</code>. This is a bug and will be fixed prior to release.</p>
-<p>If this happens to you, place your components in different modules. These types are not part of the public interface, and strictly speaking not something you're supposed to touch explicitly, and won't interfere further than this.)</p>
-<p>The parentheses around the body of render aren't strictly needed here... and you may find small bits of similar useless syntax in other positions too. The most simple explanation is that they're leftovers that will be cleaned up eventually (when more tests exist), but sometimes these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet.</p>
+<p>You may find small bits of similar useless syntax like those empty <code>{}</code> blocks in <code>new</code>. Some of these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet, while others, like the empty <code>unsafe {}</code> in <code>drop</code> are slots where code is placed when generating more complex components, and which should be effectively removed by the compiler if empty.</p>
+<blockquote>
+<p>If you notice such an empty construct that impacts runtime performance or Wasm assembly size, please file a bug report.</p>
+</blockquote>
 <h2 id="the-breakdown"><a class="header" href="#the-breakdown">The breakdown</a></h2>
 <p>There are five distinct pieces of syntax that are translated into the output here: <code>pub</code>, <code>Empty</code>, <code>()</code>, <code>()</code> and <code>[]</code>.</p>
 <h3 id="pub-visibility"><a class="header" href="#pub-visibility"><code>pub</code> (visibility)</a></h3>

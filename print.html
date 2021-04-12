@@ -408,9 +408,10 @@ impl ::std::ops::Drop for Empty {
 <span class="boring">}
 </span></code></pre>
 <p>As you can see, the <code>component!</code> macro created one <code>struct</code> type, with one constructor called <code>new</code> and one method called <code>render</code>. The output of <code>component!</code>, as far as you're supposed to touch it, <strong>always</strong> has this shape. No exceptions.</p>
-<p>(The macro can currently, under certain circumstances, create colliding definitions of structs called <code>NewStatics</code> and <code>RenderStatics</code>. This is a bug and will be fixed prior to release.</p>
-<p>If this happens to you, place your components in different modules. These types are not part of the public interface, and strictly speaking not something you're supposed to touch explicitly, and won't interfere further than this.)</p>
-<p>The parentheses around the body of render aren't strictly needed here... and you may find small bits of similar useless syntax in other positions too. The most simple explanation is that they're leftovers that will be cleaned up eventually (when more tests exist), but sometimes these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet.</p>
+<p>You may find small bits of similar useless syntax like those empty <code>{}</code> blocks in <code>new</code>. Some of these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet, while others, like the empty <code>unsafe {}</code> in <code>drop</code> are slots where code is placed when generating more complex components, and which should be effectively removed by the compiler if empty.</p>
+<blockquote>
+<p>If you notice such an empty construct that impacts runtime performance or Wasm assembly size, please file a bug report.</p>
+</blockquote>
 <h2 id="the-breakdown"><a class="header" href="#the-breakdown">The breakdown</a></h2>
 <p>There are five distinct pieces of syntax that are translated into the output here: <code>pub</code>, <code>Empty</code>, <code>()</code>, <code>()</code> and <code>[]</code>.</p>
 <h3 id="pub-visibility"><a class="header" href="#pub-visibility"><code>pub</code> (visibility)</a></h3>
@@ -892,11 +893,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55ff682ed550.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55ff682ed550.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x55ff682ed558.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x55ff682ed550.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x55ff682ed550.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55827a9d79f0.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55827a9d79f0.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x55827a9d79f8.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x55827a9d79f0.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x55827a9d79f0.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
