@@ -115,7 +115,9 @@ impl ::std::ops::Drop for Empty {
 # }
 ```
 
-As you can see, the `component!` macro created one `struct` type, with one constructor called `new` and one method called `render`. The output of `component!`, as far as you're supposed to touch it, **always** has this shape. No exceptions.
+As you can see, the `component!` macro created a `struct` type, with one constructor called `new` and one method called `render`, as well as a few helper types and functions that enable named arguments, and a [`Drop`](https://doc.rust-lang.org/stable/std/ops/trait.Drop.html) implementation. The output of `component!`, as far as you're supposed to touch it, **always** has this shape. No exceptions.
+
+Identifiers containing `__Asteracea__` are considered internal and may change at any point in time. Please don't use them directly, even if technically accessible!
 
 You may find small bits of similar useless syntax like those empty `{}` blocks in `new`. Some of these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet, while others, like the empty `unsafe {}` in `drop` are slots where code is placed when generating more complex components, and which should be effectively removed by the compiler if empty.
 
