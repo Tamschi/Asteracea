@@ -119,9 +119,7 @@ As you can see, the `component!` macro created a `struct` type, with one constru
 
 Identifiers containing `__Asteracea__` are considered internal and may change at any point in time. Please don't use them directly, even if technically accessible!
 
-You may find small bits of similar useless syntax like those empty `{}` blocks in `new`. Some of these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet, while others, like the empty `unsafe {}` in `drop` are slots where code is placed when generating more complex components, and which should be effectively removed by the compiler if empty.
-
-> If you notice such an empty construct that impacts runtime performance or Wasm assembly size, please file a bug report.
+You may find small bits of similar useless syntax like those empty `{}` blocks in `new`. Some of these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet, while others, like the empty `unsafe {}` in `drop` are slots where code is placed when generating more complex components, and which should be effectively removed by the compiler if empty. (If you notice such an empty construct that impacts runtime performance or Wasm assembly size, please file a bug report.)
 
 ## The breakdown
 
