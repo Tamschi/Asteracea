@@ -6,7 +6,7 @@ First, standard Rust comments can be placed anywhere in Asteracea components (or
 
 ```rust asteracea=Commented
 asteracea::component! {
-  pub Commented()()
+  Commented()()
 
   [
     // This is a one-line comment.
@@ -23,7 +23,7 @@ Additionally, Rust documentation is supported in many places:
 asteracea::component! {
   /// This is a documented component.  
   /// Running `cargo doc` will pick up on its documentation.
-  pub Documented()()
+  pub Documented()() -> Sync
 
   []
 }

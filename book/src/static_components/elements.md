@@ -4,7 +4,7 @@ To define elements and their contents, Asteracea provides a syntax similar to HT
 
 ```rust asteracea=Div
 asteracea::component! {
-  pub Div()()
+  Div()()
 
   <div>
 }
@@ -14,7 +14,7 @@ asteracea::component! {
 
 ```rust asteracea=Div
 asteracea::component! {
-  pub Div()()
+  Div()()
 
   <div
     // [complex nested template]
@@ -26,7 +26,7 @@ Elements can contain any number of valid Asteracea component bodies, which are r
 
 ```rust asteracea=Span
 asteracea::component! {
-  pub Span()()
+  Span()()
 
   <span
     "This is text within a <span>."
@@ -39,7 +39,7 @@ This includes other elements:
 
 ```rust asteracea=DivSpan
 asteracea::component! {
-  pub DivSpan()()
+  DivSpan()()
 
   <div
     <span "This is text within a <span>.">
@@ -56,7 +56,7 @@ Elements are statically validated against [`lignin-schema`].
 
 ```rust asteracea=Br
 asteracea::component! {
-  pub Br()()
+  Br()()
 
   <br>
 }
@@ -68,7 +68,7 @@ To use custom element names without validation, quote them like this:
 
 ```rust asteracea=Custom
 asteracea::component! {
-  pub Custom()()
+  Custom()()
 
   <"custom-element">
 }

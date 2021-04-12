@@ -16,7 +16,6 @@ use self::{
 	component_declaration::ComponentDeclaration,
 	map_message::MapMessage,
 	part::{GenerateContext, Part},
-	try_parse::TryParse,
 };
 use lazy_static::lazy_static;
 use proc_macro::TokenStream as TokenStream1;
@@ -30,8 +29,32 @@ use syn::{
 
 use syn::Error;
 
+fn hook_panics() {
+	std::panic::set_hook(Box::new(|panic_info| {
+		let location = panic_info.location();
+
+		let payload = if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+			s
+		} else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
+			s.as_str()
+		} else {
+			"(unknown panic type)"
+		};
+		eprintln!(
+			"Asteracea proc macro panic at {} line {}\n\n{}",
+			location.map(|l| l.file()).unwrap_or("None"),
+			location
+				.map(|l| l.line().to_string())
+				.unwrap_or_else(|| "None".to_string()),
+			payload
+		);
+	}))
+}
+
 #[proc_macro]
 pub fn component(input: TokenStream1) -> TokenStream1 {
+	hook_panics();
+
 	let component_declaration = parse_macro_input!(input as ComponentDeclaration);
 	let tokens: TokenStream2 = component_declaration
 		.into_tokens()
@@ -48,7 +71,15 @@ struct BumpFormat {
 #[proc_macro]
 pub fn bump_format(input: TokenStream1) -> TokenStream1 {
 	let bump_format = parse_macro_input!(input as BumpFormat);
-	quote!(#bump_format).into()
+	let mut tokens = TokenStream2::new();
+	bump_format.to_tokens_with_context(
+		&mut tokens,
+		&GenerateContext {
+			thread_safety: quote!(_),
+			prefer_thread_safe: None,
+		},
+	);
+	tokens.into()
 }
 
 impl Parse for BumpFormat {
@@ -65,19 +96,21 @@ impl Parse for BumpFormat {
 	}
 }
 
-impl ToTokens for BumpFormat {
-	fn to_tokens(&self, output: &mut TokenStream2) {
+impl BumpFormat {
+	fn to_tokens_with_context(&self, output: &mut TokenStream2, cx: &GenerateContext) {
 		let BumpFormat {
 			asteracea,
 			bump_span,
 			input,
 		} = self;
+		let thread_safety = &cx.thread_safety;
 		let bump = Ident::new("bump", bump_span.resolved_at(Span::call_site()));
 		output.extend(quote! {
-			#asteracea::lignin::Node::Text(
-				#asteracea::lignin::bumpalo::format!(in #bump, #input)
-					.into_bump_str()
-			)
+			#asteracea::lignin::Node::Text::<#thread_safety> {
+				text: #asteracea::bumpalo::format!(in #bump, #input)
+					.into_bump_str(),
+				dom_binding: None, //TODO?: Add DOM binding support.
+			}
 		});
 	}
 }
@@ -92,7 +125,10 @@ impl Configuration for FragmentConfiguration {
 pub fn fragment(input: TokenStream1) -> TokenStream1 {
 	let asteracea = asteracea_ident(Span::mixed_site());
 	let body = parse_macro_input!(input as Part<FragmentConfiguration>)
-		.part_tokens(&GenerateContext::default())
+		.part_tokens(&GenerateContext {
+			thread_safety: quote!(_),
+			prefer_thread_safe: None,
+		})
 		.unwrap_or_else(|error| error.to_compile_error());
 	(quote_spanned! {Span::mixed_site()=>
 		((|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {

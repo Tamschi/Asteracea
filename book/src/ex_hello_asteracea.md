@@ -20,7 +20,7 @@ component! {
   )(
     /// This component's class attribute value.
     class?: &'bump str,
-  )
+  ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
   |value = Cell::<i32>::new(initial)|; // shorthand capture
 
@@ -30,7 +30,7 @@ component! {
 
     <button
       "+" !{self.step} // shorthand bump_format call
-      +"click" {
+      on bubble click = fn on_click_plus(self, _) {
         self.value.set(self.value() + self.step);
         schedule_render();
       }
@@ -45,6 +45,7 @@ impl Counter {
 
   pub fn set_value(&self, value: i32) {
     self.value.set(value);
+    schedule_render();
   }
 }
 ```

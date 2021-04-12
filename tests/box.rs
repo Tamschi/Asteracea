@@ -1,11 +1,11 @@
 use std::pin::Pin;
 
+use bumpalo::Bump;
 use debugless_unwrap::DebuglessUnwrap;
-use lignin::bumpalo::Bump;
 use rhizome::Node;
 
 asteracea::component! {
-	pub Boxed()() []
+	Boxed()() []
 }
 
 // asteracea::component! {
@@ -62,11 +62,11 @@ fn named() {
 
 mod a_module {
 	asteracea::component! {
-		pub Boxed()() []
+		pub Boxed()() -> Sync []
 	}
 
 	asteracea::component! {
-		pub Public()()
+		pub Public()() -> Sync
 
 		box pub public <*Boxed pub boxed>
 	}
@@ -151,7 +151,7 @@ fn reused() {
 }
 
 asteracea::component! {
-	pub VisIgnored()()
+	pub VisIgnored()() -> Sync
 
 	box priv b: BoxContainer
 		// There's no good way to check the visibility here (since the declaration isn't emitted),
@@ -180,7 +180,7 @@ fn multi() {
 }
 
 asteracea::component! {
-	pub Nested()()
+	pub Nested()() -> Sync
 
 	[
 		box [

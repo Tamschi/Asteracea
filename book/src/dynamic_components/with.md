@@ -6,7 +6,7 @@ Instead, you can use a `with { …; } <…>`-expression to run a number of Rust 
 
 ```rust asteracea=WithExample
 asteracea::component! {
-  pub WithExample()()
+  pub WithExample()() -> Sync
 
   with {
     let tree_type = "oak";
@@ -25,7 +25,7 @@ Bindings declared in the `with`-expression's are only in scope for the embedded 
 
 ```rust asteracea=WithExample
 asteracea::component! {
-  pub WithExample()()
+  pub WithExample()() -> Sync
 
   <div
     with {

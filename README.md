@@ -72,13 +72,13 @@ The most simple (`Node`-rendering) component can be written like this:
 
 ```rust
 asteracea::component! {
-  Empty()()
+  pub Empty()() -> Sync
   [] // Empty node sequence
 }
 
 // Render into a bump allocator:
 // This is generally only this explicit at the application root.
-let mut bump = lignin::bumpalo::Bump::new();
+let mut bump = bumpalo::Bump::new();
 let root = {
   struct Root;
   asteracea::rhizome::Node::new_for::<Root>().into()
@@ -91,6 +91,8 @@ assert!(matches!(
   lignin::Node::Multi(&[]) // Empty node sequence
 ));
 ```
+
+VDOM [`Sync`-ness](https://doc.rust-lang.org/stable/std/marker/trait.Sync.html) can be inferred (even transitively) at zero runtime cost by omitting `-> Sync` (or `-> !Sync`), except for components visible outside their crate.
 
 ### Unit component
 
@@ -110,7 +112,7 @@ asteracea::component! {
 }
 
 // This is generally only this explicit at the application root.
-let mut bump = lignin::bumpalo::Bump::new();
+let mut bump = bumpalo::Bump::new();
 let root = {
   struct Root;
   asteracea::rhizome::Node::new_for::<Root>().into()
@@ -139,6 +141,7 @@ For a relatively complex example, see this parametrised counter:
 
 ```rust
 use asteracea::component;
+use lignin::web::Event;
 use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
@@ -153,7 +156,7 @@ component! {
     // optional argument;
     // `class` is `Option<&'bump str>` only inside this component, not its API.
     class?: &'bump str,
-  )
+  ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
   // shorthand capture; Defines a struct field.
   |value = Cell::<i32>::new(initial)|;
@@ -168,10 +171,7 @@ component! {
     <button
       ."disabled"? = {!self.enabled} // boolean attribute from `bool`
       "+" !{self.step} // shorthand `bump_format` call
-      +"click" { // event handler
-        self.value.set(self.value() + self.step);
-        schedule_render();
-      }
+      on bubble click = Self::on_click_plus
     >
   >
 }
@@ -184,6 +184,13 @@ impl Counter {
 
   pub fn set_value(&self, value: i32) {
     self.value.set(value);
+  }
+
+  // This may alternative take a `*const Self` or `Pin<&Self>`.
+  // Inline handlers are also possible, but not much less verbose.
+  fn on_click_plus(&self, _: Event) {
+    self.value.set(self.value() + self.step);
+    schedule_render();
   }
 }
 

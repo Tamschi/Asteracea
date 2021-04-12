@@ -21,8 +21,8 @@ doc = false
 [dependencies]
 asteracea = { path = "..", features = ["backtrace"] }
 debugless-unwrap = "0.0.3"
-lignin = "0.0.5"
-lignin-html = "0.0.5"
+lignin = { git = "https://github.com/Tamschi/lignin.git", branch = "develop" }
+lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
 line-col = "0.2.1"
 mdbook = { version = "0.4.5", default-features = false, features = ["search"] }
 proc-macro2 = "1.0.24" #TODO
@@ -36,8 +36,8 @@ version-sync = "0.9.1"
 [build-dependencies]
 asteracea = { path = "..", features = ["backtrace"] }
 mdbook = { version = "0.4.5", default-features = false, features = ["search"] }
-lignin = "0.0.5"
-lignin-html = "0.0.5"
+lignin = { git = "https://github.com/Tamschi/lignin.git", branch = "develop" }
+lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
 line-col = "0.2.1"
 proc-macro2 = "1.0.24"
 pulldown-cmark = "0.7.0"

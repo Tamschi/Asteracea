@@ -6,7 +6,7 @@ To output a static plain [`Text`] element in Asteracea, simply use a text litera
 
 ```rust asteracea=Text
 asteracea::component! {
-  pub Text()()
+  Text()()
 
   "This is text."
 }
@@ -36,7 +36,7 @@ Text nodes can be used as children of other nodes, for example a Multi Node:
 
 ```rust asteracea=TextMulti
 asteracea::component! {
-  pub TextMulti()()
+  TextMulti()()
 
   [
     "This is text."
@@ -46,7 +46,8 @@ asteracea::component! {
 ```
 
 ```rust no_run noplayground
-use lignin::{bumpalo::Bump, Node};
+use asteracea::bumpalo::Bump;
+use lignin::{Node, ThreadBound};
 
 # pub struct TextMulti {}
 # impl TextMulti {
@@ -57,11 +58,11 @@ use lignin::{bumpalo::Bump, Node};
 pub fn render<'bump>(
     &self,
     bump: &'bump Bump,
-) -> Node<'bump> {
+) -> Node<'bump, ThreadBound> { //TODO: Adjust to correct threading model once implemented.
     (Node::Multi(&*bump.alloc_with(|| {
         [
-            Node::Text("This is text."),
-            Node::Text("This is also text."),
+            Node::Text { text: "This is text.", dom_binding: None },
+            Node::Text { text: "This is also text.", dom_binding: None },
         ]
     })))
 }

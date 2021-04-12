@@ -14,7 +14,7 @@ use syn::{
 	Type, TypeArray, TypeGroup, TypeParam, TypeParamBound, TypeParen, TypePath, TypeReference,
 	TypeSlice, TypeTraitObject, TypeTuple, Visibility,
 };
-use wyz::Tap as _;
+use tap::Tap as _;
 
 fn transform_lifetime(
 	existing_lifetime: &mut Lifetime,

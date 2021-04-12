@@ -60,12 +60,14 @@ The container component size reduction isn't very useful in most cases, since As
 Consider the following:
 
 ```rust asteracea=Holder
-use std::mem::{MaybeUninit, size_of};
+use std::mem::size_of;
 
 asteracea::component! {
   Heavy()()
 
+  #[allow(dead_code)]
   |large: [u8; 1_000] = {[0; 1_000]}|; // 1 KB
+  
   "Hello!"
 }
 
@@ -87,12 +89,14 @@ As you can see, `Holder` requires 1KB of space even though `Heavy` is never used
 You can avoid this as follows:
 
 ```rust asteracea=Holder
-use std::mem::{MaybeUninit, size_of};
+use std::mem::size_of;
 
 asteracea::component! {
   Heavy()()
 
+  #[allow(dead_code)]
   |large: [u8; 1_000] = {[0; 1_000]}|; // 1 KB
+
   "Hello!"
 }
 

@@ -12,7 +12,7 @@ component! {
 }
 
 component! {
-	pub User()()
+	pub User()() -> Sync
 
 	[
 		<*Generic::<i32> .displayed = {0}>
