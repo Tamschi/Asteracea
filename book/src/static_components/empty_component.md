@@ -117,11 +117,9 @@ impl ::std::ops::Drop for Empty {
 
 As you can see, the `component!` macro created one `struct` type, with one constructor called `new` and one method called `render`. The output of `component!`, as far as you're supposed to touch it, **always** has this shape. No exceptions.
 
-(The macro can currently, under certain circumstances, create colliding definitions of structs called `NewStatics` and `RenderStatics`. This is a bug and will be fixed prior to release.
+You may find small bits of similar useless syntax like those empty `{}` blocks in `new`. Some of these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet, while others, like the empty `unsafe {}` in `drop` are slots where code is placed when generating more complex components, and which should be effectively removed by the compiler if empty.
 
-If this happens to you, place your components in different modules. These types are not part of the public interface, and strictly speaking not something you're supposed to touch explicitly, and won't interfere further than this.)
-
-The parentheses around the body of render aren't strictly needed here... and you may find small bits of similar useless syntax in other positions too. The most simple explanation is that they're leftovers that will be cleaned up eventually (when more tests exist), but sometimes these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet.
+> If you notice such an empty construct that impacts runtime performance or Wasm assembly size, please file a bug report.
 
 ## The breakdown
 
