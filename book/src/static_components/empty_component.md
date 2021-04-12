@@ -16,10 +16,103 @@ asteracea::component! {
 
 [`lignin-html`]: https://github.com/Tamschi/lignin-html
 
-This component expands to the following Rust code, with `use` imports extracted by hand and a little manual formatting:
+This component expands to the following Rust code, with `use` imports extracted by hand to improve readability:
 
 ```rust no_run noplayground
-//TODO
+# #[allow(
+#     dead_code,
+#     non_camel_case_types,
+#     non_snake_case,
+#     unused_mut,
+#     unused_unsafe,
+#     unused_variables,
+# )] {
+use ::asteracea::{
+    bumpalo::Bump,
+    error::Escalation,
+    lignin::auto_safety::AutoSafe_alias,
+    lignin::{Node, ThreadBound},
+    rhizome::{self, extensions::TypeTaggedNodeArc},
+    __::typed_builder::TypedBuilder,
+};
+use ::std::{
+    marker::PhantomData,
+    pin::Pin,
+    result::Result::{self, Ok},
+    sync::Arc,
+};
+
+#[derive(TypedBuilder)]
+#[builder(doc)]
+struct EmptyNewArgs<'NEW, 'a: 'NEW> {
+    #[builder(default, setter(skip))]
+    __Asteracea__phantom: PhantomData<(&'NEW (), &'a ())>,
+}
+
+#[derive(TypedBuilder)]
+#[builder(doc)]
+struct EmptyRenderArgs<'RENDER, 'a, 'bump: 'RENDER> {
+    #[builder(default, setter(skip))]
+    __Asteracea__phantom: PhantomData<(&'RENDER (), &'a (), &'bump ())>,
+}
+
+struct Empty {}
+impl Empty {}
+impl Empty {
+    pub fn new<'a>(
+        parent_node: &Arc<rhizome::Node>,
+        EmptyNewArgs {
+            __Asteracea__phantom: _,
+        }: EmptyNewArgs<'_, 'a>,
+    ) -> Result<Self, Escalation>
+    where
+        Self: 'a + 'static,
+    {
+        let node = TypeTaggedNodeArc::derive_for::<Self>(parent_node);
+        let mut node = node;
+        {}
+        {}
+        let node = node.into_arc();
+        Ok(Empty {})
+    }
+    pub fn new_args_builder<'NEW, 'a: 'NEW>() -> EmptyNewArgsBuilder<'NEW, 'a, ()> {
+        EmptyNewArgs::builder()
+    }
+    pub fn render<'a, 'bump>(
+        self: Pin<&'a Self>,
+        bump: &'bump Bump,
+        EmptyRenderArgs {
+            __Asteracea__phantom: _,
+        }: EmptyRenderArgs<'_, 'a, 'bump>,
+    ) -> Result<impl Empty__Asteracea__AutoSafe<Node<'bump, ThreadBound>>, Escalation> {
+        let this = self;
+        Ok(
+            Node::Multi::<'bump, _>(&*bump.alloc_try_with(|| -> Result<_, Escalation> { Ok([]) })?)
+                .prefer_thread_safe(),
+        )
+    }
+    pub fn render_args_builder<'RENDER, 'a, 'bump: 'RENDER>(
+    ) -> EmptyRenderArgsBuilder<'RENDER, 'a, 'bump, ()> {
+        EmptyRenderArgs::builder()
+    }
+    #[doc(hidden)]
+    pub fn __Asteracea__ref_render_args_builder<'RENDER, 'a, 'bump: 'RENDER>(
+        &self,
+    ) -> EmptyRenderArgsBuilder<'RENDER, 'a, 'bump, ()> {
+        let _ = self;
+        EmptyRenderArgs::builder()
+    }
+}
+
+AutoSafe_alias!(Empty__Asteracea__AutoSafe);
+
+/// Asteracea components do not currently support custom [`Drop`](`::std::ops::Drop`) implementations.
+impl ::std::ops::Drop for Empty {
+    fn drop(&mut self) {
+        unsafe {}
+    }
+}
+# }
 ```
 
 As you can see, the `component!` macro created one `struct` type, with one constructor called `new` and one method called `render`. The output of `component!`, as far as you're supposed to touch it, **always** has this shape. No exceptions.

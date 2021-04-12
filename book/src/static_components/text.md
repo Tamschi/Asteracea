@@ -55,18 +55,51 @@ use lignin::{Node, ThreadBound};
 #         Self {}
 #     }
 // …
-pub fn render<'bump>(
-    &self,
-    bump: &'bump Bump,
-) -> Node<'bump, ThreadBound> { //TODO: Adjust to correct threading model once implemented.
-    (Node::Multi(&*bump.alloc_with(|| {
-        [
-            Node::Text { text: "This is text.", dom_binding: None },
-            Node::Text { text: "This is also text.", dom_binding: None },
-        ]
-    })))
+pub fn render<'a, 'bump>(
+    self: ::std::pin::Pin<&'a Self>,
+    bump: &'bump asteracea::bumpalo::Bump,
+    TextMultiRenderArgs {
+        __Asteracea__phantom: _,
+    }: TextMultiRenderArgs<'_, 'a, 'bump>,
+) -> ::std::result::Result<
+    impl TextMulti__Asteracea__AutoSafe<
+        ::asteracea::lignin::Node<'bump, ::asteracea::lignin::ThreadBound>,
+    >,
+    ::asteracea::error::Escalation,
+> {
+    let this = self;
+    ::std::result::Result::Ok(
+        ::asteracea::lignin::Node::Multi::<'bump, _>(&*bump.alloc_try_with(
+            || -> ::std::result::Result<_, ::asteracea::error::Escalation> {
+                ::std::result::Result::Ok([
+                    ::asteracea::lignin::auto_safety::Align::align(
+                        ::asteracea::lignin::Node::Text::<'bump, _> {
+                            text: "This is text.",
+                            dom_binding: None,
+                        }
+                        .prefer_thread_safe(),
+                    ),
+                    ::asteracea::lignin::auto_safety::Align::align(
+                        ::asteracea::lignin::Node::Text::<'bump, _> {
+                            text: "This is also text.",
+                            dom_binding: None,
+                        }
+                        .prefer_thread_safe(),
+                    ),
+                ])
+            },
+        )?)
+        .prefer_thread_safe(),
+    )
 }
 // …
+# }
+#
+# #[allow(non_camel_case_types)]
+# lignin::auto_safety::AutoSafe_alias!(pub TextMulti__Asteracea__AutoSafe);
+#
+# pub struct TextMultiRenderArgs<'render, 'a, 'bump> {
+#     __Asteracea__phantom: ::core::marker::PhantomData<(&'render (), &'a (), &'bump ())>,
 # }
 ```
 
