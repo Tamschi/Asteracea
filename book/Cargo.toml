@@ -21,7 +21,7 @@ doc = false
 [dependencies]
 asteracea = { path = "..", features = ["backtrace"] }
 debugless-unwrap = "0.0.3"
-lignin = "0.0.6"
+lignin = "0.0.7"
 lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
 line-col = "0.2.1"
 mdbook = { version = "0.4.5", default-features = false, features = ["search"] }
@@ -36,7 +36,7 @@ version-sync = "0.9.1"
 [build-dependencies]
 asteracea = { path = "..", features = ["backtrace"] }
 mdbook = { version = "0.4.5", default-features = false, features = ["search"] }
-lignin = "0.0.6"
+lignin = "0.0.7"
 lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
 line-col = "0.2.1"
 proc-macro2 = "1.0.24"
