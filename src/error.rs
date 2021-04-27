@@ -251,7 +251,7 @@ impl Escalation {
 		match catch_unwind(f) {
 			Ok(Ok(t)) => Ok(t),
 			#[cfg(feature = "force-unwind")]
-			Ok(Err(_)) => Err(()).expect("unreachable"),
+			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
 			Ok(Err(Escalation(Impl::Extant(Throwable { source, trace })))) => Err(Caught {
 				boxed: source,
@@ -288,7 +288,7 @@ impl Escalation {
 		let (thrown, was_panic) = match catch_unwind(f) {
 			Ok(Ok(t)) => return Ok(Ok(t)),
 			#[cfg(feature = "force-unwind")]
-			Ok(Err(_)) => Err(()).expect("unreachable"),
+			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
 			Ok(Err(Escalation(Impl::Extant(thrown)))) => (thrown, false),
 			Err(panic) => match Box::<dyn Send + Any>::downcast::<Throwable>(panic) {
@@ -343,9 +343,7 @@ impl Escalation {
 			}
 			{
 				#![allow(unreachable_code)]
-				Err(()).expect(
-					"Workaround for clippy::missing_panic_docs. Only reachable if the \"force-unwind\" feature is both active and not active.",
-				)
+				unreachable!()
 			}
 		}
 	}
