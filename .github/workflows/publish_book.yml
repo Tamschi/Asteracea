@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - uses: actions-rs/toolchain@v1.0.7
     - run: cat CI.toml >> Cargo.toml
     - run: cd book && cargo run
     - uses: Tamschi/actions-gh-pages@v3
