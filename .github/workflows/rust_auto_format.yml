@@ -20,7 +20,7 @@ jobs:
         # github.head_ref only exists on pull requests.
         ref: ${{ github.head_ref || github.ref }}
 
-    - uses: actions-rs/toolchain@v1
+    - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: nightly
         profile: minimal
