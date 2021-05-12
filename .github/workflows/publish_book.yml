@@ -12,7 +12,7 @@ jobs:
     - uses: actions-rs/toolchain@v1
     - run: cat CI.toml >> Cargo.toml
     - run: cd book && cargo run
-    - uses: Tamschi/actions-gh-pages@v3
+    - uses: Tamschi/actions-gh-pages@v3.8.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./book/book
