@@ -145,6 +145,7 @@
 <p>Welcome to the Asteracea guide book!</p>
 <!-- markdownlint-disable no-blanks-blockquote -->
 <!-- markdownlint-disable no-trailing-punctuation -->
+<!-- markdownlint-disable no-multiple-space-blockquote -->
 <blockquote>
 <h2 id="this-book-is-a-work-in-progress"><a class="header" href="#this-book-is-a-work-in-progress">This book is a work in progress!</a></h2>
 <p>Until the first minor version stabilisation, there likely will only be this <code>develop</code>-branch version published online as rendered version, which usually won't mach a version of the crate published to crates.io. (Respective versions are tagged and can be rendered offline using (from the repository's root directory) <code>cd book</code> and <code>cargo run</code>.)</p>
@@ -154,13 +155,10 @@
 <h2 id="this-framework-is-a-work-in-progress"><a class="header" href="#this-framework-is-a-work-in-progress">This framework is a work in progress!</a></h2>
 <p>It works alright for very simple examples right now, but certain parts of the grammar related to efficiently defining dynamic content haven't landed yet.</p>
 <h3 id="what-works"><a class="header" href="#what-works">What works</a></h3>
-<!-- markdownlint-disable no-multiple-space-blockquote -->
-</blockquote>
 <ul>
-<li>Pretty much any static templating.</li>
-</ul>
-<blockquote>
-<ul>
+<li>
+<p>Pretty much any static templating.</p>
+</li>
 <li>
 <p>Events and bindings, <em>mostly</em>.
 (Deferred callback continuations aren't present yet.)</p>
@@ -214,8 +212,8 @@ and is also a stepping stone towards higher level control flow (since it likely 
 <li>A turnkey app base. The needs to come with SSR and then optionally hydrate.</li>
 <li>Anything I haven't thought of! <a href="https://github.com/Tamschi/Asteracea/discussions/categories/ideas">Suggestions</a> are welcome.</li>
 </ul>
-<!-- markdownlint-enable no-multiple-space-blockquote -->
 </blockquote>
+<!-- markdownlint-enable no-multiple-space-blockquote -->
 <!-- markdownlint-enable no-trailing-punctuation -->
 <!-- markdownlint-enable no-blanks-blockquote -->
 <h2 id="audience"><a class="header" href="#audience">Audience</a></h2>
@@ -935,11 +933,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x564a60950b30.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x564a60950b30.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x564a60950b38.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x564a60950b30.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x564a60950b30.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55f77ff8db60.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55f77ff8db60.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x55f77ff8db68.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x55f77ff8db60.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x55f77ff8db60.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
