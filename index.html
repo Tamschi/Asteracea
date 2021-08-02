@@ -142,11 +142,81 @@
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
 <p>Welcome to the Asteracea guide book!</p>
+<!-- markdownlint-disable no-blanks-blockquote -->
+<!-- markdownlint-disable no-trailing-punctuation -->
 <blockquote>
-<p><strong>This book is a work in progress!</strong></p>
+<h2 id="this-book-is-a-work-in-progress"><a class="header" href="#this-book-is-a-work-in-progress">This book is a work in progress!</a></h2>
 <p>Until the first minor version stabilisation, there likely will only be this <code>develop</code>-branch version published online as rendered version, which usually won't mach a version of the crate published to crates.io. (Respective versions are tagged and can be rendered offline using (from the repository's root directory) <code>cd book</code> and <code>cargo run</code>.)</p>
 <p>In addition to the missing chapters, URLs are subject to change, links have have not been filled in and code blocks without highlighting or rendered HTML output may show unimplemented features.</p>
 </blockquote>
+<blockquote>
+<h2 id="this-framework-is-a-work-in-progress"><a class="header" href="#this-framework-is-a-work-in-progress">This framework is a work in progress!</a></h2>
+<p>It works alright for very simple examples right now, but certain parts of the grammar related to efficiently defining dynamic content haven't landed yet.</p>
+<h3 id="what-works"><a class="header" href="#what-works">What works</a></h3>
+<!-- markdownlint-disable no-multiple-space-blockquote -->
+</blockquote>
+<ul>
+<li>Pretty much any static templating.</li>
+</ul>
+<blockquote>
+<ul>
+<li>
+<p>Events and bindings, <em>mostly</em>.
+(Deferred callback continuations aren't present yet.)</p>
+</li>
+<li>
+<p>Hover documentation!
+You get tooltips for elements, attributes and events, as far as written.</p>
+</li>
+<li>
+<p><em>Some</em> branching.</p>
+</li>
+<li>
+<p>Dependency injection, should be mostly working.</p>
+<blockquote>
+<p>Though I'm not entirely happy with it yet.
+There's per-instantiation overhead without using it.</p>
+</blockquote>
+</li>
+<li>
+<p>Code-sharing between client and server, as Asteracea targets the modular <a href="https://crates.io/crates/lignin">lignin</a>.</p>
+</li>
+</ul>
+<h3 id="what-isnt-finished"><a class="header" href="#what-isnt-finished">What isn't finished</a></h3>
+<ul>
+<li>
+<p>Thread safety inference is sometimes wonky.</p>
+<blockquote>
+<p>Write <code>ComponentName()() -&gt; Sync</code> or <code>ComponentName()() -&gt; !Sync</code> to determine it manually.
+It's sound either way, but the former may not compile.</p>
+</blockquote>
+</li>
+<li>
+<p><a href="https://github.com/Tamschi/Asteracea/pull/33">Lazy initialisation.</a></p>
+<blockquote>
+<p>This is quite important for any form of efficient dynamic content,
+and is also a stepping stone towards higher level control flow (since it likely shares structure in some ways, or could even work as building block).</p>
+</blockquote>
+</li>
+<li>
+<p><a href="https://github.com/Tamschi/Asteracea/pull/42">Repeat arguments</a> for child components. This will lead towards content transclusion. I think.</p>
+</li>
+<li>
+<p>The grammar. I'll most likely change something in a breaking way before <code>v0.1</code>.</p>
+</li>
+</ul>
+<h3 id="whats-missing"><a class="header" href="#whats-missing">What's missing</a></h3>
+<ul>
+<li>&quot;Loops&quot;</li>
+<li>A standard library, including a mockable HTTP client (for client <strong>and</strong> server).</li>
+<li>A router, hopefully nicely possible outside the core library.</li>
+<li>A turnkey app base. The needs to come with SSR and then optionally hydrate.</li>
+<li>Anything I haven't thought of! <a href="https://github.com/Tamschi/Asteracea/discussions/categories/ideas">Suggestions</a> are welcome.</li>
+</ul>
+<!-- markdownlint-enable no-multiple-space-blockquote -->
+</blockquote>
+<!-- markdownlint-enable no-trailing-punctuation -->
+<!-- markdownlint-enable no-blanks-blockquote -->
 <h2 id="audience"><a class="header" href="#audience">Audience</a></h2>
 <p>While using Asteracea effectively requires knowledge of Rust, this book is written also with non-Rustaceans in mind.</p>
 <p>If you have experience with more traditional front-end frameworks like Angular or React, quite a few of the presented concepts should be familiar to you. I will also try to highlight these connections where they appear. By the end of the book, you should be able to read Asteracea's component templates and make modifications to them.</p>
