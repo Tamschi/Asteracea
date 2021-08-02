@@ -4,6 +4,8 @@ Welcome to the Asteracea guide book!
 
 <!-- markdownlint-disable no-blanks-blockquote -->
 <!-- markdownlint-disable no-trailing-punctuation -->
+<!-- markdownlint-disable no-multiple-space-blockquote -->
+
 > ## This book is a work in progress!
 >
 > Until the first minor version stabilisation, there likely will only be this `develop`-branch version published online as rendered version, which usually won't mach a version of the crate published to crates.io. (Respective versions are tagged and can be rendered offline using (from the repository's root directory) `cd book` and `cargo run`.)
@@ -15,8 +17,6 @@ Welcome to the Asteracea guide book!
 > It works alright for very simple examples right now, but certain parts of the grammar related to efficiently defining dynamic content haven't landed yet.
 >
 > ### What works
->
-> <!-- markdownlint-disable no-multiple-space-blockquote -->
 >
 > - Pretty much any static templating.
 > - Events and bindings, *mostly*.
@@ -47,8 +47,8 @@ Welcome to the Asteracea guide book!
 > - A router, hopefully nicely possible outside the core library.
 > - A turnkey app base. The needs to come with SSR and then optionally hydrate.
 > - Anything I haven't thought of! [Suggestions](https://github.com/Tamschi/Asteracea/discussions/categories/ideas) are welcome.
->
-> <!-- markdownlint-enable no-multiple-space-blockquote -->
+
+<!-- markdownlint-enable no-multiple-space-blockquote -->
 <!-- markdownlint-enable no-trailing-punctuation -->
 <!-- markdownlint-enable no-blanks-blockquote -->
 
