@@ -2,9 +2,9 @@
 
 [![Lib.rs](https://img.shields.io/badge/Lib.rs-*-84f)](https://lib.rs/crates/asteracea)
 [![Crates.io](https://img.shields.io/crates/v/asteracea)](https://crates.io/crates/asteracea)
-[![Docs.rs](https://docs.rs/asteracea/badge.svg)](https://docs.rs/crates/asteracea)
+[![Docs.rs](https://docs.rs/asteracea/badge.svg)](https://docs.rs/asteracea)
 
-![Rust 1.51.0](https://img.shields.io/static/v1?logo=Rust&label=&message=1.51.0&color=grey)
+![Rust 1.51](https://img.shields.io/static/v1?logo=Rust&label=&message=1.51&color=grey)
 [![CI](https://github.com/Tamschi/Asteracea/workflows/CI/badge.svg?branch=develop)](https://github.com/Tamschi/Asteracea/actions?query=workflow%3ACI+branch%3Adevelop)
 ![Crates.io - License](https://img.shields.io/crates/l/asteracea/0.0.2)
 

@@ -1,3 +1,13 @@
+[workspace]
+members = [
+	".",
+	"*/src/.."
+]
+
+[patch.crates-io]
+asteracea = { path = "." }
+asteracea_proc-macro-definitions = { path = "proc-macro-definitions" }
+
 [package]
 name = "asteracea"
 version = "0.0.2"
@@ -19,13 +29,15 @@ include = [
 	"CODE_OF_CONDUCT.md",
 	"LICENSE-*",
 	"README.md",
+	"SECURITY.md",
 ]
+resolver = "2"
 publish = false
 
 [badges]
 is-it-maintained-issue-resolution = { repository = "Tamschi/Asteracea" }
 is-it-maintained-open-issues = { repository = "Tamschi/Asteracea" }
-maintenance = { status = "experimental" }
+maintenance = { status = "experimental" } # This may differ between branches.
 
 [features]
 backtrace = ["asteracea_proc-macro-definitions/backtrace"] # Enables additional error traces, at the cost of code size and performance.
@@ -37,7 +49,7 @@ services = []
 asteracea_proc-macro-definitions = { path = "./proc-macro-definitions" } # public
 bumpalo = { version = "3.6.1", features = ["collections"] } # public
 lazy-init = "0.5.0"
-lignin = "0.0.7" # public
+lignin = "0.1.0" # public
 lignin-schema = { git = "https://github.com/Tamschi/lignin-schema.git", branch = "develop" } # semi-public
 rhizome = { version = "0.0.1", features = ["macros"] } # public
 static_assertions = "1.1.0"
@@ -49,3 +61,4 @@ debugless-unwrap = "0.0.4"
 doc-comment = "0.3.3"
 git_info = "0.1.2"
 version-sync = "0.9.1"
+wasm-bindgen-test = "0.3.24"

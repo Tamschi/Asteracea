@@ -8,7 +8,7 @@ use constants::*;
 fn bug_report() {
 	version_sync::assert_contains_regex!(
 		".github/ISSUE_TEMPLATE/bug_report.md",
-		&format!(r"^- `rustc --version`: \[e\.g\. {}\]$", RUST_VERSION)
+		&format!(r"^- `rustc --version`: \[e\.g\. {}.0\]$", RUST_VERSION)
 	);
 
 	version_sync::assert_contains_regex!(

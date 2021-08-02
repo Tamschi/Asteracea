@@ -14,6 +14,8 @@ fn weak_assert_branch() {
 		} else if branch == "(no branch)" {
 			// Most likely a release tag.
 			eprintln!(r#"Branch assert ignored: "(no branch)""#)
+		} else if branch == "template" {
+			eprintln!("Branch assert ignored: Currently on template branch")
 		} else if branch.contains('-') || branch.contains('/') {
 			eprintln!("Branch assert ignored: Probably a feature branch")
 		} else {
@@ -44,7 +46,7 @@ fn crates() {
 fn docs() {
 	version_sync::assert_contains_regex!(
 		"README.md",
-		r"^\[!\[Docs\.rs\]\(https://docs\.rs/{name}/badge\.svg\)\]\(https://docs\.rs/crates/{name}\)$"
+		r"^\[!\[Docs\.rs\]\(https://docs\.rs/{name}/badge\.svg\)\]\(https://docs\.rs/{name}\)$"
 	);
 }
 

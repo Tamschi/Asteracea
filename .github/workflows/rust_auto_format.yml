@@ -20,7 +20,7 @@ jobs:
         # github.head_ref only exists on pull requests.
         ref: ${{ github.head_ref || github.ref }}
 
-    - uses: actions-rs/toolchain@v1
+    - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: nightly
         profile: minimal
@@ -28,7 +28,7 @@ jobs:
     - run: cat CI.toml >> Cargo.toml
     - run: cargo +nightly fmt --all
 
-    - uses: Tamschi/git-auto-commit-action@v4.8.0
+    - uses: stefanzweifel/git-auto-commit-action@v4.11.0
       with:
         commit_message: Automatic formatting commit (cargo +nightly fmt)
         file_pattern: '**/*.rs'

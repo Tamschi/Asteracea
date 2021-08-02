@@ -1,0 +1,41 @@
+# See <https://handsonappsec.medium.com/automerge-github-dependabot-alerts-with-github-actions-7cd6f5763750>.
+# Modified to only approve and let Dependabot do the merge if CI goes through, and updated to work in May 2021.
+
+name: 'Auto-Approve Dependabot'
+# Note: I REALLY don't recommend doing this if you have ANY broader authentication tokens available to (any) Actions.
+# Tokens that can only interact with your public repositories should be mostly fine, if you keep an eye on code changes and don't have automatic deployment set up.
+on:
+  # See <https://github.blog/changelog/2021-02-19-github-actions-workflows-triggered-by-dependabot-prs-will-run-with-read-only-permissions/>.
+  pull_request_target:
+    types: [review_requested, reopened]
+jobs:
+  approve-dependabot:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: auto-approve
+        uses: actions/github-script@v4.0.2
+        with:
+          # The default token is enough to comment, but Dependabot will only comply if you impersonate a user with write access.
+          github-token: ${{secrets.AUTO_APPROVE_DEPENDABOT_TOKEN}}
+          script: |
+            // See <https://octokit.github.io/rest.js/v18#pulls>,
+            // <https://github.com/marketplace/actions/github-script#welcome-a-first-time-contributor>.
+            const reviews = await github.pulls.listReviews({
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name,
+              pull_number: context.payload.pull_request.number,
+            });
+
+            for (review of reviews.data) {
+              console.log(`A review exists. Exiting.`)
+              return;
+            }
+
+            await github.pulls.createReview({
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name,
+              pull_number: context.payload.pull_request.number,
+              event: 'APPROVE',
+              body: '[Auto-Approve Dependabot]\n@dependabot merge',
+            });
