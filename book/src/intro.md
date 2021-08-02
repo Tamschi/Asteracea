@@ -20,7 +20,8 @@ Welcome to the Asteracea guide book!
 >
 > - Pretty much any static templating.
 > - Events and bindings, *mostly*.
->   (Deferred callback continuations aren't present yet.)
+>   > Deferred callback continuations aren't present yet,
+>   > which prevents direct component instantiation or destruction from event handlers.
 > - Hover documentation!
 >   You get tooltips for elements, attributes and events, as far as written.
 > - *Some* branching.
