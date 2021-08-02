@@ -3,6 +3,16 @@
 
 extern crate proc_macro;
 
+use lazy_static::lazy_static;
+use proc_macro::TokenStream as TokenStream1;
+use proc_macro2::{Span, TokenStream as TokenStream2};
+use proc_macro_crate::{crate_name, FoundCrate};
+use quote::{quote, quote_spanned, ToTokens};
+use syn::{
+	parse::{Parse, ParseStream},
+	parse_macro_input, Error, Ident, Result,
+};
+
 mod component_declaration;
 mod map_message;
 mod part;
@@ -17,17 +27,6 @@ use self::{
 	map_message::MapMessage,
 	part::{GenerateContext, Part},
 };
-use lazy_static::lazy_static;
-use proc_macro::TokenStream as TokenStream1;
-use proc_macro2::{Span, TokenStream as TokenStream2};
-use proc_macro_crate::crate_name;
-use quote::{quote, quote_spanned, ToTokens};
-use syn::{
-	parse::{Parse, ParseStream},
-	parse_macro_input, Ident, Result,
-};
-
-use syn::Error;
 
 fn hook_panics() {
 	std::panic::set_hook(Box::new(|panic_info| {
@@ -153,8 +152,12 @@ pub fn trace_escalations(attr: TokenStream1, item: TokenStream1) -> TokenStream1
 
 // TODO: Accept reexported asteracea module made available via `use`.
 lazy_static! {
-	static ref ASTERACEA_NAME: String =
-		crate_name("asteracea").unwrap_or_else(|_| "asteracea".to_owned());
+	static ref ASTERACEA_NAME: String = crate_name("asteracea")
+		.map(|found| match found {
+			FoundCrate::Itself => "asteracea".to_string(), // This happens in tests.
+			FoundCrate::Name(name) => name,
+		})
+		.unwrap_or_else(|_| "asteracea".to_owned());
 }
 fn asteracea_ident(span: Span) -> Ident {
 	Ident::new(&*ASTERACEA_NAME, span)
