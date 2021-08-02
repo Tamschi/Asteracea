@@ -2,11 +2,55 @@
 
 Welcome to the Asteracea guide book!
 
-> **This book is a work in progress!**
+<!-- markdownlint-disable no-blanks-blockquote -->
+<!-- markdownlint-disable no-trailing-punctuation -->
+> ## This book is a work in progress!
 >
 > Until the first minor version stabilisation, there likely will only be this `develop`-branch version published online as rendered version, which usually won't mach a version of the crate published to crates.io. (Respective versions are tagged and can be rendered offline using (from the repository's root directory) `cd book` and `cargo run`.)
 >
 > In addition to the missing chapters, URLs are subject to change, links have have not been filled in and code blocks without highlighting or rendered HTML output may show unimplemented features.
+
+> ## This framework is a work in progress!
+>
+> It works alright for very simple examples right now, but certain parts of the grammar related to efficiently defining dynamic content haven't landed yet.
+>
+> ### What works
+>
+> <!-- markdownlint-disable no-multiple-space-blockquote -->
+>
+> - Pretty much any static templating.
+> - Events and bindings, *mostly*.
+>   (Deferred callback continuations aren't present yet.)
+> - Hover documentation!
+>   You get tooltips for elements, attributes and events, as far as written.
+> - *Some* branching.
+> - Dependency injection, should be mostly working.
+>   > Though I'm not entirely happy with it yet.
+>   > There's per-instantiation overhead without using it.
+> - Code-sharing between client and server, as Asteracea targets the modular [lignin](https://crates.io/crates/lignin).
+>
+> ### What isn't finished
+>
+> - Thread safety inference is sometimes wonky.
+>    > Write `ComponentName()() -> Sync` or `ComponentName()() -> !Sync` to determine it manually.
+>   > It's sound either way, but the former may not compile.
+> - [Lazy initialisation.](https://github.com/Tamschi/Asteracea/pull/33)
+>   > This is quite important for any form of efficient dynamic content,
+>   > and is also a stepping stone towards higher level control flow (since it likely shares structure in some ways, or could even work as building block).
+> - [Repeat arguments](https://github.com/Tamschi/Asteracea/pull/42) for child components. This will lead towards content transclusion. I think.
+> - The grammar. I'll most likely change something in a breaking way before `v0.1`.
+>
+> ### What's missing
+>
+> - "Loops"
+> - A standard library, including a mockable HTTP client (for client **and** server).
+> - A router, hopefully nicely possible outside the core library.
+> - A turnkey app base. The needs to come with SSR and then optionally hydrate.
+> - Anything I haven't thought of! [Suggestions](https://github.com/Tamschi/Asteracea/discussions/categories/ideas) are welcome.
+>
+> <!-- markdownlint-enable no-multiple-space-blockquote -->
+<!-- markdownlint-enable no-trailing-punctuation -->
+<!-- markdownlint-enable no-blanks-blockquote -->
 
 ## Audience
 
