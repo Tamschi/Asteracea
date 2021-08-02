@@ -1,0 +1,70 @@
+# Largely inspired by https://github.com/dtolnay/syn/blob/master/.github/workflows/ci.yml under MIT OR Apache-2.0.
+name: CI
+on:
+  pull_request:
+  push:
+  schedule: [cron: "0 8 * * 5"] # 8:00 on Fridays
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1.0.7
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo test --workspace --locked --no-default-features
+    - run: cargo test --workspace --locked
+    - run: cargo test --workspace --locked --all-features
+
+  browser-test:
+    name: Browser Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1.0.7
+      with:
+        toolchain: stable
+        profile: minimal
+        target: wasm32-unknown-unknown
+    - run: cargo +stable install wasm-bindgen-cli --vers "^0.2.71"
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo +stable test --workspace --locked --target wasm32-unknown-unknown --no-default-features
+    - run: cargo +stable test --workspace --locked --target wasm32-unknown-unknown
+    - run: cargo +stable test --workspace --locked --target wasm32-unknown-unknown --all-features
+
+  check:
+    name: Check on Rust ${{matrix.rust}}${{format(' ({0})', matrix.target || matrix.os)}}
+    runs-on: ${{matrix.os}}-latest
+    strategy:
+      matrix:
+        os: [macos, ubuntu, windows]
+        rust: ['1.51', stable, beta, nightly]
+    env:
+      target: ${{matrix.target && format('--target={0}', matrix.target)}}
+      workspace: ${{matrix.no-workspace || '--workspace'}}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1.0.7
+      with:
+        toolchain: ${{matrix.rust}}
+        profile: minimal
+        target: ${{matrix.target}}
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo +${{matrix.rust}} check --locked ${{env.target}} ${{env.workspace}} --no-default-features
+    - run: cargo +${{matrix.rust}} check --locked ${{env.target}} ${{env.workspace}}
+    - run: cargo +${{matrix.rust}} check --locked ${{env.target}} ${{env.workspace}} --all-features
+
+  minimal-versions:
+    name: Minimal Versions
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1.0.7
+      with:
+        toolchain: nightly
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo +nightly update -Z minimal-versions
+    - run: cargo +nightly check --lib --locked --no-default-features
+    - run: cargo +nightly check --lib --locked
+    - run: cargo +nightly check --lib --locked --all-features

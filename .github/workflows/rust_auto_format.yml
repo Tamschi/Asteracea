@@ -1,0 +1,35 @@
+name: Rust Auto Format
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2.3.4
+      with:
+        # github.ref is useless on pull requests.
+        # github.head_ref only exists on pull requests.
+        ref: ${{ github.head_ref || github.ref }}
+
+    - uses: actions-rs/toolchain@v1.0.7
+      with:
+        toolchain: nightly
+        profile: minimal
+        components: rustfmt
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo +nightly fmt --all
+
+    - uses: stefanzweifel/git-auto-commit-action@v4.11.0
+      with:
+        commit_message: Automatic formatting commit (cargo +nightly fmt)
+        file_pattern: '**/*.rs'
+        commit_author: Rust Format Action <rust-format-action@schichler.dev>

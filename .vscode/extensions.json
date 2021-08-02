@@ -1,0 +1,13 @@
+{
+	"recommendations": [
+		"bungcip.better-toml",
+		"serayuzgur.crates",
+		"editorconfig.editorconfig",
+		"matklad.rust-analyzer",
+		"sidp.strict-whitespace",
+		"gruntfuggly.todo-tree"
+	],
+	"unwantedRecommendations": [
+		"rust-lang.rust"
+	]
+}

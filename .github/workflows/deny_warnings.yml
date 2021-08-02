@@ -1,0 +1,22 @@
+name: Deny Warnings
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+
+jobs:
+  deny-warnings:
+    name: Deny Warnings
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1.0.7
+      with:
+        toolchain: stable
+        profile: minimal
+        components: clippy
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo clippy --workspace --locked --no-default-features -- -D warnings
+    - run: cargo clippy --workspace --locked -- -D warnings
+    - run: cargo clippy --workspace --locked --all-features -- -D warnings
