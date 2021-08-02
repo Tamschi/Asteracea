@@ -41,9 +41,9 @@ impl<E: ?Sized> Caught<E> {
 	#[doc(hidden)]
 	pub fn __Asteracea__with_traced_frame(mut self, frame: Cow<'static, str>) -> Self {
 		if let Some(trace) = &mut self.trace {
-			trace.push(frame)
+			trace.push(frame);
 		} else {
-			self.trace = Some(vec![frame])
+			self.trace = Some(vec![frame]);
 		}
 		self
 	}
@@ -189,18 +189,18 @@ impl<E> Caught<E> {
 impl Debug for Caught<dyn Send + Any> {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		if let Some(str) = self.boxed.downcast_ref::<&str>() {
-			Display::fmt(str, f)?
+			Display::fmt(str, f)?;
 		} else if let Some(string) = self.boxed.downcast_ref::<String>() {
-			Display::fmt(string, f)?
+			Display::fmt(string, f)?;
 		} else if let Some(wrapper) = self.boxed.downcast_ref::<ErrorWrapper>() {
-			Display::fmt(&wrapper.0, f)?
+			Display::fmt(&wrapper.0, f)?;
 		} else {
-			writeln!(f, "type ID: {:?}", self.boxed.type_id())?
+			writeln!(f, "type ID: {:?}", self.boxed.type_id())?;
 		}
 		writeln!(f)?;
 		writeln!(f)?;
 		for frame in self.trace.iter().flatten() {
-			writeln!(f, "in {}", frame)?
+			writeln!(f, "in {}", frame)?;
 		}
 		Ok(())
 	}
@@ -211,7 +211,7 @@ impl<E: Debug> Debug for Caught<E> {
 		writeln!(f)?;
 		writeln!(f)?;
 		for frame in self.trace.iter().flatten() {
-			writeln!(f, "in {}", frame)?
+			writeln!(f, "in {}", frame)?;
 		}
 		Ok(())
 	}
@@ -223,7 +223,7 @@ impl<E: Display> Display for Caught<E> {
 		writeln!(f)?;
 		writeln!(f)?;
 		for frame in self.trace.iter().flatten() {
-			writeln!(f, "in {}", frame)?
+			writeln!(f, "in {}", frame)?;
 		}
 		Ok(())
 	}

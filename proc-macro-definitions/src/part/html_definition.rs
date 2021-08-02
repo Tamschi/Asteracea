@@ -327,11 +327,11 @@ impl<C: Configuration> HtmlDefinition<C> {
 
 		let has_content = !children.is_empty();
 		let children = if children.len() == 1 {
-			children[0].part_tokens(&cx)?
+			children[0].part_tokens(cx)?
 		} else {
 			let mut child_stream = TokenStream::new();
 			for child in children.into_iter() {
-				let child = child.part_tokens(&cx)?;
+				let child = child.part_tokens(cx)?;
 				child_stream.extend(quote_spanned! {child.span()=>
 					#child,
 				});
@@ -350,7 +350,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 			.partition(|part| part.kind() == PartKind::EventBinding);
 		let mut event_stream = TokenStream::new();
 		for event_binding in event_bindings.into_iter() {
-			let event_binding = event_binding.part_tokens(&cx)?;
+			let event_binding = event_binding.part_tokens(cx)?;
 			event_stream.extend(quote_spanned! {event_binding.span()=>
 				#event_binding,
 			})

@@ -247,7 +247,7 @@ impl StorageTypeConfiguration {
 									.as_ref()
 									.cloned()
 									.unwrap_or_else(|| Token![<](span)),
-								args: generic_arguments(&parent_generics)?,
+								args: generic_arguments(parent_generics)?,
 								gt_token: parent_generics
 									.gt_token
 									.as_ref()
@@ -342,7 +342,7 @@ impl StorageTypeConfiguration {
 	pub fn struct_(&self) -> Option<&Token![struct]> {
 		match self {
 			StorageTypeConfiguration::Anonymous => None,
-			StorageTypeConfiguration::Generated { struct_, .. } => Some(&struct_),
+			StorageTypeConfiguration::Generated { struct_, .. } => Some(struct_),
 			StorageTypeConfiguration::Predefined { .. } => None,
 		}
 	}

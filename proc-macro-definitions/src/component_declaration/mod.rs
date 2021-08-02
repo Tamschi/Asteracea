@@ -547,7 +547,7 @@ impl ComponentDeclaration {
 		let render_type: ReturnType = match render_type {
 			RenderType::AutoSafe => {
 				let auto_safe = Ident::new(
-					&(component_name.to_string() + "__Asteracea__AutoSafe")
+					(component_name.to_string() + "__Asteracea__AutoSafe")
 						.trim_start_matches("r#"),
 					Span::mixed_site(),
 				);
