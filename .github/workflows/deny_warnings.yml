@@ -23,6 +23,7 @@ jobs:
     - run: cargo clippy --locked --no-default-features -- -D warnings
     - run: cargo clippy --locked -- -D warnings
     - run: cargo clippy --locked --all-features -- -D warnings
+    # TODO: Fix and then deny these too:
     - run: cd book && cargo clippy --locked --no-default-features
     - run: cd book && cargo clippy --locked
     - run: cd book && cargo clippy --locked --all-features
