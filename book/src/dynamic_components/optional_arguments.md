@@ -9,7 +9,7 @@ asteracea::component! {
   )
 
   <div
-    ."class"? = {class} // `Option<_>`-typed!
+    .class? = {class} // `Option<_>`-typed!
   >
 }
 

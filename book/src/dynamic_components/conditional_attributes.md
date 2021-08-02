@@ -10,7 +10,7 @@ asteracea::component! {
   )
 
   <div
-    ."class"? = {class}
+    .class? = {class}
   >
 }
 
@@ -39,7 +39,7 @@ asteracea::component! {
   )
 
   <div
-    ."hidden"? = {!visible}
+    .hidden? = {!visible}
     "#"
   >
 }

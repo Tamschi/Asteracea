@@ -22,11 +22,11 @@ asteracea::component! {
   //
 
   <div
-    ."class"? = {class}
+    .class? = {class}
     "The current value is: " !{self.value()} <br>
 
     <button
-      ."disabled"? = {!self.enabled}
+      .disabled? = {!self.enabled}
       "+" !{self.step}
       on bubble click = Self::on_click_plus
     >

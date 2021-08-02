@@ -25,15 +25,19 @@ component! {
   |value = Cell::<i32>::new(initial)|; // shorthand capture
 
   <div
-    ."class"? = {class}
-    "The current value is: " !{self.value()} <br> // Anything within curlies is plain Rust.
+    // Attribute usage is validated statically.
+    // (Write its name as `str` literal to sidestep that.)
+    .class? = {class}
+
+    // Three content nodes in this line. Anything within curlies is plain Rust.
+    "The current value is: " !{self.value()} <br>
 
     <button
       "+" !{self.step} // shorthand bump_format call
-      on bubble click = fn on_click_plus(self, _) {
-        self.value.set(self.value() + self.step);
-        schedule_render();
-      }
+
+      // Correct event usage is validated statically.
+      // (Write its name as `str` literal to sidestep that.)
+      on bubble click = fn (self, _) { self.set_value(self.value() + self.step); } // Inline handler.
     >
   >
 }
