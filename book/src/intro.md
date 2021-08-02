@@ -120,7 +120,7 @@ Asteracea is, as of October 2020, still early in development and subject to chan
 
   [`FinalizationRegistry`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry
 
-  The targeted application model is single-threaded, which means components and event handlers aren't required to be [`Send`] or [`Sync`].
+  The targeted application model is optionally threaded, which means components and event handlers aren't required to be [`Send`] or [`Sync`], but can meaningfully be so.
 
   [`Send`]: https://doc.rust-lang.org/stable/std/marker/trait.Send.html
   [`Sync`]: https://doc.rust-lang.org/stable/std/marker/trait.Sync.html
