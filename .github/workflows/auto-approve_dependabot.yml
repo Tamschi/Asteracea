@@ -14,7 +14,7 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     steps:
       - name: auto-approve
-        uses: actions/github-script@v4.0.2
+        uses: actions/github-script@v4.1
         with:
           # The default token is enough to comment, but Dependabot will only comply if you impersonate a user with write access.
           github-token: ${{secrets.AUTO_APPROVE_DEPENDABOT_TOKEN}}
