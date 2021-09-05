@@ -16,12 +16,20 @@ asteracea::component! {
 }
 
 asteracea::component! {
-	Deferrer()()
+	Deferrer()() -> Sync
 
 	[
 		defer <*Deferred>
-		spread if {false} defer box <*Never>
-		// spread if {false} defer box <*Deferrer>
+		spread if {false} defer <*Never>
+		spread if {false} defer box <*Deferrer>
+	]
+}
+
+asteracea::component! {
+	Named()() -> Sync
+
+	[
+		defer priv deferred: struct NamedDeferred <*Deferred>
 	]
 }
 

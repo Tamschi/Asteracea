@@ -72,17 +72,20 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		);
 
 		let asteracea = asteracea_ident(defer.span);
+		let node = quote_spanned!(defer.span=> node);
 		call2_strict(
 			if dynamicism.is_some() {
 				todo!("defer dynamicism")
 			} else {
-				quote_spanned! {defer.span=>
+				quote_spanned! {defer.span.resolved_at(Span::mixed_site())=>
 					pin |
-						#visibility #field_name: ::#asteracea::try_lazy_init::LazyTransform<::std::boxed::Box<dyn FnOnce() -> ::std::result::Result<#type_path, ::#asteracea::error::Escalation>>, #type_path> =
-							{::#asteracea::try_lazy_init::LazyTransform::new(::std::boxed::Box::new({
-								let node = ::std::sync::Arc::clone(&node);
+						#visibility #field_name: ::#asteracea::try_lazy_init::LazyTransform<::std::boxed::Box<dyn FnOnce() -> ::std::result::Result<#type_path, ::#asteracea::error::Escalation>>, #type_path> = {
+							::#asteracea::try_lazy_init::LazyTransform::new(::std::boxed::Box::new({
+								#[allow(unused_variables)]
+								let #node = ::std::sync::Arc::clone(&#node);
 								move || Ok(#deferred_value)
-							}))}
+							}))
+						}
 					|;
 				}
 			},
@@ -125,12 +128,12 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 
 impl<C: Configuration> Defer<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
-		let asteracea = asteracea_ident(self.defer.span);
+		let _asteracea = asteracea_ident(self.defer.span);
 		let field_name = &self.field_name;
 		let field_pinned = Ident::new(&format!("{}_pinned", field_name), field_name.span());
 		let content = self.content.part_tokens(cx)?;
 
-		if let Some((_, move_)) = &self.dynamicism {
+		if let Some((_, _move_)) = &self.dynamicism {
 			todo!("defer dynamicism")
 		} else {
 			quote_spanned!(self.defer.span.resolved_at(Span::mixed_site())=> {
