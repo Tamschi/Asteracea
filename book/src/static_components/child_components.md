@@ -8,12 +8,14 @@ use std::marker::PhantomData;
 
 asteracea::component! {
   Inner()()
+
   "Inner body."
 }
 
 mod module {
   asteracea::component! {
-    pub Module()()
+    pub(crate) Module()()
+
     "Module body."
   }
 }
@@ -26,6 +28,7 @@ asteracea::component! {
     // `PhantomData` is a type that provides fake storage semantics.
     priv _phantom: PhantomData<T> = PhantomData::default(),
   )()
+
   "Generic body."
 }
 
@@ -48,12 +51,14 @@ use std::marker::PhantomData;
 
 asteracea::component! {
   Inner()()
+
   "Inner body."
 }
 
 mod module {
   asteracea::component! {
-    pub Module()()
+    pub(crate) Module()()
+
     "Module body."
   }
 }
@@ -65,6 +70,7 @@ asteracea::component! {
     // `PhantomData` is a type that provides fake storage semantics.
     priv _phantom: PhantomData<T> = PhantomData::default(),
   )()
+
   "Generic body."
 }
 

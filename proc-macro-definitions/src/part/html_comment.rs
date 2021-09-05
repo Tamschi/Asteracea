@@ -21,7 +21,7 @@ impl ParseWithContext for HtmlComment {
 	) -> syn::Result<Self::Output> {
 		let open_span;
 		let text;
-		unquote!(input, #^'open_span <!-- #$'open_span #text -->);
+		unquote!(input, #'open_span <!-- #text -->);
 		Ok(Self { open_span, text })
 	}
 }
@@ -36,9 +36,10 @@ impl HtmlComment {
 		let asteracea = asteracea_ident(open_span);
 
 		quote_spanned! {open_span=>
-			#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Comment(
-				#text
-			)
+			#asteracea::lignin::Node::Comment {
+				comment: #text,
+				dom_binding: None, //TODO: Add DOM binding support.
+			}
 		}
 	}
 }

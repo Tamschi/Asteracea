@@ -14,7 +14,7 @@ use syn::{
 	Type, TypeArray, TypeGroup, TypeParam, TypeParamBound, TypeParen, TypePath, TypeReference,
 	TypeSlice, TypeTraitObject, TypeTuple, Visibility,
 };
-use wyz::Tap as _;
+use tap::Tap as _;
 
 fn transform_lifetime(
 	existing_lifetime: &mut Lifetime,
@@ -130,7 +130,10 @@ fn transform_type(
 				_ => unreachable!(),
 			};
 
-			let impl_ident = Ident::new(&format!("IMPL_{}", impl_generics.len()), impl_span);
+			let impl_ident = Ident::new(
+				&format!("IMPL_{}", impl_generics.len()),
+				impl_span.resolved_at(Span::mixed_site()),
+			);
 
 			let impl_trait = match mem::replace(
 				ty,

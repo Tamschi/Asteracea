@@ -4,6 +4,7 @@ use crate::{
 	storage_context::{ParseContext, ParseWithContext},
 	Configuration,
 };
+use either::Either;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 use syn::{
@@ -34,29 +35,37 @@ enum AttributeDefinition {
 }
 
 enum AttributeKey {
-	//TODO: Known(Ident),
+	Known(Ident),
 	Literal(LitStr),
 }
 
 impl ToTokens for AttributeKey {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		match self {
-			AttributeKey::Literal(l) => l.to_tokens(tokens),
+			AttributeKey::Known(name) => {
+				let asteracea = asteracea_ident(name.span());
+				(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+					<dyn ::#asteracea::__::lignin_schema::html::attributes::#name>::NAME
+				})
+				.to_tokens(tokens)
+			}
+			AttributeKey::Literal(name) => name.to_tokens(tokens),
 		}
 	}
 }
 
 impl Parse for AttributeKey {
 	fn parse(input: ParseStream) -> Result<Self> {
-		Ok(match input.parse() {
-			Ok(lit_str) => AttributeKey::Literal(lit_str),
-			Err(err) => {
-				return Err(Error::new(
-					err.span(),
-					"Expected HTML attribute key (str literal)",
-				))
-			}
-		})
+		if let Some(name) = input.parse().unwrap() {
+			Ok(AttributeKey::Known(name))
+		} else if let Some(name) = input.parse().unwrap() {
+			Ok(AttributeKey::Literal(name))
+		} else {
+			Err(Error::new(
+				input.span(),
+				"Expected HTML attribute key (str literal)",
+			))
+		}
 	}
 }
 
@@ -83,7 +92,7 @@ impl Parse for AttributeValue {
 		} else {
 			return Err(Error::new(
 				input.span(),
-				"Expected HTML attribte value (string literal or Rust block)",
+				"Expected HTML attribute value (string literal or Rust block)",
 			));
 		})
 	}
@@ -92,10 +101,10 @@ impl Parse for AttributeValue {
 //TODO: Add a Dynamic(Block) variant.
 enum ElementName {
 	Custom(LitStr),
-	Known(Ident),
+	Known(Ident, Option<Ident>),
 }
 
-pub struct HtmlDefinition<C: Configuration> {
+pub(crate) struct HtmlDefinition<C: Configuration> {
 	lt: Token![<],
 	name: ElementName,
 	attributes: Vec<AttributeDefinition>,
@@ -113,9 +122,9 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 					"Element names must not contain spaces",
 				));
 			}
-			ElementName::Custom(name)
+			Either::Left(name) // custom
 		} else if let Some(name) = input.parse().unwrap() {
-			ElementName::Known(name)
+			Either::Right(name) // known
 		} else {
 			return Err(Error::new(
 				input.cursor().span(),
@@ -126,7 +135,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 		let attributes = {
 			let mut attributes = Vec::new();
 			while let Ok(dot) = input.parse::<Token![.]>() {
-				attributes.push(if input.peek(LitStr) {
+				attributes.push(if input.peek(Ident) || input.peek(LitStr) {
 					let key;
 					let question: Option<Token![?]>;
 					let eq;
@@ -149,7 +158,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 				} else {
 					return Err(Error::new(
 						input.span(),
-						"Expected Rust block (Attribute) or a string literal (HTML attribute name)",
+						"Expected Rust block (Attribute) or an identifier or string literal (HTML attribute name)",
 					));
 				});
 			}
@@ -163,9 +172,9 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 			}
 		}
 
-		if input.parse::<Token![/]>().is_ok() {
-			match &name {
-				ElementName::Custom(name) => {
+		let name = if input.parse::<Token![/]>().is_ok() {
+			match name {
+				Either::Left(name) => {
 					let close_name: LitStr = input.parse()?;
 					// Named close.
 					if close_name.value() != name.value() {
@@ -174,19 +183,26 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 							format_args!("Expected {:?}", name.value()),
 						));
 					}
+					ElementName::Custom(name)
 				}
-				ElementName::Known(name) => {
-					let close_name: Ident = input.parse()?;
+				Either::Right(name) => {
+					let closing_name: Ident = input.parse()?;
 					// Named close.
-					if close_name != *name {
+					if closing_name != name {
 						return Err(Error::new_spanned(
-							close_name,
+							closing_name,
 							format_args!("Expected `{}`", name),
 						));
 					}
+					ElementName::Known(name, Some(closing_name))
 				}
 			}
-		}
+		} else {
+			match name {
+				Either::Left(name) => ElementName::Custom(name),
+				Either::Right(name) => ElementName::Known(name, None),
+			}
+		};
 		input.parse::<Token![>]>()?;
 
 		Ok(Self {
@@ -208,6 +224,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 		} = self;
 
 		let asteracea = asteracea_ident(lt.span());
+		let thread_safety = &cx.thread_safety;
 
 		let bump = Ident::new("bump", lt.span().resolved_at(Span::call_site()));
 
@@ -216,6 +233,29 @@ impl<C: Configuration> HtmlDefinition<C> {
 			AttributeDefinition::Assignment(_, _, None, _, _) => false,
 			AttributeDefinition::RustBlock(_, _) => false,
 		});
+		let validate_attributes = match name {
+			ElementName::Custom(_) => vec![],
+			ElementName::Known(tag_name, _) => attributes
+				.iter()
+				.filter_map(|attribute| match attribute {
+					AttributeDefinition::Assignment(_, AttributeKey::Known(name), _, _, _) => {
+						// Move validation errors onto the attribute name.
+						let tag_name = Ident::new(&tag_name.to_string(), name.span());
+						Some(
+							quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+								// Already flagged where the attribute name is resolved.
+								// Ignored here so a deprecated element isn't warned about on the attribute.
+								#[allow(deprecated)]
+								::#asteracea::__::lignin_schema::html::attributes::#name::<_>::static_validate_on(
+									::#asteracea::__::lignin_schema::html::elements::#tag_name
+								);
+							},
+						)
+					}
+					_ => None,
+				})
+				.collect::<Vec<_>>(),
+		};
 		let attributes = attributes
 			.iter()
 			.map(|a| match a {
@@ -236,7 +276,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 							quote_spanned! {value.span().resolved_at(Span::mixed_site())=> {
 								let name = #key; // Always evaluate this.
 								if let Some(value) #eq #value {
-									attrs.push(#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Attribute {
+									attrs.push(#asteracea::lignin::Attribute {
 										name,
 										value,
 									})
@@ -244,13 +284,13 @@ impl<C: Configuration> HtmlDefinition<C> {
 							}}
 						}
 						(true, None) => quote_spanned! {span=>
-							attrs.push(#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Attribute {
+							attrs.push(#asteracea::lignin::Attribute {
 								name: #key,
 								value: #value,
 							});
 						},
 						(false, None) => quote_spanned! {span=>
-							#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Attribute {
+							#asteracea::lignin::Attribute {
 								name: #key,
 								value: #value,
 							}
@@ -272,7 +312,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 			let capacity = attributes.len();
 			quote_spanned! {lt.span.resolved_at(Span::mixed_site())=>
 				{
-					let mut attrs = #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::collections::Vec::with_capacity_in(#capacity, #bump);
+					let mut attrs = #asteracea::bumpalo::collections::Vec::with_capacity_in(#capacity, #bump);
 					#(#attributes)*
 					attrs.into_bump_slice()
 				}
@@ -284,15 +324,25 @@ impl<C: Configuration> HtmlDefinition<C> {
 		let (children, parts): (Vec<_>, Vec<_>) = parts
 			.iter()
 			.partition(|part| (*part).kind() == PartKind::Child);
-		let mut child_stream = TokenStream::new();
-		for child in children.into_iter() {
-			let child = child.part_tokens(&cx)?;
-			child_stream.extend(quote_spanned! {child.span()=>
-				#child,
-			});
-		}
-		let children = quote_spanned! {child_stream.span()=>
-			&*#bump.alloc_with(|| [#child_stream])
+
+		let has_content = !children.is_empty();
+		let children = if children.len() == 1 {
+			children[0].part_tokens(cx)?
+		} else {
+			let mut child_stream = TokenStream::new();
+			for child in children.into_iter() {
+				let child = child.part_tokens(cx)?;
+				child_stream.extend(quote_spanned! {child.span()=>
+					#child,
+				});
+			}
+			quote_spanned! {child_stream.span()=>
+				::#asteracea::lignin::Node::Multi::<'bump, #thread_safety>(&*#bump.alloc_try_with(
+					|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+						::std::result::Result::Ok([#child_stream])
+					}
+				)?)
+			}
 		};
 
 		let (event_bindings, parts): (Vec<&Part<C>>, Vec<_>) = parts
@@ -300,7 +350,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 			.partition(|part| part.kind() == PartKind::EventBinding);
 		let mut event_stream = TokenStream::new();
 		for event_binding in event_bindings.into_iter() {
-			let event_binding = event_binding.part_tokens(&cx)?;
+			let event_binding = event_binding.part_tokens(cx)?;
 			event_stream.extend(quote_spanned! {event_binding.span()=>
 				#event_binding,
 			})
@@ -311,29 +361,64 @@ impl<C: Configuration> HtmlDefinition<C> {
 
 		assert_eq!(parts.len(), 0);
 		Ok(match name {
-			ElementName::Custom(name) => quote_spanned! {lt.span=>
-				#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Element(
-					#bump.alloc_with(||
-						#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Element {
-							name: #name,
-							attributes: #attributes,
-							content: #children,
-							event_bindings: #event_bindings,
-						}
+			ElementName::Custom(name) => {
+				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
+					let children = #children;
+					//TODO: Add MathML and SVG support.
+					::#asteracea::lignin::Node::HtmlElement::<'bump, #thread_safety> {
+						element: #bump.alloc_with(||
+								#asteracea::lignin::Element {
+									name: #name,
+									creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
+									attributes: #attributes,
+									content: children,
+									event_bindings: #event_bindings,
+								}
+							),
+						//TODO: Add DOM binding support.
+						dom_binding: None,
+					}
+				}}
+			}
+			ElementName::Known(name, closing_name) => {
+				let validate_has_content = if has_content {
+					Some(
+						quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+							::#asteracea::__::lignin_schema::HasContent::static_validate_on(::#asteracea::__::lignin_schema::html::elements::#name);
+						},
 					)
-				)
-			},
-			ElementName::Known(name) => quote_spanned! {lt.span=>
-				#asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node::Element(
-					#bump.alloc_with(||
-						#asteracea::__Asteracea__implementation_details::lignin_schema::#name(
-							#attributes,
-							#children,
-							#event_bindings,
-						)
-					)
-				)
-			},
+				} else {
+					None
+				};
+				let document_closing = closing_name.as_ref().map(|closing_name| {
+					quote_spanned! {closing_name.span().resolved_at(Span::mixed_site())=>
+						let _ = ::#asteracea::__::lignin_schema::html::elements::#closing_name;
+					}
+				});
+				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
+					let children = #children;
+					//TODO: Add MathML and SVG support.
+					::#asteracea::lignin::Node::HtmlElement::<'bump, #thread_safety> {
+						element: #bump.alloc_with(|| {
+							#validate_has_content
+							#(#validate_attributes)*
+							#document_closing
+							//TODO: Validate attributes.
+							//TODO: Validate events.
+
+							::#asteracea::lignin::Element {
+								name: ::#asteracea::__::lignin_schema::html::elements::#name::TAG_NAME,
+								creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
+								attributes: #attributes,
+								content: children,
+								event_bindings: #event_bindings,
+							}
+						}),
+						//TODO: Add DOM binding support.
+						dom_binding: None,
+					}
+				}}
+			}
 		})
 	}
 }

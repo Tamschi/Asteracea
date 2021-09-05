@@ -1,11 +1,11 @@
 use std::pin::Pin;
 
-use asteracea::error::ExtractableResolutionError;
-use lignin::bumpalo::Bump;
+use bumpalo::Bump;
+use debugless_unwrap::DebuglessUnwrap;
 use rhizome::Node;
 
 asteracea::component! {
-	pub Boxed()() []
+	Boxed()() []
 }
 
 // asteracea::component! {
@@ -29,16 +29,15 @@ asteracea::component! {
 }
 
 #[test]
-fn simple() -> Result<(), ExtractableResolutionError> {
+fn simple() {
 	let root = Node::new_for::<()>();
-	let component = Simple::new(&root.into(), Simple::new_args_builder().build())?;
+	let component =
+		Simple::new(&root.into(), Simple::new_args_builder().build()).debugless_unwrap();
 
 	let bump = Bump::new();
 	let _vdom = Box::pin(component)
 		.as_ref()
 		.render(&bump, Simple::render_args_builder().build());
-
-	Ok(())
 }
 
 asteracea::component! {
@@ -48,9 +47,10 @@ asteracea::component! {
 }
 
 #[test]
-fn named() -> Result<(), ExtractableResolutionError> {
+fn named() {
 	let root = Node::new_for::<()>();
-	let component = Box::pin(Named::new(&root.into(), Named::new_args_builder().build())?);
+	let component =
+		Box::pin(Named::new(&root.into(), Named::new_args_builder().build()).debugless_unwrap());
 
 	let bump = Bump::new();
 	let _vdom = component
@@ -58,31 +58,27 @@ fn named() -> Result<(), ExtractableResolutionError> {
 		.render(&bump, Named::render_args_builder().build());
 
 	let _: Boxed = component.named.boxed;
-
-	Ok(())
 }
 
 mod a_module {
 	asteracea::component! {
-		pub Boxed()() []
+		pub Boxed()() -> Sync []
 	}
 
 	asteracea::component! {
-		pub Public()()
+		pub Public()() -> Sync
 
 		box pub public <*Boxed pub boxed>
 	}
 }
 
 #[test]
-fn public() -> Result<(), ExtractableResolutionError> {
+fn public() {
 	use a_module::Public;
 
 	let root = Node::new_for::<()>();
-	let component = Box::pin(Public::new(
-		&root.into(),
-		Public::new_args_builder().build(),
-	)?);
+	let component =
+		Box::pin(Public::new(&root.into(), Public::new_args_builder().build()).debugless_unwrap());
 
 	let bump = Bump::new();
 	let _vdom = component
@@ -90,8 +86,6 @@ fn public() -> Result<(), ExtractableResolutionError> {
 		.render(&bump, Public::render_args_builder().build());
 
 	let _: a_module::Boxed = component.public.boxed;
-
-	Ok(())
 }
 
 asteracea::component! {
@@ -101,9 +95,10 @@ asteracea::component! {
 }
 
 #[test]
-fn typed() -> Result<(), ExtractableResolutionError> {
+fn typed() {
 	let root = Node::new_for::<()>();
-	let component = Box::pin(Typed::new(&root.into(), Typed::new_args_builder().build())?);
+	let component =
+		Box::pin(Typed::new(&root.into(), Typed::new_args_builder().build()).debugless_unwrap());
 
 	let bump = Bump::new();
 	let _vdom = component
@@ -112,8 +107,6 @@ fn typed() -> Result<(), ExtractableResolutionError> {
 
 	let typed: Pin<&TypedBoxed> = component.named.as_ref();
 	let _: Boxed = typed.boxed;
-
-	Ok(())
 }
 
 struct BoxContainer {
@@ -142,12 +135,11 @@ asteracea::component! {
 }
 
 #[test]
-fn reused() -> Result<(), ExtractableResolutionError> {
+fn reused() {
 	let root = Node::new_for::<()>();
-	let component = Box::pin(TypeReused::new(
-		&root.into(),
-		TypeReused::new_args_builder().build(),
-	)?);
+	let component = Box::pin(
+		TypeReused::new(&root.into(), TypeReused::new_args_builder().build()).debugless_unwrap(),
+	);
 
 	let bump = Bump::new();
 	let _vdom = component
@@ -156,12 +148,10 @@ fn reused() -> Result<(), ExtractableResolutionError> {
 
 	let typed: &Pin<Box<BoxContainer>> = &component.named;
 	let _: Boxed = typed.boxed;
-
-	Ok(())
 }
 
 asteracea::component! {
-	VisIgnored()()
+	pub VisIgnored()() -> Sync
 
 	box priv b: BoxContainer
 		// There's no good way to check the visibility here (since the declaration isn't emitted),
@@ -179,20 +169,18 @@ asteracea::component! {
 }
 
 #[test]
-fn multi() -> Result<(), ExtractableResolutionError> {
+fn multi() {
 	let root = Node::new_for::<()>();
-	let component = Multi::new(&root.into(), Multi::new_args_builder().build())?;
+	let component = Multi::new(&root.into(), Multi::new_args_builder().build()).debugless_unwrap();
 
 	let bump = Bump::new();
 	let _vdom = Box::pin(component)
 		.as_ref()
 		.render(&bump, Multi::render_args_builder().build());
-
-	Ok(())
 }
 
 asteracea::component! {
-	Nested()()
+	pub Nested()() -> Sync
 
 	[
 		box [

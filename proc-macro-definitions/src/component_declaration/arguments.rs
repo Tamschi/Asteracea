@@ -55,7 +55,7 @@ impl Parse for ConstructorArgument {
 			#let question
 			#let colon_token
 			#let ty
-			#do let Default::parse => default
+			#do let DefaultParameter::parse => default
 		);
 		Ok(Self {
 			argument: Argument {
@@ -81,7 +81,7 @@ impl Parse for Argument {
 			#let question
 			#let colon_token
 			#let ty
-			#do let Default::parse => default
+			#do let DefaultParameter::parse => default
 		);
 		Ok(Self {
 			fn_arg: PatType {
@@ -113,13 +113,13 @@ impl ToTokens for Attributes {
 	}
 }
 
-struct Default(Option<(Token![=], Expr)>);
-impl Default {
+struct DefaultParameter(Option<(Token![=], Expr)>);
+impl DefaultParameter {
 	fn into_inner(self) -> Option<(Token![=], Expr)> {
 		self.0
 	}
 }
-impl Parse for Default {
+impl Parse for DefaultParameter {
 	fn parse(input: ParseStream) -> Result<Self> {
 		input
 			.parse::<Option<_>>()
@@ -129,7 +129,7 @@ impl Parse for Default {
 			.map(Self)
 	}
 }
-impl ToTokens for Default {
+impl ToTokens for DefaultParameter {
 	fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
 		if let Some((eq, expr)) = self.0.as_ref() {
 			eq.to_tokens(tokens);

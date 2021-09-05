@@ -9,9 +9,8 @@ fn is_it_maintained_issue_resolution() {
 	version_sync::assert_contains_regex!(
 		"Cargo.toml",
 		&format!(
-			r#"^is-it-maintained-issue-resolution = \{{ repository = "{user}/{repo}" \}}$"#,
-			user = USER,
-			repo = REPOSITORY,
+			r#"^is-it-maintained-issue-resolution = \{{ repository = "{0}/{1}" \}}"#,
+			USER, REPOSITORY
 		)
 	);
 }
@@ -21,9 +20,8 @@ fn is_it_maintained_open_issues() {
 	version_sync::assert_contains_regex!(
 		"Cargo.toml",
 		&format!(
-			r#"^is-it-maintained-open-issues = \{{ repository = "{user}/{repo}" \}}$"#,
-			user = USER,
-			repo = REPOSITORY,
+			r#"^is-it-maintained-open-issues = \{{ repository = "{0}/{1}" \}}"#,
+			USER, REPOSITORY
 		)
 	);
 }
@@ -33,13 +31,13 @@ fn maintenance() {
 	version_sync::assert_contains_regex!(
 		"Cargo.toml",
 		if BRANCH == "develop" || BRANCH == "unstable" {
-			r#"^maintenance = \{ status = "experimental" \}$"#
+			r#"^maintenance = \{ status = "experimental" \}"#
 		} else if BRANCH.starts_with('v') {
 			// Stable branch.
-			r#"^maintenance = \{ status = "(actively-developed|passively-maintained)" \}$"#
+			r#"^maintenance = \{ status = "(actively-developed|passively-maintained)" \}"#
 		} else {
 			// Just check it's there.
-			r#"^maintenance = \{ status = ".+" \}$"#
+			r#"^maintenance = \{ status = ".+" \}"#
 		}
 	);
 }

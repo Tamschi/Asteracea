@@ -1,17 +1,23 @@
 # Asteracea Changelog
 
+<!-- markdownlint-disable no-trailing-punctuation -->
+
 ## next
 
 TODO: Date
 
 * **Breaking:**
-  * Increased minimum supported Rust version from 1.45.0 to 1.46.0.
+  * Increased minimum supported Rust version from 1.45.0 to 1.51.0
+    > since `asteracea::error` uses `std::panic::panic_any(…)`.
   * Removed "rhizome" features (always enabled now)
   * Removed "styles" and "topiary" features. CSS scoping will be enabled through more general means.
   * Reworked generated component interface
   * Upgraded `lignin` and `lignin-schema` dependencies to 0.0.3 each
   * Removed all type-level (static) storage declarations. This reduces complexity a lot. Use plain Rust `static` items and, where needed, `new with { …; }` blocks and/or `with { …; } <…>` expressions instead.
   * Reorganised reexported dependencies and made some of them private
+  * Upgraded `lignin` dependency from 0.0.3 to 0.0.5
+    > to support fallible rendering.
+  * Generated `.render(…)` methods are now fallible, returning `Result<_, Escalation>`.
 
 * Features:
   * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.

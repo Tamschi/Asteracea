@@ -8,18 +8,8 @@
 		"FIXME",
 		"TODO",
 		"XXX",
-		"todo!",
-		"TK"
+		"todo!"
 	],
 	"todo-tree.regex.regex": "(($TAGS)|^\\s*- \\[ \\])",
-	"rust-analyzer.cargo.allFeatures": true,
-	"markdownlint.config": {
-		"default": true,
-		"no-inline-html": {
-			"allowed_elements": [
-				"details",
-				"summary"
-			]
-		}
-	}
+	"rust-analyzer.cargo.allFeatures": true
 }

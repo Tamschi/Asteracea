@@ -1,10 +1,12 @@
+#![allow(dead_code)] //TODO: Test output.
+
 use asteracea::component;
 
 component! {
-	Attributed()()
+	Attributed()() -> Sync
 	<div
-		."id" = "Hello!"
-		."class" = {"a-class"}
+		.id = "Hello!"
+		.class = {"a-class"}
 	>
 }
 
@@ -14,7 +16,7 @@ component! {
 	)
 
 	<div
-		."class"? = {class}
+		.class? = {class}
 	>
 }
 
@@ -25,7 +27,7 @@ component! {
 
 	<div
 		."a" = ""
-		."class"? = {class}
+		.class? = {class}
 		."class2"? = {class}
 		."b" = ""
 		."c" = ""
@@ -38,9 +40,8 @@ asteracea::component! {
   )
 
   <div
-	."hidden"? = {!visible}
+	.hidden? = {!visible}
+	.role = ""
 	"#"
   >
 }
-
-//TODO: Test output.

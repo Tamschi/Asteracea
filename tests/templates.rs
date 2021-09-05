@@ -1,8 +1,5 @@
-use asteracea::{bump_format, component, fragment};
-use lignin::{Attribute, Node};
-use std::fmt::Display;
-
 // Just for illustration purposes:
+#[allow(dead_code)]
 fn do_anything_here() {}
 trait Select: Sized {
 	fn select<R, S: FnOnce(Self) -> R>(self, selector: S) -> R;
@@ -30,9 +27,9 @@ impl<T> Select for T {
 // 	<B> // #'bump is implicit if any HTML elements are present.
 // 	(
 // 		// &#self, is implicit.
-// 		// #bump: &#'bump #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::Bump, is implicit if any HTML elements are present. Needed for any bump-allocated elements, i.e. HTML elements and formatted text.
+// 		// #bump: &#'bump #asteracea::bumpalo::Bump, is implicit if any HTML elements are present. Needed for any bump-allocated elements, i.e. HTML elements and formatted text.
 // 		_b: B,
-// 	) // Default: `-> #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node<#'bump>`
+// 	) // Default: `-> #asteracea::lignin::Node<#'bump>`
 
 // 	//TODO: Inversion of control/"DI".
 // 	/*ref for 'NEW, 'RENDER (
@@ -155,7 +152,7 @@ impl<T> Select for T {
 
 // #[test]
 // fn test() {
-// 	use asteracea::lignin_schema::lignin::bumpalo::Bump;
+// 	use asteracea::lignin_schema::bumpalo::Bump;
 // 	use std::sync::Arc;
 
 // 	enum RootTag {}

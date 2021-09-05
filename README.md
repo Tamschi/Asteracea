@@ -2,9 +2,9 @@
 
 [![Lib.rs](https://img.shields.io/badge/Lib.rs-*-84f)](https://lib.rs/crates/asteracea)
 [![Crates.io](https://img.shields.io/crates/v/asteracea)](https://crates.io/crates/asteracea)
-[![Docs.rs](https://docs.rs/asteracea/badge.svg)](https://docs.rs/crates/asteracea)
+[![Docs.rs](https://docs.rs/asteracea/badge.svg)](https://docs.rs/asteracea)
 
-![Rust 1.46.0](https://img.shields.io/static/v1?logo=Rust&label=&message=1.46.0&color=grey)
+![Rust 1.51](https://img.shields.io/static/v1?logo=Rust&label=&message=1.51&color=grey)
 [![CI](https://github.com/Tamschi/Asteracea/workflows/CI/badge.svg?branch=develop)](https://github.com/Tamschi/Asteracea/actions?query=workflow%3ACI+branch%3Adevelop)
 ![Crates.io - License](https://img.shields.io/crates/l/asteracea/0.0.2)
 
@@ -72,24 +72,27 @@ The most simple (`Node`-rendering) component can be written like this:
 
 ```rust
 asteracea::component! {
-  Empty()()
+  pub Empty()() -> Sync
   [] // Empty node sequence
 }
 
 // Render into a bump allocator:
 // This is generally only this explicit at the application root.
-let mut bump = lignin::bumpalo::Bump::new();
+let mut bump = bumpalo::Bump::new();
 let root = {
   struct Root;
   asteracea::rhizome::Node::new_for::<Root>().into()
 };
 assert!(matches!(
-  Box::pin(Empty::new(&root, Empty::new_args_builder().build()).expect("No DI."))
+  Box::pin(Empty::new(&root, Empty::new_args_builder().build()).unwrap())
     .as_ref()
-    .render(&mut bump, Empty::render_args_builder().build()),
+    .render(&mut bump, Empty::render_args_builder().build())
+    .unwrap(),
   lignin::Node::Multi(&[]) // Empty node sequence
 ));
 ```
+
+VDOM [`Sync`-ness](https://doc.rust-lang.org/stable/std/marker/trait.Sync.html) can be inferred (even transitively) at zero runtime cost by omitting `-> Sync` (or `-> !Sync`), except for components visible outside their crate.
 
 ### Unit component
 
@@ -109,21 +112,23 @@ asteracea::component! {
 }
 
 // This is generally only this explicit at the application root.
-let mut bump = lignin::bumpalo::Bump::new();
+let mut bump = bumpalo::Bump::new();
 let root = {
   struct Root;
   asteracea::rhizome::Node::new_for::<Root>().into()
 };
 assert_eq!(
-  Box::pin(Unit::new(&root, Unit::new_args_builder().build()).expect("No DI."))
+  Box::pin(Unit::new(&root, Unit::new_args_builder().build()).unwrap())
     .as_ref()
-    .render(&mut bump, Unit::render_args_builder().build()),
+    .render(&mut bump, Unit::render_args_builder().build())
+    .unwrap(),
   (),
 );
 assert_eq!(
-  Box::pin(Offset::new(&root, Offset::new_args_builder().base(2).build()).expect("No DI."))
+  Box::pin(Offset::new(&root, Offset::new_args_builder().base(2).build()).unwrap())
     .as_ref()
-    .render(&mut bump, Offset::render_args_builder().offset(3).build()),
+    .render(&mut bump, Offset::render_args_builder().offset(3).build())
+    .unwrap(),
   5,
 );
 ```
@@ -136,6 +141,7 @@ For a relatively complex example, see this parametrised counter:
 
 ```rust
 use asteracea::component;
+use lignin::web::Event;
 use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
@@ -150,7 +156,7 @@ component! {
     // optional argument;
     // `class` is `Option<&'bump str>` only inside this component, not its API.
     class?: &'bump str,
-  )
+  ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
   // shorthand capture; Defines a struct field.
   |value = Cell::<i32>::new(initial)|;
@@ -165,10 +171,7 @@ component! {
     <button
       ."disabled"? = {!self.enabled} // boolean attribute from `bool`
       "+" !{self.step} // shorthand `bump_format` call
-      +"click" { // event handler
-        self.value.set(self.value() + self.step);
-        schedule_render();
-      }
+      on bubble click = Self::on_click_plus
     >
   >
 }
@@ -181,6 +184,13 @@ impl Counter {
 
   pub fn set_value(&self, value: i32) {
     self.value.set(value);
+  }
+
+  // This may alternative take a `*const Self` or `Pin<&Self>`.
+  // Inline handlers are also possible, but not much less verbose.
+  fn on_click_plus(&self, _: Event) {
+    self.value.set(self.value() + self.step);
+    schedule_render();
   }
 }
 

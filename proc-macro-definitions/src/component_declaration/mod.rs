@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use self::{
 	arguments::{Argument, ConstructorArgument},
 	parameter_helper_definitions::{CustomArgument, ParameterHelperDefintions},
@@ -25,12 +27,14 @@ use syn::{
 	Type, Visibility, WhereClause, WherePredicate,
 };
 use syn_mid::Block;
+use tap::Pipe as _;
 use unquote::unquote;
 
 mod arguments;
 mod parameter_helper_definitions;
 mod kw {
 	syn::custom_keyword!(new);
+	syn::custom_keyword!(Sync);
 	syn::custom_keyword!(with);
 }
 
@@ -48,11 +52,20 @@ pub struct ComponentDeclaration {
 	render_generics: Generics,
 	render_paren: Paren,
 	render_args: Punctuated<Argument, Token![,]>,
-	render_type: ReturnType,
+	render_type: RenderType,
 	constructor_block: Option<(kw::new, kw::with, Block)>,
 	body: Part<ComponentRenderConfiguration>,
 	rhizome_extractions: Vec<TokenStream>,
 	assorted_items: Vec<Item>,
+	callback_registrations: Vec<(Ident, Type)>,
+}
+
+pub enum RenderType {
+	AutoSafe,
+	Explicit(Token![->], Box<Type>),
+	ExplicitAutoSync(Token![->], kw::Sync, Token![?]),
+	Sync(Token![->], kw::Sync),
+	UnSync(Token![->], Token![!], kw::Sync),
 }
 
 pub struct FieldDefinition {
@@ -192,23 +205,21 @@ impl Parse for ComponentDeclaration {
 				let extracted_colon: Token![:] = input.parse()?;
 				let extracted_type: Type = input.parse()?;
 				let extracted_question: Token![?] = input.parse()?;
-				let extracted_semi = quote_spanned!(extracted_question.span=> ;);
+
+				let semi = Token![;](extracted_question.span);
+
+				let asteracea = asteracea_ident(extracted_for.span);
 
 				//TODO: Is there a way to write this span more nicely?
-				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type #extracted_question).span();
+				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type).span();
 				let call_site_node =
 					Ident::new("node", ref_statement_span.resolved_at(Span::call_site()));
 				rhizome_extractions.push({
-					let asteracea = asteracea_ident(ref_statement_span);
 					quote_spanned! {
 						ref_statement_span=>
 						#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
 						= <#extracted_type>::extract_from(&#call_site_node)
-							.map_err(|error| #asteracea::error::ExtractableResolutionError{
-								component: core::any::type_name::<Self>(),
-								dependency: core::any::type_name::<#extracted_type>(),
-								source: error,
-							})#extracted_question#extracted_semi
+							.map_err(|error| ::#asteracea::error::Escalate2::escalate(::std::format!("Dependency resolution error in component {}: {}", ::std::stringify!(#component_name), error)))#extracted_question#semi
 					}
 				})
 			} else {
@@ -271,10 +282,17 @@ impl Parse for ComponentDeclaration {
 			));
 		}
 
+		let ParseContext {
+			assorted_items,
+			storage_context,
+			callback_registrations,
+			..
+		} = cx;
+
 		Ok(Self {
-			assorted_items: cx.assorted_items,
+			assorted_items,
 			attributes,
-			storage_context: cx.storage_context,
+			storage_context,
 			visibility,
 			name: component_name,
 			component_generics,
@@ -290,7 +308,31 @@ impl Parse for ComponentDeclaration {
 			constructor_block,
 			body,
 			rhizome_extractions,
+			callback_registrations: Rc::try_unwrap(callback_registrations)
+				.expect(
+					"Internal Asteracea error: `callback_registrations` still referenced elsewhere",
+				)
+				.into_inner(),
 		})
+	}
+}
+
+impl Parse for RenderType {
+	fn parse(input: ParseStream) -> Result<Self> {
+		match input.parse().unwrap() {
+			None => Self::AutoSafe,
+			Some(r_arrow) => match input.parse().unwrap() {
+				Some(bang) => Self::UnSync(r_arrow, bang, input.parse()?),
+				None => match input.parse().unwrap() {
+					Some(sync) => match input.parse().unwrap() {
+						Some(question) => Self::ExplicitAutoSync(r_arrow, sync, question),
+						None => Self::Sync(r_arrow, sync),
+					},
+					None => Self::Explicit(r_arrow, input.parse()?),
+				},
+			},
+		}
+		.pipe(Ok)
 	}
 }
 
@@ -301,7 +343,7 @@ impl ComponentDeclaration {
 			attributes,
 			visibility,
 			name: component_name,
-			storage_context,
+			mut storage_context,
 			component_generics,
 			constructor_attributes,
 			constructor_generics,
@@ -315,10 +357,42 @@ impl ComponentDeclaration {
 			constructor_block,
 			body,
 			rhizome_extractions,
-			assorted_items: random_items,
+			assorted_items: mut random_items,
+			callback_registrations,
 		} = self;
 
 		let asteracea = asteracea_ident(Span::call_site());
+
+		let mut unsafe_drop_early = TokenStream::new();
+		for (name, parameter_type) in callback_registrations {
+			storage_context.push(FieldDefinition {
+				attributes: vec![],
+				visibility: Visibility::Inherited,
+				name: name.clone(),
+				field_type: quote_spanned! {parameter_type.span().resolved_at(Span::mixed_site())=>
+					::#asteracea::__::DroppableLazyCallbackRegistration::<
+						#component_name,
+						fn(#parameter_type),
+					>
+				},
+				initial_value: quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+					::#asteracea::__::DroppableLazyCallbackRegistration::default()
+				},
+				structurally_pinned: true, // This isn't quite clean, but it implies asserting `!Unpin` on the component type.
+			});
+
+			// IMPORTANT: These fields must be dropped FIRST, before any other drop logic!
+			// Dropping callback registrations synchronises callbacks to make sure they aren't newly invoked,
+			// and that all running ones have exited already.
+
+			// Dropping these callback registrations early also means they mustn't be considered user-accessible.
+			assert!(name.to_string().contains("__Asteracea__"));
+			unsafe_drop_early.extend(
+				quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+					::#asteracea::__::DroppableLazyCallbackRegistration::drop(&mut self.#name);
+				},
+			)
+		}
 
 		let struct_definition = StorageTypeConfiguration::new_component_root(
 			component_name.clone(),
@@ -342,7 +416,30 @@ impl ComponentDeclaration {
 			bump
 		);
 
-		let body = body.part_tokens(&GenerateContext::default())?;
+		let cx = match render_type {
+			RenderType::AutoSafe => GenerateContext {
+				thread_safety: quote!(_),
+				prefer_thread_safe: Some(quote!(.prefer_thread_safe())),
+			},
+			RenderType::Explicit(r_arrow, _) => GenerateContext {
+				thread_safety: quote_spanned!(r_arrow.span()=> _),
+				prefer_thread_safe: None,
+			},
+			RenderType::ExplicitAutoSync(r_arrow, _, sync) => GenerateContext {
+				thread_safety: quote_spanned!(sync.span.resolved_at(Span::mixed_site())=> _),
+				prefer_thread_safe: Some(quote_spanned!(r_arrow.span()=> .prefer_thread_safe())),
+			},
+			RenderType::Sync(_, sync) => GenerateContext {
+				thread_safety: quote_spanned!(sync.span.resolved_at(Span::mixed_site())=> ::#asteracea::lignin::ThreadSafe),
+				prefer_thread_safe: None,
+			},
+			RenderType::UnSync(_, _, sync) => GenerateContext {
+				thread_safety: quote_spanned!(sync.span.resolved_at(Span::mixed_site())=> ::#asteracea::lignin::ThreadBound),
+				prefer_thread_safe: None,
+			},
+		};
+
+		let body = body.part_tokens(&cx)?;
 
 		let new_lifetime: Lifetime = parse2(quote_spanned!(Span::call_site()=> 'NEW)).unwrap();
 		let render_lifetime: Lifetime =
@@ -447,12 +544,50 @@ impl ComponentDeclaration {
 
 		let render_self: Token![self] = parse2(quote_spanned!(render_paren.span=> self)).unwrap();
 
-		let render_type: ReturnType = match &render_type {
-			ReturnType::Default => parse2(quote_spanned! {render_type.span()=>
-				-> #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::Node<'bump>
-			})
-			.unwrap(),
-			rt @ ReturnType::Type(_, _) => rt.clone(),
+		let render_type: ReturnType = match render_type {
+			RenderType::AutoSafe => {
+				let auto_safe = Ident::new(
+					(component_name.to_string() + "__Asteracea__AutoSafe")
+						.trim_start_matches("r#"),
+					Span::mixed_site(),
+				);
+				random_items.push(
+					parse2(quote! {
+						::#asteracea::lignin::auto_safety::AutoSafe_alias!(pub(crate) #auto_safe);
+					})
+					.expect("RenderType::AutoSafe __Asteracea__AutoSafe"),
+				);
+				parse2(quote! {
+					-> ::std::result::Result<
+						impl #auto_safe<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>>,
+						::#asteracea::error::Escalation,
+					>
+				})
+				.expect("render_type AutoSafe")
+			}
+			RenderType::Explicit(r_arrow, type_) => ReturnType::Type(
+				r_arrow,
+				parse2(quote_spanned! {r_arrow.span()=>
+					::std::result::Result<#type_, ::#asteracea::error::Escalation>
+				})
+				.expect("RenderType::Explicit"),
+			),
+			RenderType::ExplicitAutoSync(_, _, question) => {
+				parse2(quote_spanned! {question.span=>
+					-> ::std::result::Result<
+						impl ::#asteracea::lignin::auto_safety::AutoSafe::<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>>,
+						::#asteracea::error::Escalation,
+					>
+				})
+				.expect("render_type AutoSafe")
+			}
+			RenderType::Sync(r_arrow, _) | RenderType::UnSync(r_arrow, _, _) => {
+				let thread_safety = &cx.thread_safety;
+				parse2(quote_spanned! {r_arrow.span()=>
+					-> ::std::result::Result<::#asteracea::lignin::Node<'bump, #thread_safety>, ::#asteracea::error::Escalation>
+				})
+				.expect("render_type explicit thread safety")
+			}
 		};
 
 		let constructor_block_statements =
@@ -463,29 +598,33 @@ impl ComponentDeclaration {
 		let (component_impl_generics, component_type_generics, component_where_clause) =
 			component_generics.split_for_impl();
 
+		// This (hopefully) enables unused function warnings.
+		let new = Ident::new("new", component_name.span());
+		let render = Ident::new("render", component_name.span());
+
 		Ok(quote_spanned! {Span::mixed_site()=>
 			//TODO: Doc comment referring to associated type.
-			#[derive(#asteracea::__Asteracea__implementation_details::typed_builder::TypedBuilder)]
+			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
 			#[builder(doc)]
 			#visibility struct #new_args_name#new_args_generics #new_args_body
 
 			//TODO: Doc comment referring to associated type.
-			#[derive(#asteracea::__Asteracea__implementation_details::typed_builder::TypedBuilder)]
+			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
 			#[builder(doc)]
 			#visibility struct #render_args_name#render_args_generics #render_args_body
 
 			#(#struct_definition)*
 
-			impl#component_impl_generics #component_name#component_type_generics
-				#component_where_clause {
+			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
+				#[::#asteracea::trace_escalations(#component_name)]
 				#(#constructor_attributes)*
-				pub fn new#new_generics(
+				pub fn #new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
 					#new_args_name {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}: #new_args_name#new_args_generic_args,
-				) -> ::std::result::Result<Self, #asteracea::error::ExtractableResolutionError> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
 					#(#rhizome_extractions)*
 					let mut #call_site_node = #call_site_node;
@@ -503,7 +642,7 @@ impl ComponentDeclaration {
 					// I really should add benchmarks before trying this, though.
 					let #call_site_node = #call_site_node.into_arc();
 
-					Ok(#constructed_value)
+					::std::result::Result::Ok(#constructed_value)
 				}
 
 				pub fn new_args_builder#new_args_builder_generics()
@@ -511,17 +650,18 @@ impl ComponentDeclaration {
 					#new_args_name::builder()
 				}
 
+				#[::#asteracea::trace_escalations(#component_name)]
 				#(#render_attributes)*
-				pub fn render#render_generics(
+				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
-					#bump: &'bump #asteracea::__Asteracea__implementation_details::lignin_schema::lignin::bumpalo::Bump,
+					#bump: &'bump #asteracea::bumpalo::Bump,
 					#render_args_name {
 						#(#render_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}: #render_args_name#render_args_generic_args,
 				) #render_type {
 					let this = #render_self;
-					#body
+					::std::result::Result::Ok(#body)
 				}
 
 				pub fn render_args_builder#render_args_builder_generics()
@@ -539,6 +679,16 @@ impl ComponentDeclaration {
 			}
 
 			#(#random_items)*
+
+			/// Asteracea components do not currently support custom [`Drop`](`::std::ops::Drop`) implementations.
+			impl#component_impl_generics ::std::ops::Drop for #component_name#component_type_generics #component_where_clause {
+				fn drop(&mut self) {
+					unsafe {
+						#unsafe_drop_early
+					}
+					//TODO: Undo DOM bindings.
+				}
+			}
 		})
 	}
 }

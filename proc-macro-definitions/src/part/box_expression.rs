@@ -50,7 +50,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		)?);
 
 		let type_path =
-			type_configuration.type_path(&cx.storage_context, &field_name, &cx.storage_generics)?;
+			type_configuration.type_path(&cx.storage_context, &field_name, cx.storage_generics)?;
 
 		let boxed_value = parse_context.storage_context.value(
 			type_configuration.type_is_generated(),

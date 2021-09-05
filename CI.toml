@@ -1,9 +1,2 @@
-[workspace]
-members = [
-	".",
-	"*/src/.."
-]
-
-[patch.crates-io]
-asteracea = { path = "." }
-asteracea_proc-macro-definitions = { path = "proc-macro-definitions" }
+[profile.dev]
+split-debuginfo = "unpacked"

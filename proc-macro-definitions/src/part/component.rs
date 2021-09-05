@@ -1,13 +1,16 @@
 use std::{collections::HashSet, iter};
 
-use super::{AttachedAccessExpression, CaptureDefinition};
-use crate::storage_context::{ParseContext, ParseWithContext};
+use super::CaptureDefinition;
+use crate::{
+	asteracea_ident,
+	storage_context::{ParseContext, ParseWithContext},
+};
 use call2_for_syn::call2_strict;
 use proc_macro2::{Punct, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
-	parse2, parse_quote,
+	parse2,
 	token::{Brace, Paren},
 	visit_mut::{visit_expr_mut, VisitMut},
 	Error, Expr, ExprPath, Ident, Pat, PatIdent, PatTuple, PatTupleStruct, Result, Token,
@@ -19,7 +22,7 @@ use unquote::unquote;
 pub enum Component<C> {
 	Instantiated {
 		capture: CaptureDefinition<C>,
-		attached_access: AttachedAccessExpression,
+		render_call: TokenStream,
 	},
 	Instanced {
 		open_span: Span,
@@ -32,7 +35,7 @@ impl<C> ParseWithContext for Component<C> {
 
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let open_span;
-		unquote!(input, #^'open_span <* #$'open_span);
+		unquote!(input, #'open_span <*);
 
 		if input.peek(Brace) {
 			let mut reference: Block;
@@ -136,15 +139,15 @@ impl<C> ParseWithContext for Component<C> {
 				)
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
-				.unwrap(),
-			attached_access: {
+				.expect("Component::parse_with_context capture"),
+			render_call: {
 				let render_params = parameter_struct_expression(
 					open_span.resolved_at(Span::mixed_site()),
 					parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
 					render_params.as_slice(),
 				);
-				parse2(quote_spanned! (open_span=> .render(bump, #render_params)))
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?}
+				quote_spanned! (open_span=> .render(bump, #render_params)? )
+			}
 		})
 		}
 	}
@@ -155,9 +158,19 @@ impl<C> Component<C> {
 		match self {
 			Component::Instantiated {
 				capture,
-				attached_access,
+				render_call,
 			} => {
-				let mut expr = parse_quote!(#capture#attached_access);
+				let asteracea = asteracea_ident(Span::mixed_site());
+				let mut expr = parse2(quote!({
+					let rendered = #capture#render_call;
+
+					{
+						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
+						#[allow(deprecated)]
+						rendered.deanonymize()
+					}
+				}))
+				.expect("Component::Instantiated");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
 				quote!(#expr)
 			}
@@ -166,6 +179,7 @@ impl<C> Component<C> {
 				reference,
 				render_params,
 			} => {
+				let asteracea = asteracea_ident(*open_span);
 				let binding = quote_spanned!(reference.brace_token.span.resolved_at(Span::mixed_site())=> let reference: ::std::pin::Pin<&_> = #reference;);
 				let bump = quote_spanned!(*open_span=> bump);
 				let render_params = parameter_struct_expression(
@@ -177,9 +191,15 @@ impl<C> Component<C> {
 				);
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					#binding
-					reference.render(#bump, #render_params)
+					let rendered = reference.render(#bump, #render_params)?;
+
+					{
+						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
+						#[allow(deprecated)]
+						rendered.deanonymize()
+					}
 				}))
-				.unwrap();
+				.expect("Component::part_tokens Instanced expr");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
 				quote!(#expr)
 			}
