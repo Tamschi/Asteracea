@@ -132,7 +132,9 @@ impl<C: Configuration> Defer<C> {
 		} else {
 			quote_spanned!(self.defer.span.resolved_at(Span::mixed_site())=> {
 				let #field_name = this.#field_pinned();
-				let #field_name = #field_name.try_get_or_create(|init| init())?;
+				let #field_name = #field_name
+					.get_or_create_or_poison(|init| init())
+					.map_err(|first_time_error| first_time_error.unwrap_or_else(|| todo!("construct repeat error")))?;
 				let #field_name = unsafe {
 					// SAFETY:
 					// We already know the field itself is pinned properly, and the `LazyTransform` won't move its value around either.

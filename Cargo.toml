@@ -32,7 +32,7 @@ services = []
 
 [dependencies]
 asteracea_proc-macro-definitions = { path = "./proc-macro-definitions" } # public
-try-lazy-init = "0.0.1" #public
+try-lazy-init = "0.0.2" #public
 lignin = "0.0.3" #public
 lignin-schema = { version = "0.0.3", features = ["bumpalo-collections"] }
 rhizome = { version = "0.0.1", features = ["macros"] } # public
