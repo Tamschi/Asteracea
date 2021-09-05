@@ -78,8 +78,8 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 			} else {
 				quote_spanned! {defer.span=>
 					pin |
-						#visibility #field_name: ::#asteracea::lazy_init::LazyTransform<::std::boxed::Box<dyn FnOnce() -> ::std::result::Result<#type_path, ::#asteracea::error::ExtractableResolutionError>>, #type_path> =
-							{::#asteracea::lazy_init::LazyTransform::new(::std::boxed::Box::new(move || Ok(#deferred_value)))}
+						#visibility #field_name: ::#asteracea::try_lazy_init::LazyTransform<::std::boxed::Box<dyn FnOnce() -> ::std::result::Result<#type_path, ::#asteracea::error::ExtractableResolutionError>>, #type_path> =
+							{::#asteracea::try_lazy_init::LazyTransform::new(::std::boxed::Box::new(move || Ok(#deferred_value)))}
 					|;
 				}
 			},

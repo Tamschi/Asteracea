@@ -4,9 +4,9 @@
 #![allow(clippy::match_bool)]
 
 pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
-pub use lazy_init;
 pub use lignin;
 pub use rhizome;
+pub use try_lazy_init;
 
 #[cfg(doctest)]
 pub mod readme {
