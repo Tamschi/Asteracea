@@ -1,3 +1,5 @@
+#![allow(unreachable_code)]
+
 use bumpalo::Bump;
 use rhizome::Node;
 
@@ -6,11 +8,19 @@ asteracea::component! {
 }
 
 asteracea::component! {
+	Never()()
+
+	new with { unreachable!(); }
+
+	[]
+}
+
+asteracea::component! {
 	Deferrer()()
 
 	[
 		defer <*Deferred>
-		spread if {false} defer box <*Deferred>
+		spread if {false} defer box <*Never>
 		// spread if {false} defer box <*Deferrer>
 	]
 }
@@ -23,5 +33,6 @@ fn defer() {
 	let bump = Bump::new();
 	let _vdom = Box::pin(component)
 		.as_ref()
-		.render(&bump, Deferrer::render_args_builder().build());
+		.render(&bump, Deferrer::render_args_builder().build())
+		.unwrap();
 }
