@@ -10,14 +10,11 @@ mod html_definition;
 //TODO: Renamed module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
 //TODO: Rust expressions shouldn't automatically be blocks except for ones after `with`.
 
-pub use self::{
-	capture_definition::CaptureDefinition,
-	defer::Defer,
-};
 use self::{
 	box_expression::BoxExpression, component::Component, html_comment::HtmlComment,
 	html_definition::HtmlDefinition,
 };
+pub use self::{capture_definition::CaptureDefinition, defer::Defer};
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},

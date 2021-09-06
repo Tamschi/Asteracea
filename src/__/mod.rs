@@ -1,10 +1,10 @@
-use try_lazy_init::Lazy;
 use lignin::CallbackRegistration;
 use std::{mem::ManuallyDrop, pin::Pin};
+use try_lazy_init::Lazy;
 
-pub use try_lazy_init;
 pub use lignin_schema;
 pub use static_assertions;
+pub use try_lazy_init;
 pub use typed_builder;
 
 /// Only implemented for functions that have a signature ABI-compatible with `fn(*const R, T)`!
