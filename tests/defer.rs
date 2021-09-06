@@ -1,5 +1,3 @@
-#![allow(unreachable_code)]
-
 use bumpalo::Bump;
 use rhizome::Node;
 
@@ -8,7 +6,9 @@ asteracea::component! {
 }
 
 asteracea::component! {
-	Never()()
+	Never
+	#[allow(unreachable_code)]
+	()()
 
 	new with { unreachable!(); }
 

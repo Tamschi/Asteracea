@@ -55,6 +55,7 @@ dependencies = [
  "lignin-schema",
  "rhizome",
  "static_assertions",
+ "tap",
  "try-lazy-init",
  "typed-builder",
  "version-sync",
