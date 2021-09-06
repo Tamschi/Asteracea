@@ -160,6 +160,9 @@
 <p>Pretty much any static templating.</p>
 </li>
 <li>
+<p>Lazy initialisation, via <code>defer</code> and <code>bind</code> expressions.</p>
+</li>
+<li>
 <p>Events and bindings, <em>mostly</em>.</p>
 <blockquote>
 <p>Deferred callback continuations aren't present yet,
@@ -194,14 +197,10 @@ It's sound either way, but the former may not compile.</p>
 </blockquote>
 </li>
 <li>
-<p><a href="https://github.com/Tamschi/Asteracea/pull/33">Lazy initialisation.</a></p>
-<blockquote>
-<p>This is quite important for any form of efficient dynamic content,
-and is also a stepping stone towards higher level control flow (since it likely shares structure in some ways, or could even work as building block).</p>
-</blockquote>
+<p><a href="https://github.com/Tamschi/Asteracea/pull/42">Repeat arguments</a> for child components. This will lead towards content transclusion. I think.</p>
 </li>
 <li>
-<p><a href="https://github.com/Tamschi/Asteracea/pull/42">Repeat arguments</a> for child components. This will lead towards content transclusion. I think.</p>
+<p>Attached properties, to configure transclusion.</p>
 </li>
 <li>
 <p>The grammar. I'll most likely change something in a breaking way before <code>v0.1</code>.</p>
@@ -212,7 +211,7 @@ and is also a stepping stone towards higher level control flow (since it likely 
 <li>&quot;Loops&quot;</li>
 <li>A standard library, including a mockable HTTP client (for client <strong>and</strong> server).</li>
 <li>A router, hopefully nicely possible outside the core library.</li>
-<li>A turnkey app base. The needs to come with SSR and then optionally hydrate.</li>
+<li>A turnkey app base. This needs to come with SSR and then optionally hydrate.</li>
 <li>Anything I haven't thought of! <a href="https://github.com/Tamschi/Asteracea/discussions/categories/ideas">Suggestions</a> are welcome.</li>
 </ul>
 </blockquote>
@@ -936,11 +935,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x558575ed9160.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x558575ed9160.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x558575ed9168.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x558575ed9160.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x558575ed9160.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55dc17e50b70.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55dc17e50b70.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x55dc17e50b78.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x55dc17e50b70.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x55dc17e50b70.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>

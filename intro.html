@@ -159,6 +159,9 @@
 <p>Pretty much any static templating.</p>
 </li>
 <li>
+<p>Lazy initialisation, via <code>defer</code> and <code>bind</code> expressions.</p>
+</li>
+<li>
 <p>Events and bindings, <em>mostly</em>.</p>
 <blockquote>
 <p>Deferred callback continuations aren't present yet,
@@ -193,14 +196,10 @@ It's sound either way, but the former may not compile.</p>
 </blockquote>
 </li>
 <li>
-<p><a href="https://github.com/Tamschi/Asteracea/pull/33">Lazy initialisation.</a></p>
-<blockquote>
-<p>This is quite important for any form of efficient dynamic content,
-and is also a stepping stone towards higher level control flow (since it likely shares structure in some ways, or could even work as building block).</p>
-</blockquote>
+<p><a href="https://github.com/Tamschi/Asteracea/pull/42">Repeat arguments</a> for child components. This will lead towards content transclusion. I think.</p>
 </li>
 <li>
-<p><a href="https://github.com/Tamschi/Asteracea/pull/42">Repeat arguments</a> for child components. This will lead towards content transclusion. I think.</p>
+<p>Attached properties, to configure transclusion.</p>
 </li>
 <li>
 <p>The grammar. I'll most likely change something in a breaking way before <code>v0.1</code>.</p>
@@ -211,7 +210,7 @@ and is also a stepping stone towards higher level control flow (since it likely 
 <li>&quot;Loops&quot;</li>
 <li>A standard library, including a mockable HTTP client (for client <strong>and</strong> server).</li>
 <li>A router, hopefully nicely possible outside the core library.</li>
-<li>A turnkey app base. The needs to come with SSR and then optionally hydrate.</li>
+<li>A turnkey app base. This needs to come with SSR and then optionally hydrate.</li>
 <li>Anything I haven't thought of! <a href="https://github.com/Tamschi/Asteracea/discussions/categories/ideas">Suggestions</a> are welcome.</li>
 </ul>
 </blockquote>
