@@ -1,3 +1,4 @@
+mod bind;
 mod box_expression;
 mod bump_format_shorthand;
 mod capture_definition;
@@ -10,11 +11,11 @@ mod html_definition;
 //TODO: Renamed module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
 //TODO: Rust expressions shouldn't automatically be blocks except for ones after `with`.
 
+pub use self::capture_definition::CaptureDefinition;
 use self::{
-	box_expression::BoxExpression, component::Component, html_comment::HtmlComment,
-	html_definition::HtmlDefinition,
+	bind::Bind, box_expression::BoxExpression, component::Component, defer::Defer,
+	html_comment::HtmlComment, html_definition::HtmlDefinition,
 };
-pub use self::{capture_definition::CaptureDefinition, defer::Defer};
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
@@ -38,6 +39,7 @@ use unquote::unquote;
 
 #[allow(clippy::large_enum_variant, clippy::type_complexity)]
 pub(crate) enum Part<C: Configuration> {
+	Bind(Bind<C>),
 	Box(BoxExpression<C>),
 	BumpFormat(BumpFormat),
 	Capture(CaptureDefinition<C>),
@@ -82,7 +84,8 @@ enum PartKind {
 impl<C: Configuration> Part<C> {
 	fn kind(&self) -> PartKind {
 		match self {
-			Part::Box(_)
+			Part::Bind(_)
+			| Part::Box(_)
 			| Part::BumpFormat(_)
 			| Part::Capture(_)
 			| Part::Comment(_)
@@ -170,7 +173,9 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 	type Output = Option<Self>;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let lookahead = input.lookahead1();
-		Ok(if lookahead.peek(Token![box]) {
+		if lookahead.peek(bind::kw::bind) {
+			Some(Part::Bind(Bind::parse_with_context(input, cx)?))
+		} else if lookahead.peek(Token![box]) {
 			Some(Part::Box(BoxExpression::parse_with_context(input, cx)?))
 		} else if lookahead.peek(defer::kw::defer) {
 			Some(Part::Defer(Defer::parse_with_context(input, cx)?))
@@ -340,7 +345,8 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 				+\"event_name\" = |event| handler()
 				with { …; } <…>",
 			));
-		})
+		}
+		.pipe(Ok)
 	}
 }
 
@@ -354,6 +360,7 @@ impl<C: Configuration> Part<C> {
 		let thread_safety = &cx.thread_safety;
 		let prefer_thread_safe = &cx.prefer_thread_safe;
 		let mut part_tokens = match self {
+			Part::Bind(bind) => bind.part_tokens(cx)?,
 			Part::Box(box_expression) => box_expression.part_tokens(cx)?,
 			Part::BumpFormat(bump_format) => {
 				let mut tokens = TokenStream::new();

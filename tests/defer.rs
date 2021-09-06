@@ -1,5 +1,3 @@
-#![allow(unreachable_code)]
-
 use bumpalo::Bump;
 use rhizome::Node;
 
@@ -8,7 +6,9 @@ asteracea::component! {
 }
 
 asteracea::component! {
-	Never()()
+	Never
+	#[allow(unreachable_code)]
+	()()
 
 	new with { unreachable!(); }
 
@@ -28,9 +28,7 @@ asteracea::component! {
 asteracea::component! {
 	Named()() -> Sync
 
-	[
-		defer priv deferred: struct NamedDeferred <*Deferred>
-	]
+	defer priv deferred: struct NamedDeferred <*Deferred>
 }
 
 #[test]

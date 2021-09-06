@@ -1,4 +1,4 @@
-# `defer ⟦priv …⟦: ⟦struct⟧ …⟧⟧ <…>`
+# `defer ⦃storage⦄ <…>`
 
 An alternative method of breaking up recursive component initialisation is to defer it for the recursive part of the template until it is rendered.
 

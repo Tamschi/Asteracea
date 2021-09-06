@@ -9,28 +9,30 @@ use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
-use syn::{parse::ParseStream, Ident, Result, Visibility};
+use syn::{parse::ParseStream, Ident, Result, Token, Visibility};
 use tap::Pipe;
 
 pub mod kw {
-	syn::custom_keyword!(defer);
+	syn::custom_keyword!(bind);
 }
 
 #[allow(clippy::type_complexity)]
 #[allow(dead_code)]
-pub struct Defer<C: Configuration> {
-	defer: kw::defer,
+pub struct Bind<C: Configuration> {
+	bind: kw::bind,
 	visibility: Visibility,
 	field_name: Ident,
 	type_configuration: StorageTypeConfiguration,
+	move_: Option<Token![move]>,
+	binding_expression: TokenStream,
 	content: Box<Part<C>>,
 }
 
-impl<C: Configuration> ParseWithContext for Defer<C> {
+impl<C: Configuration> ParseWithContext for Bind<C> {
 	type Output = Self;
 
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
-		let defer: kw::defer = input.parse()?;
+		let bind: kw::bind = input.parse()?;
 		let storage_configuration: StorageConfiguration = input.parse()?;
 
 		let visibility = storage_configuration.visibility();
@@ -38,13 +40,15 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		let field_name = storage_configuration
 			.field_name()
 			.cloned()
-			.unwrap_or_else(|| cx.storage_context.next_field(defer.span));
+			.unwrap_or_else(|| cx.storage_context.next_field(bind.span));
 
 		let type_configuration = storage_configuration.type_configuration();
 
 		let nested_generics = type_configuration.generics()?;
 		let auto_generics = nested_generics.is_none();
 		let nested_generics = nested_generics.unwrap_or_else(|| cx.storage_generics.clone());
+
+		let move_ = input.parse().unwrap();
 
 		let mut parse_context = cx.new_nested(
 			cx.storage_context.generated_type_name(&field_name),
@@ -58,24 +62,19 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		let type_path =
 			type_configuration.type_path(&cx.storage_context, &field_name, cx.storage_generics)?;
 
-		let deferred_value = parse_context.storage_context.value(
+		let binding_expression = parse_context.storage_context.value(
 			type_configuration.type_is_generated(),
 			&type_path,
 			auto_generics,
 		);
 
-		let asteracea = asteracea_ident(defer.span);
-		let node = quote_spanned!(defer.span=> node);
+		let asteracea = asteracea_ident(bind.span);
+		let node = quote_spanned!(bind.span=> node);
 		call2_strict(
-			quote_spanned! {defer.span.resolved_at(Span::mixed_site())=>
+			quote_spanned! {bind.span.resolved_at(Span::mixed_site())=>
 				pin |
-					#visibility #field_name: ::#asteracea::try_lazy_init::LazyTransform<::std::boxed::Box<dyn FnOnce() -> ::std::result::Result<#type_path, ::#asteracea::error::Escalation>>, #type_path> = {
-						::#asteracea::try_lazy_init::LazyTransform::new(::std::boxed::Box::new({
-							#[allow(unused_variables)]
-							let #node = ::std::sync::Arc::clone(&#node);
-							move || Ok(#deferred_value)
-						}))
-					}
+					#visibility #field_name = ::#asteracea::try_lazy_init::LazyTransform::<::std::sync::Arc<::#asteracea::rhizome::Node>, #type_path>
+					::new(::std::sync::Arc::clone(&#node))
 				|;
 			},
 			|input| CaptureDefinition::<C>::parse_with_context(input, cx),
@@ -105,25 +104,35 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		cx.assorted_items.extend(parse_context.assorted_items);
 
 		Ok(Self {
-			defer,
+			bind,
 			visibility,
 			field_name,
 			type_configuration,
+			move_,
+			binding_expression,
 			content,
 		})
 	}
 }
 
-impl<C: Configuration> Defer<C> {
+impl<C: Configuration> Bind<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
+		let asteracea = asteracea_ident(self.bind.span);
 		let field_name = &self.field_name;
 		let field_pinned = Ident::new(&format!("{}_pinned", field_name), field_name.span());
+		let node = quote_spanned!(self.bind.span=> node);
+		let move_ = &self.move_;
+		let binding_expression = &self.binding_expression;
 		let content = self.content.part_tokens(cx)?;
 
-		quote_spanned!(self.defer.span.resolved_at(Span::mixed_site())=> {
+		quote_spanned!(self.bind.span.resolved_at(Span::mixed_site())=> {
 			let #field_name = this.#field_pinned();
 			let #field_name = #field_name
-				.get_or_create_or_poison(|init| init())
+				.get_or_create_or_poison(
+					#move_ |#node| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+						Ok(#binding_expression)
+					}
+				)
 				.map_err(|first_time_error| first_time_error.unwrap_or_else(|| todo!("construct repeat error")))?;
 			let #field_name = unsafe {
 				// SAFETY:
