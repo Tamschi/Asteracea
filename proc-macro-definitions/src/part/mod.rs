@@ -2,6 +2,7 @@ mod box_expression;
 mod bump_format_shorthand;
 mod capture_definition;
 mod component;
+mod defer;
 mod event_binding;
 mod html_comment;
 mod html_definition;
@@ -9,11 +10,11 @@ mod html_definition;
 //TODO: Renamed module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
 //TODO: Rust expressions shouldn't automatically be blocks except for ones after `with`.
 
-pub use self::capture_definition::CaptureDefinition;
 use self::{
 	box_expression::BoxExpression, component::Component, html_comment::HtmlComment,
 	html_definition::HtmlDefinition,
 };
+pub use self::{capture_definition::CaptureDefinition, defer::Defer};
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
@@ -42,6 +43,7 @@ pub(crate) enum Part<C: Configuration> {
 	Capture(CaptureDefinition<C>),
 	Comment(HtmlComment),
 	Component(Component<C>),
+	Defer(Defer<C>),
 	EventBinding(EventBindingDefinition),
 	RustBlock(Brace, TokenStream),
 	Html(HtmlDefinition<C>),
@@ -85,6 +87,7 @@ impl<C: Configuration> Part<C> {
 			| Part::Capture(_)
 			| Part::Comment(_)
 			| Part::Component(_)
+			| Part::Defer(_)
 			| Part::RustBlock(_, _)
 			| Part::Html(_)
 			| Part::If(_, _, _, _, _, _)
@@ -169,6 +172,8 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 		let lookahead = input.lookahead1();
 		Ok(if lookahead.peek(Token![box]) {
 			Some(Part::Box(BoxExpression::parse_with_context(input, cx)?))
+		} else if lookahead.peek(defer::kw::defer) {
+			Some(Part::Defer(Defer::parse_with_context(input, cx)?))
 		} else if lookahead.peek(LitStr) {
 			Some(Part::Text(input.parse()?))
 		} else if lookahead.peek(Token![<]) {
@@ -357,6 +362,7 @@ impl<C: Configuration> Part<C> {
 			}
 			Part::Comment(html_comment) => html_comment.part_tokens(),
 			Part::Component(component) => component.part_tokens(),
+			Part::Defer(defer) => defer.part_tokens(cx)?,
 			Part::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span()=>

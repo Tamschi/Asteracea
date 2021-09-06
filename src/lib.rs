@@ -27,6 +27,7 @@ pub use asteracea_proc_macro_definitions::{bump_format, component, fragment, tra
 pub use bumpalo;
 pub use lignin;
 pub use rhizome;
+pub use try_lazy_init;
 
 #[cfg(doctest)]
 pub mod readme {
