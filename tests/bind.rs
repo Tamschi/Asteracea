@@ -48,9 +48,7 @@ asteracea::component! {
 		late: usize = 1,
 	) -> Sync
 
-	[
-		bind priv bound: struct NamedBound <*Bound *_early = {late}>
-	]
+	bind priv bound: struct NamedBound <*Bound *_early = {late}>
 }
 
 asteracea::component! {
@@ -58,9 +56,7 @@ asteracea::component! {
 		late: usize = 1,
 	) -> Sync
 
-	[
-		bind priv bound: struct NamedMovedBound move <*Bound *_early = {late}>
-	]
+	bind priv bound: struct NamedMovedBound move <*Bound *_early = {late}>
 }
 
 #[test]

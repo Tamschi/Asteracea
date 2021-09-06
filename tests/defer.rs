@@ -28,9 +28,7 @@ asteracea::component! {
 asteracea::component! {
 	Named()() -> Sync
 
-	[
-		defer priv deferred: struct NamedDeferred <*Deferred>
-	]
+	defer priv deferred: struct NamedDeferred <*Deferred>
 }
 
 #[test]
