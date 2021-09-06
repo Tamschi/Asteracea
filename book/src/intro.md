@@ -19,6 +19,7 @@ Welcome to the Asteracea guide book!
 > ### What works
 >
 > - Pretty much any static templating.
+> - Lazy initialisation, via `defer` and `bind` expressions.
 > - Events and bindings, *mostly*.
 >   > Deferred callback continuations aren't present yet,
 >   > which prevents direct component instantiation or destruction from event handlers.
@@ -35,10 +36,8 @@ Welcome to the Asteracea guide book!
 > - Thread safety inference is sometimes wonky.
 >    > Write `ComponentName()() -> Sync` or `ComponentName()() -> !Sync` to determine it manually.
 >   > It's sound either way, but the former may not compile.
-> - [Lazy initialisation.](https://github.com/Tamschi/Asteracea/pull/33)
->   > This is quite important for any form of efficient dynamic content,
->   > and is also a stepping stone towards higher level control flow (since it likely shares structure in some ways, or could even work as building block).
 > - [Repeat arguments](https://github.com/Tamschi/Asteracea/pull/42) for child components. This will lead towards content transclusion. I think.
+> - Attached properties, to configure transclusion.
 > - The grammar. I'll most likely change something in a breaking way before `v0.1`.
 >
 > ### What's missing
@@ -46,7 +45,7 @@ Welcome to the Asteracea guide book!
 > - "Loops"
 > - A standard library, including a mockable HTTP client (for client **and** server).
 > - A router, hopefully nicely possible outside the core library.
-> - A turnkey app base. The needs to come with SSR and then optionally hydrate.
+> - A turnkey app base. This needs to come with SSR and then optionally hydrate.
 > - Anything I haven't thought of! [Suggestions](https://github.com/Tamschi/Asteracea/discussions/categories/ideas) are welcome.
 
 <!-- markdownlint-enable no-multiple-space-blockquote -->
