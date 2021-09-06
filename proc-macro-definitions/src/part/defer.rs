@@ -13,7 +13,6 @@ use syn::{parse::ParseStream, Ident, Result, Visibility};
 use tap::Pipe;
 
 pub mod kw {
-	//TODO: Rename this into `lazy`.
 	syn::custom_keyword!(defer);
 }
 
