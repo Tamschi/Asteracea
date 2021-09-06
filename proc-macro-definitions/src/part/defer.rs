@@ -9,11 +9,11 @@ use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
-use syn::{parse::ParseStream, Ident, Result, Token, Visibility};
+use syn::{parse::ParseStream, Ident, Result, Visibility};
 use tap::Pipe;
 
 pub mod kw {
-	//TODO: Split this into `lazy` and `init_once` expressions!
+	//TODO: Rename this into `lazy`.
 	syn::custom_keyword!(defer);
 }
 
@@ -24,7 +24,6 @@ pub struct Defer<C: Configuration> {
 	visibility: Visibility,
 	field_name: Ident,
 	type_configuration: StorageTypeConfiguration,
-	dynamicism: Option<(Token![dyn], Option<Token![move]>)>,
 	content: Box<Part<C>>,
 }
 
@@ -48,11 +47,6 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		let auto_generics = nested_generics.is_none();
 		let nested_generics = nested_generics.unwrap_or_else(|| cx.storage_generics.clone());
 
-		let dynamicism: Option<Token![dyn]> = input.parse()?;
-		let dynamicism = dynamicism
-			.map(|dyn_| Result::Ok((dyn_, input.parse()?)))
-			.transpose()?;
-
 		let mut parse_context = cx.new_nested(
 			cx.storage_context.generated_type_name(&field_name),
 			&nested_generics,
@@ -63,7 +57,7 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		)?);
 
 		let type_path =
-			type_configuration.type_path(&cx.storage_context, &field_name, &cx.storage_generics)?;
+			type_configuration.type_path(&cx.storage_context, &field_name, cx.storage_generics)?;
 
 		let deferred_value = parse_context.storage_context.value(
 			type_configuration.type_is_generated(),
@@ -74,9 +68,6 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		let asteracea = asteracea_ident(defer.span);
 		let node = quote_spanned!(defer.span=> node);
 		call2_strict(
-			if dynamicism.is_some() {
-				todo!("defer dynamicism")
-			} else {
 				quote_spanned! {defer.span.resolved_at(Span::mixed_site())=>
 					pin |
 						#visibility #field_name: ::#asteracea::try_lazy_init::LazyTransform<::std::boxed::Box<dyn FnOnce() -> ::std::result::Result<#type_path, ::#asteracea::error::Escalation>>, #type_path> = {
@@ -87,7 +78,6 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 							}))
 						}
 					|;
-				}
 			},
 			|input| CaptureDefinition::<C>::parse_with_context(input, cx),
 		)
@@ -120,7 +110,6 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 			visibility,
 			field_name,
 			type_configuration,
-			dynamicism,
 			content,
 		})
 	}
@@ -133,23 +122,19 @@ impl<C: Configuration> Defer<C> {
 		let field_pinned = Ident::new(&format!("{}_pinned", field_name), field_name.span());
 		let content = self.content.part_tokens(cx)?;
 
-		if let Some((_, _move_)) = &self.dynamicism {
-			todo!("defer dynamicism")
-		} else {
-			quote_spanned!(self.defer.span.resolved_at(Span::mixed_site())=> {
-				let #field_name = this.#field_pinned();
-				let #field_name = #field_name
-					.get_or_create_or_poison(|init| init())
-					.map_err(|first_time_error| first_time_error.unwrap_or_else(|| todo!("construct repeat error")))?;
-				let #field_name = unsafe {
-					// SAFETY:
-					// We already know the field itself is pinned properly, and the `LazyTransform` won't move its value around either.
-					::std::pin::Pin::new_unchecked(#field_name)
-				};
-				let this = #field_name;
-				#content
-			})
-		}
+		quote_spanned!(self.defer.span.resolved_at(Span::mixed_site())=> {
+			let #field_name = this.#field_pinned();
+			let #field_name = #field_name
+				.get_or_create_or_poison(|init| init())
+				.map_err(|first_time_error| first_time_error.unwrap_or_else(|| todo!("construct repeat error")))?;
+			let #field_name = unsafe {
+				// SAFETY:
+				// We already know the field itself is pinned properly, and the `LazyTransform` won't move its value around either.
+				::std::pin::Pin::new_unchecked(#field_name)
+			};
+			let this = #field_name;
+			#content
+		})
 		.pipe(Ok)
 	}
 }

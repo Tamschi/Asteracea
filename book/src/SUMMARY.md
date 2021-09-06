@@ -39,7 +39,7 @@
   - [`spread match { … } [ … ]`](./conditional_content/spread_match.md)
   - [`dyn match <…> [ … ]`]()
   - [`box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ <…>`](./conditional_content/box.md)
-  - [`defer ⟦priv …⟦: ⟦struct⟧ …⟧⟧ ⟦dyn ⟦move⟧⟧ <…>`](./conditional_content/defer_move_as.md)
+  - [`defer ⟦priv …⟦: ⟦struct⟧ …⟧⟧ <…>`](./conditional_content/defer.md)
 - [4: Modifiers]()
   - [Introduction to VDOM Modifiers]()
   - [CSS Scoping]()

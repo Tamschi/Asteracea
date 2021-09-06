@@ -1,12 +1,12 @@
-# `defer ⟦priv …⟦: ⟦struct⟧ …⟧⟧ ⟦dyn ⟦move⟧⟧ <…>`
+# `defer ⟦priv …⟦: ⟦struct⟧ …⟧⟧ <…>`
 
 An alternative method of breaking up recursive component initialisation is to defer it for the recursive part of the template until it is rendered.
 
 As such, the recursive example from the [`box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ <…>` chapter](./box.md) can be written as:
 
-```rust asteracea=Countdown asteracea::render=.i(6)
+```rust asteracea=HalfADozen
 asteracea::component! {
-  pub Countdown()(
+  Countdown()(
     i: usize,
   ) -> Sync // Syncness hint required due to recursion.
 
@@ -17,6 +17,12 @@ asteracea::component! {
       defer box <*Countdown .i = {i - 1}>
     ]
   ]
+}
+
+asteracea::component! {
+  pub HalfADozen()() -> Sync?
+
+  <*Countdown .i = {6}>
 }
 ```
 
