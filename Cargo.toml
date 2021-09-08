@@ -46,7 +46,7 @@ force-unwind = [] # Force the use of panics for `Escalation` propagation. This m
 services = []
 
 [dependencies]
-asteracea_proc-macro-definitions = { path = "./proc-macro-definitions" } # public
+asteracea_proc-macro-definitions = { path = "./proc-macro-definitions", version = "0.0.2" } # public
 bumpalo = { version = "3.6.1", features = ["collections"] } # public
 try-lazy-init = "0.0.2"
 lignin = "0.1.0" # public

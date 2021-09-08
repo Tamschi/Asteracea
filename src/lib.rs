@@ -17,7 +17,6 @@
 //! TODO
 
 #![doc(html_root_url = "https://docs.rs/asteracea/0.0.2")]
-#![forbid(unsafe_code)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::match_bool)]
 #![allow(clippy::redundant_closure_for_method_calls)]
@@ -35,6 +34,7 @@ pub mod readme {
 }
 
 pub mod error;
+pub mod storage;
 
 #[cfg(feature = "services")]
 pub mod services;

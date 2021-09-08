@@ -69,13 +69,13 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		call2_strict(
 			quote_spanned! {defer.span.resolved_at(Span::mixed_site())=>
 				pin |
-					#visibility #field_name: ::#asteracea::try_lazy_init::LazyTransform<::std::boxed::Box<dyn FnOnce() -> ::std::result::Result<#type_path, ::#asteracea::error::Escalation>>, #type_path> = {
-						::#asteracea::try_lazy_init::LazyTransform::new(::std::boxed::Box::new({
+					#visibility #field_name =
+						::#asteracea::storage::Defer::<'static, #type_path>
+						::new(::std::boxed::Box::new({
 							#[allow(unused_variables)]
 							let #node = ::std::sync::Arc::clone(&#node);
 							move || Ok(#deferred_value)
 						}))
-					}
 				|;
 			},
 			|input| CaptureDefinition::<C>::parse_with_context(input, cx),
@@ -121,15 +121,7 @@ impl<C: Configuration> Defer<C> {
 		let content = self.content.part_tokens(cx)?;
 
 		quote_spanned!(self.defer.span.resolved_at(Span::mixed_site())=> {
-			let #field_name = this.#field_pinned();
-			let #field_name = #field_name
-				.get_or_create_or_poison(|init| init())
-				.map_err(|first_time_error| first_time_error.unwrap_or_else(|| todo!("construct repeat error")))?;
-			let #field_name = unsafe {
-				// SAFETY:
-				// We already know the field itself is pinned properly, and the `LazyTransform` won't move its value around either.
-				::std::pin::Pin::new_unchecked(#field_name)
-			};
+			let #field_name = this.#field_pinned().get_or_poison()?;
 			let this = #field_name;
 			#content
 		})

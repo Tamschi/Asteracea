@@ -56,7 +56,7 @@ pub trait CaptureNotValid {
 impl<T> CaptureNotValid for T {}
 
 pub trait PhaseExpected {
-	#[deprecated = "Exected one of keywords `bubble` or `capture`; this event bubbles."]
+	#[deprecated = "Expected one of keywords `bubble` or `capture`; this event bubbles."]
 	#[inline(always)]
 	fn check(_: Invalid) {}
 }

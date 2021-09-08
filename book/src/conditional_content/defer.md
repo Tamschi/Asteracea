@@ -39,7 +39,7 @@ asteracea::component! {
   Introspective()()
 
   [
-    "Was I rendered before? " !{self.deferred.get().is_some()}
+    "Was I rendered before? " !{self.deferred_pinned().get().is_some()}
     defer priv deferred: struct Deferred []
   ]
 }
