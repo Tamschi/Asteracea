@@ -54,9 +54,6 @@ asteracea::component! {
 }
 ```
 
-> **TODO:**
->
-> Calling `.get()` gives you, in this case, an `Option<&Deferred>`, which isn't very useful.
-> The `LazyTransform` is also exposed, which isn't good.
->
-> Some encapsulation is needed to expose *only* that method, returning only an `Option<Pin<&Deferred>>` instead.
+The subexpression backing storage is wrapped in a [`Deferred`]() instance, which provides a [`.get()`]() method returning an `Option<Pin<&Deferred>>` depending on whether the subexpression was constructed yet.
+
+You can also call [`.get_or_poison()`](), to evaluate the constructor if pending, which returns a `Result<Pin<&Deferred>, Escalation>`.
