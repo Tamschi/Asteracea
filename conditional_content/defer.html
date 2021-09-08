@@ -204,12 +204,8 @@ asteracea::component! {
 <pre><code class="language-html">Was I rendered before? false
 Was I rendered before? true
 </code></pre>
-<blockquote>
-<p><strong>TODO:</strong></p>
-<p>Calling <code>.get()</code> gives you, in this case, an <code>Option&lt;&amp;Deferred&gt;</code>, which isn't very useful.
-The <code>LazyTransform</code> is also exposed, which isn't good.</p>
-<p>Some encapsulation is needed to expose <em>only</em> that method, returning only an <code>Option&lt;Pin&lt;&amp;Deferred&gt;&gt;</code> instead.</p>
-</blockquote>
+<p>The subexpression backing storage is wrapped in a <a href=""><code>Deferred</code></a> instance, which provides a <a href=""><code>.get()</code></a> method returning an <code>Option&lt;Pin&lt;&amp;Deferred&gt;&gt;</code> depending on whether the subexpression was constructed yet.</p>
+<p>You can also call <a href=""><code>.get_or_poison()</code></a>, to evaluate the constructor if pending, which returns a <code>Result&lt;Pin&lt;&amp;Deferred&gt;, Escalation&gt;</code>.</p>
 
                     </main>
 
