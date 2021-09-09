@@ -8,6 +8,7 @@ use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use proc_macro_crate::{crate_name, FoundCrate};
 use quote::{quote, quote_spanned, ToTokens};
+use std::iter;
 use syn::{
 	parse::{Parse, ParseStream},
 	parse_macro_input, Error, Ident, Result,
@@ -175,4 +176,29 @@ use workaround_module::Configuration;
 
 fn warn(location: Span, message: &str) -> Result<()> {
 	Err(Error::new(location, message.to_string()))
+}
+
+trait FailSoftly<T, E>: Sized {
+	fn fail_softly(self, errors: &mut impl Extend<E>, fallback: impl FnOnce() -> T) -> T;
+	fn fail_softly_into<E2: From<E>>(
+		self,
+		errors: &mut (impl IntoIterator<Item = E2> + Extend<E2>),
+		fallback: impl FnOnce() -> T,
+	) -> T;
+}
+impl<T, E> FailSoftly<T, E> for std::result::Result<T, E> {
+	fn fail_softly(self, errors: &mut impl Extend<E>, fallback: impl FnOnce() -> T) -> T {
+		self.unwrap_or_else(|error| {
+			errors.extend(iter::once(error));
+			fallback()
+		})
+	}
+
+	fn fail_softly_into<E2: From<E>>(
+		self,
+		errors: &mut (impl IntoIterator<Item = E2> + Extend<E2>),
+		fallback: impl FnOnce() -> T,
+	) -> T {
+		self.map_err(Into::into).fail_softly(errors, fallback)
+	}
 }
