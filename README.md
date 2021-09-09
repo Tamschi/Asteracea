@@ -11,6 +11,8 @@
 [![GitHub](https://img.shields.io/static/v1?logo=GitHub&label=&message=%20&color=grey)](https://github.com/Tamschi/Asteracea)
 [![open issues](https://img.shields.io/github/issues-raw/Tamschi/Asteracea)](https://github.com/Tamschi/Asteracea/issues)
 [![open pull requests](https://img.shields.io/github/issues-pr-raw/Tamschi/Asteracea)](https://github.com/Tamschi/Asteracea/pulls)
+[![good first issues](https://img.shields.io/github/issues-raw/Tamschi/Asteracea/good%20first%20issue?label=good+first+issues)](https://github.com/Tamschi/Asteracea/contribute)
+
 [![crev reviews](https://web.crev.dev/rust-reviews/badge/crev_count/asteracea.svg)](https://web.crev.dev/rust-reviews/crate/asteracea/)
 
 Asteracea is a web application framework aiming to combine the strengths of [Angular] and [React] while fully supporting Rust's lifetime model.
