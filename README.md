@@ -11,6 +11,8 @@
 [![GitHub](https://img.shields.io/static/v1?logo=GitHub&label=&message=%20&color=grey)](https://github.com/Tamschi/TODO_CRATE_NAME)
 [![open issues](https://img.shields.io/github/issues-raw/Tamschi/TODO_CRATE_NAME)](https://github.com/Tamschi/TODO_CRATE_NAME/issues)
 [![open pull requests](https://img.shields.io/github/issues-pr-raw/Tamschi/TODO_CRATE_NAME)](https://github.com/Tamschi/TODO_CRATE_NAME/pulls)
+[![good first issues](https://img.shields.io/github/issues-raw/Tamschi/TODO_CRATE_NAME/good%20first%20issue?label=good+first+issues)](https://github.com/Tamschi/TODO_CRATE_NAME/contribute)
+
 [![crev reviews](https://web.crev.dev/rust-reviews/badge/crev_count/TODO_CRATE_NAME.svg)](https://web.crev.dev/rust-reviews/crate/TODO_CRATE_NAME/)
 
 TODO_README_DESCRIPTION
