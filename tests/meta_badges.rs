@@ -120,6 +120,17 @@ fn pulls() {
 }
 
 #[test]
+fn good_first_issues() {
+	version_sync::assert_contains_regex!(
+		"README.md",
+		&format!(
+			r"^\[!\[good first issues\]\(https://img\.shields\.io/github/issues-raw/{0}/{{name}}/good%20first%20issue\?label=good\+first\+issues\)\]\(https://github\.com/{0}/{{name}}/contribute\)$",
+			USER,
+		)
+	);
+}
+
+#[test]
 fn crev() {
 	version_sync::assert_contains_regex!(
 		"README.md",

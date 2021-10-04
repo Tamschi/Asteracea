@@ -14,14 +14,14 @@ jobs:
     if: github.actor == 'dependabot[bot]'
     steps:
       - name: auto-approve
-        uses: actions/github-script@v4.1
+        uses: actions/github-script@v5
         with:
           # The default token is enough to comment, but Dependabot will only comply if you impersonate a user with write access.
           github-token: ${{secrets.AUTO_APPROVE_DEPENDABOT_TOKEN}}
           script: |
             // See <https://octokit.github.io/rest.js/v18#pulls>,
             // <https://github.com/marketplace/actions/github-script#welcome-a-first-time-contributor>.
-            const reviews = await github.pulls.listReviews({
+            const reviews = await github.rest.pulls.listReviews({
               owner: context.payload.repository.owner.login,
               repo: context.payload.repository.name,
               pull_number: context.payload.pull_request.number,
@@ -32,7 +32,7 @@ jobs:
               return;
             }
 
-            await github.pulls.createReview({
+            await github.rest.pulls.createReview({
               owner: context.payload.repository.owner.login,
               repo: context.payload.repository.name,
               pull_number: context.payload.pull_request.number,

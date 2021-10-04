@@ -7,9 +7,16 @@ updates:
     # versioning-strategy: "increase-if-necessary" # Not yet supported. See <https://github.com/dependabot/dependabot-core/issues/4009>.
     assignees:
       - "Tamschi"
+    labels:
+      - "type: upkeep"
+      - "domain: Rust"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
     assignees:
       - "Tamschi"
+    labels:
+      - "type: upkeep"
+      - "domain: GitHub Actions"

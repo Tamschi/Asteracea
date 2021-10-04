@@ -33,5 +33,5 @@ maintenance = { status = "experimental" } # This may differ between branches.
 cargo-husky = "1.5.0"
 doc-comment = "0.3.3"
 git_info = "0.1.2"
-version-sync = "0.9.1"
-wasm-bindgen-test = "0.3.27"
+version-sync = "0.9.3"
+wasm-bindgen-test = "0.3.28"
