@@ -8,6 +8,9 @@ updates:
     # versioning-strategy: "increase-if-necessary" # Not yet supported. See <https://github.com/dependabot/dependabot-core/issues/4009>.
     assignees:
       - "Tamschi"
+    labels:
+      - "type: upkeep"
+      - "domain: Rust"
 
   - package-ecosystem: "cargo"
     directory: "/proc-macro-definitions/"
@@ -16,6 +19,9 @@ updates:
     # versioning-strategy: "increase-if-necessary" # Not yet supported. See <https://github.com/dependabot/dependabot-core/issues/4009>.
     assignees:
       - "Tamschi"
+    labels:
+      - "type: upkeep"
+      - "domain: Rust"
 
   - package-ecosystem: "cargo"
     directory: "/book/"
@@ -24,6 +30,9 @@ updates:
     # versioning-strategy: "increase-if-necessary" # Not yet supported. See <https://github.com/dependabot/dependabot-core/issues/4009>.
     assignees:
       - "Tamschi"
+    labels:
+      - "type: upkeep"
+      - "domain: Rust"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -31,3 +40,6 @@ updates:
       interval: "daily"
     assignees:
       - "Tamschi"
+    labels:
+      - "type: upkeep"
+      - "domain: GitHub Actions"
