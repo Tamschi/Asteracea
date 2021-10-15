@@ -10,7 +10,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.3.5
     - uses: actions-rs/toolchain@v1.0.7
     - run: cat CI.toml >> Cargo.toml
     - run: cargo test --workspace --locked --no-default-features
@@ -21,7 +21,7 @@ jobs:
     name: Browser Test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.3.5
     - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: stable
@@ -44,7 +44,7 @@ jobs:
       target: ${{matrix.target && format('--target={0}', matrix.target)}}
       workspace: ${{matrix.no-workspace || '--workspace'}}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.3.5
     - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: ${{matrix.rust}}
@@ -59,7 +59,7 @@ jobs:
     name: Minimal Versions
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.3.5
     - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: nightly
@@ -73,7 +73,7 @@ jobs:
     name: Book
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.3.5
     - uses: actions-rs/toolchain@v1
     - run: cat CI.toml >> Cargo.toml
     - run: cd book && cargo run
