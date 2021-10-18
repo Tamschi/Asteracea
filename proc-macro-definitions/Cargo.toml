@@ -32,7 +32,7 @@ call2-for-syn = "2.0.3"
 debugless-unwrap = "0.0.4"
 heck = "0.3.1"
 lazy_static = "1.4.0"
-quote = "1.0.2"
+quote = "1.0.10"
 proc-macro-crate = "1.0.0"
 proc-macro2 = "1.0.7"
 syn-mid = { version = "0.5.0", features = ["clone-impls"] }
