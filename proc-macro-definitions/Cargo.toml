@@ -45,6 +45,6 @@ either = "1.6.1"
 tap = "1.0.1"
 
 [dependencies.syn]
-version = "1.0.78"
+version = "1.0.80"
 default-features = false
 features = ["derive", "full", "parsing", "printing", "visit-mut"]
