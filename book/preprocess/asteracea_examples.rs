@@ -184,12 +184,11 @@ struct CodeState<'a> {
 
 impl<'a> CodeState<'a> {
 	fn new(tag: CowStr) -> Option<Self> {
-		let tags: Vec<_> = tag.split(' ').collect();
 		let mut name: Option<CowStr> = None;
 		let mut constructor_build: CowStr = "".into();
 		let mut render_build: CowStr = "".into();
-		let tags: Vec<_> = tags
-			.into_iter()
+		let tags: Vec<_> = tag
+			.split(' ')
 			.filter(|t| {
 				if t.starts_with("asteracea::new") {
 					constructor_build = t
