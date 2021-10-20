@@ -10,6 +10,6 @@ asteracea::component! {
 
 	spread match {enum_value} [
 		Enum::Text(text) => <span !{text}>
-		Enum::Other => <div ."class" = "placeholder">
+		Enum::Other => <div .class = "placeholder">
 	]
 }
