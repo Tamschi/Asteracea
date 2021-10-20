@@ -165,9 +165,9 @@ dependencies = [
 
 [[package]]
 name = "bumpalo"
-version = "3.7.1"
+version = "3.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9df67f7bf9ef8498769f994239c45613ef0c5899415fb58e9add412d2c1a538"
+checksum = "8f1e260c3a9040a7c19a12468758f4c16f31a81a1fe087482be9570ec864bb6c"
 
 [[package]]
 name = "byte-tools"
@@ -516,7 +516,7 @@ dependencies = [
 [[package]]
 name = "lignin-schema"
 version = "0.0.4"
-source = "git+https://github.com/Tamschi/lignin-schema.git?branch=develop#eabc9d1ef5bf73363610feb158a595f4430088c2"
+source = "git+https://github.com/Tamschi/lignin-schema.git?branch=develop#a60d7ac84ded70858cfa82cc41826585697d9085"
 dependencies = [
  "heck-but-macros",
 ]
@@ -1651,9 +1651,9 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "xml5ever"
-version = "0.16.1"
+version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b1b52e6e8614d4a58b8e70cf51ec0cc21b256ad8206708bcff8139b5bbd6a59"
+checksum = "9234163818fd8e2418fcde330655e757900d4236acd8cc70fef345ef91f6d865"
 dependencies = [
  "log",
  "mac",
