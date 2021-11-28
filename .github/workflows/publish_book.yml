@@ -1,4 +1,8 @@
 name: Publish Book
+
+permissions:
+  contents: write
+
 on:
   push:
     branches: [develop]
