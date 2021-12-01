@@ -26,6 +26,7 @@ include = [
 	"Cargo.toml",
 	"CHANGELOG.md",
 	"CODE_OF_CONDUCT.md",
+	"COPYRIGHT.md",
 	"LICENSE-*",
 	"README.md",
 	"SECURITY.md",
@@ -57,7 +58,6 @@ typed-builder = "0.9.0" # semi-public
 [dev-dependencies]
 cargo-husky = "1.5.0"
 debugless-unwrap = "0.0.4"
-doc-comment = "0.3.3"
 git_info = "0.1.2"
 tap = "1.0.1"
 version-sync = "0.9.1"

@@ -4,10 +4,14 @@
 name: 'Auto-Approve Dependabot'
 # Note: I REALLY don't recommend doing this if you have ANY broader authentication tokens available to (any) Actions.
 # Tokens that can only interact with your public repositories should be mostly fine, if you keep an eye on code changes and don't have automatic deployment set up.
+
+permissions: {} # None, using a custom token.
+
 on:
   # See <https://github.blog/changelog/2021-02-19-github-actions-workflows-triggered-by-dependabot-prs-will-run-with-read-only-permissions/>.
   pull_request_target:
     types: [review_requested, reopened]
+
 jobs:
   approve-dependabot:
     runs-on: ubuntu-latest
@@ -28,7 +32,7 @@ jobs:
             });
 
             for (review of reviews.data) {
-              console.log(`A review exists. Exiting.`)
+              console.log(`A review exists. Exiting.`);
               return;
             }
 

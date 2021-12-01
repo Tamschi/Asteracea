@@ -1,9 +1,16 @@
 name: Push Audit
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write # Probably.
+
 on:
   push:
     paths:
       - '**/Cargo.toml'
       - '**/Cargo.lock'
+
 jobs:
   security_audit:
     runs-on: ubuntu-latest

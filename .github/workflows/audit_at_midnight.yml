@@ -1,7 +1,13 @@
 name: Midnight Audit
+
+permissions:
+  contents: read
+  issues: write
+
 on:
   schedule:
     - cron: '0 0 * * *'
+
 jobs:
   audit:
     runs-on: ubuntu-latest

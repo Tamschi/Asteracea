@@ -2,6 +2,11 @@
 # See also <https://seantrane.com/posts/logical-colorful-github-labels-18230/>.
 
 name: Update Labels
+
+permissions:
+  contents: read
+  issues: write
+
 on:
   push:
     branches: [develop]

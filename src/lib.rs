@@ -1,3 +1,7 @@
+//! A lightweight but flexible web frontend framework in Rust.
+//!
+//! [![Zulip Chat](https://img.shields.io/endpoint?label=chat&url=https%3A%2F%2Fiteration-square-automation.schichler.dev%2F.netlify%2Ffunctions%2Fstream_subscribers_shield%3Fstream%3Dproject%252FAsteracea)](https://iteration-square.schichler.dev/#narrow/stream/project.2FAsteracea)
+//!
 //! # Features
 //!
 //! ## `"backtrace"`
@@ -17,7 +21,7 @@
 //! TODO
 
 #![doc(html_root_url = "https://docs.rs/asteracea/0.0.2")]
-#![warn(clippy::pedantic)]
+#![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::match_bool)]
 #![allow(clippy::redundant_closure_for_method_calls)]
 #![allow(clippy::redundant_else)]
@@ -30,9 +34,8 @@ pub use rhizome;
 pub use try_lazy_init;
 
 #[cfg(doctest)]
-pub mod readme {
-	doc_comment::doctest!("../README.md");
-}
+#[doc = include_str!("../README.md")]
+mod readme {}
 
 pub mod error;
 pub mod storage;
