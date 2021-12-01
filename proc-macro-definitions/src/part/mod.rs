@@ -265,6 +265,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 					let attrs = input.call(Attribute::parse_outer)?;
 					let pats = {
 						let mut pats = vec![];
+						#[allow(clippy::blocks_in_if_conditions)]
 						while {
 							unquote!(input, #let maybe_pipe #let pat);
 							pats.push((maybe_pipe, pat));

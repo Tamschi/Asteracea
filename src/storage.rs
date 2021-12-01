@@ -1,3 +1,5 @@
+//! State storage implementations, which are embedded into components to by certain stateful expressions.
+
 use crate::error::{Escalate, Escalation};
 use std::{
 	error::Error,
@@ -48,6 +50,7 @@ impl<'a, Storage> Defer<'a, Storage> {
 			})
 	}
 
+	/// Retrieves a reference to the constructed `Storage`, iff one is available already.
 	#[must_use]
 	pub fn get(self: Pin<&Self>) -> Option<Pin<&Storage>> {
 		self.0

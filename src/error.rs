@@ -1,3 +1,5 @@
+//! GUI error escalation.
+
 #![allow(clippy::module_name_repetitions)]
 
 use std::{
@@ -103,6 +105,7 @@ enum Impl {
 	Extant(Throwable),
 }
 
+/// [`Send`] + [`Any`] + [`Error`]
 //TODO: This *probably* needs some clean-up.
 pub trait SendAnyError: Send + Any + Error {}
 impl<E: Send + Any + Error> SendAnyError for E {}
@@ -125,8 +128,12 @@ impl<E: SendAnyError> SendAnyErrorCasting for E {
 	}
 }
 
+/// Extension trait to GUI-escalate compatible errors.
+//TODO: Sealed?
 pub trait Escalate {
+	/// The type that is escalated.
 	type Output;
+	/// Escalates an error along the GUI call stack.
 	fn escalate(self) -> Self::Output;
 }
 impl<E: SendAnyError> Escalate for E {
@@ -149,8 +156,11 @@ impl<E: SendAnyError> Escalate for E {
 	}
 }
 
+/// Extension trait to convert compatible [`Result`]s into potentially escalated results.
 pub trait EscalateResult {
+	/// The type that is escalated.
 	type Output;
+	/// Converts a compatible [`Result`] into one that may have been escalated by the call.
 	fn escalate(self) -> Self::Output;
 }
 impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
@@ -175,12 +185,14 @@ pub struct Caught<E: ?Sized> {
 	was_panic: bool,
 }
 impl<E: ?Sized> Caught<E> {
+	/// Unwraps the boxed error or panic, discarding the trace.
 	#[must_use]
 	pub fn into_boxed(self) -> Box<E> {
 		self.boxed
 	}
 }
 impl<E> Caught<E> {
+	/// Unwraps the boxed error or panic by value, discarding the trace.
 	#[must_use]
 	pub fn into_inner(self) -> E {
 		*self.boxed

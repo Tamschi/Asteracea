@@ -47,6 +47,7 @@ pub mod services;
 ///
 /// It's recommended to only implement this trait if the conversion is very cheap.
 pub trait ConditionalAttributeValue<'a> {
+	/// Borrows the attribute value as representative [`Option<&str>`].
 	fn into_str_option(self) -> Option<&'a str>;
 }
 
