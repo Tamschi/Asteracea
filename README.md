@@ -34,13 +34,13 @@ cargo add asteracea
 
 ## Design goals
 
-* Little boilerplate / Useful defaults
+- Little boilerplate / Useful defaults
 
   Most generated boilerplate code is adjusted automatically to what is required. For example, the signature of a component's `.render` method changes if a `Node` is generated.
 
   [There is still room for improvement here without sacrificing readability.](https://github.com/Tamschi/Asteracea/projects/2)
 
-* Co-location / [DRY]
+- Co-location / [DRY]
 
   Intent shouldn't need to be reiterated in multiple places (split declaration, initialisation and usage).
 
@@ -50,7 +50,7 @@ cargo add asteracea
 
   [DRY]: https://en.wikipedia.org/w/index.php?title=Don%27t_repeat_yourself&oldid=972595923
 
-* Robust code
+- Robust code
 
   Element names are statically checked against [`lignin-schema`] by default, but other schemata can be defined similarly. Empty elements like `<br>` cannot contain children.
 
@@ -58,7 +58,7 @@ cargo add asteracea
 
   [`lignin-schema`]: https://github.com/Tamschi/lignin-schema
 
-* No default runtime
+- No default runtime
 
   Asteracea components compile to plain Rust code with few dependencies, which helps keep bundles small.
 
