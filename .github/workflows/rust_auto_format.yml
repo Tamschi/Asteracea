@@ -1,10 +1,14 @@
 name: Rust Auto Format
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
+#  # Deactivated pending further investigation into #36.
+#  pull_request:
+#    branches: [ develop ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -14,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2.3.4
+    - uses: actions/checkout@v2.4.0
       with:
         # github.ref is useless on pull requests.
         # github.head_ref only exists on pull requests.

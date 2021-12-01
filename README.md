@@ -4,7 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/TODO_CRATE_NAME)](https://crates.io/crates/TODO_CRATE_NAME)
 [![Docs.rs](https://docs.rs/TODO_CRATE_NAME/badge.svg)](https://docs.rs/TODO_CRATE_NAME)
 
-![Rust 1.51](https://img.shields.io/static/v1?logo=Rust&label=&message=1.51&color=grey)
+![Rust 1.54](https://img.shields.io/static/v1?logo=Rust&label=&message=1.54&color=grey)
 [![CI](https://github.com/Tamschi/TODO_CRATE_NAME/workflows/CI/badge.svg?branch=develop)](https://github.com/Tamschi/TODO_CRATE_NAME/actions?query=workflow%3ACI+branch%3Adevelop)
 ![Crates.io - License](https://img.shields.io/crates/l/TODO_CRATE_NAME/0.0.1)
 
@@ -14,6 +14,7 @@
 [![good first issues](https://img.shields.io/github/issues-raw/Tamschi/TODO_CRATE_NAME/good%20first%20issue?label=good+first+issues)](https://github.com/Tamschi/TODO_CRATE_NAME/contribute)
 
 [![crev reviews](https://web.crev.dev/rust-reviews/badge/crev_count/TODO_CRATE_NAME.svg)](https://web.crev.dev/rust-reviews/crate/TODO_CRATE_NAME/)
+[![Zulip Chat](https://img.shields.io/endpoint?label=chat&url=https%3A%2F%2Fiteration-square-automation.schichler.dev%2F.netlify%2Ffunctions%2Fstream_subscribers_shield%3Fstream%3Dproject%252FTODO_CRATE_NAME)](https://iteration-square.schichler.dev/#narrow/stream/project.2FTODO_CRATE_NAME)
 
 TODO_README_DESCRIPTION
 

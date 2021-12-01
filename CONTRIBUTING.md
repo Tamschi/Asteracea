@@ -69,6 +69,29 @@ Nicknames and entries without email addresses are fine, too.
 
 For substantial contributions (basically anything more than typo or grammar fixes), feel free to add yourself to the `authors` list in `Cargo.toml`. This explicitly includes documentation changes, testing and bug fixes that just happen to be not much code.
 
+### Optional: Update [CHANGELOG.md](CHANGELOG.md)
+
+I use the following format for an upcoming release with contributed changes:
+
+```markdown
+## next
+
+TODO: Date
+
+- Revisions:
+  - Change title (contributed by @<your GitHub @> in #<PR #>)
+    > Further description or motivation, if necessary.
+```
+
+When adding your change, replace:
+
+- `Revisions` with `Features` or `**Breaking changes**`, iff your contribution falls into one of those categories instead.
+- `<your GitHub @>` with your GitHub username.
+- `<PR #>` with the id of your pull-request. (Squashing is optional)
+- `Change title` and `> Further description…` as appropriate.
+
+See non-contributed changes from earlier releases for examples.
+
 ## Labels
 
 Don't worry about these too much.
@@ -98,7 +121,7 @@ See <https://github.com/Tamschi/TODO_CRATE_NAME/issues/labels> for details on in
 
 - `priority:`
 
-  Vaguely informs my schedule, **cross-respository**.
+  Vaguely informs my schedule, **cross-repository**.
 
   You're welcome to let me know that (and ideally why) you'd like to see a specific change and I'll take that into account.
 

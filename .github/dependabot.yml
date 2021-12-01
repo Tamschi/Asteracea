@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: "daily"
     # versioning-strategy: "increase-if-necessary" # Not yet supported. See <https://github.com/dependabot/dependabot-core/issues/4009>.
+    # For now, use the following to reduce spam:
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
     assignees:
       - "Tamschi"
     labels:

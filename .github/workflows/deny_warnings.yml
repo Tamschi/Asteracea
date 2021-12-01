@@ -1,4 +1,8 @@
 name: Deny Warnings
+
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches: [develop]
@@ -10,7 +14,7 @@ jobs:
     name: Deny Warnings
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.4.0
     - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: stable
