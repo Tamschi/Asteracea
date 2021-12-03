@@ -3,10 +3,12 @@ use syn::{
 	parse::{Parse, ParseStream},
 	Attribute, Expr, PatType, Result, Token, Visibility,
 };
+use tap::Pipe;
 use unquote::unquote;
 
 pub struct ConstructorArgument {
 	pub capture: Capture,
+	pub injection: Injection,
 	pub argument: Argument,
 }
 
@@ -40,6 +42,21 @@ impl ToTokens for Capture {
 	}
 }
 
+pub enum Injection {
+	No,
+	Yes(Token![ref]),
+}
+impl Parse for Injection {
+	fn parse(input: ParseStream) -> Result<Self> {
+		if let Some(ref_) = input.parse().unwrap() {
+			Self::Yes(ref_)
+		} else {
+			Self::No
+		}
+		.pipe(Ok)
+	}
+}
+
 pub struct Argument {
 	pub fn_arg: PatType,
 	pub question: Option<Token![?]>,
@@ -51,6 +68,7 @@ impl Parse for ConstructorArgument {
 		unquote!(input,
 			#do let Attributes::parse_outer => attrs
 			#let capture
+			#let injection
 			#let pat
 			#let question
 			#let colon_token
@@ -58,6 +76,8 @@ impl Parse for ConstructorArgument {
 			#do let DefaultParameter::parse => default
 		);
 		Ok(Self {
+			capture,
+			injection,
 			argument: Argument {
 				fn_arg: PatType {
 					attrs: attrs.into_inner(),
@@ -68,7 +88,6 @@ impl Parse for ConstructorArgument {
 				question,
 				default: default.into_inner(),
 			},
-			capture,
 		})
 	}
 }

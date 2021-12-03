@@ -249,6 +249,7 @@ impl Parse for ComponentDeclaration {
 		for constructor_argument in constructor_args.iter() {
 			if let ConstructorArgument {
 				capture: arguments::Capture::Yes(visibility),
+				injection,
 				argument: Argument { fn_arg, .. },
 			} = constructor_argument
 			{
@@ -262,10 +263,18 @@ impl Parse for ComponentDeclaration {
 					let PatType {
 						colon_token, ty, ..
 					} = fn_arg;
+					let ty = match injection {
+						arguments::Injection::No => ty.clone(),
+						arguments::Injection::Yes(ref_) => {
+							parse2::<Type>(quote_spanned! {ref_.span=> ::core::pin::Pin::<*const #ty>})
+								.unwrap()
+								.pipe(Box::new)
+						}
+					};
 					quote!(#pat#colon_token #ty)
 				};
 				call2_strict(
-					quote_spanned!(span=> |#(#attrs)* #visibility #arg = {#pat}|;),
+					dbg!(quote_spanned!(span=> |#(#attrs)* #visibility #arg = {#pat}|;)),
 					|input| {
 						Part::<ComponentRenderConfiguration>::parse_with_context(input, &mut cx)
 					},
