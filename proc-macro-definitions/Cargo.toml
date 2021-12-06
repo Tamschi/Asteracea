@@ -34,7 +34,7 @@ heck = "0.3.1"
 lazy_static = "1.4.0"
 quote = "1.0.10"
 proc-macro-crate = "1.0.0"
-proc-macro2 = "1.0.32"
+proc-macro2 = "1.0.33"
 syn-mid = { version = "0.5.0", features = ["clone-impls"] }
 take_mut = "0.2.2"
 unzip-n = "0.1.1"
