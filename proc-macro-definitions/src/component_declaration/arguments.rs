@@ -1,9 +1,15 @@
-use quote::ToTokens;
+use proc_macro2::Span;
+use quote::{quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
-	Attribute, Expr, PatType, Result, Token, Visibility,
+	parse_quote,
+	spanned::Spanned,
+	Attribute, Expr, Ident, Pat, PatIdent, PatType, Result, Token, Visibility,
 };
+use tap::Pipe;
 use unquote::unquote;
+
+use crate::asteracea_ident;
 
 pub struct ConstructorArgument {
 	pub capture: Capture,
@@ -75,24 +81,63 @@ impl Parse for ConstructorArgument {
 
 impl Parse for Argument {
 	fn parse(input: ParseStream) -> Result<Self> {
-		unquote!(input,
-			#do let Attributes::parse_outer => attrs
-			#let pat
-			#let question
-			#let colon_token
-			#let ty
-			#do let DefaultParameter::parse => default
-		);
-		Ok(Self {
-			fn_arg: PatType {
-				attrs: attrs.into_inner(),
-				pat,
-				colon_token,
-				ty,
-			},
-			question,
-			default: default.into_inner(),
-		})
+		let attrs = Attributes::parse_outer(input)?;
+		if let Some(dot2) = input.parse::<Option<Token![..]>>().expect("infallible") {
+			// This is a content argument.
+			// For now, only a very minimal feature is supported.
+			let bump = quote_spanned! (dot2.span()=>
+				'bump
+			);
+			let asteracea = asteracea_ident(dot2.span());
+			Self {
+				fn_arg: PatType {
+					attrs: attrs.into_inner(),
+					pat: PatIdent {
+						attrs: vec![],
+						by_ref: None,
+						mutability: None,
+						ident: Ident::new(
+							"__Asteracea__anonymous_content",
+							dot2.span().resolved_at(Span::mixed_site()),
+						),
+						subpat: None,
+					}
+					.pipe(Pat::Ident)
+					.pipe(Box::new),
+					colon_token: Token![:](dot2.span().resolved_at(Span::mixed_site())),
+					ty: parse_quote!(::std::boxed::Box::<
+						dyn '_ + ::core::ops::FnOnce(&#bump ::#asteracea::bumpalo::Bump) -> ::std::result::Result::<
+							::#asteracea::lignin::Node::<
+								#bump,
+								::#asteracea::lignin::ThreadSafe,
+							>,
+							::#asteracea::error::Escalation,
+						>
+					>),
+				},
+				question: None,
+				default: None,
+			}
+		} else {
+			unquote!(input,
+				#let pat
+				#let question
+				#let colon_token
+				#let ty
+				#do let DefaultParameter::parse => default
+			);
+			Self {
+				fn_arg: PatType {
+					attrs: attrs.into_inner(),
+					pat,
+					colon_token,
+					ty,
+				},
+				question,
+				default: default.into_inner(),
+			}
+		}
+		.pipe(Ok)
 	}
 }
 

@@ -134,7 +134,8 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 
 		let attributes = {
 			let mut attributes = Vec::new();
-			while let Ok(dot) = input.parse::<Token![.]>() {
+			while input.peek(Token![.]) && !input.peek(Token![..]) {
+				let dot = input.parse::<Token![.]>().expect("unreachable");
 				attributes.push(if input.peek(Ident) || input.peek(LitStr) {
 					let key;
 					let question: Option<Token![?]>;
