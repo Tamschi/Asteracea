@@ -118,7 +118,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 			}
 
 			let mut content_children = vec![];
-			while !input.peek(Token![>]) {
+			while !input.peek(Token![/]) && !input.peek(Token![>]) {
 				let span = input.span();
 				let part = Part::<C>::parse_with_context(input, cx)?;
 				if let Some(part) = part {
