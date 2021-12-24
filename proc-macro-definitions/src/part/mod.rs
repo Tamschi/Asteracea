@@ -3,6 +3,7 @@ mod box_expression;
 mod bump_format_shorthand;
 mod capture_definition;
 mod component;
+mod content;
 mod defer;
 mod event_binding;
 mod html_comment;
@@ -13,8 +14,8 @@ mod html_definition;
 
 pub use self::capture_definition::CaptureDefinition;
 use self::{
-	bind::Bind, box_expression::BoxExpression, component::Component, defer::Defer,
-	html_comment::HtmlComment, html_definition::HtmlDefinition,
+	bind::Bind, box_expression::BoxExpression, component::Component, content::Content,
+	defer::Defer, html_comment::HtmlComment, html_definition::HtmlDefinition,
 };
 use crate::{
 	asteracea_ident,
@@ -43,6 +44,7 @@ pub(crate) enum Part<C: Configuration> {
 	Box(BoxExpression<C>),
 	BumpFormat(BumpFormat),
 	Capture(CaptureDefinition<C>),
+	Content(Content),
 	Comment(HtmlComment),
 	Component(Component<C>),
 	Defer(Defer<C>),
@@ -90,6 +92,7 @@ impl<C: Configuration> Part<C> {
 			| Part::Capture(_)
 			| Part::Comment(_)
 			| Part::Component(_)
+			| Part::Content(_)
 			| Part::Defer(_)
 			| Part::RustBlock(_, _)
 			| Part::Html(_)
@@ -177,6 +180,8 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 			Some(Part::Bind(Bind::parse_with_context(input, cx)?))
 		} else if lookahead.peek(Token![box]) {
 			Some(Part::Box(BoxExpression::parse_with_context(input, cx)?))
+		} else if lookahead.peek(Token![..]) {
+			Some(Part::Content(Content::parse_with_context(input, cx)?))
 		} else if lookahead.peek(defer::kw::defer) {
 			Some(Part::Defer(Defer::parse_with_context(input, cx)?))
 		} else if lookahead.peek(LitStr) {
@@ -369,7 +374,8 @@ impl<C: Configuration> Part<C> {
 				tokens
 			}
 			Part::Comment(html_comment) => html_comment.part_tokens(),
-			Part::Component(component) => component.part_tokens(),
+			Part::Component(component) => component.part_tokens(cx)?,
+			Part::Content(content) => content.part_tokens(),
 			Part::Defer(defer) => defer.part_tokens(cx)?,
 			Part::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
