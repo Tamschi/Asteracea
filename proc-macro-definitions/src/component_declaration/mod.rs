@@ -187,7 +187,7 @@ impl Parse for ComponentDeclaration {
 		let mut cx = ParseContext::new_root(&visibility, &component_name, &component_generics);
 
 		// Dependency extraction:
-		while let Some(ref_token) = input.parse::<Token![ref]>().ok() {
+		while let Some(ref_token) = input.parse::<Option<Token![ref]>>().expect("infallible") {
 			let rhizome_lookahead = input.lookahead1();
 			if rhizome_lookahead.peek(Token![;]) {
 				input.parse::<Token![;]>()?;

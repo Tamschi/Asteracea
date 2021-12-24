@@ -14,8 +14,6 @@ impl<R: ?Sized, T, F> CallbackHandler<R, T, *const R> for F where F: FnOnce(*con
 impl<R: ?Sized, T, F> CallbackHandler<R, T, &'static R> for F where F: FnOnce(&R, T) {}
 impl<R: ?Sized, T, F> CallbackHandler<R, T, Pin<&'static R>> for F where F: FnOnce(Pin<&R>, T) {}
 
-pub mod errors;
-
 // Clippy complains about the type complexity of this if it appears directly as component field.
 pub type DroppableLazyCallbackRegistration<Component, ParameterFn> =
 	ManuallyDrop<Lazy<CallbackRegistration<Component, ParameterFn>>>;

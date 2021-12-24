@@ -10,6 +10,7 @@ asteracea = { path = "." }
 [package]
 name = "asteracea"
 version = "0.0.2"
+rust-version = "1.57"
 authors = ["Tamme Schichler <tamme@schichler.dev>"]
 edition = "2018"
 description = "A web application framework for Rust. Asteracea can be used for client-side and server-side rendering and for statically rendered and deployed sites (and combinations thereof) without specific changes to an app's code."
