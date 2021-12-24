@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use self::{
 	arguments::{Argument, ConstructorArgument},
-	parameter_helper_definitions::{CustomArgument, ParameterHelperDefintions},
+	parameter_helper_definitions::{CustomArgument, ParameterHelperDefinitions},
 };
 use crate::{
 	asteracea_ident,
@@ -473,14 +473,14 @@ impl ComponentDeclaration {
 			}))
 			.collect::<Result<Vec<_>>>()?;
 
-		let ParameterHelperDefintions {
+		let ParameterHelperDefinitions {
 			on_parameter_struct: new_args_generics,
 			parameter_struct_body: new_args_body,
 			on_function: new_generics,
 			for_function_args: new_args_generic_args,
 			on_builder_function: new_args_builder_generics,
 			for_builder_function_return: new_args_builder_generic_args,
-		} = ParameterHelperDefintions::new(
+		} = ParameterHelperDefinitions::new(
 			&component_generics,
 			&parse2(quote_spanned!(constructor_paren.span=> <'a: '_>)).unwrap(),
 			&constructor_generics,
@@ -488,14 +488,14 @@ impl ComponentDeclaration {
 			&new_lifetime,
 		);
 
-		let ParameterHelperDefintions {
+		let ParameterHelperDefinitions {
 			on_parameter_struct: render_args_generics,
 			parameter_struct_body: render_args_body,
 			on_function: render_generics,
 			for_function_args: render_args_generic_args,
 			on_builder_function: render_args_builder_generics,
 			for_builder_function_return: render_args_builder_generic_args,
-		} = ParameterHelperDefintions::new(
+		} = ParameterHelperDefinitions::new(
 			&component_generics,
 			&parse2(quote_spanned!(render_paren.span=> <'a, 'bump: '_>)).unwrap(),
 			&render_generics,
