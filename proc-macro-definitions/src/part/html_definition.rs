@@ -397,24 +397,23 @@ impl<C: Configuration> HtmlDefinition<C> {
 					}
 				});
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
-					let children = #children;
 					//TODO: Add MathML and SVG support.
 					::#asteracea::lignin::Node::HtmlElement::<'bump, #thread_safety> {
-						element: #bump.alloc_with(|| {
+						element: #bump.alloc_try_with(|| -> ::core::result::Result::<_, ::#asteracea::error::Escalation> {
 							#validate_has_content
 							#(#validate_attributes)*
 							#document_closing
 							//TODO: Validate attributes.
 							//TODO: Validate events.
 
-							::#asteracea::lignin::Element {
+							::core::result::Result::Ok(::#asteracea::lignin::Element {
 								name: ::#asteracea::__::lignin_schema::html::elements::#name::TAG_NAME,
 								creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
 								attributes: #attributes,
-								content: children,
 								event_bindings: #event_bindings,
-							}
-						}),
+								content: #children,
+							})
+						})?,
 						//TODO: Add DOM binding support.
 						dom_binding: None,
 					}
