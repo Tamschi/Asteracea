@@ -49,8 +49,10 @@ dependencies = [
  "bumpalo",
  "cargo-husky",
  "debugless-unwrap 0.0.4",
+ "ergo-pin",
  "git_info",
  "lignin",
+ "lignin-html",
  "lignin-schema",
  "rhizome",
  "static_assertions",
@@ -300,6 +302,17 @@ dependencies = [
  "log",
  "regex",
  "termcolor",
+]
+
+[[package]]
+name = "ergo-pin"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bc1eb88aabef58f4b6ebfa4e5d644bf6e832a39a0fba225c120605580f4a30b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
