@@ -8,12 +8,13 @@ use crate::{
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
-use proc_macro2::{Punct, Span, TokenStream};
+use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
-	parse2,
-	token::{Brace, Paren},
+	parse2, parse_quote_spanned,
+	spanned::Spanned,
+	token::{Brace, Eq, Paren, Question},
 	visit_mut::{visit_expr_mut, VisitMut},
 	Error, Expr, ExprPath, Ident, Pat, PatIdent, PatTuple, PatTupleStruct, Result, Token,
 	Visibility,
@@ -27,20 +28,24 @@ pub enum Component<C: Configuration> {
 		open_span: Span,
 		path: ExprPath,
 		capture: CaptureDefinition<C>,
-		render_params: Vec<Parameter>,
+		render_params: Vec<Parameter<Token![.]>>,
 		content_children: Vec<ContentChild<C>>,
 	},
 	Instanced {
 		open_span: Span,
 		reference: Block,
-		render_params: Vec<Parameter>,
+		render_params: Vec<Parameter<Token![.]>>,
 		content_children: Vec<ContentChild<C>>,
 	},
 }
 impl<C: Configuration> ParseWithContext for Component<C> {
 	type Output = Self;
 
-	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
+	fn parse_with_context(
+		input: ParseStream<'_>,
+		cx: &mut ParseContext,
+		parent_parameter_parser: &mut dyn ParentParameterParser,
+	) -> Result<Self::Output> {
 		let open_span;
 		unquote!(input, #'open_span <*);
 
@@ -51,6 +56,8 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 			// Suppress warning.
 			reference.brace_token.span = reference.brace_token.span.resolved_at(Span::mixed_site());
 
+			parent_parameter_parser.parse_any(input, cx)?;
+
 			let mut render_params = vec![];
 			while input.peek(Token![.]) && !input.peek(Token![..]) {
 				unquote!(input, #let param);
@@ -60,9 +67,14 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 			let mut content_children = vec![];
 			while !input.peek(Token![>]) {
 				let span = input.span();
-				let part = Part::<C>::parse_with_context(input, cx)?;
+				let mut parent_parameters = vec![];
+				let part = Part::<C>::parse_with_context(input, cx, &mut parent_parameters)?;
 				if let Some(part) = part {
-					content_children.push(ContentChild { span, part })
+					content_children.push(ContentChild {
+						span,
+						part,
+						parent_parameters,
+					})
 				}
 			}
 
@@ -106,23 +118,29 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				}
 			};
 
-			let mut new_params: Vec<Parameter> = vec![];
+			parent_parameter_parser.parse_any(input, cx)?;
+
+			let mut new_params: Vec<Parameter<Token![*]>> = vec![];
 			while input.peek(Token![*]) {
 				new_params.push(input.parse()?)
 			}
 
-			let mut render_params: Vec<Parameter> = vec![];
+			let mut render_params: Vec<Parameter<Token![.]>> = vec![];
 			while input.peek(Token![.]) && !input.peek(Token![..]) {
-				unquote!(input, #let param);
-				render_params.push(param)
+				render_params.push(input.parse()?)
 			}
 
 			let mut content_children = vec![];
 			while !input.peek(Token![/]) && !input.peek(Token![>]) {
 				let span = input.span();
-				let part = Part::<C>::parse_with_context(input, cx)?;
+				let mut parent_parameters = vec![];
+				let part = Part::<C>::parse_with_context(input, cx, &mut parent_parameters)?;
 				if let Some(part) = part {
-					content_children.push(ContentChild { span, part })
+					content_children.push(ContentChild {
+						span,
+						part,
+						parent_parameters,
+					})
 				}
 			}
 
@@ -148,7 +166,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				));
 			}
 
-			let new_params = parameter_struct_expression::<C>(
+			let new_params = parameter_struct_expression::<C, Token![*]>(
 				None,
 				open_span,
 				parse2(quote_spanned! (open_span=> #path::new_args_builder()))
@@ -163,7 +181,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 					quote_spanned! {open_span=>
 						pin |#visibility #field_name = #path::new(&node, #new_params)?|
 					},
-					|input| CaptureDefinition::<C>::parse_with_context(input, cx),
+					|input| CaptureDefinition::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
 				)
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
@@ -257,16 +275,17 @@ impl VisitMut for SelfMassager {
 	}
 }
 
+//TODO: Unify all parameter types.
 #[derive(Clone)]
-pub struct Parameter {
-	punct: Punct,
+pub struct Parameter<P> {
+	punct: P,
 	ident: Ident,
-	question: Option<Token![?]>,
-	eq: Token![=],
+	question: Option<Question>,
+	eq: Eq,
 	value: Block,
 }
 
-impl Parse for Parameter {
+impl<P: Parse> Parse for Parameter<P> {
 	fn parse(input: ParseStream) -> Result<Self> {
 		unquote! {input,
 			#let punct
@@ -285,12 +304,12 @@ impl Parse for Parameter {
 	}
 }
 
-impl ToTokens for Parameter {
+impl<P: Spanned> ToTokens for Parameter<P> {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		let value_stmts = &self.value.stmts;
 		let value = quote_spanned! (self.value.brace_token.span.resolved_at(Span::mixed_site())=> {#value_stmts});
 		match self.question {
-			Some(_) => unreachable!(),
+			Some(_) => todo!("Conditional component parameters."),
 			None => {
 				let dot = quote_spanned!(self.punct.span()=> .);
 				let ident = &self.ident;
@@ -300,11 +319,11 @@ impl ToTokens for Parameter {
 	}
 }
 
-fn parameter_struct_expression<C: Configuration>(
+fn parameter_struct_expression<C: Configuration, P: Spanned>(
 	cx: Option<&GenerateContext>,
 	fallback_span: Span,
 	make_builder: Expr,
-	parameters: &[Parameter],
+	parameters: &[Parameter<P>],
 	content_children: &[ContentChild<C>],
 ) -> Result<TokenStream> {
 	if parameters
@@ -491,21 +510,35 @@ fn parameter_struct_expression<C: Configuration>(
 pub struct ContentChild<C: Configuration> {
 	span: Span,
 	part: Part<C>,
+	parent_parameters: Vec<Parameter<Token![^]>>,
 }
 
 impl<C: Configuration> ContentChild<C> {
 	fn parameter_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
+		let span = self.span.resolved_at(Span::mixed_site());
+
+		let parent_parameter_tokens = parameter_struct_expression::<C, Token![^]>(
+			Some(cx),
+			span,
+			parse_quote_spanned!(span=> parent_parameters_builder),
+			&self.parent_parameters,
+			&[],
+		)?;
 		let part = self.part.part_tokens(cx)?;
 
-		let span = self.span.resolved_at(Span::mixed_site());
 		let bump = Ident::new("bump", span.resolved_at(Span::call_site()));
 		let bump_time = quote_spanned!(bump.span()=> 'bump);
 		let asteracea = asteracea_ident(span);
 		quote_spanned! {span=>
-			.__Asteracea__anonymous_content(::std::boxed::Box::new(
-				|bump: &#bump_time ::#asteracea::bumpalo::Bump| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
-					::core::result::Result::Ok(#part)
-				}
+			.__Asteracea__anonymous_content((
+				::#asteracea::__::infer_builder(|parent_parameters_builder| -> ::core::result::Result<_, ::#asteracea::error::Escalation> {
+					::core::result::Result::Ok(#parent_parameter_tokens)
+				}),
+				::std::boxed::Box::new(
+					|bump: &#bump_time ::#asteracea::bumpalo::Bump| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+						::core::result::Result::Ok(#part)
+					}
+				),
 			))
 		}
 		.to_token_stream()
@@ -547,4 +580,34 @@ struct MatchArm<'a> {
 struct BuilderMethodCall {
 	builder_method: Ident,
 	deferred: Ident,
+}
+
+pub trait ParentParameterParser {
+	fn parse_one(&mut self, input: ParseStream, cx: &mut ParseContext) -> Result<()>;
+
+	fn parse_any(&mut self, input: ParseStream, cx: &mut ParseContext) -> Result<()> {
+		while input.peek(Token![^]) {
+			self.parse_one(input, cx)?
+		}
+		Ok(())
+	}
+}
+
+pub struct BlockParentParameters;
+impl ParentParameterParser for BlockParentParameters {
+	fn parse_one(&mut self, input: ParseStream, _: &mut ParseContext) -> Result<()> {
+		let caret: Token![^];
+		let _name: Ident;
+		let _optional: Option<Token![?]>;
+		let _value: Block;
+		unquote!(input, #caret#_name#_optional=#_value);
+		Err(Error::new_spanned(caret, "Parent parameters aren't allowed here but only in direct children of included components."))
+	}
+}
+
+impl ParentParameterParser for Vec<Parameter<Token![^]>> {
+	fn parse_one(&mut self, input: ParseStream, _: &mut ParseContext) -> Result<()> {
+		self.push(input.parse()?);
+		Ok(())
+	}
 }

@@ -17,3 +17,14 @@ impl<R: ?Sized, T, F> CallbackHandler<R, T, Pin<&'static R>> for F where F: FnOn
 // Clippy complains about the type complexity of this if it appears directly as component field.
 pub type DroppableLazyCallbackRegistration<Component, ParameterFn> =
 	ManuallyDrop<Lazy<CallbackRegistration<Component, ParameterFn>>>;
+
+/// Automatically instantiates as [`Built::Builder`] via type inference.
+pub fn infer_builder<B: Built, E>(build: impl FnOnce(B::Builder) -> Result<B, E>) -> Result<B, E> {
+	build(B::builder())
+}
+
+/// A buildable type.
+pub trait Built {
+	type Builder;
+	fn builder() -> Self::Builder;
+}

@@ -6,7 +6,7 @@ use self::{
 };
 use crate::{
 	asteracea_ident,
-	part::GenerateContext,
+	part::{BlockParentParameters, GenerateContext},
 	storage_configuration::StorageTypeConfiguration,
 	storage_context::{ParseContext, ParseWithContext, StorageContext},
 	syn_ext::{AddOptionExt, *},
@@ -239,7 +239,7 @@ impl Parse for ComponentDeclaration {
 		};
 
 		let body = loop {
-			match Part::parse_with_context(input, &mut cx)? {
+			match Part::parse_with_context(input, &mut cx, &mut BlockParentParameters)? {
 				None => (),
 				Some(body) => break body,
 			}
@@ -267,7 +267,11 @@ impl Parse for ComponentDeclaration {
 				call2_strict(
 					quote_spanned!(span=> |#(#attrs)* #visibility #arg = {#pat}|;),
 					|input| {
-						Part::<ComponentRenderConfiguration>::parse_with_context(input, &mut cx)
+						Part::<ComponentRenderConfiguration>::parse_with_context(
+							input,
+							&mut cx,
+							&mut BlockParentParameters,
+						)
 					},
 				)
 				.debugless_unwrap()?

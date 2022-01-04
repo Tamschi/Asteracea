@@ -6,6 +6,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
 use syn::{parse::ParseStream, LitStr};
 use unquote::unquote;
+use super::ParentParameterParser;
 
 pub struct HtmlComment {
 	open_span: Span,
@@ -18,6 +19,7 @@ impl ParseWithContext for HtmlComment {
 	fn parse_with_context(
 		input: ParseStream<'_>,
 		_cx: &mut ParseContext,
+		_: &mut dyn ParentParameterParser,
 	) -> syn::Result<Self::Output> {
 		let open_span;
 		let text;
