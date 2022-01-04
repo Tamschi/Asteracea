@@ -37,6 +37,7 @@ pub use try_lazy_init;
 #[doc = include_str!("../README.md")]
 mod readme {}
 
+pub mod components;
 pub mod error;
 pub mod storage;
 

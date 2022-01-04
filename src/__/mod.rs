@@ -1,5 +1,5 @@
 use lignin::CallbackRegistration;
-use std::{mem::ManuallyDrop, pin::Pin};
+use std::{marker::PhantomData, mem::ManuallyDrop, pin::Pin};
 use try_lazy_init::Lazy;
 
 pub use lignin_schema;
@@ -23,8 +23,15 @@ pub type DroppableLazyCallbackRegistration<Component, ParameterFn> =
 /// # Errors
 ///
 /// Iff `build` errors.
-pub fn infer_builder<B: Built, E>(build: impl FnOnce(B::Builder) -> Result<B, E>) -> Result<B, E> {
-	build(B::builder())
+pub fn infer_builder<B: Built, E>(
+	build: impl FnOnce(B::Builder) -> Result<B, E>,
+) -> Result<(PhantomData<B>, B), E> {
+	build(B::builder()).map(|built| (PhantomData, built))
+}
+
+/// Helps [`infer_builder`] by giving it an additional type to used
+pub fn infer_built<T>(built: (PhantomData<T>, T)) -> T {
+	built.1
 }
 
 /// A buildable type.
@@ -51,6 +58,7 @@ impl Built for AnonymousContentParentParameters {
 impl AnonymousContentParentParametersBuilder {
 	#[must_use]
 	pub fn build(self) -> AnonymousContentParentParameters {
+		let _ = self;
 		AnonymousContentParentParameters {}
 	}
 }

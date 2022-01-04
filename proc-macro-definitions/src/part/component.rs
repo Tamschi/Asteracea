@@ -531,9 +531,11 @@ impl<C: Configuration> ContentChild<C> {
 		let asteracea = asteracea_ident(span);
 		quote_spanned! {span=>
 			.__Asteracea__anonymous_content((
-				::#asteracea::__::infer_builder(|parent_parameters_builder| -> ::core::result::Result<_, ::#asteracea::error::Escalation> {
-					::core::result::Result::Ok(#parent_parameter_tokens)
-				})?,
+				::#asteracea::__::infer_built(
+					::#asteracea::__::infer_builder(|parent_parameters_builder| -> ::core::result::Result<_, ::#asteracea::error::Escalation> {
+						::core::result::Result::Ok(#parent_parameter_tokens)
+					})?
+				),
 				::std::boxed::Box::new(
 					|bump: &#bump_time ::#asteracea::bumpalo::Bump| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
 						::core::result::Result::Ok(#part)
