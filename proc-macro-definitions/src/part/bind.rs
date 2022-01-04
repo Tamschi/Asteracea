@@ -1,4 +1,6 @@
-use super::{CaptureDefinition, GenerateContext, ParentParameterParser, Part, BlockParentParameters};
+use super::{
+	BlockParentParameters, CaptureDefinition, GenerateContext, ParentParameterParser, Part,
+};
 use crate::{
 	asteracea_ident,
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},

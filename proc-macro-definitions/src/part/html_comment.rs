@@ -1,3 +1,4 @@
+use super::ParentParameterParser;
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
@@ -6,7 +7,6 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
 use syn::{parse::ParseStream, LitStr};
 use unquote::unquote;
-use super::ParentParameterParser;
 
 pub struct HtmlComment {
 	open_span: Span,
