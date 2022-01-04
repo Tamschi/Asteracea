@@ -1,5 +1,5 @@
 use lignin::CallbackRegistration;
-use std::{marker::PhantomData, mem::ManuallyDrop, pin::Pin};
+use std::{mem::ManuallyDrop, pin::Pin};
 use try_lazy_init::Lazy;
 
 pub use lignin_schema;
