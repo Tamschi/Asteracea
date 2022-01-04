@@ -19,6 +19,10 @@ pub type DroppableLazyCallbackRegistration<Component, ParameterFn> =
 	ManuallyDrop<Lazy<CallbackRegistration<Component, ParameterFn>>>;
 
 /// Automatically instantiates as [`Built::Builder`] via type inference.
+///
+/// # Errors
+///
+/// Iff `build` errors.
 pub fn infer_builder<B: Built, E>(build: impl FnOnce(B::Builder) -> Result<B, E>) -> Result<B, E> {
 	build(B::builder())
 }
@@ -27,4 +31,26 @@ pub fn infer_builder<B: Built, E>(build: impl FnOnce(B::Builder) -> Result<B, E>
 pub trait Built {
 	type Builder;
 	fn builder() -> Self::Builder;
+}
+
+/// FIXME: Properly support custom parent parameters.
+pub struct AnonymousContentParentParameters {}
+/// FIXME: Properly support custom parent parameters.
+
+pub struct AnonymousContentParentParametersBuilder;
+
+impl Built for AnonymousContentParentParameters {
+	type Builder = AnonymousContentParentParametersBuilder;
+
+	#[must_use]
+	fn builder() -> Self::Builder {
+		AnonymousContentParentParametersBuilder
+	}
+}
+
+impl AnonymousContentParentParametersBuilder {
+	#[must_use]
+	pub fn build(self) -> AnonymousContentParentParameters {
+		AnonymousContentParentParameters {}
+	}
 }

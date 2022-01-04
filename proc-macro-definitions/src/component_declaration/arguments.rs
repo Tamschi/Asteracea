@@ -2,9 +2,9 @@ use proc_macro2::Span;
 use quote::{quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
-	parse_quote,
+	parse_quote_spanned,
 	spanned::Spanned,
-	Attribute, Expr, Ident, Pat, PatIdent, PatType, Result, Token, Visibility,
+	Attribute, Expr, FnArg, PatType, Result, Token, Visibility,
 };
 use tap::Pipe;
 use unquote::unquote;
@@ -90,30 +90,22 @@ impl Parse for Argument {
 			);
 			let asteracea = asteracea_ident(dot2.span());
 			Self {
-				fn_arg: PatType {
-					attrs: attrs.into_inner(),
-					pat: PatIdent {
-						attrs: vec![],
-						by_ref: None,
-						mutability: None,
-						ident: Ident::new(
-							"__Asteracea__anonymous_content",
-							dot2.span().resolved_at(Span::mixed_site()),
-						),
-						subpat: None,
-					}
-					.pipe(Pat::Ident)
-					.pipe(Box::new),
-					colon_token: Token![:](dot2.span().resolved_at(Span::mixed_site())),
-					ty: parse_quote!(::std::boxed::Box::<
-						dyn '_ + ::core::ops::FnOnce(&#bump ::#asteracea::bumpalo::Bump) -> ::std::result::Result::<
-							::#asteracea::lignin::Node::<
-								#bump,
-								::#asteracea::lignin::ThreadSafe,
-							>,
-							::#asteracea::error::Escalation,
-						>
-					>),
+				fn_arg: match parse_quote_spanned! {dot2.span().resolved_at(Span::mixed_site())=>
+					__Asteracea__anonymous_content: (
+						::#asteracea::__::AnonymousContentParentParameters,
+						::std::boxed::Box::<
+							dyn '_ + ::core::ops::FnOnce(&#bump ::#asteracea::bumpalo::Bump) -> ::std::result::Result::<
+								::#asteracea::lignin::Node::<
+									#bump,
+									::#asteracea::lignin::ThreadSafe,
+								>,
+								::#asteracea::error::Escalation,
+							>
+						>,
+					)
+				} {
+					FnArg::Receiver(_) => unreachable!(),
+					FnArg::Typed(pat_type) => pat_type,
 				},
 				question: None,
 				default: None,
