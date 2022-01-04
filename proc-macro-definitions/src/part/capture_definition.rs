@@ -12,6 +12,8 @@ use syn::{
 };
 use take_mut::take;
 
+use super::ParentParameterParser;
+
 pub struct CaptureDefinition<C> {
 	access: TokenStream,
 	_phantom: PhantomData<C>,
@@ -23,7 +25,11 @@ pub mod kw {
 
 impl<C> ParseWithContext for CaptureDefinition<C> {
 	type Output = Option<Self>;
-	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
+	fn parse_with_context(
+		input: ParseStream<'_>,
+		cx: &mut ParseContext,
+		_: &mut dyn ParentParameterParser,
+	) -> Result<Self::Output> {
 		let mut attributes = input.call(Attribute::parse_outer)?;
 
 		let pin: Option<kw::pin> = input.parse()?;
