@@ -148,7 +148,7 @@ const _: () = {
 		}
 	}
 
-	struct RouterParentParameters<'RENDER> {
+	pub struct RouterParentParameters<'RENDER> {
 		/// FIXME: This is inefficient.
 		paths: Vec<&'RENDER str>,
 	}
@@ -162,6 +162,10 @@ const _: () = {
 	}
 
 	impl<'a> RouterParentParameters<'a> {
+		pub fn build(self) -> Self {
+			self
+		}
+
 		pub fn path(self, path: &'a str) -> RouterParentParameters<'a> {
 			let Self { mut paths } = self;
 			paths.push(path);

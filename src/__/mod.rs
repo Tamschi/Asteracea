@@ -24,14 +24,10 @@ pub type DroppableLazyCallbackRegistration<Component, ParameterFn> =
 ///
 /// Iff `build` errors.
 pub fn infer_builder<B: Built, E>(
+	_phantom: [B; 0],
 	build: impl FnOnce(B::Builder) -> Result<B, E>,
-) -> Result<(PhantomData<B>, B), E> {
-	build(B::builder()).map(|built| (PhantomData, built))
-}
-
-/// Helps [`infer_builder`] by giving it an additional type to used
-pub fn infer_built<T>(built: (PhantomData<T>, T)) -> T {
-	built.1
+) -> Result<B, E> {
+	build(B::builder())
 }
 
 /// A buildable type.
