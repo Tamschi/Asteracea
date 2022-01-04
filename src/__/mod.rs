@@ -23,11 +23,11 @@ pub type DroppableLazyCallbackRegistration<Component, ParameterFn> =
 /// # Errors
 ///
 /// Iff `build` errors.
+#[allow(clippy::needless_pass_by_value)]
 pub fn infer_builder<B: Built, E>(
-	phantom: [B; 0],
+	_phantom: [B; 0],
 	build: impl FnOnce(B::Builder) -> Result<B, E>,
 ) -> Result<B, E> {
-	let _ = phantom;
 	build(B::builder())
 }
 
