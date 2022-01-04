@@ -31,7 +31,15 @@ const _: () = {
 			for route in __Asteracea__anonymous_content {
 				let (RouterParentParameters { paths }, render_content) = route;
 				for route in paths {
-					if path == route || (route.ends_with('/') && &path[..route.len()] == route) {
+					let wildcard_route = route.ends_with("/*");
+					let route = if wildcard_route {
+						&route[..route.len() - '*'.len_utf8()]
+					} else {
+						route
+					};
+					if (!wildcard_route && path == route)
+						|| (wildcard_route && &path[..route.len()] == route)
+					{
 						if let Some(rest) = rest {
 							let prev_rest = rest
 								.replace(&path[route.strip_suffix('/').unwrap_or(route).len()..]);
@@ -44,7 +52,7 @@ const _: () = {
 					}
 				}
 			}
-			todo!("Router default (explicit named child!).")
+			todo!("Router default (explicit named child?).")
 		}
 
 		pub fn new_args_builder() -> RouterNewArgsBuilder<()> {
