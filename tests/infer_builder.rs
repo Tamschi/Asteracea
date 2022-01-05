@@ -7,11 +7,7 @@ fn my_test() {
 		if false {
 			<[_; 0] as IntoIterator>::into_iter(phantom).next().unwrap()
 		} else {
-			infer_builder(
-				phantom,
-				|builder| -> Result<_, asteracea::error::Escalation> { Ok(builder.build()) },
-			)
-			.unwrap()
+			infer_builder(phantom).build()
 		}
 	};
 }

@@ -18,17 +18,11 @@ impl<R: ?Sized, T, F> CallbackHandler<R, T, Pin<&'static R>> for F where F: FnOn
 pub type DroppableLazyCallbackRegistration<Component, ParameterFn> =
 	ManuallyDrop<Lazy<CallbackRegistration<Component, ParameterFn>>>;
 
-/// Automatically instantiates as [`Built::Builder`] via type inference.
-///
-/// # Errors
-///
-/// Iff `build` errors.
-#[allow(clippy::needless_pass_by_value)]
-pub fn infer_builder<B: Built, E>(
-	_phantom: [B; 0],
-	build: impl FnOnce(B::Builder) -> Result<B, E>,
-) -> Result<B, E> {
-	build(B::builder())
+/// Automatically instantiates as [`Built::Builder`] for a type [`B: Built`](`Built`)
+/// that can be inferred from a phantom array.
+pub fn infer_builder<B: Built>(phantom: [B; 0]) -> B::Builder {
+	drop(phantom);
+	B::builder()
 }
 
 /// A buildable type.
