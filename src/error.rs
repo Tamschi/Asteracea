@@ -287,7 +287,7 @@ impl Escalation {
 
 	/// Catches [`Escalation`]s and, if possible, (other) panics currently unwinding the stack that are an `E`.
 	///
-	/// Even if not caught, panics are converted into [`GuiError`]s (which may re-panic them).
+	/// Even if not caught, panics are converted into [`Escalation`]s (which may re-panic them).
 	///
 	/// # Errors
 	///
