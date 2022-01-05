@@ -15,7 +15,7 @@
   - [CSS Scoping]()
   - [EX: Stateless Components are Zero-Sized](./static_components/ex_stateless_components_are_zero-sized.md)
 - [2: Dynamic Components]()
-  - [`Escalation` and `"backtrace"`](./dynamic_components/escalation_and_backtrace.md)
+  - [`Escalation`](./dynamic_components/escalation.md)
   - [`new with { …; }`](./dynamic_components/new_with.md)
   - [Render Parameters]()
   - [Constructor Parameters]()

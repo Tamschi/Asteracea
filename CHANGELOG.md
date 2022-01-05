@@ -19,6 +19,7 @@ TODO: Date
   * Upgraded `lignin` dependency from 0.0.3 to 0.0.5
     > to support fallible rendering.
   * Generated `.render(…)` methods are now fallible, returning `Result<_, Escalation>`.
+  * The `"backtrace"` feature was replaced by `"tracing"`, which enables [`tracing`](https://docs.rs/tracing/0.1/) compatibility.
 
 * Features:
   * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.

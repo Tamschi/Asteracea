@@ -625,7 +625,6 @@ impl ComponentDeclaration {
 			#(#struct_definition)*
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
-				#[::#asteracea::trace_escalations(#component_name)]
 				#[::#asteracea::__::tracing::instrument(name = #new_span_name, skip_all)]
 				#(#constructor_attributes)*
 				pub fn #new#new_generics(
@@ -660,7 +659,6 @@ impl ComponentDeclaration {
 					#new_args_name::builder()
 				}
 
-				#[::#asteracea::trace_escalations(#component_name)]
 				#[::#asteracea::__::tracing::instrument(name = #render_span_name, skip_all)]
 				#(#render_attributes)*
 				pub fn #render#render_generics(

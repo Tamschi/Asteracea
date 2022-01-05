@@ -41,7 +41,6 @@ is-it-maintained-open-issues = { repository = "Tamschi/Asteracea" }
 maintenance = { status = "experimental" } # This may differ between branches.
 
 [features]
-backtrace = ["asteracea_proc-macro-definitions/backtrace"] # Enables additional error traces, at the cost of code size and performance.
 error-abort = [] # Reserved. Will be used to abort the process on GUI error escalation.
 force-unwind = [] # Force the use of panics for `Escalation` propagation. This may improve code size and app performance.
 services = []

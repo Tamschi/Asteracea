@@ -78,6 +78,7 @@ dependencies = [
  "pulldown-cmark 0.7.2",
  "pulldown-cmark-to-cmark",
  "quote",
+ "tracing",
  "version-sync",
  "walkdir",
 ]
