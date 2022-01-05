@@ -14,7 +14,7 @@ use crate::{
 };
 use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapNone as _};
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::{Literal, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	parenthesized,
@@ -606,6 +606,11 @@ impl ComponentDeclaration {
 		let new = Ident::new("new", component_name.span());
 		let render = Ident::new("render", component_name.span());
 
+		let mut new_span_name = Literal::string(&format!("{}::{}", component_name, new));
+		new_span_name.set_span(new.span().resolved_at(Span::mixed_site()));
+		let mut render_span_name = Literal::string(&format!("{}::{}", component_name, render));
+		render_span_name.set_span(render.span().resolved_at(Span::mixed_site()));
+
 		Ok(quote_spanned! {Span::mixed_site()=>
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
@@ -621,7 +626,7 @@ impl ComponentDeclaration {
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
 				#[::#asteracea::trace_escalations(#component_name)]
-				#[::#asteracea::__::tracing::instrument(skip_all)]
+				#[::#asteracea::__::tracing::instrument(name = #new_span_name, skip_all)]
 				#(#constructor_attributes)*
 				pub fn #new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
@@ -656,7 +661,7 @@ impl ComponentDeclaration {
 				}
 
 				#[::#asteracea::trace_escalations(#component_name)]
-				#[::#asteracea::__::tracing::instrument(skip_all)]
+				#[::#asteracea::__::tracing::instrument(name = #render_span_name, skip_all)]
 				#(#render_attributes)*
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
