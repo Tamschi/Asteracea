@@ -1,6 +1,9 @@
 #![allow(warnings)] //FIXME
 
-use crate::{error::Escalation, __::Built};
+use crate::{
+	error::Escalation,
+	__::{tracing::instrument, Built},
+};
 use ::std::pin::Pin;
 use bumpalo::Bump;
 use lignin::{Node, ThreadSafe};
@@ -8,16 +11,20 @@ use std::{any::type_name, cell::Cell, sync::Arc};
 use typed_builder::TypedBuilder;
 
 // A simple page router.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Router;
 
 const _: () = {
 	impl Router {
+		#[instrument(name = "Router::new", skip_all)]
 		pub fn new(
 			_parent_node: &Arc<rhizome::Node>,
 			RouterNewArgs {}: RouterNewArgs,
 		) -> Result<Self, Escalation> {
 			Ok(Self)
 		}
+
+		#[instrument(name = "Router::render", skip_all, fields(path = path))]
 		pub fn render<'bump>(
 			self: Pin<&Self>,
 			bump: &'bump Bump,
