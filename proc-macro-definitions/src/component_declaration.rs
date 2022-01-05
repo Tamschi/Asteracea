@@ -638,7 +638,7 @@ impl ComponentDeclaration {
 					#(#rhizome_extractions)*
 					let mut #call_site_node = #call_site_node;
 
-					{} // Isolate constrcutor block.
+					{} // Isolate constructor block.
 					#constructor_block_statements
 					{} // Dito.
 
