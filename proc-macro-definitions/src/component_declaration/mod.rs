@@ -621,6 +621,7 @@ impl ComponentDeclaration {
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
 				#[::#asteracea::trace_escalations(#component_name)]
+				#[::#asteracea::__::tracing::instrument(skip_all)]
 				#(#constructor_attributes)*
 				pub fn #new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
@@ -655,6 +656,7 @@ impl ComponentDeclaration {
 				}
 
 				#[::#asteracea::trace_escalations(#component_name)]
+				#[::#asteracea::__::tracing::instrument(skip_all)]
 				#(#render_attributes)*
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,

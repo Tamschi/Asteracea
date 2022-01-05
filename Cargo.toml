@@ -55,6 +55,7 @@ lignin-schema = { git = "https://github.com/Tamschi/lignin-schema.git", branch =
 rhizome = { version = "0.0.1", features = ["macros"] } # public
 static_assertions = "1.1.0"
 typed-builder = "0.9.0" # semi-public
+tracing = { version = "0.1.29", optional = true }
 
 [dev-dependencies]
 cargo-husky = "1.5.0"

@@ -19,6 +19,11 @@
 //! ## `"services"`
 //!
 //! TODO
+//!
+//! ## `"tracing"`
+//!
+//! Enables [`tracing`](https://docs.rs/tracing/0.1/tracing/) instrumentation of `::new` and `.render` functions
+//! (on components generated using [`component`]).
 
 #![doc(html_root_url = "https://docs.rs/asteracea/0.0.2")]
 #![warn(clippy::pedantic, missing_docs)]

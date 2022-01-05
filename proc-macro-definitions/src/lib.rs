@@ -202,3 +202,12 @@ impl<T, E> FailSoftly<T, E> for std::result::Result<T, E> {
 		self.map_err(Into::into).fail_softly(errors, fallback)
 	}
 }
+
+/// An attribute macro that discards its arguments and returns what it is applied to unchanged.
+///
+/// Used as stub when another attribute is not to be activated.
+#[proc_macro_attribute]
+pub fn discard_these_attribute_args(args: TokenStream1, item: TokenStream1) -> TokenStream1 {
+	drop(args);
+	item
+}

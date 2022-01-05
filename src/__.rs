@@ -7,6 +7,14 @@ pub use static_assertions;
 pub use try_lazy_init;
 pub use typed_builder;
 
+#[cfg(feature = "tracing")]
+pub use tracing;
+
+#[cfg(not(feature = "tracing"))]
+pub mod tracing {
+	pub use asteracea_proc_macro_definitions::discard_these_attribute_args as instrument;
+}
+
 /// Only implemented for functions that have a signature ABI-compatible with `fn(*const R, T)`!
 /// See `event_binding.rs` is the asteracea_proc-macro-definition crate for more information.
 pub trait CallbackHandler<R: ?Sized, T, Disambiguate> {}
