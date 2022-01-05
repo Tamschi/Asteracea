@@ -18,7 +18,7 @@ impl<R: ?Sized, T, F> CallbackHandler<R, T, Pin<&'static R>> for F where F: FnOn
 pub type DroppableLazyCallbackRegistration<Component, ParameterFn> =
 	ManuallyDrop<Lazy<CallbackRegistration<Component, ParameterFn>>>;
 
-/// Automatically instantiates as [`Built::Builder`] for a type [`B: Built`](`Built`)
+/// Automatically instantiates a [`Built::Builder`] for a type [`B: Built`](`Built`)
 /// that can be inferred from a phantom array.
 pub fn infer_builder<B: Built>(phantom: [B; 0]) -> B::Builder {
 	drop(phantom);
