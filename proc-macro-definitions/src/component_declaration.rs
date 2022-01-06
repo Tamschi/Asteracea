@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use self::{
 	arguments::{Argument, ConstructorArgument},
 	parameter_helper_definitions::{CustomArgument, ParameterHelperDefinitions},
@@ -16,6 +14,7 @@ use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapNone as _};
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
+use std::rc::Rc;
 use syn::{
 	parenthesized,
 	parse::{discouraged, Parse, ParseStream, Result},
@@ -23,8 +22,8 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, Generics, Ident, Item, Lifetime, Pat, PatIdent, PatType, ReturnType, Token,
-	Type, Visibility, WhereClause, WherePredicate,
+	Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent, PatType,
+	ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -107,9 +106,9 @@ impl Parse for ComponentDeclaration {
 					let comma_required = !forked.peek(Token![#]);
 					if comma_required && forked.parse::<Token![,]>().is_err() {
 						return Err(Error::new_spanned(
-                            predicate,
-                            "A component's where clause must end with a comma unless it is followed by an attribute.",
-                        ));
+							predicate,
+							"A component's where clause must end with a comma unless it is followed by an attribute.",
+						));
 					}
 					component_wheres.push(predicate);
 
@@ -127,7 +126,7 @@ impl Parse for ComponentDeclaration {
 				warn(
 					input.cursor().span(),
 					"No where predicate found.
-                    Did you forget to end it with a comma?",
+					Did you forget to end it with a comma?",
 				)?;
 			} else {
 				component_generics.where_clause = component_generics
@@ -282,7 +281,7 @@ impl Parse for ComponentDeclaration {
 		if !input.is_empty() {
 			return Err(input.error(
 				"Currently, only one root element is supported.
-                Consider wrapping your elements like so: <div child1 child2 ...>",
+				Consider wrapping your elements like so: <div child1 child2 ...>",
 			));
 		}
 
@@ -454,8 +453,8 @@ impl ComponentDeclaration {
 			.map(|arg| Ok(CustomArgument {
 				attrs: arg.argument.fn_arg.attrs.as_slice(),
 				ident: match &*arg.argument.fn_arg.pat {
-				    Pat::Ident(PatIdent{ ident, .. }) => ident,
-				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
+					Pat::Ident(PatIdent{ ident, .. }) => ident,
+					other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
 				optional: arg.argument.question,
 				ty: &*arg.argument.fn_arg.ty,
@@ -468,8 +467,8 @@ impl ComponentDeclaration {
 			.map(|arg| Ok(CustomArgument {
 				attrs: arg.fn_arg.attrs.as_slice(),
 				ident: match &*arg.fn_arg.pat {
-				    Pat::Ident(PatIdent{ ident, .. }) => ident,
-				    other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
+					Pat::Ident(PatIdent{ ident, .. }) => ident,
+					other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
 				optional: arg.question,
 				ty: &*arg.fn_arg.ty,
@@ -517,6 +516,19 @@ impl ComponentDeclaration {
 			})
 			.collect::<Result<Vec<_>>>()?;
 
+		let constructor_args_tracing_fields = constructor_args_field_patterns
+			.iter()
+			.map(|FieldPat { member, .. }| match member {
+				Member::Unnamed(_) => unreachable!(),
+				Member::Named(arg_ident) => {
+					quote_spanned!(arg_ident.span().resolved_at(Span::mixed_site())=> #arg_ident = {
+						use ::#asteracea::__::CoerceTracingValue;
+						(&&&::#asteracea::__::InertWrapper(&#arg_ident)).coerce()
+					})
+				}
+			})
+			.collect::<Vec<_>>();
+
 		let render_args_field_patterns = render_args
 			.into_iter()
 			.map(|arg| match *arg.fn_arg.pat {
@@ -526,6 +538,19 @@ impl ComponentDeclaration {
 				}
 			})
 			.collect::<Result<Vec<_>>>()?;
+
+		let render_args_tracing_fields = render_args_field_patterns
+			.iter()
+			.map(|FieldPat { member, .. }| match member {
+				Member::Unnamed(_) => unreachable!(),
+				Member::Named(arg_ident) => {
+					quote_spanned!(arg_ident.span().resolved_at(Span::mixed_site())=> #arg_ident = {
+						use ::#asteracea::__::CoerceTracingValue;
+						(&&&::#asteracea::__::InertWrapper(&#arg_ident)).coerce()
+					})
+				}
+			})
+			.collect::<Vec<_>>();
 
 		// These can't be fully hygienic with current technology.
 		let new_args_name = Ident::new(
@@ -625,7 +650,11 @@ impl ComponentDeclaration {
 			#(#struct_definition)*
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
-				#[::#asteracea::__::tracing::instrument(name = #new_span_name, skip_all)]
+				#[::#asteracea::__::tracing::instrument(
+					name = #new_span_name,
+					skip_all,
+					fields(#(#constructor_args_tracing_fields,)*),
+				)]
 				#(#constructor_attributes)*
 				pub fn #new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
@@ -659,7 +688,11 @@ impl ComponentDeclaration {
 					#new_args_name::builder()
 				}
 
-				#[::#asteracea::__::tracing::instrument(name = #render_span_name, skip_all)]
+				#[::#asteracea::__::tracing::instrument(
+					name = #render_span_name,
+					skip_all,
+					fields(#(#render_args_tracing_fields,)*),
+				)]
 				#(#render_attributes)*
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
