@@ -1,5 +1,10 @@
+use core::fmt::Debug;
 use lignin::CallbackRegistration;
-use std::{mem::ManuallyDrop, pin::Pin};
+use std::{
+	fmt::{self, Formatter},
+	mem::ManuallyDrop,
+	pin::Pin,
+};
 use try_lazy_init::Lazy;
 
 pub use lignin_schema;
@@ -61,3 +66,83 @@ impl AnonymousContentParentParametersBuilder {
 		AnonymousContentParentParameters {}
 	}
 }
+
+/// Used to duck-type [`tracing::Value`] implementations on component parameters,
+/// via [autoderef-specialisation](https://lukaskalbertodt.github.io/2019/12/05/generalized-autoref-based-specialization.html),
+/// for use in [`tracing::instrument`]'s `fields` argument.
+///
+/// # Example
+///
+/// ```rust
+/// #[derive(Debug)]
+/// struct YesDebug;
+/// struct NoDebug;
+///
+/// #[::asteracea::__::tracing::instrument(skip_all, fields(
+///     value = {
+///         use ::asteracea::__::CoerceTracingValue;
+///         (&&&::asteracea::__::InertWrapper(&value)).coerce()
+///     },
+///     debug = {
+///         use ::asteracea::__::CoerceTracingValue;
+///         (&&&::asteracea::__::InertWrapper(&debug_)).coerce()
+///     },
+///     neither = {
+///         use ::asteracea::__::CoerceTracingValue;
+///         (&&&::asteracea::__::InertWrapper(&neither)).coerce()
+///     },
+/// ))]
+/// //FIXME: `#[instrument]` isn't hygienic, so the parameter can't be called `debug`. See <https://github.com/tokio-rs/tracing/issues/1318>.
+/// pub fn auto_values(value: u32, debug_: YesDebug, neither: NoDebug) {
+///     drop((value, debug_, neither))
+/// }
+/// ```
+#[cfg(feature = "tracing")]
+pub trait CoerceTracingValue<'a> {
+	type CoercedValue: 'a + tracing::Value;
+	#[must_use]
+	fn coerce(&self) -> Self::CoercedValue;
+}
+
+#[cfg(feature = "tracing")]
+impl<'a, T: ?Sized> CoerceTracingValue<'a> for &&InertWrapper<&'a T>
+where
+	T: tracing::Value,
+{
+	type CoercedValue = &'a T;
+	fn coerce(&self) -> Self::CoercedValue {
+		self.0
+	}
+}
+
+#[cfg(feature = "tracing")]
+impl<'a, T: ?Sized> CoerceTracingValue<'a> for &InertWrapper<&'a T>
+where
+	T: Debug,
+{
+	type CoercedValue = tracing::field::DebugValue<&'a T>;
+	fn coerce(&self) -> Self::CoercedValue {
+		tracing::field::debug(self.0)
+	}
+}
+
+#[cfg(feature = "tracing")]
+impl<T: ?Sized> CoerceTracingValue<'_> for InertWrapper<&T> {
+	type CoercedValue = tracing::field::DebugValue<NotValueNotDebugDebug>;
+	fn coerce(&self) -> Self::CoercedValue {
+		tracing::field::debug(NotValueNotDebugDebug)
+	}
+}
+
+pub struct NotValueNotDebugDebug;
+impl Debug for NotValueNotDebugDebug {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		f.write_str("(`!tracing::Value + !Debug`)")
+	}
+}
+
+/// A newtype that does absolutely nothing by itself.
+///
+/// This is needed to de-collide [`CoerceTracingValue`] due to [`impl<T: ?Sized + Debug> Debug for &T`](https://doc.rust-lang.org/stable/core/fmt/trait.Debug.html#implementors),
+/// for example.
+pub struct InertWrapper<T: ?Sized>(pub T);
