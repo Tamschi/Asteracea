@@ -523,7 +523,7 @@ impl ComponentDeclaration {
 				Member::Named(arg_ident) => {
 					quote_spanned!(arg_ident.span().resolved_at(Span::mixed_site())=> #arg_ident = {
 						use ::#asteracea::__::CoerceTracingValue;
-						(&&&::#asteracea::__::InertWrapper(&#arg_ident)).coerce()
+						(&&&&::#asteracea::__::InertWrapper(&#arg_ident)).coerce()
 					})
 				}
 			})
@@ -546,7 +546,7 @@ impl ComponentDeclaration {
 				Member::Named(arg_ident) => {
 					quote_spanned!(arg_ident.span().resolved_at(Span::mixed_site())=> #arg_ident = {
 						use ::#asteracea::__::CoerceTracingValue;
-						(&&&::#asteracea::__::InertWrapper(&#arg_ident)).coerce()
+						(&&&&::#asteracea::__::InertWrapper(&#arg_ident)).coerce()
 					})
 				}
 			})

@@ -81,15 +81,15 @@ impl AnonymousContentParentParametersBuilder {
 /// #[::asteracea::__::tracing::instrument(skip_all, fields(
 ///     value = {
 ///         use ::asteracea::__::CoerceTracingValue;
-///         (&&&::asteracea::__::InertWrapper(&value)).coerce()
+///         (&&&&::asteracea::__::InertWrapper(&value)).coerce()
 ///     },
 ///     debug = {
 ///         use ::asteracea::__::CoerceTracingValue;
-///         (&&&::asteracea::__::InertWrapper(&debug_)).coerce()
+///         (&&&&::asteracea::__::InertWrapper(&debug_)).coerce()
 ///     },
 ///     neither = {
 ///         use ::asteracea::__::CoerceTracingValue;
-///         (&&&::asteracea::__::InertWrapper(&neither)).coerce()
+///         (&&&&::asteracea::__::InertWrapper(&neither)).coerce()
 ///     },
 /// ))]
 /// //FIXME: `#[instrument]` isn't hygienic, so the parameter can't be called `debug`. See <https://github.com/tokio-rs/tracing/issues/1318>.
@@ -105,7 +105,7 @@ pub trait CoerceTracingValue<'a> {
 }
 
 #[cfg(feature = "tracing")]
-impl<'a, T: ?Sized> CoerceTracingValue<'a> for &&InertWrapper<&'a T>
+impl<'a, T: ?Sized> CoerceTracingValue<'a> for &&&InertWrapper<&'a T>
 where
 	T: tracing::Value,
 {
@@ -116,13 +116,23 @@ where
 }
 
 #[cfg(feature = "tracing")]
-impl<'a, T: ?Sized> CoerceTracingValue<'a> for &InertWrapper<&'a T>
+impl<'a, T: ?Sized> CoerceTracingValue<'a> for &&InertWrapper<&'a T>
 where
 	T: Debug,
 {
 	type CoercedValue = tracing::field::DebugValue<&'a T>;
 	fn coerce(&self) -> Self::CoercedValue {
 		tracing::field::debug(self.0)
+	}
+}
+
+#[cfg(feature = "tracing")]
+impl<T> CoerceTracingValue<'_> for &InertWrapper<&Option<T>> {
+	type CoercedValue = Option<tracing::field::DebugValue<NotValueNotDebugDebug>>;
+	fn coerce(&self) -> Self::CoercedValue {
+		self.0
+			.as_ref()
+			.map(|_| tracing::field::debug(NotValueNotDebugDebug))
 	}
 }
 
