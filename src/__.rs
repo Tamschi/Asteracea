@@ -69,7 +69,7 @@ impl AnonymousContentParentParametersBuilder {
 
 /// Used to duck-type [`tracing::Value`] implementations on component parameters,
 /// via [autoderef-specialisation](https://lukaskalbertodt.github.io/2019/12/05/generalized-autoref-based-specialization.html),
-/// for use in [`tracing::instrument`]'s `fields` argument.
+/// for use in [`mod@tracing::instrument`]'s `fields` argument.
 ///
 /// # Example
 ///

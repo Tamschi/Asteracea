@@ -523,7 +523,7 @@ impl ComponentDeclaration {
 				Member::Named(arg_ident) => {
 					quote_spanned!(arg_ident.span().resolved_at(Span::mixed_site())=> #arg_ident = {
 						use ::#asteracea::__::CoerceTracingValue;
-						(&&&&::#asteracea::__::InertWrapper(&#arg_ident)).coerce()
+						(&&&&::#asteracea::__::InertWrapper(&args.#arg_ident)).coerce()
 					})
 				}
 			})
@@ -546,7 +546,7 @@ impl ComponentDeclaration {
 				Member::Named(arg_ident) => {
 					quote_spanned!(arg_ident.span().resolved_at(Span::mixed_site())=> #arg_ident = {
 						use ::#asteracea::__::CoerceTracingValue;
-						(&&&&::#asteracea::__::InertWrapper(&#arg_ident)).coerce()
+						(&&&&::#asteracea::__::InertWrapper(&args.#arg_ident)).coerce()
 					})
 				}
 			})
@@ -658,11 +658,14 @@ impl ComponentDeclaration {
 				#(#constructor_attributes)*
 				pub fn #new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
-					#new_args_name {
+					args: #new_args_name#new_args_generic_args,
+				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+					// Split off so that `#[instrument]` can see fields.
+					let #new_args_name {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
-					}: #new_args_name#new_args_generic_args,
-				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+					} = args;
+
 					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
 					#(#rhizome_extractions)*
 					let mut #call_site_node = #call_site_node;
@@ -697,11 +700,14 @@ impl ComponentDeclaration {
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
 					#bump: &'bump #asteracea::bumpalo::Bump,
-					#render_args_name {
+					args: #render_args_name#render_args_generic_args,
+				) #render_type {
+					// Split off so that `#[instrument]` can see fields.
+					let #render_args_name {
 						#(#render_args_field_patterns,)*
 						__Asteracea__phantom: _,
-					}: #render_args_name#render_args_generic_args,
-				) #render_type {
+					} = args;
+
 					let this = #render_self;
 					::std::result::Result::Ok(#body)
 				}
