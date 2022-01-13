@@ -651,6 +651,7 @@ impl ComponentDeclaration {
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
 				#[::#asteracea::__::tracing::instrument(
+					level = "trace",
 					name = #new_span_name,
 					skip_all,
 					fields(#(#constructor_args_tracing_fields,)*),
@@ -692,6 +693,7 @@ impl ComponentDeclaration {
 				}
 
 				#[::#asteracea::__::tracing::instrument(
+					level = "trace",
 					name = #render_span_name,
 					skip_all,
 					fields(#(#render_args_tracing_fields,)*),
