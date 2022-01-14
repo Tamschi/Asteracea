@@ -105,13 +105,24 @@ pub trait CoerceTracingValue<'a> {
 }
 
 #[cfg(feature = "tracing")]
-impl<'a, T: ?Sized> CoerceTracingValue<'a> for &&&InertWrapper<&'a T>
+impl<'a, T: ?Sized> CoerceTracingValue<'a> for &&&&InertWrapper<&'a T>
 where
 	T: tracing::Value,
 {
 	type CoercedValue = &'a T;
 	fn coerce(&self) -> Self::CoercedValue {
 		self.0
+	}
+}
+
+#[cfg(feature = "tracing")]
+impl<'a, T> CoerceTracingValue<'a> for &&&InertWrapper<&'a Option<T>>
+where
+	&'a T: Debug,
+{
+	type CoercedValue = Option<tracing::field::DebugValue<&'a T>>;
+	fn coerce(&self) -> Self::CoercedValue {
+		self.0.as_ref().map(tracing::field::debug)
 	}
 }
 
