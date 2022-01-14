@@ -1,10 +1,8 @@
-# `Escalation` and `"backtrace"`
+# `Escalation`
 
 The `::new(…)` and `.render(…)` functions of Asteracea-components are fallible, returning a `Result<_, Escalation>`.
 
 [`Escalation`]()s are panic-like: They are not expected during normal execution of a web frontend, are strictly deprioritised compared to the [`Ok`]() path and components that catch them are encouraged to implement a "fail once and stop" approach where child components are disposed of on first failure.
-
-As long as Asteracea is compiled with the `"backtrace"` feature, it will trace [`Escalation`]() propagation through any function instrumented via the [`#[asteracea::trace_escalations]`]() attribute, which is automatic for the two mentioned above.
 
 You can escalate any error along the GUI tree as long as it is [`Any`](), [`Error`]() and [`Send`]().
 
@@ -48,9 +46,7 @@ asteracea::component! {
 }
 ```
 
-These backtraces are for human consumption, so please don't parse them. They may change in any release without notice.
-
-> Showing line and column information is planned, but the necessary API is [currently not available on stable Rust](https://doc.rust-lang.org/stable/proc_macro/struct.LineColumn.html).
+> Showing line and column information is planned, but the necessary API is [currently not available on stable Rust](https://doc.rust-lang.org/stable/proc_macro/struct.LineColumn.html). Hooking into tracing should be comparatively straightforward, though.
 
 > If the `"force-unwind"` feature is enabled, `Escalation` instances are erased and the type itself uses the panic infrastructure for propagation instead of being passed up via [`Err`]() variant. This may reduce code size in some cases.
 >

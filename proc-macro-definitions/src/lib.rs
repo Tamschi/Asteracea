@@ -7,12 +7,15 @@ use lazy_static::lazy_static;
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use proc_macro_crate::{crate_name, FoundCrate};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote, quote_spanned};
 use std::iter;
 use syn::{
 	parse::{Parse, ParseStream},
-	parse_macro_input, Error, Ident, Result,
+	parse_macro_input,
+	spanned::Spanned,
+	Error, Ident, Result,
 };
+use tap::Conv;
 
 mod component_declaration;
 mod map_message;
@@ -20,7 +23,6 @@ mod part;
 mod storage_configuration;
 mod storage_context;
 mod syn_ext;
-mod trace_instrumentation;
 mod try_parse;
 
 use self::{
@@ -138,19 +140,6 @@ pub fn fragment(input: TokenStream1) -> TokenStream1 {
 	.into()
 }
 
-/// Iff the `"backtrace"` feature is enabled, instruments a function to add a trace frame of the form "attr_param::function_name".
-/// This only works on functions that return `Result<_, Escalation>`.
-#[proc_macro_attribute]
-pub fn trace_escalations(attr: TokenStream1, item: TokenStream1) -> TokenStream1 {
-	if cfg!(feature = "backtrace") {
-		let mut gui_traced = parse_macro_input!(item as Tracing);
-		gui_traced.prefix = parse_macro_input!(attr as TokenStream2).into();
-		gui_traced.into_token_stream().into()
-	} else {
-		item
-	}
-}
-
 // TODO: Accept reexported asteracea module made available via `use`.
 lazy_static! {
 	static ref ASTERACEA_NAME: String = crate_name("asteracea")
@@ -171,7 +160,6 @@ mod workaround_module {
 		const CAN_CAPTURE: bool;
 	}
 }
-use trace_instrumentation::Tracing;
 use workaround_module::Configuration;
 
 fn warn(location: Span, message: &str) -> Result<()> {
@@ -201,4 +189,24 @@ impl<T, E> FailSoftly<T, E> for std::result::Result<T, E> {
 	) -> T {
 		self.map_err(Into::into).fail_softly(errors, fallback)
 	}
+}
+
+/// An attribute macro that discards its arguments and returns what it is applied to unchanged.
+///
+/// Used as stub when another attribute is not to be activated.
+#[proc_macro_attribute]
+pub fn discard_these_attribute_args(args: TokenStream1, item: TokenStream1) -> TokenStream1 {
+	drop(args);
+	item
+}
+
+/// Returns just an `::asteracea::__::tracing::Span`, preserving [`Span`] location but resolving it at [`Span::mixed_site()`](`Span::mixed_site`).
+#[proc_macro]
+pub fn fake_span(input: TokenStream1) -> TokenStream1 {
+	let span = input
+		.conv::<TokenStream2>()
+		.span()
+		.resolved_at(Span::mixed_site());
+	let asteracea = asteracea_ident(span);
+	quote_spanned!(span=> ::#asteracea::__::tracing::Span).into()
 }

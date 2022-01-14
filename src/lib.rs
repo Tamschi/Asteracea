@@ -4,10 +4,6 @@
 //!
 //! # Features
 //!
-//! ## `"backtrace"`
-//!
-//! Enables additional error traces, at the cost of code size and performance.
-//!
 //! ## `"error-abort"`
 //!
 //! Reserved. Will be used to abort-the process on GUI error escalation.
@@ -19,6 +15,13 @@
 //! ## `"services"`
 //!
 //! TODO
+//!
+//! ## `"tracing"`
+//!
+//! Enables [`tracing`](https://docs.rs/tracing/0.1/tracing/) instrumentation of `::new` and `.render` functions
+//! (on components generated using [`component`]).
+//!
+//! **Note:** This currently requires `tracing = { version = "0.1", default-features = false }` in your dependencies to resolve this crate.
 
 #![doc(html_root_url = "https://docs.rs/asteracea/0.0.2")]
 #![warn(clippy::pedantic, missing_docs)]
@@ -27,7 +30,10 @@
 #![allow(clippy::redundant_else)]
 #![allow(clippy::semicolon_if_nothing_returned)]
 
-pub use asteracea_proc_macro_definitions::{bump_format, component, fragment, trace_escalations};
+//FIXME: This won't be necessary anymore once `$crate` is in use everywhere.
+extern crate self as asteracea;
+
+pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
 pub use bumpalo;
 pub use lignin;
 pub use rhizome;

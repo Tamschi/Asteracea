@@ -153,7 +153,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 							value.span(),
 							format!(
 							"Expected Rust block value for optional HTML attribute, but found `{}`",
-							value.to_token_stream().to_string(),
+							value.to_token_stream(),
 						),
 						));
 					}

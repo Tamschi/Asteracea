@@ -150,7 +150,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				if closing_name != path.path.segments.last().ok_or_else(|| Error::new_spanned(path.clone(), "Strange: This path doesn't contain a last segment... Somehow. It's needed for named element closing, so maybe don't do that here."))?.ident {
 						return Err(Error::new_spanned(
 							closing_name,
-							format!("Expected `{}`", path.path.segments.last().unwrap().ident.to_string()),
+							format!("Expected `{}`", path.path.segments.last().unwrap().ident),
 						));
 					}
 			} else if input.peek(Token![>]) {
@@ -159,7 +159,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				return Err(Error::new(
 					input.span(),
 					if let Some(last) = path.path.segments.last() {
-						format!("Expected .render_arg or content child or `/{}>` or `>` (end of child component element)", last.ident.to_string())
+						format!("Expected .render_arg or content child or `/{}>` or `>` (end of child component element)", last.ident)
 					} else {
 						"Expected .render_arg or content child or `>` (end of child component element)".to_string()
 					},
@@ -516,11 +516,12 @@ pub struct ContentChild<C: Configuration> {
 impl<C: Configuration> ContentChild<C> {
 	fn parameter_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		let span = self.span.resolved_at(Span::mixed_site());
+		let asteracea = asteracea_ident(span);
 
 		let parent_parameter_tokens = parameter_struct_expression::<C, Token![^]>(
 			Some(cx),
 			span,
-			parse_quote_spanned!(span=> parent_parameters_builder),
+			parse_quote_spanned!(span=> ::#asteracea::__::infer_builder(phantom)),
 			&self.parent_parameters,
 			&[],
 		)?;
@@ -528,7 +529,6 @@ impl<C: Configuration> ContentChild<C> {
 
 		let bump = Ident::new("bump", span.resolved_at(Span::call_site()));
 		let bump_time = quote_spanned!(bump.span()=> 'bump);
-		let asteracea = asteracea_ident(span);
 		quote_spanned! {span=>
 			.__Asteracea__anonymous_content((
 				{
@@ -537,9 +537,7 @@ impl<C: Configuration> ContentChild<C> {
 					if false {
 						<[_; 0] as ::core::iter::IntoIterator>::into_iter(phantom).next().unwrap()
 					} else {
-						::#asteracea::__::infer_builder(phantom, |parent_parameters_builder| -> ::core::result::Result<_, ::#asteracea::error::Escalation> {
-							::core::result::Result::Ok(#parent_parameter_tokens)
-						})?
+						#parent_parameter_tokens
 					}
 				},
 				::std::boxed::Box::new(

@@ -1,6 +1,9 @@
 #![allow(warnings)] //FIXME
 
-use crate::{error::Escalation, __::Built};
+use crate::{
+	error::Escalation,
+	__::{tracing::debug_span, Built},
+};
 use ::std::pin::Pin;
 use bumpalo::Bump;
 use lignin::{Node, ThreadSafe};
@@ -8,6 +11,7 @@ use std::{any::type_name, cell::Cell, sync::Arc};
 use typed_builder::TypedBuilder;
 
 // A simple page router.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Router;
 
 const _: () = {
@@ -16,8 +20,10 @@ const _: () = {
 			_parent_node: &Arc<rhizome::Node>,
 			RouterNewArgs {}: RouterNewArgs,
 		) -> Result<Self, Escalation> {
+			let _span = debug_span!("Router::new").entered();
 			Ok(Self)
 		}
+
 		pub fn render<'bump>(
 			self: Pin<&Self>,
 			bump: &'bump Bump,
@@ -27,6 +33,7 @@ const _: () = {
 				rest,
 			}: RouterRenderArgs<'_, 'bump>,
 		) -> Result<Node<'bump, ThreadSafe>, Escalation> {
+			let _span = debug_span!("Router::render", path).entered();
 			for route in __Asteracea__anonymous_content {
 				let (RouterParentParameters { paths }, render_content) = route;
 				for route in paths {
