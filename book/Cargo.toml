@@ -29,7 +29,6 @@ proc-macro2 = "1.0.24" #TODO
 pulldown-cmark = "0.7.0" #TODO
 pulldown-cmark-to-cmark = "5.0.0" #TODO
 quote = "1.0.7"
-tracing = { version = "0.1.29", default-features = false }
 
 [dev-dependencies]
 version-sync = "0.9.1"
@@ -45,4 +44,3 @@ pulldown-cmark = "0.7.0"
 pulldown-cmark-to-cmark = "5.0.0"
 quote = "1.0.7"
 walkdir = "2.3.1"
-tracing = { version = "0.1.29", default-features = false }

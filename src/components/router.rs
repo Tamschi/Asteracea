@@ -2,7 +2,7 @@
 
 use crate::{
 	error::Escalation,
-	__::{tracing::instrument, Built},
+	__::{tracing::debug_span, Built},
 };
 use ::std::pin::Pin;
 use bumpalo::Bump;
@@ -16,15 +16,14 @@ pub struct Router;
 
 const _: () = {
 	impl Router {
-		#[instrument(name = "Router::new", skip_all)]
 		pub fn new(
 			_parent_node: &Arc<rhizome::Node>,
 			RouterNewArgs {}: RouterNewArgs,
 		) -> Result<Self, Escalation> {
+			let _span = debug_span!("Router::new").entered();
 			Ok(Self)
 		}
 
-		#[instrument(name = "Router::render", skip_all, fields(path = path))]
 		pub fn render<'bump>(
 			self: Pin<&Self>,
 			bump: &'bump Bump,
@@ -34,6 +33,7 @@ const _: () = {
 				rest,
 			}: RouterRenderArgs<'_, 'bump>,
 		) -> Result<Node<'bump, ThreadSafe>, Escalation> {
+			let _span = debug_span!("Router::render", path).entered();
 			for route in __Asteracea__anonymous_content {
 				let (RouterParentParameters { paths }, render_content) = route;
 				for route in paths {

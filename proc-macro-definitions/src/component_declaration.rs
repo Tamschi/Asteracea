@@ -650,18 +650,15 @@ impl ComponentDeclaration {
 			#(#struct_definition)*
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
-				#[::#asteracea::__::tracing::instrument(
-					level = "trace",
-					name = #new_span_name,
-					skip_all,
-					fields(#(#constructor_args_tracing_fields,)*),
-				)]
 				#(#constructor_attributes)*
 				pub fn #new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
 					args: #new_args_name#new_args_generic_args,
 				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
-					// Split off so that `#[instrument]` can see fields.
+					// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.
+					// The following should be equivalent to skipping all fields and setting them one by one:
+					let _tracing_span = ::#asteracea::__::tracing::debug_span!(#new_span_name, #(#constructor_args_tracing_fields,)*).entered();
+
 					let #new_args_name {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
@@ -692,19 +689,16 @@ impl ComponentDeclaration {
 					#new_args_name::builder()
 				}
 
-				#[::#asteracea::__::tracing::instrument(
-					level = "trace",
-					name = #render_span_name,
-					skip_all,
-					fields(#(#render_args_tracing_fields,)*),
-				)]
 				#(#render_attributes)*
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
 					#bump: &'bump #asteracea::bumpalo::Bump,
 					args: #render_args_name#render_args_generic_args,
 				) #render_type {
-					// Split off so that `#[instrument]` can see fields.
+					// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.
+					// The following should be equivalent to skipping all fields and setting them one by one:
+					let _tracing_span = ::#asteracea::__::tracing::debug_span!(#new_span_name, #(#render_args_tracing_fields,)*).entered();
+
 					let #render_args_name {
 						#(#render_args_field_patterns,)*
 						__Asteracea__phantom: _,

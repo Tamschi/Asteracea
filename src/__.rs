@@ -17,7 +17,15 @@ pub use tracing;
 
 #[cfg(not(feature = "tracing"))]
 pub mod tracing {
-	pub use asteracea_proc_macro_definitions::discard_these_attribute_args as instrument;
+	pub use asteracea_proc_macro_definitions::fake_span as debug_span;
+
+	pub struct Span;
+	impl Span {
+		#[must_use]
+		pub fn entered(self) {
+			drop(self)
+		}
+	}
 }
 
 /// Only implemented for functions that have a signature ABI-compatible with `fn(*const R, T)`!
@@ -78,22 +86,24 @@ impl AnonymousContentParentParametersBuilder {
 /// struct YesDebug;
 /// struct NoDebug;
 ///
-/// #[::asteracea::__::tracing::instrument(skip_all, fields(
-///     value = {
-///         use ::asteracea::__::CoerceTracingValue;
-///         (&&&&::asteracea::__::InertWrapper(&value)).coerce()
-///     },
-///     debug = {
-///         use ::asteracea::__::CoerceTracingValue;
-///         (&&&&::asteracea::__::InertWrapper(&debug_)).coerce()
-///     },
-///     neither = {
-///         use ::asteracea::__::CoerceTracingValue;
-///         (&&&&::asteracea::__::InertWrapper(&neither)).coerce()
-///     },
-/// ))]
-/// //FIXME: `#[instrument]` isn't hygienic, so the parameter can't be called `debug`. See <https://github.com/tokio-rs/tracing/issues/1318>.
+/// //FIXME: `debug_span` isn't entirely hygienic, so the parameter can't be called `debug`.
+/// // See <https://github.com/tokio-rs/tracing/issues/1318>.
 /// pub fn auto_values(value: u32, debug_: YesDebug, neither: NoDebug) {
+///     let _span = ::asteracea::__::tracing::debug_span!(
+///             "auto_values",
+///             value = {
+///                 use ::asteracea::__::CoerceTracingValue;
+///                 (&&&&&::asteracea::__::InertWrapper(&value)).coerce()
+///             },
+///             debug = {
+///                 use ::asteracea::__::CoerceTracingValue;
+///                 (&&&&&::asteracea::__::InertWrapper(&debug_)).coerce()
+///             },
+///             neither = {
+///                 use ::asteracea::__::CoerceTracingValue;
+///                 (&&&&&::asteracea::__::InertWrapper(&neither)).coerce()
+///             },
+///         ).entered();
 ///     drop((value, debug_, neither))
 /// }
 /// ```
