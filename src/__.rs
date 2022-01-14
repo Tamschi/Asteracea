@@ -21,6 +21,7 @@ pub mod tracing {
 
 	pub struct Span;
 	impl Span {
+		#[allow(clippy::must_use_unit)]
 		#[must_use]
 		pub fn entered(self) {
 			drop(self)
