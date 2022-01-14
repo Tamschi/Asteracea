@@ -10,7 +10,7 @@ cargo run -p tracing-sample
 
 ## Rendering
 
-You can render the logged information logged into `./tracing-sample.folded` into SVG images using `inferno-flamegraph` (`cargo install inferno`).
+You can render the information logged into `./tracing-sample.folded` into SVG images using `inferno-flamegraph` (`cargo install inferno`).
 
 ### Flamegraph
 
