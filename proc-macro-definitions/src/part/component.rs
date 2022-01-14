@@ -150,7 +150,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				if closing_name != path.path.segments.last().ok_or_else(|| Error::new_spanned(path.clone(), "Strange: This path doesn't contain a last segment... Somehow. It's needed for named element closing, so maybe don't do that here."))?.ident {
 						return Err(Error::new_spanned(
 							closing_name,
-							format!("Expected `{}`", path.path.segments.last().unwrap().ident.to_string()),
+							format!("Expected `{}`", path.path.segments.last().unwrap().ident),
 						));
 					}
 			} else if input.peek(Token![>]) {
@@ -159,7 +159,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				return Err(Error::new(
 					input.span(),
 					if let Some(last) = path.path.segments.last() {
-						format!("Expected .render_arg or content child or `/{}>` or `>` (end of child component element)", last.ident.to_string())
+						format!("Expected .render_arg or content child or `/{}>` or `>` (end of child component element)", last.ident)
 					} else {
 						"Expected .render_arg or content child or `>` (end of child component element)".to_string()
 					},

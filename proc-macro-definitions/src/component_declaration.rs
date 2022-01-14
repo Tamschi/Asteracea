@@ -553,21 +553,17 @@ impl ComponentDeclaration {
 			.collect::<Vec<_>>();
 
 		// These can't be fully hygienic with current technology.
-		let new_args_name = Ident::new(
-			&format!("{}NewArgs", component_name.to_string()),
-			component_name.span(),
-		);
+		let new_args_name =
+			Ident::new(&format!("{}NewArgs", component_name), component_name.span());
 		let render_args_name = Ident::new(
-			&format!("{}RenderArgs", component_name.to_string()),
+			&format!("{}RenderArgs", component_name),
 			component_name.span(),
 		);
 
-		let new_args_builder_name = Ident::new(
-			&format!("{}Builder", new_args_name.to_string()),
-			component_name.span(),
-		);
+		let new_args_builder_name =
+			Ident::new(&format!("{}Builder", new_args_name), component_name.span());
 		let render_args_builder_name = Ident::new(
-			&format!("{}Builder", render_args_name.to_string()),
+			&format!("{}Builder", render_args_name),
 			component_name.span(),
 		);
 

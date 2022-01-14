@@ -192,22 +192,22 @@ impl<'a> CodeState<'a> {
 			.filter(|t| {
 				if t.starts_with("asteracea::new") {
 					constructor_build = t
-						.splitn(2, '=')
-						.nth(1)
+						.split_once('=')
+						.map(|x| x.1)
 						.expect("Missing arg builder method calls after asteracea::new")
 						.into();
 					false
 				} else if t.starts_with("asteracea::render") {
 					render_build = t
-						.splitn(2, '=')
-						.nth(1)
+						.split_once('=')
+						.map(|x| x.1)
 						.expect("Missing arg builder method calls after asteracea::render")
 						.into();
 					false
 				} else if t.starts_with("asteracea") {
 					name = Some(
-						t.splitn(2, '=')
-							.nth(1)
+						t.split_once('=')
+							.map(|x| x.1)
 							.expect("Missing component name after asteracea")
 							.into(),
 					);

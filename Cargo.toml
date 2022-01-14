@@ -3,6 +3,7 @@ members = [
 	".",
 	"*/src/.."
 ]
+resolver = "2"
 
 [patch.crates-io]
 asteracea = { path = "." }
@@ -32,7 +33,6 @@ include = [
 	"README.md",
 	"SECURITY.md",
 ]
-resolver = "2"
 publish = false
 
 [badges]
