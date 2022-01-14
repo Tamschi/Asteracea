@@ -19,8 +19,8 @@ doc = false
 
 #TODO: This can be cleaned up a lot with better code organisation.
 [dependencies]
-asteracea = { path = "..", features = ["tracing"] }
-debugless-unwrap = "0.0.3"
+asteracea = { path = ".." }
+debugless-unwrap = "0.0.4"
 lignin = "0.1.0"
 lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
 line-col = "0.2.1"
@@ -29,13 +29,12 @@ proc-macro2 = "1.0.24" #TODO
 pulldown-cmark = "0.7.0" #TODO
 pulldown-cmark-to-cmark = "5.0.0" #TODO
 quote = "1.0.7"
-tracing = { version = "0.1.29", default-features = false }
 
 [dev-dependencies]
 version-sync = "0.9.1"
 
 [build-dependencies]
-asteracea = { path = "..", features = ["tracing"] }
+asteracea = { path = ".." }
 mdbook = { version = "0.4.5", default-features = false, features = ["search"] }
 lignin = "0.1.0"
 lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
@@ -45,4 +44,3 @@ pulldown-cmark = "0.7.0"
 pulldown-cmark-to-cmark = "5.0.0"
 quote = "1.0.7"
 walkdir = "2.3.1"
-tracing = { version = "0.1.29", default-features = false }

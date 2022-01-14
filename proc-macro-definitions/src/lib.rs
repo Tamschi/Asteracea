@@ -11,8 +11,11 @@ use quote::{quote, quote_spanned};
 use std::iter;
 use syn::{
 	parse::{Parse, ParseStream},
-	parse_macro_input, Error, Ident, Result,
+	parse_macro_input,
+	spanned::Spanned,
+	Error, Ident, Result,
 };
+use tap::Conv;
 
 mod component_declaration;
 mod map_message;
@@ -195,4 +198,15 @@ impl<T, E> FailSoftly<T, E> for std::result::Result<T, E> {
 pub fn discard_these_attribute_args(args: TokenStream1, item: TokenStream1) -> TokenStream1 {
 	drop(args);
 	item
+}
+
+/// Returns just an `::asteracea::__::tracing::Span`, preserving [`Span`] location but resolving it at [`Span::mixed_site()`](`Span::mixed_site`).
+#[proc_macro]
+pub fn fake_span(input: TokenStream1) -> TokenStream1 {
+	let span = input
+		.conv::<TokenStream2>()
+		.span()
+		.resolved_at(Span::mixed_site());
+	let asteracea = asteracea_ident(span);
+	quote_spanned!(span=> ::#asteracea::__::tracing::Span).into()
 }

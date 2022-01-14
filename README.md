@@ -69,6 +69,8 @@ cargo add asteracea
 
 ## Examples
 
+Additional examples can be found [in the examples directory](examples#list-of-examples).
+
 ### Empty component
 
 The most simple (`Node`-rendering) component can be written like this:

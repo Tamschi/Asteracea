@@ -30,6 +30,9 @@
 #![allow(clippy::redundant_else)]
 #![allow(clippy::semicolon_if_nothing_returned)]
 
+//FIXME: This won't be necessary anymore once `$crate` is in use everywhere.
+extern crate self as asteracea;
+
 pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
 pub use bumpalo;
 pub use lignin;
