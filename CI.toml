@@ -1,9 +1,2 @@
-[workspace]
-members = [
-	".",
-]
-
-[patch.crates-io]
-
 [profile.dev]
 split-debuginfo = "unpacked"

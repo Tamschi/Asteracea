@@ -34,8 +34,8 @@ If applicable, add screenshots to help explain your problem.
 
 **please complete the following information:**
 
-- `rustc --version`: [e.g. 1.54.0]
-- Crate version (if applicable): [e.g. 0.0.1]
+- `rustc --version`: [e.g. 1.57.0]
+- Crate version (if applicable): [e.g. 0.0.2]
 
 **Additional context**
 Add any other context about the problem here.

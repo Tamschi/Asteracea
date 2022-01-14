@@ -1,15 +1,27 @@
+[workspace]
+members = [
+	".",
+	"*/src/..",
+	"examples/*"
+]
+resolver = "2"
+
+[patch.crates-io]
+asteracea = { path = "." }
+
 [package]
-name = "TODO_CRATE_NAME"
-version = "0.0.1"
+name = "asteracea"
+version = "0.0.2"
+rust-version = "1.57"
 authors = ["Tamme Schichler <tamme@schichler.dev>"]
 edition = "2018"
-description = "TODO_DESCRIPTION"
+description = "A web application framework for Rust. Asteracea can be used for client-side and server-side rendering and for statically rendered and deployed sites (and combinations thereof) without specific changes to an app's code."
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/Tamschi/TODO_CRATE_NAME"
-homepage = "https://github.com/Tamschi/TODO_CRATE_NAME/tree/v0.0.1"
-documentation = "https://docs.rs/TODO_CRATE_NAME/0.0.1"
-keywords = [] #TODO
-categories = [] #TODO
+repository = "https://github.com/Tamschi/Asteracea"
+homepage = "https://github.com/Tamschi/Asteracea/tree/v0.0.2"
+documentation = "https://docs.rs/asteracea/0.0.2"
+keywords = ["framework", "server-side", "client-side", "static-site"]
+categories = ["web-programming", "gui", "wasm", "no-std"]
 readme = "README.md"
 include = [
 	"**/*.rs",
@@ -22,16 +34,35 @@ include = [
 	"README.md",
 	"SECURITY.md",
 ]
-resolver = "2"
 publish = false
 
 [badges]
-is-it-maintained-issue-resolution = { repository = "Tamschi/TODO_CRATE_NAME" }
-is-it-maintained-open-issues = { repository = "Tamschi/TODO_CRATE_NAME" }
+is-it-maintained-issue-resolution = { repository = "Tamschi/Asteracea" }
+is-it-maintained-open-issues = { repository = "Tamschi/Asteracea" }
 maintenance = { status = "experimental" } # This may differ between branches.
+
+[features]
+error-abort = [] # Reserved. Will be used to abort the process on GUI error escalation.
+force-unwind = [] # Force the use of panics for `Escalation` propagation. This may improve code size and app performance.
+services = []
+
+[dependencies]
+asteracea_proc-macro-definitions = { path = "./proc-macro-definitions", version = "0.0.2" } # public
+bumpalo = { version = "3.6.1", features = ["collections"] } # public
+try-lazy-init = "0.0.2"
+lignin = "0.1.0" # public
+lignin-schema = { git = "https://github.com/Tamschi/lignin-schema.git", branch = "develop" } # semi-public
+rhizome = { version = "0.0.1", features = ["macros"] } # public
+static_assertions = "1.1.0"
+typed-builder = "0.9.0" # semi-public
+tracing = { version = "0.1.29", optional = true, default-features = false }
 
 [dev-dependencies]
 cargo-husky = "1.5.0"
+debugless-unwrap = "0.0.4"
+ergo-pin = "0.1.0"
 git_info = "0.1.2"
-version-sync = "0.9.3"
-wasm-bindgen-test = "0.3.28"
+lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
+tap = "1.0.1"
+version-sync = "0.9.1"
+wasm-bindgen-test = "0.3.27"

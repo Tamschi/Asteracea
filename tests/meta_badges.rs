@@ -66,8 +66,9 @@ fn build_status() {
 	version_sync::assert_contains_regex!(
 		"README.md",
 		&format!(
-			r"^\[!\[CI\]\(https://github\.com/{user}/{{name}}/workflows/CI/badge\.svg\?branch={branch}\)\]\(https://github\.com/{user}/{{name}}/actions\?query=workflow%3ACI\+branch%3A{branch}\)$",
+			r"^\[!\[CI\]\(https://github\.com/{user}/{repo}/workflows/CI/badge\.svg\?branch={branch}\)\]\(https://github\.com/{user}/{repo}/actions\?query=workflow%3ACI\+branch%3A{branch}\)$",
 			user = USER,
+			repo = REPOSITORY,
 			branch = BRANCH,
 		)
 	);
@@ -85,14 +86,19 @@ fn license() {
 fn git_hub() {
 	version_sync::assert_contains_regex!(
 		"Cargo.toml",
-		&format!(r#"^repository = "https://github.com/{0}/{{name}}"$"#, USER,)
+		&format!(
+			r#"^repository = "https://github.com/{user}/{repo}"$"#,
+			user = USER,
+			repo = REPOSITORY,
+		)
 	);
 
 	version_sync::assert_contains_regex!(
 		"README.md",
 		&format!(
-			r"^\[!\[GitHub\]\(https://img\.shields\.io/static/v1\?logo=GitHub&label=&message=%20&color=grey\)\]\(https://github\.com/{0}/{{name}}\)$",
-			USER,
+			r"^\[!\[GitHub\]\(https://img\.shields\.io/static/v1\?logo=GitHub&label=&message=%20&color=grey\)\]\(https://github\.com/{user}/{repo}\)$",
+			user = USER,
+			repo = REPOSITORY,
 		)
 	);
 }
@@ -102,8 +108,9 @@ fn issues() {
 	version_sync::assert_contains_regex!(
 		"README.md",
 		&format!(
-			r"^\[!\[open issues\]\(https://img\.shields\.io/github/issues-raw/{0}/{{name}}\)\]\(https://github\.com/{0}/{{name}}/issues\)$",
-			USER,
+			r"^\[!\[open issues\]\(https://img\.shields\.io/github/issues-raw/{user}/{repo}\)\]\(https://github\.com/{user}/{repo}/issues\)$",
+			user = USER,
+			repo = REPOSITORY,
 		)
 	);
 }
@@ -113,8 +120,9 @@ fn pulls() {
 	version_sync::assert_contains_regex!(
 		"README.md",
 		&format!(
-			r"^\[!\[open pull requests\]\(https://img\.shields\.io/github/issues-pr-raw/{0}/{{name}}\)\]\(https://github\.com/{0}/{{name}}/pulls\)$",
-			USER,
+			r"^\[!\[open pull requests\]\(https://img\.shields\.io/github/issues-pr-raw/{user}/{repo}\)\]\(https://github\.com/{user}/{repo}/pulls\)$",
+			user = USER,
+			repo = REPOSITORY,
 		)
 	);
 }
@@ -124,8 +132,9 @@ fn good_first_issues() {
 	version_sync::assert_contains_regex!(
 		"README.md",
 		&format!(
-			r"^\[!\[good first issues\]\(https://img\.shields\.io/github/issues-raw/{0}/{{name}}/good%20first%20issue\?label=good\+first\+issues\)\]\(https://github\.com/{0}/{{name}}/contribute\)$",
-			USER,
+			r"^\[!\[good first issues\]\(https://img\.shields\.io/github/issues-raw/{user}/{repo}/good%20first%20issue\?label=good\+first\+issues\)\]\(https://github\.com/{user}/{repo}/contribute\)$",
+			user = USER,
+			repo = REPOSITORY,
 		)
 	);
 }

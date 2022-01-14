@@ -21,6 +21,13 @@ jobs:
         profile: minimal
         components: clippy
     - run: cat CI.toml >> Cargo.toml
-    - run: cargo clippy --workspace --locked --all-targets --no-default-features -- -D warnings
-    - run: cargo clippy --workspace --locked --all-targets -- -D warnings
-    - run: cargo clippy --workspace --locked --all-targets --all-features -- -D warnings
+    - run: cd proc-macro-definitions && cargo clippy --locked --all-targets --no-default-features -- -D warnings
+    - run: cd proc-macro-definitions && cargo clippy --locked --all-targets -- -D warnings
+    - run: cd proc-macro-definitions && cargo clippy --locked --all-targets --all-features -- -D warnings
+    - run: cargo clippy --locked --all-targets --no-default-features -- -D warnings
+    - run: cargo clippy --locked --all-targets -- -D warnings
+    - run: cargo clippy --locked --all-targets --all-features -- -D warnings
+    # TODO: Fix and then deny these too:
+    - run: cd book && cargo clippy --all-targets --locked --no-default-features
+    - run: cd book && cargo clippy --all-targets --locked
+    - run: cd book && cargo clippy --all-targets --locked --all-features

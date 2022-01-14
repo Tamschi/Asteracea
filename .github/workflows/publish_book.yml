@@ -1,0 +1,22 @@
+name: Publish Book
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  publish-book:
+    name: Publish Book
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.4.0
+    - uses: actions-rs/toolchain@v1
+    - run: cat CI.toml >> Cargo.toml
+    - run: cd book && cargo run
+    - uses: Tamschi/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./book/book

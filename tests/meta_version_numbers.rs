@@ -23,8 +23,9 @@ fn homepage() {
 	version_sync::assert_contains_regex!(
 		"Cargo.toml",
 		&format!(
-			r#"^homepage = "https://github\.com/{0}/{{name}}/tree/v{{version}}"$"#,
-			USER,
+			r#"^homepage = "https://github\.com/{user}/{repo}/tree/v{{version}}"$"#,
+			user = USER,
+			repo = REPOSITORY,
 		)
 	);
 }
@@ -34,5 +35,27 @@ fn documentation() {
 	version_sync::assert_contains_regex!(
 		"Cargo.toml",
 		r#"^documentation = "https://docs\.rs/{name}/{version}"$"#
+	);
+}
+
+#[test]
+fn rust_version() {
+	version_sync::assert_contains_regex!(
+		"Cargo.toml",
+		&format!(
+			r#"^rust-version = "{rust_version}"$"#,
+			rust_version = RUST_VERSION,
+		)
+	);
+}
+
+#[test]
+fn proc_macro_definitions_rust_version() {
+	version_sync::assert_contains_regex!(
+		"proc-macro-definitions/Cargo.toml",
+		&format!(
+			r#"^rust-version = "{rust_version}"$"#,
+			rust_version = RUST_VERSION,
+		)
 	);
 }

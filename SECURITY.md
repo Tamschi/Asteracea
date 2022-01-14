@@ -4,12 +4,12 @@
 
 | Version | Supported          | ***Initial*** Reason for Removal |
 | ------- | ------------------ | -------------------------------- |
-| 0.0.1   | :white_check_mark: |                                  |
+| 0.0.1-2 | :white_check_mark: |                                  |
 
 Faulty versions are [yanked](https://doc.rust-lang.org/cargo/commands/cargo-yank.html), where possible after a Semver-compatible update is made available, and added to the table above as unsupported.  
 They are also marked with an additional `v….….…-yanked` tag in Git to make them easily recognisable, but original release tags are not removed.
 
-Security advisories are published through [the respective section on this repository here](https://github.com/Tamschi/TODO_CRATE_NAME/security/advisories) and [RustSec/advisory-db](https://github.com/RustSec/advisory-db).
+Security advisories are published through [the respective section on this repository here](https://github.com/Tamschi/Asteracea/security/advisories) and [RustSec/advisory-db](https://github.com/RustSec/advisory-db).
 
 ## Reporting a Vulnerability
 
@@ -31,6 +31,6 @@ To be notified automatically, either subscribe to releases through the repositor
 To check only for vulnerabilities, use [cargo-audit](https://github.com/RustSec/rustsec/tree/main/cargo-audit#readme) instead, which is available as a GitHub Action as [actions-rs/audit-check](https://github.com/actions-rs/audit-check#readme).
 
 Once a version becomes yanked/unsupported, please update or upgrade to a supported version in a timely manner.
-I'll try to make this as painless as possible where manual changes are required, but a simple [`cargo update -p TODO_CRATE_NAME`](https://doc.rust-lang.org/cargo/commands/cargo-update.html) should do the trick in most cases.
+I'll try to make this as painless as possible where manual changes are required, but a simple [`cargo update -p asteracea`](https://doc.rust-lang.org/cargo/commands/cargo-update.html) should do the trick in most cases.
 
 [Dependabot]: https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically

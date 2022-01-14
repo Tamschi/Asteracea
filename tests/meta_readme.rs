@@ -1,5 +1,9 @@
 #![cfg(not(miri))]
 
+#[path = "meta_constants_.rs"]
+mod constants;
+use constants::*;
+
 #[test]
 fn installation() {
 	version_sync::assert_contains_regex!("README.md", "^cargo add {name}$");
@@ -9,6 +13,9 @@ fn installation() {
 fn versioning() {
 	version_sync::assert_contains_regex!(
 		"README.md",
-		r"^`{name}` strictly follows \[Semantic Versioning 2\.0\.0\]"
+		&format!(
+			r"^{repo} strictly follows \[Semantic Versioning 2\.0\.0\]",
+			repo = REPOSITORY,
+		)
 	);
 }

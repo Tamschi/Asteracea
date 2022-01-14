@@ -20,6 +20,10 @@ jobs:
     - run: cargo test --workspace --locked --no-default-features
     - run: cargo test --workspace --locked
     - run: cargo test --workspace --locked --all-features
+    # Test the main crate separately, since the examples pull in features.
+    - run: cargo test --locked --no-default-features
+    - run: cargo test --locked
+    - run: cargo test --locked --all-features
 
   browser-test:
     name: Browser Test
@@ -33,9 +37,9 @@ jobs:
         target: wasm32-unknown-unknown
     - run: cargo +stable install wasm-bindgen-cli --vers "^0.2.71"
     - run: cat CI.toml >> Cargo.toml
-    - run: cargo +stable test --workspace --locked --target wasm32-unknown-unknown --no-default-features
-    - run: cargo +stable test --workspace --locked --target wasm32-unknown-unknown
-    - run: cargo +stable test --workspace --locked --target wasm32-unknown-unknown --all-features
+    - run: cargo +stable test --locked --target wasm32-unknown-unknown --no-default-features
+    - run: cargo +stable test --locked --target wasm32-unknown-unknown
+    - run: cargo +stable test --locked --target wasm32-unknown-unknown --all-features
 
   check:
     name: Check on Rust ${{matrix.rust}}${{format(' ({0})', matrix.target || matrix.os)}}
@@ -43,7 +47,7 @@ jobs:
     strategy:
       matrix:
         os: [macos, ubuntu, windows]
-        rust: ['1.54', stable, beta, nightly]
+        rust: ['1.57', stable, beta, nightly]
     env:
       target: ${{matrix.target && format('--target={0}', matrix.target)}}
       workspace: ${{matrix.no-workspace || '--workspace'}}
@@ -72,3 +76,12 @@ jobs:
     - run: cargo +nightly check --lib --locked --no-default-features
     - run: cargo +nightly check --lib --locked
     - run: cargo +nightly check --lib --locked --all-features
+
+  book:
+    name: Book
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.4.0
+    - uses: actions-rs/toolchain@v1
+    - run: cat CI.toml >> Cargo.toml
+    - run: cd book && cargo run
