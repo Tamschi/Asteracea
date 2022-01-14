@@ -12,7 +12,7 @@ asteracea::component! {
 
 	<ul
 		//FIXME: Replace `{}` with `()` and make it optional.
-		<li !"recurse = {recurse:?}"{}>
+		<li !"recurse = {:?}"{recurse}>
 
 		spread if {let Some(recurse) = recurse} <li
 			spread if {recurse > 1} [
