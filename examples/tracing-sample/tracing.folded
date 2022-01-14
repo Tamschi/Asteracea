@@ -1,0 +1,8 @@
+ThreadId(1)-main 683900
+ThreadId(1)-main; tracing_sample::FirstAndMaybeSecond::new:examples\tracing-sample\src\main.rs:6 29800
+ThreadId(1)-main 21000
+ThreadId(1)-main; tracing_sample::FirstAndMaybeSecond::new:examples\tracing-sample\src\main.rs:6 4700
+ThreadId(1)-main; tracing_sample::FirstAndMaybeSecond::new:examples\tracing-sample\src\main.rs:6; tracing_sample::FirstAndMaybeSecond::new:examples\tracing-sample\src\main.rs:6 3300
+ThreadId(1)-main; tracing_sample::FirstAndMaybeSecond::new:examples\tracing-sample\src\main.rs:6 6900
+ThreadId(1)-main; tracing_sample::FirstAndMaybeSecond::new:examples\tracing-sample\src\main.rs:6; tracing_sample::FirstAndMaybeSecond::new:examples\tracing-sample\src\main.rs:6 2700
+ThreadId(1)-main; tracing_sample::FirstAndMaybeSecond::new:examples\tracing-sample\src\main.rs:6 3100

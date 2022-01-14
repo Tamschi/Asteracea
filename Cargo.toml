@@ -1,7 +1,8 @@
 [workspace]
 members = [
 	".",
-	"*/src/.."
+	"*/src/..",
+	"examples/*"
 ]
 resolver = "2"
 
