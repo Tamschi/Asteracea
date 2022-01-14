@@ -1,22 +1,27 @@
 use asteracea::bumpalo::Bump;
+use core::pin::Pin;
 use rhizome::Node;
+use tracing::instrument;
 use tracing_flame::FlameLayer;
-use tracing_subscriber::{fmt, prelude::*};
+use tracing_subscriber::prelude::*;
 
 asteracea::component! {
 	FirstAndMaybeSecond()(
-		first: &str,
-		second?: &str,
+		recurse?: usize,
 	) -> Sync
 
 	<ul
 		//FIXME: Replace `{}` with `()` and make it optional.
-		<li !"first = {first}"{}>
-		<li !"second = {second:?}"{}>
+		<li !"recurse = {recurse:?}"{}>
 
-		spread if {let Some(second) = second} <li
-			"Nested:" <br>
-			defer box <*FirstAndMaybeSecond .first={second}>
+		spread if {let Some(recurse) = recurse} <li
+			spread if {recurse > 1} [
+				"Nested with "<code ".recurse">":" <br>
+				defer box <*FirstAndMaybeSecond .recurse={recurse - 1}>
+			] else [
+				"Nested without "<code ".recurse">":" <br>
+				defer box <*FirstAndMaybeSecond>
+			]
 		>
 	/ul>
 }
@@ -28,11 +33,13 @@ fn main() {
 
 #[must_use]
 fn set_up_tracing() -> impl Drop {
-	let fmt_layer = fmt::layer();
+	let tree_layer = tracing_tree::HierarchicalLayer::default()
+		.with_bracketed_fields(true)
+		.with_wraparound(10); // Wraparound is helpful for deeply nested GUIs.
 	let (flame_layer, flush_guard) = FlameLayer::with_file("./tracing-sample.folded").unwrap();
 
 	tracing_subscriber::registry()
-		.with(fmt_layer)
+		.with(tree_layer)
 		.with(flame_layer)
 		.init();
 
@@ -48,18 +55,27 @@ fn render_components() {
 	.unwrap();
 	let app = pin!(app).as_ref();
 
-	let bump = Bump::new();
+	let mut bump = Bump::new();
+
+	for recursion in 0..5 {
+		print_app(&bump, app, recursion);
+		bump.reset();
+	}
+}
+
+#[instrument(skip(bump, app))]
+fn print_app(bump: &Bump, app: Pin<&FirstAndMaybeSecond>, recursion: usize) {
 	let vdom = app
 		.render(
-			&bump,
+			bump,
 			FirstAndMaybeSecond::render_args_builder()
-				.first("1")
-				.second("2")
+				.recurse(recursion)
 				.build(),
 		)
 		.unwrap();
 
-	lignin_html::render_fragment(&vdom, &mut PrintWriter, 10).unwrap();
+	lignin_html::render_fragment(&vdom, &mut PrintWriter, 50).unwrap();
+	println!();
 }
 
 struct PrintWriter;

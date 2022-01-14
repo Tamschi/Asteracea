@@ -48,7 +48,7 @@ dependencies = [
  "asteracea_proc-macro-definitions",
  "bumpalo",
  "cargo-husky",
- "debugless-unwrap 0.0.4",
+ "debugless-unwrap",
  "ergo-pin",
  "git_info",
  "lignin",
@@ -69,7 +69,7 @@ name = "asteracea-book"
 version = "0.0.2"
 dependencies = [
  "asteracea",
- "debugless-unwrap 0.0.3",
+ "debugless-unwrap",
  "lignin",
  "lignin-html",
  "line-col",
@@ -87,7 +87,7 @@ name = "asteracea_proc-macro-definitions"
 version = "0.0.2"
 dependencies = [
  "call2-for-syn",
- "debugless-unwrap 0.0.4",
+ "debugless-unwrap",
  "easy-ext",
  "either",
  "heck",
@@ -243,12 +243,6 @@ dependencies = [
  "cfg-if",
  "wasm-bindgen",
 ]
-
-[[package]]
-name = "debugless-unwrap"
-version = "0.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3ee47a91953412c437cf7c674e92ba5ce71ae2fd81c16d1a796cb584c763ba5"
 
 [[package]]
 name = "debugless-unwrap"
@@ -1367,7 +1361,19 @@ checksum = "375a639232caf30edfc78e8d89b2d4c375515393e7af7e16f01cd96917fb2105"
 dependencies = [
  "cfg-if",
  "pin-project-lite",
+ "tracing-attributes",
  "tracing-core",
+]
+
+[[package]]
+name = "tracing-attributes"
+version = "0.1.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4f480b8f81512e825f337ad51e94c1eb5d3bbdf2b363dcd01e2b19a9ffe3f8e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -1409,8 +1415,10 @@ dependencies = [
  "ergo-pin",
  "lignin-html",
  "rhizome",
+ "tracing",
  "tracing-flame",
  "tracing-subscriber",
+ "tracing-tree",
 ]
 
 [[package]]
@@ -1425,6 +1433,19 @@ dependencies = [
  "thread_local",
  "tracing-core",
  "tracing-log",
+]
+
+[[package]]
+name = "tracing-tree"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ce989c9962c7f61fe084dd4a230eec784649dfc2392467c790007c3a6e134e7"
+dependencies = [
+ "ansi_term",
+ "atty",
+ "tracing-core",
+ "tracing-log",
+ "tracing-subscriber",
 ]
 
 [[package]]

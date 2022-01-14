@@ -693,7 +693,7 @@ impl ComponentDeclaration {
 				) #render_type {
 					// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.
 					// The following should be equivalent to skipping all fields and setting them one by one:
-					let _tracing_span = ::#asteracea::__::tracing::debug_span!(#new_span_name, #(#render_args_tracing_fields,)*).entered();
+					let _tracing_span = ::#asteracea::__::tracing::debug_span!(#render_span_name, #(#render_args_tracing_fields,)*).entered();
 
 					let #render_args_name {
 						#(#render_args_field_patterns,)*
