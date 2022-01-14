@@ -2,8 +2,6 @@
 
 (Named such because `tracing`crate disambiguation didn't work with `cargo run -p tracing:0.0.0`.)
 
-TODO: This isn't actually helpful right now and logging the tracing info to stderr doesn't seem to work.
-
 ## Running
 
 ```cmd
