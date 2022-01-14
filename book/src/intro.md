@@ -2,11 +2,55 @@
 
 Welcome to the Asteracea guide book!
 
-> **This book is a work in progress!**
+<!-- markdownlint-disable no-blanks-blockquote -->
+<!-- markdownlint-disable no-trailing-punctuation -->
+<!-- markdownlint-disable no-multiple-space-blockquote -->
+
+> ## This book is a work in progress!
 >
 > Until the first minor version stabilisation, there likely will only be this `develop`-branch version published online as rendered version, which usually won't mach a version of the crate published to crates.io. (Respective versions are tagged and can be rendered offline using (from the repository's root directory) `cd book` and `cargo run`.)
 >
 > In addition to the missing chapters, URLs are subject to change, links have have not been filled in and code blocks without highlighting or rendered HTML output may show unimplemented features.
+
+> ## This framework is a work in progress!
+>
+> It works alright for very simple examples right now, but certain parts of the grammar related to efficiently defining dynamic content haven't landed yet.
+>
+> ### What works
+>
+> - Pretty much any static templating.
+> - Lazy initialisation, via `defer` and `bind` expressions.
+> - Events and bindings, *mostly*.
+>   > Deferred callback continuations aren't present yet,
+>   > which prevents direct component instantiation or destruction from event handlers.
+> - Hover documentation!
+>   You get tooltips for elements, attributes and events, as far as written.
+> - *Some* branching.
+> - Dependency injection, should be mostly working.
+>   > Though I'm not entirely happy with it yet.
+>   > There's per-instantiation overhead without using it.
+> - Code-sharing between client and server, as Asteracea targets the modular [lignin](https://crates.io/crates/lignin).
+>
+> ### What isn't finished
+>
+> - Thread safety inference is sometimes wonky.
+>    > Write `ComponentName()() -> Sync` or `ComponentName()() -> !Sync` to determine it manually.
+>   > It's sound either way, but the former may not compile.
+> - [Repeat arguments](https://github.com/Tamschi/Asteracea/pull/42) for child components. This will lead towards content transclusion. I think.
+> - Attached properties, to configure transclusion.
+> - The grammar. I'll most likely change something in a breaking way before `v0.1`.
+>
+> ### What's missing
+>
+> - "Loops"
+> - A standard library, including a mockable HTTP client (for client **and** server).
+> - A router, hopefully nicely possible outside the core library.
+> - A turnkey app base. This needs to come with SSR and then optionally hydrate.
+> - Anything I haven't thought of! [Suggestions](https://github.com/Tamschi/Asteracea/discussions/categories/ideas) are welcome.
+
+<!-- markdownlint-enable no-multiple-space-blockquote -->
+<!-- markdownlint-enable no-trailing-punctuation -->
+<!-- markdownlint-enable no-blanks-blockquote -->
 
 ## Audience
 
@@ -76,7 +120,7 @@ Asteracea is, as of October 2020, still early in development and subject to chan
 
   [`FinalizationRegistry`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry
 
-  The targeted application model is single-threaded, which means components and event handlers aren't required to be [`Send`] or [`Sync`].
+  The targeted application model is optionally threaded, which means components and event handlers aren't required to be [`Send`] or [`Sync`], but can meaningfully be so.
 
   [`Send`]: https://doc.rust-lang.org/stable/std/marker/trait.Send.html
   [`Sync`]: https://doc.rust-lang.org/stable/std/marker/trait.Sync.html

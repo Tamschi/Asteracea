@@ -14,6 +14,8 @@ fn weak_assert_branch() {
 		} else if branch == "(no branch)" {
 			// Most likely a release tag.
 			eprintln!(r#"Branch assert ignored: "(no branch)""#)
+		} else if branch == "template" {
+			eprintln!("Branch assert ignored: Currently on template branch")
 		} else if branch.contains('-') || branch.contains('/') {
 			eprintln!("Branch assert ignored: Probably a feature branch")
 		} else {
@@ -44,7 +46,7 @@ fn crates() {
 fn docs() {
 	version_sync::assert_contains_regex!(
 		"README.md",
-		r"^\[!\[Docs\.rs\]\(https://docs\.rs/{name}/badge\.svg\)\]\(https://docs\.rs/crates/{name}\)$"
+		r"^\[!\[Docs\.rs\]\(https://docs\.rs/{name}/badge\.svg\)\]\(https://docs\.rs/{name}\)$"
 	);
 }
 
@@ -119,6 +121,18 @@ fn pulls() {
 		"README.md",
 		&format!(
 			r"^\[!\[open pull requests\]\(https://img\.shields\.io/github/issues-pr-raw/{user}/{repo}\)\]\(https://github\.com/{user}/{repo}/pulls\)$",
+			user = USER,
+			repo = REPOSITORY,
+		)
+	);
+}
+
+#[test]
+fn good_first_issues() {
+	version_sync::assert_contains_regex!(
+		"README.md",
+		&format!(
+			r"^\[!\[good first issues\]\(https://img\.shields\.io/github/issues-raw/{user}/{repo}/good%20first%20issue\?label=good\+first\+issues\)\]\(https://github\.com/{user}/{repo}/contribute\)$",
 			user = USER,
 			repo = REPOSITORY,
 		)

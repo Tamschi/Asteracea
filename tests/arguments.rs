@@ -1,11 +1,11 @@
 use asteracea::component;
-use lignin::bumpalo::Bump;
+use bumpalo::Bump;
 use rhizome::Node;
 
 component! {
 	pub Greeting()(
 		greeting: &str = "Hello!",
-	)
+	) -> Sync
 
 	<span
 		."class" = "greeting"
@@ -16,7 +16,7 @@ component! {
 asteracea::component! {
 	pub Classic()(
 		class?: &'bump str,
-	)
+	) -> Sync
 
 	<div
 		."class"? = {class} // `Option<_>`-typed!

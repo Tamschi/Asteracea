@@ -1,3 +1,4 @@
+use super::ParentParameterParser;
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
@@ -18,10 +19,11 @@ impl ParseWithContext for HtmlComment {
 	fn parse_with_context(
 		input: ParseStream<'_>,
 		_cx: &mut ParseContext,
+		_: &mut dyn ParentParameterParser,
 	) -> syn::Result<Self::Output> {
 		let open_span;
 		let text;
-		unquote!(input, #^'open_span <!-- #$'open_span #text -->);
+		unquote!(input, #'open_span <!-- #text -->);
 		Ok(Self { open_span, text })
 	}
 }
@@ -36,9 +38,10 @@ impl HtmlComment {
 		let asteracea = asteracea_ident(open_span);
 
 		quote_spanned! {open_span=>
-			#asteracea::lignin::Node::Comment(
-				#text
-			)
+			#asteracea::lignin::Node::Comment {
+				comment: #text,
+				dom_binding: None, //TODO: Add DOM binding support.
+			}
 		}
 	}
 }

@@ -1,38 +1,53 @@
 use std::{collections::HashSet, iter};
 
-use super::{AttachedAccessExpression, CaptureDefinition};
-use crate::storage_context::{ParseContext, ParseWithContext};
+use super::{CaptureDefinition, GenerateContext};
+use crate::{
+	asteracea_ident,
+	part::Part,
+	storage_context::{ParseContext, ParseWithContext},
+	workaround_module::Configuration,
+};
 use call2_for_syn::call2_strict;
-use proc_macro2::{Punct, Span, TokenStream};
+use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
-	parse2, parse_quote,
-	token::{Brace, Paren},
+	parse2, parse_quote_spanned,
+	spanned::Spanned,
+	token::{Brace, Eq, Paren, Question},
 	visit_mut::{visit_expr_mut, VisitMut},
 	Error, Expr, ExprPath, Ident, Pat, PatIdent, PatTuple, PatTupleStruct, Result, Token,
 	Visibility,
 };
 use syn_mid::Block;
+use tap::Pipe;
 use unquote::unquote;
 
-pub enum Component<C> {
+pub enum Component<C: Configuration> {
 	Instantiated {
+		open_span: Span,
+		path: ExprPath,
 		capture: CaptureDefinition<C>,
-		attached_access: AttachedAccessExpression,
+		render_params: Vec<Parameter<Token![.]>>,
+		content_children: Vec<ContentChild<C>>,
 	},
 	Instanced {
 		open_span: Span,
 		reference: Block,
-		render_params: Vec<Parameter>,
+		render_params: Vec<Parameter<Token![.]>>,
+		content_children: Vec<ContentChild<C>>,
 	},
 }
-impl<C> ParseWithContext for Component<C> {
+impl<C: Configuration> ParseWithContext for Component<C> {
 	type Output = Self;
 
-	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
+	fn parse_with_context(
+		input: ParseStream<'_>,
+		cx: &mut ParseContext,
+		parent_parameter_parser: &mut dyn ParentParameterParser,
+	) -> Result<Self::Output> {
 		let open_span;
-		unquote!(input, #^'open_span <* #$'open_span);
+		unquote!(input, #'open_span <*);
 
 		if input.peek(Brace) {
 			let mut reference: Block;
@@ -41,26 +56,42 @@ impl<C> ParseWithContext for Component<C> {
 			// Suppress warning.
 			reference.brace_token.span = reference.brace_token.span.resolved_at(Span::mixed_site());
 
+			parent_parameter_parser.parse_any(input, cx)?;
+
 			let mut render_params = vec![];
-			loop {
-				if input.peek(Token![.]) {
-					unquote!(input, #let param);
-					render_params.push(param)
-				} else if input.peek(Token![>]) {
-					unquote!(input, >);
-					break;
-				} else {
-					return Err(Error::new(
-						input.span(),
-						"Expected .render_arg or `>` (end of child component element)",
-					));
+			while input.peek(Token![.]) && !input.peek(Token![..]) {
+				unquote!(input, #let param);
+				render_params.push(param)
+			}
+
+			let mut content_children = vec![];
+			while !input.peek(Token![>]) {
+				let span = input.span();
+				let mut parent_parameters = vec![];
+				let part = Part::<C>::parse_with_context(input, cx, &mut parent_parameters)?;
+				if let Some(part) = part {
+					content_children.push(ContentChild {
+						span,
+						part,
+						parent_parameters,
+					})
 				}
+			}
+
+			if input.peek(Token![>]) {
+				unquote!(input, >);
+			} else {
+				return Err(Error::new(
+					input.span(),
+					"Expected .render_arg or content child or `>` (end of child component element)",
+				));
 			}
 
 			Ok(Self::Instanced {
 				open_span,
 				reference,
 				render_params,
+				content_children,
 			})
 		} else {
 			// TypePath actually would lead to a better error message here (regarding ::<> use),
@@ -87,78 +118,114 @@ impl<C> ParseWithContext for Component<C> {
 				}
 			};
 
-			let mut new_params: Vec<Parameter> = vec![];
-			let mut render_params: Vec<Parameter> = vec![];
-			loop {
-				if input.peek(Token![*]) {
-					new_params.push(input.parse()?)
-				} else if input.peek(Token![.]) {
-					render_params.push(input.parse()?)
-				} else if input.peek(Token![/]) {
-					let closing_name: Ident;
-					unquote!(input, /#closing_name>);
-					if closing_name != path.path.segments.last().ok_or_else(|| Error::new_spanned(path.clone(), "Strange: This path doesn't contain a last segment... Somehow. It's needed for named element closing, so maybe don't do that here."))?.ident {
-						return Err(Error::new_spanned(
-							closing_name,
-							format!("Expected `{}`", path.path.segments.last().unwrap().ident.to_string()),
-						));
-					}
-					break;
-				} else if input.peek(Token![>]) {
-					unquote!(input, >);
-					break;
-				} else {
-					return Err(Error::new(
-						input.span(),
-						if let Some(last) = path.path.segments.last() {
-							format!("Expected .render_arg or `/{}>` or `>` (end of child component element)", last.ident.to_string())
-						} else {
-							"Expected .render_arg or `>` (end of child component element)"
-								.to_string()
-						},
-					));
+			parent_parameter_parser.parse_any(input, cx)?;
+
+			let mut new_params: Vec<Parameter<Token![*]>> = vec![];
+			while input.peek(Token![*]) {
+				new_params.push(input.parse()?)
+			}
+
+			let mut render_params: Vec<Parameter<Token![.]>> = vec![];
+			while input.peek(Token![.]) && !input.peek(Token![..]) {
+				render_params.push(input.parse()?)
+			}
+
+			let mut content_children = vec![];
+			while !input.peek(Token![/]) && !input.peek(Token![>]) {
+				let span = input.span();
+				let mut parent_parameters = vec![];
+				let part = Part::<C>::parse_with_context(input, cx, &mut parent_parameters)?;
+				if let Some(part) = part {
+					content_children.push(ContentChild {
+						span,
+						part,
+						parent_parameters,
+					})
 				}
 			}
 
-			let new_params = parameter_struct_expression(
+			if input.peek(Token![/]) {
+				let closing_name: Ident;
+				unquote!(input, /#closing_name>);
+				if closing_name != path.path.segments.last().ok_or_else(|| Error::new_spanned(path.clone(), "Strange: This path doesn't contain a last segment... Somehow. It's needed for named element closing, so maybe don't do that here."))?.ident {
+						return Err(Error::new_spanned(
+							closing_name,
+							format!("Expected `{}`", path.path.segments.last().unwrap().ident),
+						));
+					}
+			} else if input.peek(Token![>]) {
+				unquote!(input, >);
+			} else {
+				return Err(Error::new(
+					input.span(),
+					if let Some(last) = path.path.segments.last() {
+						format!("Expected .render_arg or content child or `/{}>` or `>` (end of child component element)", last.ident)
+					} else {
+						"Expected .render_arg or content child or `>` (end of child component element)".to_string()
+					},
+				));
+			}
+
+			let new_params = parameter_struct_expression::<C, Token![*]>(
+				None,
 				open_span,
 				parse2(quote_spanned! (open_span=> #path::new_args_builder()))
 					.expect("new_params make_builder"),
 				new_params.as_slice(),
-			);
+				&[],
+			)?;
 
 			Ok(Self::Instantiated {
-			capture: call2_strict(
-				quote_spanned! {open_span=>
+				open_span,
+				capture: call2_strict(
+					quote_spanned! {open_span=>
 						pin |#visibility #field_name = #path::new(&node, #new_params)?|
 					},
-					|input| CaptureDefinition::<C>::parse_with_context(input, cx),
+					|input| CaptureDefinition::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
 				)
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
-				.unwrap(),
-			attached_access: {
-				let render_params = parameter_struct_expression(
-					open_span.resolved_at(Span::mixed_site()),
-					parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
-					render_params.as_slice(),
-				);
-				parse2(quote_spanned! (open_span=> .render(bump, #render_params)?))
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable attached access"))?
-			}
+				.expect("Component::parse_with_context capture"),
+				path,
+			render_params,
+			content_children,
 		})
 		}
 	}
 }
 
-impl<C> Component<C> {
-	pub fn part_tokens(&self) -> TokenStream {
+impl<C: Configuration> Component<C> {
+	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		match self {
 			Component::Instantiated {
+				open_span,
 				capture,
-				attached_access,
+				path,
+				render_params,
+				content_children,
 			} => {
-				let mut expr = parse_quote!(#capture#attached_access);
+let render_call= {
+	let render_params = parameter_struct_expression(
+		Some(cx),
+		open_span.resolved_at(Span::mixed_site()),
+		parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
+		render_params.as_slice(),
+		content_children.as_slice(),
+	)?;
+	quote_spanned!(*open_span=> .render(bump, #render_params)?)
+};
+
+				let asteracea = asteracea_ident(Span::mixed_site());
+				let mut expr = parse2(quote!({
+					let rendered = #capture#render_call;
+
+					{
+						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
+						#[allow(deprecated)]
+						rendered.deanonymize()
+					}
+				}))
+				.expect("Component::Instantiated");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
 				quote!(#expr)
 			}
@@ -166,25 +233,35 @@ impl<C> Component<C> {
 				open_span,
 				reference,
 				render_params,
+				content_children,
 			} => {
+				let asteracea = asteracea_ident(*open_span);
 				let binding = quote_spanned!(reference.brace_token.span.resolved_at(Span::mixed_site())=> let reference: ::std::pin::Pin<&_> = #reference;);
 				let bump = quote_spanned!(*open_span=> bump);
 				let render_params = parameter_struct_expression(
+					Some(cx),
 					open_span.resolved_at(Span::mixed_site()),
 					parse2(
 						quote_spanned!(open_span.resolved_at(Span::mixed_site())=> reference.__Asteracea__ref_render_args_builder()),
 					).expect("render_params make_builder 2"),
 					render_params.as_slice(),
-				);
+					content_children.as_slice(),
+				)?;
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					#binding
-					reference.render(#bump, #render_params)?
+					let rendered = reference.render(#bump, #render_params)?;
+
+					{
+						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
+						#[allow(deprecated)]
+						rendered.deanonymize()
+					}
 				}))
-				.unwrap();
+				.expect("Component::part_tokens Instanced expr");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
 				quote!(#expr)
 			}
-		}
+		}.pipe(Ok)
 	}
 }
 
@@ -198,16 +275,17 @@ impl VisitMut for SelfMassager {
 	}
 }
 
+//TODO: Unify all parameter types.
 #[derive(Clone)]
-pub struct Parameter {
-	punct: Punct,
+pub struct Parameter<P> {
+	punct: P,
 	ident: Ident,
-	question: Option<Token![?]>,
-	eq: Token![=],
+	question: Option<Question>,
+	eq: Eq,
 	value: Block,
 }
 
-impl Parse for Parameter {
+impl<P: Parse> Parse for Parameter<P> {
 	fn parse(input: ParseStream) -> Result<Self> {
 		unquote! {input,
 			#let punct
@@ -226,12 +304,12 @@ impl Parse for Parameter {
 	}
 }
 
-impl ToTokens for Parameter {
+impl<P: Spanned> ToTokens for Parameter<P> {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		let value_stmts = &self.value.stmts;
 		let value = quote_spanned! (self.value.brace_token.span.resolved_at(Span::mixed_site())=> {#value_stmts});
 		match self.question {
-			Some(_) => unreachable!(),
+			Some(_) => todo!("Conditional component parameters."),
 			None => {
 				let dot = quote_spanned!(self.punct.span()=> .);
 				let ident = &self.ident;
@@ -241,11 +319,13 @@ impl ToTokens for Parameter {
 	}
 }
 
-fn parameter_struct_expression(
+fn parameter_struct_expression<C: Configuration, P: Spanned>(
+	cx: Option<&GenerateContext>,
 	fallback_span: Span,
 	make_builder: Expr,
-	parameters: &[Parameter],
-) -> TokenStream {
+	parameters: &[Parameter<P>],
+	content_children: &[ContentChild<C>],
+) -> Result<TokenStream> {
 	if parameters
 		.iter()
 		.all(|parameter| parameter.question.is_none())
@@ -271,10 +351,21 @@ fn parameter_struct_expression(
 				},
 			)
 			.collect::<Vec<_>>();
+		let content_children = content_children
+			.iter()
+			.map(|content_child| content_child.parameter_tokens(cx.expect("`GenerateContent` is required here.")))
+			.collect::<Result<Vec<_>>>()?;
 		quote_spanned! {fallback_span=>
-			#make_builder#(#parameters)*.build()
+			#make_builder
+				#(#parameters)*
+				#(#content_children)*
+				.build()
 		}
 	} else {
+		if !content_children.is_empty() {
+			todo!("Content children in the presence of optional parameters")
+		}
+
 		let mut deferred_names = HashSet::new();
 
 		let mut deferred = vec![];
@@ -413,6 +504,51 @@ fn parameter_struct_expression(
 				#(#match_arms)*
 			}
 		}}
+	}.pipe(Ok)
+}
+
+pub struct ContentChild<C: Configuration> {
+	span: Span,
+	part: Part<C>,
+	parent_parameters: Vec<Parameter<Token![^]>>,
+}
+
+impl<C: Configuration> ContentChild<C> {
+	fn parameter_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
+		let span = self.span.resolved_at(Span::mixed_site());
+		let asteracea = asteracea_ident(span);
+
+		let parent_parameter_tokens = parameter_struct_expression::<C, Token![^]>(
+			Some(cx),
+			span,
+			parse_quote_spanned!(span=> ::#asteracea::__::infer_builder(phantom)),
+			&self.parent_parameters,
+			&[],
+		)?;
+		let part = self.part.part_tokens(cx)?;
+
+		let bump = Ident::new("bump", span.resolved_at(Span::call_site()));
+		let bump_time = quote_spanned!(bump.span()=> 'bump);
+		quote_spanned! {span=>
+			.__Asteracea__anonymous_content((
+				{
+					// Many thanks to Yandros for help with the type inference here:
+					let phantom = [];
+					if false {
+						<[_; 0] as ::core::iter::IntoIterator>::into_iter(phantom).next().unwrap()
+					} else {
+						#parent_parameter_tokens
+					}
+				},
+				::std::boxed::Box::new(
+					|bump: &#bump_time ::#asteracea::bumpalo::Bump| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+						::core::result::Result::Ok(#part)
+					}
+				),
+			))
+		}
+		.to_token_stream()
+		.pipe(Ok)
 	}
 }
 
@@ -450,4 +586,34 @@ struct MatchArm<'a> {
 struct BuilderMethodCall {
 	builder_method: Ident,
 	deferred: Ident,
+}
+
+pub trait ParentParameterParser {
+	fn parse_one(&mut self, input: ParseStream, cx: &mut ParseContext) -> Result<()>;
+
+	fn parse_any(&mut self, input: ParseStream, cx: &mut ParseContext) -> Result<()> {
+		while input.peek(Token![^]) {
+			self.parse_one(input, cx)?
+		}
+		Ok(())
+	}
+}
+
+pub struct BlockParentParameters;
+impl ParentParameterParser for BlockParentParameters {
+	fn parse_one(&mut self, input: ParseStream, _: &mut ParseContext) -> Result<()> {
+		let caret: Token![^];
+		let _name: Ident;
+		let _optional: Option<Token![?]>;
+		let _value: Block;
+		unquote!(input, #caret#_name#_optional=#_value);
+		Err(Error::new_spanned(caret, "Parent parameters aren't allowed here but only in direct children of included components."))
+	}
+}
+
+impl ParentParameterParser for Vec<Parameter<Token![^]>> {
+	fn parse_one(&mut self, input: ParseStream, _: &mut ParseContext) -> Result<()> {
+		self.push(input.parse()?);
+		Ok(())
+	}
 }

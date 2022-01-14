@@ -6,7 +6,7 @@ To output a static plain [`Text`] element in Asteracea, simply use a text litera
 
 ```rust asteracea=Text
 asteracea::component! {
-  pub Text()()
+  Text()()
 
   "This is text."
 }
@@ -36,7 +36,7 @@ Text nodes can be used as children of other nodes, for example a Multi Node:
 
 ```rust asteracea=TextMulti
 asteracea::component! {
-  pub TextMulti()()
+  TextMulti()()
 
   [
     "This is text."
@@ -46,7 +46,8 @@ asteracea::component! {
 ```
 
 ```rust no_run noplayground
-use lignin::{bumpalo::Bump, Node};
+use asteracea::bumpalo::Bump;
+use lignin::{Node, ThreadBound};
 
 # pub struct TextMulti {}
 # impl TextMulti {
@@ -54,18 +55,51 @@ use lignin::{bumpalo::Bump, Node};
 #         Self {}
 #     }
 // …
-pub fn render<'bump>(
-    &self,
-    bump: &'bump Bump,
-) -> Node<'bump> {
-    (Node::Multi(&*bump.alloc_with(|| {
-        [
-            Node::Text("This is text."),
-            Node::Text("This is also text."),
-        ]
-    })))
+pub fn render<'a, 'bump>(
+    self: ::std::pin::Pin<&'a Self>,
+    bump: &'bump asteracea::bumpalo::Bump,
+    TextMultiRenderArgs {
+        __Asteracea__phantom: _,
+    }: TextMultiRenderArgs<'_, 'a, 'bump>,
+) -> ::std::result::Result<
+    impl TextMulti__Asteracea__AutoSafe<
+        ::asteracea::lignin::Node<'bump, ::asteracea::lignin::ThreadBound>,
+    >,
+    ::asteracea::error::Escalation,
+> {
+    let this = self;
+    ::std::result::Result::Ok(
+        ::asteracea::lignin::Node::Multi::<'bump, _>(&*bump.alloc_try_with(
+            || -> ::std::result::Result<_, ::asteracea::error::Escalation> {
+                ::std::result::Result::Ok([
+                    ::asteracea::lignin::auto_safety::Align::align(
+                        ::asteracea::lignin::Node::Text::<'bump, _> {
+                            text: "This is text.",
+                            dom_binding: None,
+                        }
+                        .prefer_thread_safe(),
+                    ),
+                    ::asteracea::lignin::auto_safety::Align::align(
+                        ::asteracea::lignin::Node::Text::<'bump, _> {
+                            text: "This is also text.",
+                            dom_binding: None,
+                        }
+                        .prefer_thread_safe(),
+                    ),
+                ])
+            },
+        )?)
+        .prefer_thread_safe(),
+    )
 }
 // …
+# }
+#
+# #[allow(non_camel_case_types)]
+# lignin::auto_safety::AutoSafe_alias!(pub TextMulti__Asteracea__AutoSafe);
+#
+# pub struct TextMultiRenderArgs<'render, 'a, 'bump> {
+#     __Asteracea__phantom: ::core::marker::PhantomData<(&'render (), &'a (), &'bump ())>,
 # }
 ```
 

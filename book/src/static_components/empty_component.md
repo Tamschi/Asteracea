@@ -6,7 +6,7 @@ In context, and written more like what you'd see in the wild:
 
 ```rust asteracea=Empty
 asteracea::component! {
-  pub Empty()()
+  Empty()()
 
   []
 }
@@ -16,19 +16,110 @@ asteracea::component! {
 
 [`lignin-html`]: https://github.com/Tamschi/lignin-html
 
-This component expands to the following Rust code, with `use` imports extracted by hand and a little manual formatting:
+This component expands to the following Rust code, with `use` imports extracted by hand to improve readability:
 
 ```rust no_run noplayground
-//TODO
+# #[allow(
+#     dead_code,
+#     non_camel_case_types,
+#     non_snake_case,
+#     unused_mut,
+#     unused_unsafe,
+#     unused_variables,
+# )] {
+use ::asteracea::{
+    bumpalo::Bump,
+    error::Escalation,
+    lignin::auto_safety::AutoSafe_alias,
+    lignin::{Node, ThreadBound},
+    rhizome::{self, extensions::TypeTaggedNodeArc},
+    __::typed_builder::TypedBuilder,
+};
+use ::std::{
+    marker::PhantomData,
+    pin::Pin,
+    result::Result::{self, Ok},
+    sync::Arc,
+};
+
+#[derive(TypedBuilder)]
+#[builder(doc)]
+struct EmptyNewArgs<'NEW, 'a: 'NEW> {
+    #[builder(default, setter(skip))]
+    __Asteracea__phantom: PhantomData<(&'NEW (), &'a ())>,
+}
+
+#[derive(TypedBuilder)]
+#[builder(doc)]
+struct EmptyRenderArgs<'RENDER, 'a, 'bump: 'RENDER> {
+    #[builder(default, setter(skip))]
+    __Asteracea__phantom: PhantomData<(&'RENDER (), &'a (), &'bump ())>,
+}
+
+struct Empty {}
+impl Empty {}
+impl Empty {
+    pub fn new<'a>(
+        parent_node: &Arc<rhizome::Node>,
+        EmptyNewArgs {
+            __Asteracea__phantom: _,
+        }: EmptyNewArgs<'_, 'a>,
+    ) -> Result<Self, Escalation>
+    where
+        Self: 'a + 'static,
+    {
+        let node = TypeTaggedNodeArc::derive_for::<Self>(parent_node);
+        let mut node = node;
+        {}
+        {}
+        let node = node.into_arc();
+        Ok(Empty {})
+    }
+    pub fn new_args_builder<'NEW, 'a: 'NEW>() -> EmptyNewArgsBuilder<'NEW, 'a, ()> {
+        EmptyNewArgs::builder()
+    }
+    pub fn render<'a, 'bump>(
+        self: Pin<&'a Self>,
+        bump: &'bump Bump,
+        EmptyRenderArgs {
+            __Asteracea__phantom: _,
+        }: EmptyRenderArgs<'_, 'a, 'bump>,
+    ) -> Result<impl Empty__Asteracea__AutoSafe<Node<'bump, ThreadBound>>, Escalation> {
+        let this = self;
+        Ok(
+            Node::Multi::<'bump, _>(&*bump.alloc_try_with(|| -> Result<_, Escalation> { Ok([]) })?)
+                .prefer_thread_safe(),
+        )
+    }
+    pub fn render_args_builder<'RENDER, 'a, 'bump: 'RENDER>(
+    ) -> EmptyRenderArgsBuilder<'RENDER, 'a, 'bump, ()> {
+        EmptyRenderArgs::builder()
+    }
+    #[doc(hidden)]
+    pub fn __Asteracea__ref_render_args_builder<'RENDER, 'a, 'bump: 'RENDER>(
+        &self,
+    ) -> EmptyRenderArgsBuilder<'RENDER, 'a, 'bump, ()> {
+        let _ = self;
+        EmptyRenderArgs::builder()
+    }
+}
+
+AutoSafe_alias!(Empty__Asteracea__AutoSafe);
+
+/// Asteracea components do not currently support custom [`Drop`](`::std::ops::Drop`) implementations.
+impl ::std::ops::Drop for Empty {
+    fn drop(&mut self) {
+        unsafe {}
+    }
+}
+# }
 ```
 
-As you can see, the `component!` macro created one `struct` type, with one constructor called `new` and one method called `render`. The output of `component!`, as far as you're supposed to touch it, **always** has this shape. No exceptions.
+As you can see, the `component!` macro created a `struct` type, with one constructor called `new` and one method called `render`, as well as a few helper types and functions that enable named arguments, and a [`Drop`](https://doc.rust-lang.org/stable/std/ops/trait.Drop.html) implementation. The output of `component!`, as far as you're supposed to touch it, **always** has this shape. No exceptions.
 
-(The macro can currently, under certain circumstances, create colliding definitions of structs called `NewStatics` and `RenderStatics`. This is a bug and will be fixed prior to release.
+Identifiers containing `__Asteracea__` are considered internal and may change at any point in time. Please don't use them directly, even if technically accessible!
 
-If this happens to you, place your components in different modules. These types are not part of the public interface, and strictly speaking not something you're supposed to touch explicitly, and won't interfere further than this.)
-
-The parentheses around the body of render aren't strictly needed here... and you may find small bits of similar useless syntax in other positions too. The most simple explanation is that they're leftovers that will be cleaned up eventually (when more tests exist), but sometimes these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet.
+You may find small bits of similar useless syntax like those empty `{}` blocks in `new`. Some of these pieces of code nudge Rust into giving you a better error message or block off certain edge cases (usually inner attributes) that either would be confusing to read or haven't been properly evaluated yet, while others, like the empty `unsafe {}` in `drop` are slots where code is placed when generating more complex components, and which should be effectively removed by the compiler if empty. (If you notice such an empty construct that impacts runtime performance or Wasm assembly size, please file a bug report.)
 
 ## The breakdown
 

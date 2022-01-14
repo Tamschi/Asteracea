@@ -1,3 +1,5 @@
+//! GUI error escalation.
+
 #![allow(clippy::module_name_repetitions)]
 
 use std::{
@@ -5,7 +7,7 @@ use std::{
 	borrow::Cow,
 	error::Error,
 	fmt::{self, Debug, Display, Formatter},
-	panic::{catch_unwind, resume_unwind, UnwindSafe},
+	panic::{catch_unwind, panic_any, resume_unwind, UnwindSafe},
 	writeln,
 };
 
@@ -13,7 +15,7 @@ use std::{
 ///
 /// # About GUI Errors
 ///
-/// GUI errors (including dependency resolution errors) are, at least in Asteracea, considered to be programming errors and not part of the expected control flow. As such, they are strongly deprioritised for optimisation and any built-in error handling primitives are a variation of 'fail once, fail forever' regarding their operands.
+/// GUI errors (including dependency resolution errors) are, at least in Asteracea, considered to be programming errors and not part of the expected control flow. As such, they are strongly deprioritized for optimization and any built-in error handling primitives are a variation of 'fail once, fail forever' regarding their operands.
 ///
 /// What this means in practice is that the framework may substitute panics for any [`Err(Escalation)`](`Err`) variant and therefore make all `new` and `render` methods on components effectively infallible. Additionally, panics unwound through the GUI are considered to be GUI errors and caught by Asteracea's error handling expressions.
 ///
@@ -41,9 +43,9 @@ impl<E: ?Sized> Caught<E> {
 	#[doc(hidden)]
 	pub fn __Asteracea__with_traced_frame(mut self, frame: Cow<'static, str>) -> Self {
 		if let Some(trace) = &mut self.trace {
-			trace.push(frame)
+			trace.push(frame);
 		} else {
-			self.trace = Some(vec![frame])
+			self.trace = Some(vec![frame]);
 		}
 		self
 	}
@@ -103,6 +105,7 @@ enum Impl {
 	Extant(Throwable),
 }
 
+/// [`Send`] + [`Any`] + [`Error`]
 //TODO: This *probably* needs some clean-up.
 pub trait SendAnyError: Send + Any + Error {}
 impl<E: Send + Any + Error> SendAnyError for E {}
@@ -125,8 +128,12 @@ impl<E: SendAnyError> SendAnyErrorCasting for E {
 	}
 }
 
+/// Extension trait to GUI-escalate compatible errors.
+//TODO: Sealed?
 pub trait Escalate {
+	/// The type that is escalated.
 	type Output;
+	/// Escalates an error along the GUI call stack.
 	fn escalate(self) -> Self::Output;
 }
 impl<E: SendAnyError> Escalate for E {
@@ -137,8 +144,7 @@ impl<E: SendAnyError> Escalate for E {
 			trace: vec![],
 		};
 		if cfg!(feature = "force-unwind") {
-			//FIXME: Replace this with panic_any once that lands.
-			std::panic::resume_unwind(Box::new(throwable));
+			panic_any(Box::new(throwable));
 		} else {
 			#[cfg(not(feature = "force-unwind"))]
 			return Escalation(Impl::Extant(throwable));
@@ -150,8 +156,11 @@ impl<E: SendAnyError> Escalate for E {
 	}
 }
 
+/// Extension trait to convert compatible [`Result`]s into potentially escalated results.
 pub trait EscalateResult {
+	/// The type that is escalated.
 	type Output;
+	/// Converts a compatible [`Result`] into one that may have been escalated by the call.
 	fn escalate(self) -> Self::Output;
 }
 impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
@@ -164,10 +173,7 @@ impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
 
 /// A caught [`Escalation`], which may have originated as error or panic.
 ///
-/// Re-escalating this type always panics if it was created from a panic, in order to presever unwind-safety-related errors.
-///
-/// Panics resumed from this type (including via tracing instrumentation with `"backtrace"` enabled) are wrapped to enable tracing if that was not the case before.
-/// This is transparent towards the `Escalation::catch…` functions and other APIs inside this module, but may affect error handlers from other crates.
+/// Re-escalating this type always panics if it was created from a panic, in order to preserve unwind-safety-related errors.
 #[must_use = "Please ignore caught escalations explicitly with `let _ =` if this is intentional."]
 pub struct Caught<E: ?Sized> {
 	// An error or panic.
@@ -176,12 +182,14 @@ pub struct Caught<E: ?Sized> {
 	was_panic: bool,
 }
 impl<E: ?Sized> Caught<E> {
+	/// Unwraps the boxed error or panic, discarding the trace.
 	#[must_use]
 	pub fn into_boxed(self) -> Box<E> {
 		self.boxed
 	}
 }
 impl<E> Caught<E> {
+	/// Unwraps the boxed error or panic by value, discarding the trace.
 	#[must_use]
 	pub fn into_inner(self) -> E {
 		*self.boxed
@@ -190,18 +198,18 @@ impl<E> Caught<E> {
 impl Debug for Caught<dyn Send + Any> {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		if let Some(str) = self.boxed.downcast_ref::<&str>() {
-			Display::fmt(str, f)?
+			Display::fmt(str, f)?;
 		} else if let Some(string) = self.boxed.downcast_ref::<String>() {
-			Display::fmt(string, f)?
+			Display::fmt(string, f)?;
 		} else if let Some(wrapper) = self.boxed.downcast_ref::<ErrorWrapper>() {
-			Display::fmt(&wrapper.0, f)?
+			Display::fmt(&wrapper.0, f)?;
 		} else {
-			writeln!(f, "type ID: {:?}", self.boxed.type_id())?
+			writeln!(f, "type ID: {:?}", self.boxed.type_id())?;
 		}
 		writeln!(f)?;
 		writeln!(f)?;
 		for frame in self.trace.iter().flatten() {
-			writeln!(f, "in {}", frame)?
+			writeln!(f, "in {}", frame)?;
 		}
 		Ok(())
 	}
@@ -212,7 +220,7 @@ impl<E: Debug> Debug for Caught<E> {
 		writeln!(f)?;
 		writeln!(f)?;
 		for frame in self.trace.iter().flatten() {
-			writeln!(f, "in {}", frame)?
+			writeln!(f, "in {}", frame)?;
 		}
 		Ok(())
 	}
@@ -224,7 +232,7 @@ impl<E: Display> Display for Caught<E> {
 		writeln!(f)?;
 		writeln!(f)?;
 		for frame in self.trace.iter().flatten() {
-			writeln!(f, "in {}", frame)?
+			writeln!(f, "in {}", frame)?;
 		}
 		Ok(())
 	}
@@ -238,8 +246,7 @@ impl<E: Error> Error for Caught<E> {
 impl Escalation {
 	/// Catches any [`Escalation`] currently unwinding the stack.
 	///
-	/// Plain panics are considered to also be escalations,
-	/// and re-escalating them always leads to instrumentation for tracing.
+	/// Plain panics are considered to also be escalations.
 	///
 	/// # Errors
 	///
@@ -276,7 +283,7 @@ impl Escalation {
 
 	/// Catches [`Escalation`]s and, if possible, (other) panics currently unwinding the stack that are an `E`.
 	///
-	/// Even if not caught, panics are converted into [`GuiError`]s (which may re-panic them).
+	/// Even if not caught, panics are converted into [`Escalation`]s (which may re-panic them).
 	///
 	/// # Errors
 	///

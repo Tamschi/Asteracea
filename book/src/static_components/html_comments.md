@@ -4,7 +4,7 @@ The third kind of comment is specific to Asteracea and does affect program outpu
 
 ```rust asteracea=HtmlCommented
 asteracea::component! {
-  pub HtmlCommented()()
+  HtmlCommented()()
 
   <!-- "This is an HTML comment." -->
 }
@@ -16,7 +16,7 @@ You can use a multiline string to easily write a multiline HTML comment:
 
 ```rust asteracea=HtmlCommented
 asteracea::component! {
-  pub HtmlCommented()()
+  HtmlCommented()()
 
   <!-- "
     This comment spans mul-

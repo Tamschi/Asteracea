@@ -3,31 +3,32 @@
 Before I begin to explain in earnest, here is a relatively complex dynamic component using many of Asteracea's features, along with its resulting HTML representation:
 
 ```rust asteracea=CounterUser
+use lignin::web::Event;
 use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
 
 asteracea::component! {
-  pub Counter(
+  Counter(
     initial: i32,
     priv step: i32,
     pub enabled: bool = true,
   )(
     class?: &'bump str,
-  )
+  ) -> !Sync
 
   |value = Cell::<i32>::new(initial)|;
 
   //
 
   <div
-    ."class"? = {class}
+    .class? = {class}
     "The current value is: " !{self.value()} <br>
 
     <button
-      ."disabled"? = {!self.enabled}
+      .disabled? = {!self.enabled}
       "+" !{self.step}
-      +"click" {self.step()}
+      on bubble click = Self::on_click_plus
     >
   >
 }
@@ -44,14 +45,13 @@ impl Counter {
     schedule_render();
   }
 
-  fn step(&self) {
-    self.value.set(self.value() + self.step);
-    schedule_render();
+  fn on_click_plus(&self, _: Event) {
+    self.set_value(self.value() + self.step);
   }
 }
 
 asteracea::component! {
-  pub CounterUser()()
+  CounterUser()() -> !Sync
 
   <"counter-user" "\n\t"
     <*Counter

@@ -12,7 +12,7 @@ asteracea::component! {
   )
 
   <div
-    ."class"? = {class}
+    .class? = {class}
   >
 }
 

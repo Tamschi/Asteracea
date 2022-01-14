@@ -16,6 +16,7 @@ pub struct AsteraceaExamplesBuild {
 pub struct AsteraceaExamples;
 
 impl AsteraceaExamplesBuild {
+	#[allow(dead_code)] //FIXME
 	pub fn new() -> Result<Self, Box<dyn Error>> {
 		let out_dir = Path::new(&env::var_os("OUT_DIR").ok_or("Missing OUT_DIR.")?).to_owned();
 		Ok(Self {
@@ -26,8 +27,6 @@ impl AsteraceaExamplesBuild {
 					"{} {{ {} {{",
 					quote! {
 						use debugless_unwrap::DebuglessUnwrap as _;
-						use lignin::Node;
-						use std::collections::HashMap;
 
 						pub fn get_html(key: &str) -> Result<String, asteracea::error::Escalation>
 					},
@@ -185,31 +184,30 @@ struct CodeState<'a> {
 
 impl<'a> CodeState<'a> {
 	fn new(tag: CowStr) -> Option<Self> {
-		let tags: Vec<_> = tag.split(' ').collect();
 		let mut name: Option<CowStr> = None;
 		let mut constructor_build: CowStr = "".into();
 		let mut render_build: CowStr = "".into();
-		let tags: Vec<_> = tags
-			.into_iter()
+		let tags: Vec<_> = tag
+			.split(' ')
 			.filter(|t| {
 				if t.starts_with("asteracea::new") {
 					constructor_build = t
-						.splitn(2, '=')
-						.nth(1)
+						.split_once('=')
+						.map(|x| x.1)
 						.expect("Missing arg builder method calls after asteracea::new")
 						.into();
 					false
 				} else if t.starts_with("asteracea::render") {
 					render_build = t
-						.splitn(2, '=')
-						.nth(1)
+						.split_once('=')
+						.map(|x| x.1)
 						.expect("Missing arg builder method calls after asteracea::render")
 						.into();
 					false
 				} else if t.starts_with("asteracea") {
 					name = Some(
-						t.splitn(2, '=')
-							.nth(1)
+						t.split_once('=')
+							.map(|x| x.1)
 							.expect("Missing component name after asteracea")
 							.into(),
 					);
@@ -301,10 +299,16 @@ impl<'a> CodeState<'a> {
 				};
 				let component = Box::pin(NAME::new(&root, NAME::new_args_builder()CONSTRUCTOR_BUILD.build())?);
 
-				let bump = lignin::bumpalo::Bump::new();
-				let vdom = component.as_ref().render(&bump, NAME::render_args_builder()RENDER_BUILD.build())?;
+				let bump = asteracea::bumpalo::Bump::new();
+				let rendered = component.as_ref().render(&bump, NAME::render_args_builder()RENDER_BUILD.build())?;
+				let vdom = {
+					#[allow(unused_imports)]
+					use asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
+					#[allow(deprecated)]
+					rendered.deanonymize()
+				};
 				let mut html = String::new();
-				lignin_html::render(&mut html, &vdom, &bump).debugless_unwrap();
+				lignin_html::render_fragment(&vdom, &mut html, 1000).debugless_unwrap();
 				Ok(html)
 			}}
 			.to_string()

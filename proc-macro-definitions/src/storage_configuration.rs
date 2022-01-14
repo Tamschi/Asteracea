@@ -1,7 +1,6 @@
-use std::iter;
-
 use proc_macro2::Span;
 use quote::{quote_spanned, ToTokens};
+use std::iter;
 use syn::{
 	parse::{Parse, ParseStream},
 	parse2,
@@ -13,8 +12,8 @@ use syn::{
 	ItemStruct, LifetimeDef, Path, PathArguments, PathSegment, Result, Token, TypeParam, TypePath,
 	Visibility, WhereClause,
 };
+use tap::Pipe as _;
 use unquote::unquote;
-use wyz::Pipe;
 
 use crate::{asteracea_ident, storage_context::StorageContext};
 
@@ -248,7 +247,7 @@ impl StorageTypeConfiguration {
 									.as_ref()
 									.cloned()
 									.unwrap_or_else(|| Token![<](span)),
-								args: generic_arguments(&parent_generics)?,
+								args: generic_arguments(parent_generics)?,
 								gt_token: parent_generics
 									.gt_token
 									.as_ref()
@@ -343,7 +342,7 @@ impl StorageTypeConfiguration {
 	pub fn struct_(&self) -> Option<&Token![struct]> {
 		match self {
 			StorageTypeConfiguration::Anonymous => None,
-			StorageTypeConfiguration::Generated { struct_, .. } => Some(&struct_),
+			StorageTypeConfiguration::Generated { struct_, .. } => Some(struct_),
 			StorageTypeConfiguration::Predefined { .. } => None,
 		}
 	}
@@ -470,7 +469,7 @@ impl StorageTypeConfiguration {
 			} else {
 				let asteracea = asteracea_ident(span);
 				quote_spanned! {span=>
-					::#asteracea::__Asteracea__implementation_details::static_assertions::assert_not_impl_any!(#ident: ::std::marker::Unpin);
+					::#asteracea::__::static_assertions::assert_not_impl_any!(#ident: ::std::marker::Unpin);
 				}
 			}))
 			}

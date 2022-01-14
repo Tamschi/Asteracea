@@ -3,35 +3,60 @@
 
 extern crate proc_macro;
 
+use lazy_static::lazy_static;
+use proc_macro::TokenStream as TokenStream1;
+use proc_macro2::{Span, TokenStream as TokenStream2};
+use proc_macro_crate::{crate_name, FoundCrate};
+use quote::{quote, quote_spanned};
+use std::iter;
+use syn::{
+	parse::{Parse, ParseStream},
+	parse_macro_input,
+	spanned::Spanned,
+	Error, Ident, Result,
+};
+use tap::Conv;
+
 mod component_declaration;
 mod map_message;
 mod part;
 mod storage_configuration;
 mod storage_context;
 mod syn_ext;
-mod trace_instrumentation;
 mod try_parse;
 
 use self::{
 	component_declaration::ComponentDeclaration,
 	map_message::MapMessage,
 	part::{GenerateContext, Part},
-	try_parse::TryParse,
-};
-use lazy_static::lazy_static;
-use proc_macro::TokenStream as TokenStream1;
-use proc_macro2::{Span, TokenStream as TokenStream2};
-use proc_macro_crate::crate_name;
-use quote::{quote, quote_spanned, ToTokens};
-use syn::{
-	parse::{Parse, ParseStream},
-	parse_macro_input, Ident, Result,
 };
 
-use syn::Error;
+fn hook_panics() {
+	std::panic::set_hook(Box::new(|panic_info| {
+		let location = panic_info.location();
+
+		let payload = if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+			s
+		} else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
+			s.as_str()
+		} else {
+			"(unknown panic type)"
+		};
+		eprintln!(
+			"Asteracea proc macro panic at {} line {}\n\n{}",
+			location.map(|l| l.file()).unwrap_or("None"),
+			location
+				.map(|l| l.line().to_string())
+				.unwrap_or_else(|| "None".to_string()),
+			payload
+		);
+	}))
+}
 
 #[proc_macro]
 pub fn component(input: TokenStream1) -> TokenStream1 {
+	hook_panics();
+
 	let component_declaration = parse_macro_input!(input as ComponentDeclaration);
 	let tokens: TokenStream2 = component_declaration
 		.into_tokens()
@@ -48,7 +73,15 @@ struct BumpFormat {
 #[proc_macro]
 pub fn bump_format(input: TokenStream1) -> TokenStream1 {
 	let bump_format = parse_macro_input!(input as BumpFormat);
-	quote!(#bump_format).into()
+	let mut tokens = TokenStream2::new();
+	bump_format.to_tokens_with_context(
+		&mut tokens,
+		&GenerateContext {
+			thread_safety: quote!(_),
+			prefer_thread_safe: None,
+		},
+	);
+	tokens.into()
 }
 
 impl Parse for BumpFormat {
@@ -65,19 +98,21 @@ impl Parse for BumpFormat {
 	}
 }
 
-impl ToTokens for BumpFormat {
-	fn to_tokens(&self, output: &mut TokenStream2) {
+impl BumpFormat {
+	fn to_tokens_with_context(&self, output: &mut TokenStream2, cx: &GenerateContext) {
 		let BumpFormat {
 			asteracea,
 			bump_span,
 			input,
 		} = self;
+		let thread_safety = &cx.thread_safety;
 		let bump = Ident::new("bump", bump_span.resolved_at(Span::call_site()));
 		output.extend(quote! {
-			#asteracea::lignin::Node::Text(
-				#asteracea::lignin::bumpalo::format!(in #bump, #input)
-					.into_bump_str()
-			)
+			#asteracea::lignin::Node::Text::<#thread_safety> {
+				text: #asteracea::bumpalo::format!(in #bump, #input)
+					.into_bump_str(),
+				dom_binding: None, //TODO?: Add DOM binding support.
+			}
 		});
 	}
 }
@@ -92,7 +127,10 @@ impl Configuration for FragmentConfiguration {
 pub fn fragment(input: TokenStream1) -> TokenStream1 {
 	let asteracea = asteracea_ident(Span::mixed_site());
 	let body = parse_macro_input!(input as Part<FragmentConfiguration>)
-		.part_tokens(&GenerateContext::default())
+		.part_tokens(&GenerateContext {
+			thread_safety: quote!(_),
+			prefer_thread_safe: None,
+		})
 		.unwrap_or_else(|error| error.to_compile_error());
 	(quote_spanned! {Span::mixed_site()=>
 		((|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
@@ -102,23 +140,14 @@ pub fn fragment(input: TokenStream1) -> TokenStream1 {
 	.into()
 }
 
-/// Iff the `"backtrace"` feature is enabled, instruments a function to add a trace frame of the form "attr_param::function_name".
-/// This only works on functions that return `Result<_, Escalation>`.
-#[proc_macro_attribute]
-pub fn trace_escalations(attr: TokenStream1, item: TokenStream1) -> TokenStream1 {
-	if cfg!(feature = "backtrace") {
-		let mut gui_traced = parse_macro_input!(item as Tracing);
-		gui_traced.prefix = parse_macro_input!(attr as TokenStream2).into();
-		gui_traced.into_token_stream().into()
-	} else {
-		item
-	}
-}
-
 // TODO: Accept reexported asteracea module made available via `use`.
 lazy_static! {
-	static ref ASTERACEA_NAME: String =
-		crate_name("asteracea").unwrap_or_else(|_| "asteracea".to_owned());
+	static ref ASTERACEA_NAME: String = crate_name("asteracea")
+		.map(|found| match found {
+			FoundCrate::Itself => "asteracea".to_string(), // This happens in tests.
+			FoundCrate::Name(name) => name,
+		})
+		.unwrap_or_else(|_| "asteracea".to_owned());
 }
 fn asteracea_ident(span: Span) -> Ident {
 	Ident::new(&*ASTERACEA_NAME, span)
@@ -131,9 +160,53 @@ mod workaround_module {
 		const CAN_CAPTURE: bool;
 	}
 }
-use trace_instrumentation::Tracing;
 use workaround_module::Configuration;
 
 fn warn(location: Span, message: &str) -> Result<()> {
 	Err(Error::new(location, message.to_string()))
+}
+
+trait FailSoftly<T, E>: Sized {
+	fn fail_softly(self, errors: &mut impl Extend<E>, fallback: impl FnOnce() -> T) -> T;
+	fn fail_softly_into<E2: From<E>>(
+		self,
+		errors: &mut (impl IntoIterator<Item = E2> + Extend<E2>),
+		fallback: impl FnOnce() -> T,
+	) -> T;
+}
+impl<T, E> FailSoftly<T, E> for std::result::Result<T, E> {
+	fn fail_softly(self, errors: &mut impl Extend<E>, fallback: impl FnOnce() -> T) -> T {
+		self.unwrap_or_else(|error| {
+			errors.extend(iter::once(error));
+			fallback()
+		})
+	}
+
+	fn fail_softly_into<E2: From<E>>(
+		self,
+		errors: &mut (impl IntoIterator<Item = E2> + Extend<E2>),
+		fallback: impl FnOnce() -> T,
+	) -> T {
+		self.map_err(Into::into).fail_softly(errors, fallback)
+	}
+}
+
+/// An attribute macro that discards its arguments and returns what it is applied to unchanged.
+///
+/// Used as stub when another attribute is not to be activated.
+#[proc_macro_attribute]
+pub fn discard_these_attribute_args(args: TokenStream1, item: TokenStream1) -> TokenStream1 {
+	drop(args);
+	item
+}
+
+/// Returns just an `::asteracea::__::tracing::Span`, preserving [`Span`] location but resolving it at [`Span::mixed_site()`](`Span::mixed_site`).
+#[proc_macro]
+pub fn fake_span(input: TokenStream1) -> TokenStream1 {
+	let span = input
+		.conv::<TokenStream2>()
+		.span()
+		.resolved_at(Span::mixed_site());
+	let asteracea = asteracea_ident(span);
+	quote_spanned!(span=> ::#asteracea::__::tracing::Span).into()
 }

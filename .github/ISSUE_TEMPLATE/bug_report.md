@@ -2,10 +2,18 @@
 name: Bug Report
 about: Create a report to help this project improve
 title: ''
-labels: bug
+labels: 'type: bug'
 assignees: ''
 
 ---
+
+<!--
+Ideally, your bug report should be self-contained, that is provide all necessary
+information without having to click on links.
+
+You can still still provide links though, for example to more complete CI logs
+where an error is shown.
+-->
 
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -26,7 +34,7 @@ If applicable, add screenshots to help explain your problem.
 
 **please complete the following information:**
 
-- `rustc --version`: [e.g. 1.46.0]
+- `rustc --version`: [e.g. 1.57.0]
 - Crate version (if applicable): [e.g. 0.0.2]
 
 **Additional context**

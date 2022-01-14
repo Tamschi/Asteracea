@@ -1,26 +1,74 @@
 version: 2
 updates:
+
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "daily"
+    # versioning-strategy: "increase-if-necessary" # Not yet supported. See <https://github.com/dependabot/dependabot-core/issues/4009>.
+    # For now, use the following to reduce spam:
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
     assignees:
       - "Tamschi"
-    reviewers:
-      - "Tamschi"
+    labels:
+      - "type: upkeep"
+      - "domain: Rust"
+
   - package-ecosystem: "cargo"
     directory: "/proc-macro-definitions/"
     schedule:
       interval: "daily"
+    # versioning-strategy: "increase-if-necessary" # Not yet supported. See <https://github.com/dependabot/dependabot-core/issues/4009>.
+    # For now, use the following to reduce spam:
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
     assignees:
       - "Tamschi"
-    reviewers:
+    labels:
+      - "type: upkeep"
+      - "domain: Rust"
+
+  - package-ecosystem: "cargo"
+    directory: "/book/"
+    schedule:
+      interval: "daily"
+    # versioning-strategy: "increase-if-necessary" # Not yet supported. See <https://github.com/dependabot/dependabot-core/issues/4009>.
+    # For now, use the following to reduce spam:
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+    assignees:
       - "Tamschi"
+    labels:
+      - "type: upkeep"
+      - "domain: Rust"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
     assignees:
       - "Tamschi"
-    reviewers:
+    labels:
+      - "type: upkeep"
+      - "domain: GitHub Actions"
+
+  ## Examples
+
+  - package-ecosystem: "cargo"
+    directory: "/examples/tracing/"
+    schedule:
+      interval: "daily"
+    # versioning-strategy: "increase-if-necessary" # Not yet supported. See <https://github.com/dependabot/dependabot-core/issues/4009>.
+    # For now, use the following to reduce spam:
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+    assignees:
       - "Tamschi"
+    labels:
+      - "type: upkeep"
+      - "domain: Rust"

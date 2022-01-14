@@ -1,5 +1,8 @@
+use std::{cell::RefCell, rc::Rc};
+
 use crate::{
-	component_declaration::FieldDefinition, storage_configuration::StorageTypeConfiguration,
+	component_declaration::FieldDefinition, part::ParentParameterParser,
+	storage_configuration::StorageTypeConfiguration,
 };
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
@@ -17,6 +20,7 @@ pub struct ParseContext<'a> {
 	pub storage_generics: &'a Generics,
 	pub storage_context: StorageContext,
 	pub assorted_items: Vec<Item>,
+	pub callback_registrations: Rc<RefCell<Vec<(Ident, Type)>>>,
 }
 
 impl<'a> ParseContext<'a> {
@@ -35,6 +39,7 @@ impl<'a> ParseContext<'a> {
 				generated_names: 0,
 			},
 			assorted_items: vec![],
+			callback_registrations: Rc::default(),
 		}
 	}
 
@@ -49,6 +54,7 @@ impl<'a> ParseContext<'a> {
 				generated_names: 0,
 			},
 			assorted_items: vec![],
+			callback_registrations: Rc::default(),
 		}
 	}
 
@@ -67,6 +73,7 @@ impl<'a> ParseContext<'a> {
 				generated_names: 0,
 			},
 			assorted_items: vec![],
+			callback_registrations: Rc::clone(&self.callback_registrations),
 		}
 	}
 }
@@ -195,7 +202,12 @@ impl StorageContext {
 pub trait ParseWithContext {
 	//WAITING: https://github.com/rust-lang/rust/issues/29661, = Self
 	type Output;
-	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output>;
+
+	fn parse_with_context(
+		input: ParseStream<'_>,
+		cx: &mut ParseContext,
+		parent_parameter_parser: &mut dyn ParentParameterParser,
+	) -> Result<Self::Output>;
 }
 
 fn strip_params(

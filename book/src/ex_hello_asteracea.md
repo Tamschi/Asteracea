@@ -20,20 +20,24 @@ component! {
   )(
     /// This component's class attribute value.
     class?: &'bump str,
-  )
+  ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
   |value = Cell::<i32>::new(initial)|; // shorthand capture
 
   <div
-    ."class"? = {class}
-    "The current value is: " !{self.value()} <br> // Anything within curlies is plain Rust.
+    // Attribute usage is validated statically.
+    // (Write its name as `str` literal to sidestep that.)
+    .class? = {class}
+
+    // Three content nodes in this line. Anything within curlies is plain Rust.
+    "The current value is: " !{self.value()} <br>
 
     <button
       "+" !{self.step} // shorthand bump_format call
-      +"click" {
-        self.value.set(self.value() + self.step);
-        schedule_render();
-      }
+
+      // Correct event usage is validated statically.
+      // (Write its name as `str` literal to sidestep that.)
+      on bubble click = fn (self, _) { self.set_value(self.value() + self.step); } // Inline handler.
     >
   >
 }
@@ -45,6 +49,7 @@ impl Counter {
 
   pub fn set_value(&self, value: i32) {
     self.value.set(value);
+    schedule_render();
   }
 }
 ```

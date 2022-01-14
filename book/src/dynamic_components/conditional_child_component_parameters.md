@@ -8,7 +8,7 @@ asteracea::component! {
     class?: &'bump str,
   )
 
-  <span ."class"? = {class}>
+  <span .class? = {class}>
 }
 
 asteracea::component! {

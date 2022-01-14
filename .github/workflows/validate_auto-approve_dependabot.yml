@@ -1,0 +1,39 @@
+name: 'Validate Auto-Approve Dependabot'
+
+permissions:
+  pull-requests: read
+
+# That bricked itself during the last major version upgrade of `actions/github-script` to `v5`. Whoops.
+# This workflow here now makes sure the API is there at least.
+on:
+  pull_request:
+
+jobs:
+  validate-approve-dependabot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate API
+        uses: actions/github-script@v5
+        with:
+          # The default token is enough to comment, but Dependabot will only comply if you impersonate a user with write access.
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            if (github.rest.pulls.listReviews == false) {
+              throw "`listReviews` not found.";
+            }
+
+            if (github.rest.pulls.createReview == false) {
+              throw "`createReview` not found.";
+            }
+
+            // If the following works, the script is probably fine:
+
+            const pulls = await github.rest.pulls.list({
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name,
+            });
+
+            for (pull of pulls.data) {
+              console.log(pull);
+              return;
+            }
