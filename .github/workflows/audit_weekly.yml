@@ -1,4 +1,4 @@
-name: Midnight Audit
+name: Weekly Audit
 
 permissions:
   contents: read
@@ -6,7 +6,9 @@ permissions:
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    #FIXME: Schedule this daily but make it so that the job doesn't fail no matter what.
+    # (New advisories still get reported as issues, anyway.)
+    - cron: '* 23 * * 5'
 
 jobs:
   audit:
