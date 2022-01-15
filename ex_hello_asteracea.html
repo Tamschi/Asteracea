@@ -181,13 +181,15 @@ component! {
   &lt;div
     // Attribute usage is validated statically.
     // (Write its name as `str` literal to sidestep that.)
+    // Anything within curlies is plain Rust.
     .class? = {class}
 
-    // Three content nodes in this line. Anything within curlies is plain Rust.
-    &quot;The current value is: &quot; !{self.value()} &lt;br&gt;
+    // Three content nodes in this line,
+    // with a shorthand bump_format call in the middle.
+    &quot;The current value is: &quot; !(self.value()) &lt;br&gt;
 
     &lt;button
-      &quot;+&quot; !{self.step} // shorthand bump_format call
+      &quot;+&quot; !(self.step)
 
       // Correct event usage is validated statically.
       // (Write its name as `str` literal to sidestep that.)

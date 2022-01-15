@@ -163,7 +163,7 @@ asteracea::component! {
   )
 
   spread match {enum_value} [
-    Enum::Text(text) =&gt; &lt;span !{text}&gt;
+    Enum::Text(text) =&gt; &lt;span !(text)&gt;
     Enum::Other =&gt; &lt;div .&quot;class&quot; = &quot;placeholder&quot;&gt;
   ]
 }

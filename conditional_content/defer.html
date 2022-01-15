@@ -159,7 +159,7 @@
   ) -&gt; Sync // Syncness hint required due to recursion.
 
   [
-    !{i}
+    !(i)
     spread if {i &gt; 0} [
       &quot;\n&quot;
       defer box &lt;*Countdown .i = {i - 1}&gt;
@@ -193,7 +193,7 @@ asteracea::component! {
   Introspective()()
 
   [
-    &quot;Was I rendered before? &quot; !{self.deferred_pinned().get().is_some()}
+    &quot;Was I rendered before? &quot; !(self.deferred_pinned().get().is_some())
     defer priv deferred: struct Deferred []
   ]
 }

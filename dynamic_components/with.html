@@ -160,9 +160,9 @@
     let tree_type = &quot;oak&quot;;
     let leaves_state = &quot;fallen&quot;;
   } &lt;div
-    //TODO: .&quot;class&quot; = !&quot;{} {}&quot;{tree_type, leaves_state}
-    !&quot;The tree in the garden is an {}.\n&quot;{ tree_type }
-    !&quot;The {}'s leaves are {}.&quot;{tree_type, leaves_state} //TODO: Support named formatting parameters.
+    //TODO: .&quot;class&quot; = !&quot;{} {}&quot;(tree_type, leaves_state)
+    !&quot;The tree in the garden is an {}.\n&quot;(tree_type)
+    !&quot;The {}'s leaves are {}.&quot;(tree_type, leaves_state)
   &gt;
 }
 <span class="boring">}
@@ -183,8 +183,8 @@ The oak's leaves are fallen.&lt;/DIV&gt;
       let tree_type = &quot;oak&quot;;
       let leaves_state = &quot;fallen&quot;;
     } [
-      !&quot;The tree in the garden is an {}.\n&quot;{ tree_type }
-      !&quot;The {}'s leaves are {}.&quot;{tree_type, leaves_state} //TODO: Support named formatting parameters.
+      !&quot;The tree in the garden is an {}.\n&quot;(tree_type)
+      !&quot;The {}'s leaves are {}.&quot;(tree_type, leaves_state)
     ]
   &gt;
 }
