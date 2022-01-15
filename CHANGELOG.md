@@ -20,6 +20,9 @@ TODO: Date
     > to support fallible rendering.
   * Generated `.render(…)` methods are now fallible, returning `Result<_, Escalation>`.
   * The `"backtrace"` feature was replaced by `"tracing"`, which enables [`tracing`](https://docs.rs/tracing/0.1/) compatibility.
+  * Changed `bump_format!` shorthand syntax.:  
+    `!"format string"`, `!"format_string"(args)` and `!(args)` are all valid now,
+    though in the last case the format string is implicitly `"{}"`.
 
 * Features:
   * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.

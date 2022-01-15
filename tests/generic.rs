@@ -8,7 +8,7 @@ component! {
 		displayed: T,
 	)
 
-	!{displayed}
+	!(displayed)
 }
 
 component! {

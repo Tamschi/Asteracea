@@ -139,8 +139,8 @@ impl<T> Select for T {
 // 	(render_arg: &str)
 
 // 	[
-// 		"new_arg: " !{self.new_arg} <br>
-// 		"render_arg: " !{render_arg}
+// 		"new_arg: " !(self.new_arg) <br>
+// 		"render_arg: " !(render_arg)
 // 	]
 // }
 

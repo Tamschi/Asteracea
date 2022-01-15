@@ -9,7 +9,7 @@ asteracea::component! {
 	) -> Sync
 
 	spread match {enum_value} [
-		Enum::Text(text) => <span !{text}>
+		Enum::Text(text) => <span !(text)>
 		Enum::Other => <div .class = "placeholder">
 	]
 }

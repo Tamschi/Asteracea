@@ -64,7 +64,7 @@ asteracea::component! {
   [
     "["
     spread if {let Some(content) = content} <div
-      !{content}
+      !(content)
     >
     "]"
   ]

@@ -9,7 +9,7 @@ component! {
 
 	<span
 		."class" = "greeting"
-		!{greeting}
+		!(greeting)
 	>
 }
 

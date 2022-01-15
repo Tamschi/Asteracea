@@ -11,7 +11,7 @@ asteracea::component! {
   ) -> Sync // Syncness hint required due to recursion.
 
   [
-    !{i}
+    !(i)
     spread if {i > 0} [
       "\n"
       defer box <*Countdown .i = {i - 1}>
@@ -39,7 +39,7 @@ asteracea::component! {
   Introspective()()
 
   [
-    "Was I rendered before? " !{self.deferred_pinned().get().is_some()}
+    "Was I rendered before? " !(self.deferred_pinned().get().is_some())
     defer priv deferred: struct Deferred []
   ]
 }

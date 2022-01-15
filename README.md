@@ -171,11 +171,11 @@ component! {
     ."class"? = {class}
 
     // Anything within curlies is plain Rust.
-    "The current value is: " !{self.value()} <br>
+    "The current value is: " !(self.value()) <br>
 
     <button
       ."disabled"? = {!self.enabled} // boolean attribute from `bool`
-      "+" !{self.step} // shorthand `bump_format` call
+      "+" !(self.step) // shorthand `bump_format` call
       on bubble click = Self::on_click_plus
     >
   >

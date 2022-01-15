@@ -33,7 +33,7 @@ asteracea::component! {
   // This code will turn into `!|quote: String = { quoted }|` then.
   |quote: String = { quoted }|;
 
-  !{self.quote}
+  !(self.quote)
 }
 
 asteracea::component! {

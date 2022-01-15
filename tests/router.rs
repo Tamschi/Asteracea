@@ -16,10 +16,10 @@ asteracea::component! {
 		.path={path}
 		.rest={&rest}
 		<div ^path={"/div/*"}
-			!"{}"{rest.get()}
+			!(rest.get())
 		>
 		<span ^path={"/span/*"}
-			!"{}"{rest.get()}
+			!(rest.get())
 		>
 	/Router>
 }

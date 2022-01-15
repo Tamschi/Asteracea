@@ -12,9 +12,9 @@ asteracea::component! {
     let tree_type = "oak";
     let leaves_state = "fallen";
   } <div
-    //TODO: ."class" = !"{} {}"{tree_type, leaves_state}
-    !"The tree in the garden is an {}.\n"{ tree_type }
-    !"The {}'s leaves are {}."{tree_type, leaves_state} //TODO: Support named formatting parameters.
+    //TODO: ."class" = !"{} {}"(tree_type, leaves_state)
+    !"The tree in the garden is an {}.\n"(tree_type)
+    !"The {}'s leaves are {}."(tree_type, leaves_state)
   >
 }
 ```
@@ -32,8 +32,8 @@ asteracea::component! {
       let tree_type = "oak";
       let leaves_state = "fallen";
     } [
-      !"The tree in the garden is an {}.\n"{ tree_type }
-      !"The {}'s leaves are {}."{tree_type, leaves_state} //TODO: Support named formatting parameters.
+      !"The tree in the garden is an {}.\n"(tree_type)
+      !"The {}'s leaves are {}."(tree_type, leaves_state)
     ]
   >
 }
