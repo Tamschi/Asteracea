@@ -32,10 +32,10 @@ use ::asteracea::{
     error::Escalation,
     lignin::auto_safety::AutoSafe_alias,
     lignin::{Node, ThreadBound},
-    rhizome::{self, extensions::TypeTaggedNodeArc},
     __::typed_builder::TypedBuilder,
 };
 use ::std::{
+    any::TypeId,
     marker::PhantomData,
     pin::Pin,
     result::Result::{self, Ok},
@@ -68,11 +68,11 @@ impl Empty {
     where
         Self: 'a + 'static,
     {
-        let node = TypeTaggedNodeArc::derive_for::<Self>(parent_node);
+        let node = parent_node.branch_for(TypeId::of::<Self>());
         let mut node = node;
         {}
         {}
-        let node = node.into_arc();
+        let node = &*node;
         Ok(Empty {})
     }
     pub fn new_args_builder<'NEW, 'a: 'NEW>() -> EmptyNewArgsBuilder<'NEW, 'a, ()> {

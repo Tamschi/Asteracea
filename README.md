@@ -86,7 +86,7 @@ asteracea::component! {
 let mut bump = bumpalo::Bump::new();
 let root = {
   struct Root;
-  asteracea::rhizome::Node::new_for::<Root>().into()
+  asteracea::__dependency_injection::ResourceNode::new(::core::any::TypeId::of::<Root>())
 };
 assert!(matches!(
   Box::pin(Empty::new(&root, Empty::new_args_builder().build()).unwrap())
@@ -120,7 +120,7 @@ asteracea::component! {
 let mut bump = bumpalo::Bump::new();
 let root = {
   struct Root;
-  asteracea::rhizome::Node::new_for::<Root>().into()
+  asteracea::__dependency_injection::ResourceNode::new(::core::any::TypeId::of::<Root>())
 };
 assert_eq!(
   Box::pin(Unit::new(&root, Unit::new_args_builder().build()).unwrap())
