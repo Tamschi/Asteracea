@@ -20,6 +20,8 @@ mod asteracea_html {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+	println!("cargo:rerun-if-changed=src/");
+
 	build_book()?;
 	generate_tests()?;
 	Ok(())
