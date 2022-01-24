@@ -1,9 +1,8 @@
-use asteracea::components::Router;
+use asteracea::{__dependency_injection::ResourceNode, components::Router};
 use bumpalo::Bump;
 use core::cell::Cell;
 use lignin_html::render_fragment;
-use rhizome::Node;
-use std::pin::Pin;
+use std::{any::TypeId, pin::Pin};
 
 asteracea::component! {
 	pub RouterTester()(
@@ -26,7 +25,7 @@ asteracea::component! {
 
 #[test]
 fn div() {
-	let root_node = Node::new_for::<()>().into_arc();
+	let root_node = ResourceNode::new(TypeId::of::<()>());
 	let router = RouterTester::new(&root_node, RouterTester::new_args_builder().build()).unwrap();
 	let router = unsafe { Pin::new_unchecked(&router) };
 	let bump = Bump::new();
@@ -48,7 +47,7 @@ fn div() {
 
 #[test]
 fn span() {
-	let root_node = Node::new_for::<()>().into_arc();
+	let root_node = ResourceNode::new(TypeId::of::<()>());
 	let router = RouterTester::new(&root_node, RouterTester::new_args_builder().build()).unwrap();
 	let router = unsafe { Pin::new_unchecked(&router) };
 	let bump = Bump::new();

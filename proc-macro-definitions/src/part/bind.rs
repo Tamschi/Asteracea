@@ -80,8 +80,8 @@ impl<C: Configuration> ParseWithContext for Bind<C> {
 		call2_strict(
 			quote_spanned! {bind.span.resolved_at(Span::mixed_site())=>
 				pin |
-					#visibility #field_name = ::#asteracea::try_lazy_init::LazyTransform::<::std::sync::Arc<::#asteracea::rhizome::Node>, #type_path>
-					::new(::std::sync::Arc::clone(&#node))
+					#visibility #field_name = ::#asteracea::try_lazy_init::LazyTransform::<::#asteracea::__dependency_injection::ResourceNodeHandle, #type_path>
+					::new(#node.clone_handle())
 				|;
 			},
 			|input| CaptureDefinition::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
@@ -137,6 +137,7 @@ impl<C: Configuration> Bind<C> {
 			let #field_name = #field_name
 				.get_or_create_or_poison(
 					#move_ |#node| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+						let #node = &*#node;
 						Ok(#binding_expression)
 					}
 				)

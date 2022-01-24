@@ -179,7 +179,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				open_span,
 				capture: call2_strict(
 					quote_spanned! {open_span=>
-						pin |#visibility #field_name = #path::new(&node, #new_params)?|
+						pin |#visibility #field_name = #path::new(node, #new_params)?|
 					},
 					|input| CaptureDefinition::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
 				)

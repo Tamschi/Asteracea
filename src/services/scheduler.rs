@@ -1,13 +1,14 @@
 #![allow(missing_docs)] //TODO
 
 use core::future::Future;
-use rhizome::extractable;
 
-extractable! {
-	pub abstract trait Scheduler
+use crate::__dependency_injection::InjectionKey;
 
-	fn spawn_dynamic(&self, future: Box<dyn Future<Output = ()> >);
+pub trait Scheduler {
+	fn spawn_dynamic(&self, future: Box<dyn Future<Output = ()>>);
 }
+
+impl InjectionKey for dyn Scheduler {}
 
 //TODO: This should be possible as `final` function in the extractable itself.
 impl dyn Scheduler {

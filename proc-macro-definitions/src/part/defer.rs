@@ -80,8 +80,12 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 						::#asteracea::storage::Defer::<'static, #type_path>
 						::new(::std::boxed::Box::new({
 							#[allow(unused_variables)]
-							let #node = ::std::sync::Arc::clone(&#node);
-							move || Ok(#deferred_value)
+							let #node = #node.clone_handle();
+							//FIXME: This shouldn't `move` everything.
+							move || {
+								let #node = &*#node;
+								Ok(#deferred_value)
+							}
 						}))
 				|;
 			},

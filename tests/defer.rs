@@ -1,5 +1,6 @@
+use asteracea::__dependency_injection::ResourceNode;
 use bumpalo::Bump;
-use rhizome::Node;
+use std::any::TypeId;
 
 asteracea::component! {
 	Deferred()() []
@@ -33,8 +34,8 @@ asteracea::component! {
 
 #[test]
 fn defer() {
-	let root = Node::new_for::<()>();
-	let component = Deferrer::new(&root.into(), Deferrer::new_args_builder().build()).unwrap();
+	let root = ResourceNode::new(TypeId::of::<()>());
+	let component = Deferrer::new(&root, Deferrer::new_args_builder().build()).unwrap();
 
 	let bump = Bump::new();
 	let _vdom = Box::pin(component)

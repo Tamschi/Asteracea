@@ -46,6 +46,7 @@ mod readme {}
 pub mod components;
 pub mod error;
 pub mod storage;
+pub mod __dependency_injection;
 
 #[cfg(feature = "services")]
 pub mod services;

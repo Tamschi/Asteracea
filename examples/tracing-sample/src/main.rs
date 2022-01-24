@@ -1,6 +1,10 @@
-use asteracea::{bumpalo::Bump, __::AnonymousContentParentParameters};
+#![allow(clippy::needless_question_mark)] //FIXME
+
+use asteracea::{
+	__dependency_injection::ResourceNode, bumpalo::Bump, __::AnonymousContentParentParameters,
+};
 use core::pin::Pin;
-use rhizome::Node;
+use std::any::TypeId;
 use tracing::instrument;
 use tracing_flame::FlameLayer;
 use tracing_subscriber::prelude::*;
@@ -17,7 +21,6 @@ struct D;
 struct E;
 
 asteracea::component! {
-	#[allow(clippy::needless_question_mark)] //FIXME
 	ContainerComponent(
 		// Constructor parameters:
 		_plain: A,
@@ -57,7 +60,7 @@ fn set_up_tracing() -> impl Drop {
 #[ergo_pin::ergo_pin]
 fn render_components() {
 	let app = ContainerComponent::new(
-		&Node::new_for::<()>().into_arc(),
+		&ResourceNode::new(TypeId::of::<()>()),
 		ContainerComponent::new_args_builder()
 			._plain(A)
 			._stored(B)

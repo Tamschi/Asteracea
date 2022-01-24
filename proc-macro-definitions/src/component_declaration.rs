@@ -264,11 +264,11 @@ impl Parse for ComponentDeclaration {
 					} = fn_arg;
 					let ty = match injection {
 						arguments::Injection::No => ty.clone(),
-						arguments::Injection::Yes(ref_) => {
-							parse2::<Type>(quote_spanned! {ref_.span=> ::core::pin::Pin::<*const #ty>})
-								.unwrap()
-								.pipe(Box::new)
-						}
+						arguments::Injection::Yes(ref_) => parse2::<Type>(
+							quote_spanned! {ref_.span=> ::core::pin::Pin::<*const #ty>},
+						)
+						.unwrap()
+						.pipe(Box::new),
 					};
 					quote!(#pat#colon_token #ty)
 				};
@@ -657,7 +657,7 @@ impl ComponentDeclaration {
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
 				#(#constructor_attributes)*
 				pub fn #new#new_generics(
-					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
+					parent_node: &::#asteracea::__dependency_injection::ResourceNode,
 					args: #new_args_name#new_args_generic_args,
 				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.
@@ -669,14 +669,6 @@ impl ComponentDeclaration {
 						__Asteracea__phantom: _,
 					} = args;
 
-					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
-					#(#rhizome_extractions)*
-					let mut #call_site_node = #call_site_node;
-
-					{} // Isolate constructor block.
-					#constructor_block_statements
-					{} // Dito.
-
 					//FIXME: The eager heap allocation here isn't great.
 					// It would probably be sensible to make this lazy through
 					// a "seed" or handle placed on the stack that can be referenced
@@ -684,7 +676,15 @@ impl ComponentDeclaration {
 					// or seed lifetime extension would then initialise the backing
 					// data structure as needed.
 					// I really should add benchmarks before trying this, though.
-					let #call_site_node = #call_site_node.into_arc();
+					let #call_site_node = parent_node.branch_for(::core::any::TypeId::of::<Self>());
+					#(#rhizome_extractions)*
+					let mut #call_site_node = #call_site_node;
+
+					{} // Isolate constructor block.
+					#constructor_block_statements
+					{} // Dito.
+
+					let #call_site_node = &*#call_site_node;
 
 					::std::result::Result::Ok(#constructed_value)
 				}

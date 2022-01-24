@@ -60,7 +60,7 @@ struct Empty {}
 impl Empty {}
 impl Empty {
     pub fn new<'a>(
-        parent_node: &Arc<rhizome::Node>,
+        parent_node: &::asteracea::__dependency_injection::ResourceNode,
         EmptyNewArgs {
             __Asteracea__phantom: _,
         }: EmptyNewArgs<'_, 'a>,

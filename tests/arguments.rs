@@ -1,6 +1,6 @@
-use asteracea::component;
+use asteracea::{__dependency_injection::ResourceNode, component};
 use bumpalo::Bump;
-use rhizome::Node;
+use std::any::TypeId;
 
 component! {
 	pub Greeting()(
@@ -52,7 +52,7 @@ asteracea::component! {
 fn test() {
 	let outer = Box::pin(
 		Outer::new(
-			&Node::new_for::<()>().into_arc(),
+			&ResourceNode::new(TypeId::of::<()>()),
 			Outer::new_args_builder().build(),
 		)
 		.unwrap(),
