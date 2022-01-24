@@ -1,4 +1,6 @@
-use super::{CaptureDefinition, GenerateContext, Part};
+use super::{
+	BlockParentParameters, CaptureDefinition, GenerateContext, ParentParameterParser, Part,
+};
 use crate::{
 	asteracea_ident,
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
@@ -31,7 +33,11 @@ pub struct Bind<C: Configuration> {
 impl<C: Configuration> ParseWithContext for Bind<C> {
 	type Output = Self;
 
-	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
+	fn parse_with_context(
+		input: ParseStream<'_>,
+		cx: &mut ParseContext,
+		parent_parameter_parser: &mut dyn ParentParameterParser,
+	) -> Result<Self::Output> {
 		let bind: kw::bind = input.parse()?;
 		let storage_configuration: StorageConfiguration = input.parse()?;
 
@@ -57,6 +63,7 @@ impl<C: Configuration> ParseWithContext for Bind<C> {
 		let content = Box::new(Part::parse_required_with_context(
 			input,
 			&mut parse_context,
+			parent_parameter_parser,
 		)?);
 
 		let type_path =
@@ -77,7 +84,7 @@ impl<C: Configuration> ParseWithContext for Bind<C> {
 					::new(::std::sync::Arc::clone(&#node))
 				|;
 			},
-			|input| CaptureDefinition::<C>::parse_with_context(input, cx),
+			|input| CaptureDefinition::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
 		)
 		.debugless_unwrap()
 		.unwrap()

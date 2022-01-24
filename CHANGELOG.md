@@ -7,8 +7,9 @@
 TODO: Date
 
 * **Breaking:**
-  * Increased minimum supported Rust version from 1.45.0 to 1.51.0
-    > since `asteracea::error` uses `std::panic::panic_any(…)`.
+  * Increased minimum supported Rust version from 1.45.0 to 1.57.0
+    > since `asteracea::error` uses `std::panic::panic_any(…)`,
+    > and to show better event binding validation errors using const panics.
   * Removed "rhizome" features (always enabled now)
   * Removed "styles" and "topiary" features. CSS scoping will be enabled through more general means.
   * Reworked generated component interface
@@ -18,6 +19,10 @@ TODO: Date
   * Upgraded `lignin` dependency from 0.0.3 to 0.0.5
     > to support fallible rendering.
   * Generated `.render(…)` methods are now fallible, returning `Result<_, Escalation>`.
+  * The `"backtrace"` feature was replaced by `"tracing"`, which enables [`tracing`](https://docs.rs/tracing/0.1/) compatibility.
+  * Changed `bump_format!` shorthand syntax.:  
+    `!"format string"`, `!"format_string"(args)` and `!(args)` are all valid now,
+    though in the last case the format string is implicitly `"{}"`.
 
 * Features:
   * You can now prefix constructor arguments with an explicit visibility (`priv`, `pub`, `pub(restriction)`) to capture them as component instance fields.

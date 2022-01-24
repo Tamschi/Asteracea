@@ -33,7 +33,7 @@ asteracea::component! {
   )
 
   [
-    !{i}
+    !(i)
     dyn if {i > 0} [
       "\n"
       box <*Countdown .i = {i - 1}>
@@ -77,7 +77,7 @@ asteracea::component! {
   )
 
   [
-    "Holder size: " !{size_of::<Self>()} " bytes"
+    "Holder size: " !(size_of::<Self>()) " bytes"
     spread if {show} //TODO: Replace `spread` with `dyn`!
       <*Heavy>
   ]
@@ -106,7 +106,7 @@ asteracea::component! {
   )
 
   [
-    "Holder size: " !{size_of::<Self>()} " bytes"
+    "Holder size: " !(size_of::<Self>()) " bytes"
     spread if {show} //TODO: Replace `spread` with `dyn`!
       box <*Heavy>
   ]

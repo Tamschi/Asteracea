@@ -174,9 +174,6 @@ impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
 /// A caught [`Escalation`], which may have originated as error or panic.
 ///
 /// Re-escalating this type always panics if it was created from a panic, in order to preserve unwind-safety-related errors.
-///
-/// Panics resumed from this type (including via tracing instrumentation with `"backtrace"` enabled) are wrapped to enable tracing if that was not the case before.
-/// This is transparent towards the `Escalation::catch…` functions and other APIs inside this module, but may affect error handlers from other crates.
 #[must_use = "Please ignore caught escalations explicitly with `let _ =` if this is intentional."]
 pub struct Caught<E: ?Sized> {
 	// An error or panic.
@@ -249,8 +246,7 @@ impl<E: Error> Error for Caught<E> {
 impl Escalation {
 	/// Catches any [`Escalation`] currently unwinding the stack.
 	///
-	/// Plain panics are considered to also be escalations,
-	/// and re-escalating them always leads to instrumentation for tracing.
+	/// Plain panics are considered to also be escalations.
 	///
 	/// # Errors
 	///
@@ -263,7 +259,7 @@ impl Escalation {
 		match catch_unwind(f) {
 			Ok(Ok(t)) => Ok(t),
 			#[cfg(feature = "force-unwind")]
-			Ok(Err(_)) => Err(()).expect("unreachable"),
+			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
 			Ok(Err(Escalation(Impl::Extant(Throwable { source, trace })))) => Err(Caught {
 				boxed: source,
@@ -287,7 +283,7 @@ impl Escalation {
 
 	/// Catches [`Escalation`]s and, if possible, (other) panics currently unwinding the stack that are an `E`.
 	///
-	/// Even if not caught, panics are converted into [`GuiError`]s (which may re-panic them).
+	/// Even if not caught, panics are converted into [`Escalation`]s (which may re-panic them).
 	///
 	/// # Errors
 	///
@@ -300,7 +296,7 @@ impl Escalation {
 		let (thrown, was_panic) = match catch_unwind(f) {
 			Ok(Ok(t)) => return Ok(Ok(t)),
 			#[cfg(feature = "force-unwind")]
-			Ok(Err(_)) => Err(()).expect("unreachable"),
+			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
 			Ok(Err(Escalation(Impl::Extant(thrown)))) => (thrown, false),
 			Err(panic) => match Box::<dyn Send + Any>::downcast::<Throwable>(panic) {
@@ -355,9 +351,7 @@ impl Escalation {
 			}
 			{
 				#![allow(unreachable_code)]
-				Err(()).expect(
-					"Workaround for clippy::missing_panic_docs. Only reachable if the \"force-unwind\" feature is both active and not active.",
-				)
+				unreachable!()
 			}
 		}
 	}

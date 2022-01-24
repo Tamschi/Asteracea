@@ -20,9 +20,9 @@ asteracea::component! {
   )()
 
   [
-    !"I contain {:?}!"{self.value}
-    " My size is " <b !{size_of::<Self>()}> " bytes."
-    !" I'm located at address {:p}."{self}
+    !"I contain {:?}!"(self.value)
+    " My size is " <b !(size_of::<Self>())> " bytes."
+    !" I'm located at address {:p}."(self)
   ]
 }
 
@@ -34,7 +34,7 @@ asteracea::component! {
     <*MySize::<()> *value = {()}> "\n"
     <*MySize::<u8> *value = {1}> "\n"
     <*MySize::<usize> *value = {2}> "\n"
-    "The container instance occupies " <b !{size_of::<Self>()}> !" bytes at {:p}."{self}
+    "The container instance occupies " <b !(size_of::<Self>())> !" bytes at {:p}."(self)
   ]
 }
 ```

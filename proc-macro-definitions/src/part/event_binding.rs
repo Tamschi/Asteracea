@@ -275,50 +275,45 @@ impl EventBindingDefinition {
 		};
 
 		let validate_mode = if let EventName::Known(name) = name {
+			let const_name = Ident::new(
+				&name.to_string(),
+				name.span().resolved_at(Span::mixed_site()),
+			);
 			match mode {
 				EventMode::None => {
-					let forbid = quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #[forbid(deprecated)]);
-					quote_spanned!(name.span()=> {
-						#[allow(unused_imports)]
-						use ::#asteracea::__::errors::PhaseExpected;
-						#[allow(deprecated)]
-						type CheckNoBubbles = ::#asteracea::__::errors::CheckNoBubbles::<
-							dyn ::#asteracea::__::lignin_schema::events::#name::<
-								::#asteracea::__::lignin_schema::aspects::Event
-							>
-						>;
-						#forbid
-						CheckNoBubbles::check();
+					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> {
+						use ::#asteracea::__::lignin_schema::{EventInfo, YesNo};
+						const #const_name: () = if <dyn ::#asteracea::__::lignin_schema::events::#name as EventInfo>::Bubbles::IS_YES {
+							panic!("Expected one of keywords `bubble` or `capture`, as this event bubbles.")
+						};
 					})
 				}
 				EventMode::Capture(capture) => {
-					let forbid = quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #[forbid(deprecated)]);
-					quote_spanned!(capture.span=> {
-						#[allow(unused_imports)]
-						use ::#asteracea::__::errors::CaptureNotValid;
-						#[allow(deprecated)]
-						type CheckYesBubbles = ::#asteracea::__::errors::CheckYesBubbles::<
-							dyn ::#asteracea::__::lignin_schema::events::#name::<
-								::#asteracea::__::lignin_schema::aspects::Event
-							>
-						>;
-						#forbid
-						CheckYesBubbles::check();
+					let panic = quote_spanned! {capture.span.resolved_at(Span::mixed_site())=>
+						const fn #const_name() {
+							panic!("Keyword `capture` is not valid for this event; the event does not bubble.")
+						}
+						#const_name()
+					};
+					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> {
+						use ::#asteracea::__::lignin_schema::{EventInfo, YesNo};
+						const #const_name: () = if !<dyn ::#asteracea::__::lignin_schema::events::#name as EventInfo>::Bubbles::IS_YES {
+							#panic
+						};
 					})
 				}
 				EventMode::Bubble(bubble) => {
-					let forbid = quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #[forbid(deprecated)]);
-					quote_spanned!(bubble.span=> {
-						#[allow(unused_imports)]
-						use ::#asteracea::__::errors::BubbleNotValid;
-						#[allow(deprecated)]
-						type CheckYesBubbles = ::#asteracea::__::errors::CheckYesBubbles::<
-							dyn ::#asteracea::__::lignin_schema::events::#name::<
-								::#asteracea::__::lignin_schema::aspects::Event
-							>
-						>;
-						#forbid
-						CheckYesBubbles::check();
+					let panic = quote_spanned! {bubble.span.resolved_at(Span::mixed_site())=>
+						const fn #const_name() {
+							panic!("Keyword `bubble` is not valid for this event; the event does not bubble.")
+						}
+						#const_name()
+					};
+					quote_spanned!(name.span().resolved_at(Span::mixed_site())=> {
+						use ::#asteracea::__::lignin_schema::{EventInfo, YesNo};
+						const #const_name: () = if !<dyn ::#asteracea::__::lignin_schema::events::#name as EventInfo>::Bubbles::IS_YES {
+							#panic
+						};
 					})
 				}
 			}
@@ -334,18 +329,21 @@ impl EventBindingDefinition {
 
 		let validate_active = if let EventName::Known(name) = name {
 			active.map(|active| {
-				let forbid = quote_spanned!(name.span().resolved_at(Span::mixed_site())=> #[forbid(deprecated)]);
-				quote_spanned!(active.span=> {
-					#[allow(unused_imports)]
-					use ::#asteracea::__::errors::ActiveNotValid;
-					#[allow(deprecated)]
-					type CheckYesCancelable = ::#asteracea::__::errors::CheckYesCancelable::<
-						dyn ::#asteracea::__::lignin_schema::events::#name::<
-							::#asteracea::__::lignin_schema::aspects::Event
-						>
-					>;
-					#forbid
-					CheckYesCancelable::check();
+				let const_name = Ident::new(
+					&name.to_string(),
+					name.span().resolved_at(Span::mixed_site()),
+				);
+				let panic = quote_spanned! {active.span.resolved_at(Span::mixed_site())=>
+					const fn #const_name() {
+						panic!("Keyword `active` is not valid for this event; the event is not cancelable.")
+					}
+					#const_name()
+				};
+				quote_spanned!(name.span().resolved_at(Span::mixed_site())=> {
+					use ::#asteracea::__::lignin_schema::{EventInfo, YesNo};
+						const #const_name: () = if !<dyn ::#asteracea::__::lignin_schema::events::#name as EventInfo>::Bubbles::IS_YES {
+						#panic
+					};
 				})
 			})
 		} else {

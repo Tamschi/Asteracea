@@ -238,7 +238,7 @@ fn transform_generic_param(generic_param: &mut GenericParam, lifetime: &Lifetime
 }
 
 #[derive(Debug)]
-pub struct ParameterHelperDefintions {
+pub struct ParameterHelperDefinitions {
 	pub on_parameter_struct: Generics,
 	pub parameter_struct_body: FieldsNamed,
 	pub on_function: Generics,
@@ -257,7 +257,7 @@ pub struct CustomArgument<'a> {
 }
 
 #[allow(clippy::needless_collect)] // Inaccurate lint, apparently.
-impl ParameterHelperDefintions {
+impl ParameterHelperDefinitions {
 	pub fn new(
 		component_generics: &Generics,
 		basic_function_generics: &Generics,

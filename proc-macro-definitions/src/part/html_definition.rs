@@ -1,4 +1,4 @@
-use super::{GenerateContext, Part, PartKind};
+use super::{BlockParentParameters, GenerateContext, ParentParameterParser, Part, PartKind};
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
@@ -113,7 +113,11 @@ pub(crate) struct HtmlDefinition<C: Configuration> {
 
 impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 	type Output = Self;
-	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self> {
+	fn parse_with_context(
+		input: ParseStream<'_>,
+		cx: &mut ParseContext,
+		parent_parameter_parser: &mut dyn ParentParameterParser,
+	) -> Result<Self> {
 		let lt = input.parse::<Token![<]>()?;
 		let name = if let Some(name @ LitStr { .. }) = input.parse().unwrap() {
 			if name.value().contains(' ') {
@@ -132,9 +136,12 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 			));
 		};
 
+		parent_parameter_parser.parse_any(input, cx)?;
+
 		let attributes = {
 			let mut attributes = Vec::new();
-			while let Ok(dot) = input.parse::<Token![.]>() {
+			while input.peek(Token![.]) && !input.peek(Token![..]) {
+				let dot = input.parse::<Token![.]>().expect("unreachable");
 				attributes.push(if input.peek(Ident) || input.peek(LitStr) {
 					let key;
 					let question: Option<Token![?]>;
@@ -146,7 +153,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 							value.span(),
 							format!(
 							"Expected Rust block value for optional HTML attribute, but found `{}`",
-							value.to_token_stream().to_string(),
+							value.to_token_stream(),
 						),
 						));
 					}
@@ -167,7 +174,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 
 		let mut parts = Vec::new();
 		while !input.peek(Token![>]) && !input.peek(Token![/]) {
-			if let Some(part) = Part::parse_with_context(input, cx)? {
+			if let Some(part) = Part::parse_with_context(input, cx, &mut BlockParentParameters)? {
 				parts.push(part);
 			}
 		}
@@ -396,24 +403,23 @@ impl<C: Configuration> HtmlDefinition<C> {
 					}
 				});
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
-					let children = #children;
 					//TODO: Add MathML and SVG support.
 					::#asteracea::lignin::Node::HtmlElement::<'bump, #thread_safety> {
-						element: #bump.alloc_with(|| {
+						element: #bump.alloc_try_with(|| -> ::core::result::Result::<_, ::#asteracea::error::Escalation> {
 							#validate_has_content
 							#(#validate_attributes)*
 							#document_closing
 							//TODO: Validate attributes.
 							//TODO: Validate events.
 
-							::#asteracea::lignin::Element {
+							::core::result::Result::Ok(::#asteracea::lignin::Element {
 								name: ::#asteracea::__::lignin_schema::html::elements::#name::TAG_NAME,
 								creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
 								attributes: #attributes,
-								content: children,
 								event_bindings: #event_bindings,
-							}
-						}),
+								content: #children,
+							})
+						})?,
 						//TODO: Add DOM binding support.
 						dom_binding: None,
 					}

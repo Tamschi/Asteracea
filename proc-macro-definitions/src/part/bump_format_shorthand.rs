@@ -1,7 +1,7 @@
 use crate::{storage_context::ParseContext, workaround_module::Configuration, BumpFormat};
+use proc_macro2::TokenStream;
 use quote::quote_spanned;
-use syn::{parse::ParseStream, parse2, LitStr, Result, Token};
-use syn_mid::Block;
+use syn::{parenthesized, parse::ParseStream, parse2, token::Paren, Error, LitStr, Result, Token};
 
 pub fn peek_from(input: ParseStream<'_>) -> bool {
 	input.peek(Token![!])
@@ -12,13 +12,29 @@ pub(crate) fn parse_with_context<C: Configuration>(
 	_cx: &mut ParseContext,
 ) -> Result<BumpFormat> {
 	let bang: Token![!] = input.parse()?;
-	let format_string: LitStr = if input.peek(LitStr) {
-		input.parse().unwrap()
+
+	let args = if let Some(format_string) = input.parse::<Option<LitStr>>().expect("infallible") {
+		let formatted_args = if input.peek(Paren) {
+			let args;
+			let _: Paren = parenthesized!(args in input);
+			args.parse().unwrap()
+		} else {
+			TokenStream::new()
+		};
+
+		quote_spanned!(bang.span=> #format_string, #formatted_args)
+	} else if input.peek(Paren) {
+		let formatted_args;
+		let _: Paren = parenthesized!(formatted_args in input);
+		let formatted_args: TokenStream = formatted_args.parse().expect("infallible");
+
+		quote_spanned!(bang.span=> "{}", #formatted_args)
 	} else {
-		LitStr::new("{}", bang.span)
+		return Err(Error::new(
+			input.span(),
+			"Expected format string literal (`\"…\"`) or parentheses (`(…)`).",
+		));
 	};
-	let arg_block: Block = input.parse()?;
-	let formatted_args = arg_block.stmts;
-	let args = quote_spanned!(arg_block.brace_token.span=> #format_string, #formatted_args);
+
 	parse2::<BumpFormat>(args)
 }
