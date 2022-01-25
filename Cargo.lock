@@ -107,7 +107,7 @@ dependencies = [
  "syn-mid",
  "take_mut",
  "tap",
- "unquote",
+ "unquote 0.0.6 (git+https://github.com/Tamschi/unquote.git?branch=develop)",
  "unzip-n",
 ]
 
@@ -351,8 +351,28 @@ dependencies = [
 [[package]]
 name = "fruit-salad"
 version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36af42662b7c11b40aa6bc34d77cd3e29fb859dba62c4161b7e46888513c3616"
+source = "git+https://github.com/Tamschi/fruit-salad.git?branch=develop#d193b30014368212f67963f18ff12cc1d8c3d0d7"
+dependencies = [
+ "fruit-salad_proc-macro-definitions",
+ "static_assertions",
+]
+
+[[package]]
+name = "fruit-salad_proc-macro-definitions"
+version = "0.0.2"
+source = "git+https://github.com/Tamschi/fruit-salad.git?branch=develop#d193b30014368212f67963f18ff12cc1d8c3d0d7"
+dependencies = [
+ "call2-for-syn",
+ "debugless-unwrap",
+ "lazy_static",
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "syn-mid",
+ "tap",
+ "unquote 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "futf"
@@ -1568,6 +1588,18 @@ name = "unicode-xid"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ccb82d61f80a663efe1f787a51b16b5a51e3314d6ac365b08639f52387b33f3"
+
+[[package]]
+name = "unquote"
+version = "0.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91870f447501f37a53f6fed1e8d6d87758ff699097ed410215907b3bb105ff55"
+dependencies = [
+ "call2-for-syn",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "unquote"

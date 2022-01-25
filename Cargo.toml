@@ -4,6 +4,9 @@ members = [
 	"*/src/..",
 	"examples/*"
 ]
+exclude = [
+	"book" #TODO
+]
 resolver = "2"
 
 [patch.crates-io]
@@ -56,7 +59,7 @@ rhizome = { git = "https://github.com/Tamschi/rhizome.git", branch = "develop" }
 static_assertions = "1.1.0"
 typed-builder = "0.9.0" # semi-public
 tracing = { version = "0.1.29", optional = true, default-features = false }
-fruit-salad = "0.0.2" #public
+fruit-salad = { features = ["macros"], default-features = false, git = "https://github.com/Tamschi/fruit-salad.git", branch = "develop" } # public
 
 [dev-dependencies]
 cargo-husky = "1.5.0"

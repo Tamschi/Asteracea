@@ -4,6 +4,7 @@ use self::{
 };
 use crate::{
 	asteracea_ident,
+	component_declaration::arguments::Injection,
 	part::{BlockParentParameters, GenerateContext},
 	storage_configuration::StorageTypeConfiguration,
 	storage_context::{ParseContext, ParseWithContext, StorageContext},
@@ -263,9 +264,14 @@ impl Parse for ComponentDeclaration {
 						colon_token, ty, ..
 					} = fn_arg;
 					let ty = match injection {
-						arguments::Injection::No => ty.clone(),
-						arguments::Injection::Yes(ref_) => parse2::<Type>(
-							quote_spanned! {ref_.span=> ::core::pin::Pin::<*const #ty>},
+						Injection::No => ty.clone(),
+						Injection::FromFactory(dyn_) => parse2::<Type>(
+							quote_spanned!(dyn_.span.resolved_at(Span::mixed_site())=> #ty),
+						)
+						.unwrap()
+						.pipe(Box::new),
+						Injection::ByReference(_, ref_) => parse2::<Type>(
+							quote_spanned!(ref_.span.resolved_at(Span::mixed_site())=> &'a #ty),
 						)
 						.unwrap()
 						.pipe(Box::new),
@@ -372,6 +378,23 @@ impl ComponentDeclaration {
 			assorted_items: mut random_items,
 			callback_registrations,
 		} = self;
+
+		let (constructor_args, constructor_injections) = constructor_args
+			.into_iter()
+			.partition::<Vec<_>, _>(|arg| arg.injection == Injection::No);
+
+		if let Some(ref_injection) = constructor_injections.iter().find(|injection| {
+			matches!(
+				injection,
+				ConstructorArgument {
+					injection: Injection::ByReference(..),
+					..
+				},
+			)
+		}) {
+			// This requires capturing `#call_site_node`.
+			todo!("ref injections")
+		}
 
 		let asteracea = asteracea_ident(Span::call_site());
 

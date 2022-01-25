@@ -47,14 +47,20 @@ impl ToTokens for Capture {
 	}
 }
 
+#[derive(PartialEq, Eq)]
 pub enum Injection {
 	No,
-	Yes(Token![ref]),
+	FromFactory(Token![dyn]),
+	ByReference(Token![dyn], Token![ref]),
 }
 impl Parse for Injection {
 	fn parse(input: ParseStream) -> Result<Self> {
-		if let Some(ref_) = input.parse().unwrap() {
-			Self::Yes(ref_)
+		if let Some(dyn_) = input.parse().unwrap() {
+			if let Some(ref_) = input.parse().unwrap() {
+				Self::ByReference(dyn_, ref_)
+			} else {
+				Self::FromFactory(dyn_)
+			}
 		} else {
 			Self::No
 		}
@@ -80,6 +86,7 @@ impl Parse for ConstructorArgument {
 			#let ty
 			#do let DefaultParameter::parse => default
 		);
+
 		Ok(Self {
 			capture,
 			injection,
