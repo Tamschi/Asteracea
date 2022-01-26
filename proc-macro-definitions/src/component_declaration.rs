@@ -279,7 +279,7 @@ impl Parse for ComponentDeclaration {
 					quote!(#pat#colon_token #ty)
 				};
 				call2_strict(
-					dbg!(quote_spanned!(span=> |#(#attrs)* #visibility #arg = {#pat}|;)),
+					quote_spanned!(span=> |#(#attrs)* #visibility #arg = {#pat}|;),
 					|input| {
 						Part::<ComponentRenderConfiguration>::parse_with_context(
 							input,
