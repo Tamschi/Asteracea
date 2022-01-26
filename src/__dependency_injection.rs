@@ -25,6 +25,18 @@ impl<T, K: Ord, V: ?Sized> Extract for Node<T, K, V> {}
 #[repr(transparent)]
 pub struct OwnedValueProvider<T>(pub T);
 
+#[derive(Debug, Dyncast)]
+#[dyncast(
+	#![runtime_pointer_size_assertion]
+	#![unsafe custom_projection(
+		#![unsafe deallocate_owned]
+		|this| (this as *const *mut T).read()
+	)]
+	unsafe T
+)]
+#[repr(transparent)]
+pub struct BoxedValueProvider<T: ?Sized>(pub Box<T>);
+
 pub trait Factory<T>: Dyncast {
 	fn produce(self: Pin<&Self>) -> T;
 }
