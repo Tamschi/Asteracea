@@ -6,18 +6,19 @@ mod component;
 mod content;
 mod defer;
 mod event_binding;
+mod for_;
 mod html_comment;
 mod html_definition;
 
 pub use component::{BlockParentParameters, ParentParameterParser};
 
-//TODO: Renamed module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
+//TODO: Rename module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
 //TODO: Rust expressions shouldn't automatically be blocks except for ones after `with`.
 
 pub use self::capture_definition::CaptureDefinition;
 use self::{
 	bind::Bind, box_expression::BoxExpression, component::Component, content::Content,
-	defer::Defer, html_comment::HtmlComment, html_definition::HtmlDefinition,
+	defer::Defer, for_::For, html_comment::HtmlComment, html_definition::HtmlDefinition,
 };
 use crate::{
 	asteracea_ident,
@@ -51,6 +52,7 @@ pub(crate) enum Part<C: Configuration> {
 	Component(Component<C>),
 	Defer(Defer<C>),
 	EventBinding(EventBindingDefinition),
+	For(For<C>),
 	RustBlock(Brace, TokenStream),
 	Html(HtmlDefinition<C>),
 	If(
@@ -96,6 +98,7 @@ impl<C: Configuration> Part<C> {
 			| Part::Component(_)
 			| Part::Content(_)
 			| Part::Defer(_)
+			| Part::For(_)
 			| Part::RustBlock(_, _)
 			| Part::Html(_)
 			| Part::If(_, _, _, _, _, _)
@@ -204,6 +207,12 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 			)?))
 		} else if lookahead.peek(defer::kw::defer) {
 			Some(Part::Defer(Defer::parse_with_context(
+				input,
+				cx,
+				parent_parameter_parser,
+			)?))
+		} else if input.peek(Token![for]) {
+			Some(Part::For(For::parse_with_context(
 				input,
 				cx,
 				parent_parameter_parser,
@@ -419,6 +428,7 @@ impl<C: Configuration> Part<C> {
 			Part::Component(component) => component.part_tokens(cx)?,
 			Part::Content(content) => content.part_tokens(),
 			Part::Defer(defer) => defer.part_tokens(cx)?,
+			Part::For(for_) => for_.part_tokens(cx)?,
 			Part::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span()=>
