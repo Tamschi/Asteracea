@@ -9,7 +9,7 @@ use crate::{
 use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use proc_macro2::{Span, TokenStream};
-use quote::{quote_spanned, IdentFragment};
+use quote::quote_spanned;
 use syn::{Expr, Ident, Pat, Result, Token};
 use tap::Pipe;
 use unquote::unquote;
@@ -19,6 +19,7 @@ mod kw {
 	custom_keyword!(keyed);
 }
 
+#[allow(dead_code)]
 pub struct For<C: Configuration> {
 	for_: Token![for],
 	field_name: Ident,
@@ -112,7 +113,7 @@ impl<C: Configuration> ParseWithContext for For<C> {
 			cx.assorted_items.extend(
 				type_configuration.struct_definition(
 					vec![],
-					visibility.clone(),
+					visibility,
 					type_path
 						.path
 						.segments
