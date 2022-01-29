@@ -1,5 +1,5 @@
 asteracea::component! {
-	pub For()()
+	pub For()() -> Sync
 
-	for i keyed &i in [1, 2, 3, 4, 5], !"{}"(i)
+	for i keyed &i => u8 in [1, 2, 3, 4, 5], !"{}"(i)
 }

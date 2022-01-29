@@ -10,7 +10,7 @@ use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
-use syn::{Expr, Ident, Pat, Result, Token};
+use syn::{Expr, Ident, Pat, Result, Token, Type};
 use tap::Pipe;
 use unquote::unquote;
 
@@ -27,6 +27,8 @@ pub struct For<C: Configuration> {
 	pat: Pat,
 	keyed: kw::keyed,
 	key: Expr,
+	r_arrow: Token![=>],
+	key_type: Type,
 	in_: Token![in],
 	iterable: Expr,
 	comma: Token![,],
@@ -52,6 +54,8 @@ impl<C: Configuration> ParseWithContext for For<C> {
 			#let pat
 			#let keyed
 			#let key
+			#let r_arrow
+			#let key_type
 			#let in_
 			#let iterable
 			#let comma
@@ -93,7 +97,7 @@ impl<C: Configuration> ParseWithContext for For<C> {
 			quote_spanned! {for_.span.resolved_at(Span::mixed_site())=>
 				pin |
 					#visibility #field_name =
-						::#asteracea::storage::For::<'static, #type_path>
+						::#asteracea::storage::For::<'static, #type_path, #key_type>
 						::new({
 							#[allow(unused_variables)]
 							let #node = ::std::sync::Arc::clone(&#node);
@@ -136,6 +140,8 @@ impl<C: Configuration> ParseWithContext for For<C> {
 			pat,
 			keyed,
 			key,
+			r_arrow,
+			key_type,
 			in_,
 			iterable,
 			comma,
@@ -152,8 +158,13 @@ impl<C: Configuration> For<C> {
 		let field_name = &self.field_name;
 		let field_pinned = Ident::new(&format!("{}_pinned", field_name), field_name.span());
 
+		let Self { pat, iterable, .. } = self;
+
 		quote_spanned!(self.for_.span.resolved_at(Span::mixed_site())=> {
+			let sequence = ::core::iter::IntoIterator::into_iter(#iterable);
 			let for_items = ::#asteracea::bumpalo::vec![in #bump];
+			for #pat in sequence {}
+			::#asteracea::lignin::Node::Multi(for_items.into_bump_slice())
 		})
 		.pipe(Ok)
 	}
