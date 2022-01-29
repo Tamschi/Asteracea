@@ -97,7 +97,7 @@ impl<C: Configuration> ParseWithContext for For<C> {
 						::new({
 							#[allow(unused_variables)]
 							let #node = ::std::sync::Arc::clone(&#node);
-							move |_| Ok(#manufactured_item_state)
+							move || Ok(#manufactured_item_state)
 						})
 				|;
 			},
