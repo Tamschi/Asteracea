@@ -10,7 +10,7 @@ use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
-use syn::{parse::ParseStream, Error, Expr, Ident, Pat, Result, Token, Type};
+use syn::{braced, parse::ParseStream, token::Brace, Error, Expr, Ident, Pat, Result, Token, Type};
 use tap::Pipe;
 use unquote::unquote;
 
@@ -30,7 +30,7 @@ pub struct For<C: Configuration> {
 	key_type: Option<(Token![=>], Type)>,
 	in_: Token![in],
 	iterable: Expr,
-	comma: Token![,],
+	brace: Brace,
 	content: Box<Part<C>>,
 }
 
@@ -73,9 +73,9 @@ impl<C: Configuration> ParseWithContext for For<C> {
 
 		unquote! {input,
 			#let in_
-			#let iterable
-			#let comma
 		};
+
+		let iterable = Expr::parse_without_eager_brace(input)?;
 
 		let visibility = storage_configuration.visibility();
 		let field_name = storage_configuration
@@ -92,8 +92,11 @@ impl<C: Configuration> ParseWithContext for For<C> {
 			&nested_generics,
 		);
 
+		let content;
+		let brace = braced!(content in input);
+
 		let content = Box::new(Part::parse_required_with_context(
-			input,
+			&content,
 			&mut parse_context,
 			parent_parameter_parser,
 		)?);
@@ -167,7 +170,7 @@ impl<C: Configuration> ParseWithContext for For<C> {
 			key_type,
 			in_,
 			iterable,
-			comma,
+			brace,
 			content,
 		})
 	}
@@ -185,6 +188,7 @@ impl<C: Configuration> For<C> {
 			type_,
 			key,
 			iterable,
+			brace,
 			content,
 			..
 		} = self;
@@ -208,6 +212,14 @@ impl<C: Configuration> For<C> {
 		});
 
 		let content = content.part_tokens(cx)?;
+		let content = quote_spanned! {for_=>
+			let (#pat, #field_name)#type_ = item?;
+			let this = #field_name;
+			for_items.push(#content)
+		};
+		let content = quote_spanned!(brace.span=> {
+			#content
+		});
 
 		quote_spanned!(for_=> {
 			let mut for_ = ::core::cell::RefCell::borrow_mut(&this.#field_name);
@@ -217,11 +229,7 @@ impl<C: Configuration> For<C> {
 				#selector,
 			);
 			let mut for_items = ::#asteracea::bumpalo::vec![in #bump];
-			for item in sequence {
-				let (#pat, #field_name)#type_ = item?;
-				let this = #field_name;
-				for_items.push(#content)
-			}
+			for item in sequence #content
 			::#asteracea::lignin::Node::Multi(for_items.into_bump_slice())
 		})
 		.pipe(Ok)
