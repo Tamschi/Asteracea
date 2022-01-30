@@ -9,11 +9,8 @@ use crate::{
 use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use proc_macro2::{Span, TokenStream};
-use quote::{quote_spanned, ToTokens};
-use syn::{
-	parse::{Parse, ParseStream},
-	Error, Expr, FnArg, Ident, Pat, PatType, Result, Token, Type,
-};
+use quote::quote_spanned;
+use syn::{parse::ParseStream, Error, Expr, Ident, Pat, Result, Token, Type};
 use tap::Pipe;
 use unquote::unquote;
 
@@ -28,36 +25,13 @@ pub struct For<C: Configuration> {
 	field_name: Ident,
 	type_configuration: StorageTypeConfiguration,
 	pat: Pat,
-	colon: Token![:],
-	type_: Type,
-	selector: Option<Selector>,
+	type_: Option<(Token![:], Type)>,
+	key: Option<(kw::keyed, Expr)>,
+	key_type: Option<(Token![=>], Type)>,
 	in_: Token![in],
 	iterable: Expr,
 	comma: Token![,],
 	content: Box<Part<C>>,
-}
-
-struct Selector {
-	keyed: kw::keyed,
-	key: Expr,
-	key_type: Option<(Token![=>], Type)>,
-}
-
-impl Parse for Selector {
-	fn parse(input: ParseStream) -> Result<Self> {
-		unquote! {input,
-			#let keyed
-			#let key
-		}
-		Ok(Self {
-			keyed,
-			key,
-			key_type: input
-				.peek(Token![=>])
-				.then(|| Ok::<_, Error>((input.parse()?, input.parse()?)))
-				.transpose()?,
-		})
-	}
 }
 
 impl<C: Configuration> ParseWithContext for For<C> {
@@ -76,32 +50,26 @@ impl<C: Configuration> ParseWithContext for For<C> {
 		unquote! {input,
 			#for_
 			#storage_configuration
-			#let pat_type
+			#let pat
 		};
 
-		let (pat, colon, type_) = match pat_type {
-			FnArg::Receiver(receiver) => {
-				return Err(Error::new_spanned(receiver, "Expected `pat: Type`."))
-			}
-			FnArg::Typed(PatType {
-				attrs,
-				pat,
-				colon_token,
-				ty,
-			}) if attrs.is_empty() => (*pat, colon_token, *ty),
-			FnArg::Typed(PatType { attrs, .. }) => {
-				return Err(Error::new_spanned(
-					attrs
-						.into_iter()
-						.flat_map(ToTokens::into_token_stream)
-						.collect::<TokenStream>(),
-					"Unexpected attributes: No attributes expected.",
-				))
-			}
-		};
+		let type_ = input
+			.parse::<Option<Token![:]>>()
+			.expect("infallible")
+			.map(|colon| Ok::<_, Error>((colon, input.parse()?)))
+			.transpose()?;
 
-		let selector: Option<Selector> =
-			input.peek(kw::keyed).then(|| input.parse()).transpose()?;
+		let key = input
+			.parse::<Option<kw::keyed>>()
+			.expect("infallible")
+			.map(|colon| Ok::<_, Error>((colon, input.parse()?)))
+			.transpose()?;
+
+		let key_type = input
+			.parse::<Option<Token![=>]>>()
+			.expect("infallible")
+			.map(|colon| Ok::<_, Error>((colon, input.parse()?)))
+			.transpose()?;
 
 		unquote! {input,
 			#let in_
@@ -142,11 +110,12 @@ impl<C: Configuration> ParseWithContext for For<C> {
 		let asteracea = asteracea_ident(for_.span);
 		let node = quote_spanned!(for_.span=> node);
 
-		let k = if let Some(selector) = &selector {
-			selector.key_type.as_ref().map(|(_, key_type)| key_type)
+		let k = if let Some((_, key_type)) = &key_type {
+			Some(key_type)
 		} else {
-			Some(&type_)
-		}.into_iter();
+			type_.as_ref().map(|(_, type_)| type_)
+		}
+		.into_iter();
 		call2_strict(
 			quote_spanned! {for_.span.resolved_at(Span::mixed_site())=>
 				|
@@ -193,9 +162,9 @@ impl<C: Configuration> ParseWithContext for For<C> {
 			field_name,
 			type_configuration,
 			pat,
-			colon,
 			type_,
-			selector,
+			key,
+			key_type,
 			in_,
 			iterable,
 			comma,
@@ -213,7 +182,8 @@ impl<C: Configuration> For<C> {
 			for_,
 			field_name,
 			pat,
-			selector,
+			type_,
+			key,
 			iterable,
 			content,
 			..
@@ -221,7 +191,7 @@ impl<C: Configuration> For<C> {
 
 		let for_ = for_.span.resolved_at(Span::mixed_site());
 
-		let selector = if let Some(Selector { keyed, key, .. }) = selector {
+		let selector = if let Some((keyed, key)) = key {
 			quote_spanned! {keyed.span.resolved_at(Span::mixed_site())=>
 				|#pat| ::core::result::Result::Ok(#key)
 			}
@@ -230,6 +200,12 @@ impl<C: Configuration> For<C> {
 				|item: &mut _| ::core::result::Result::Ok(&*item)
 			}
 		};
+
+		let type_ = type_.as_ref().map(|(colon, type_)| {
+			quote_spanned! {for_=>
+				#colon (#type_, _)
+			}
+		});
 
 		let content = content.part_tokens(cx)?;
 
@@ -242,7 +218,7 @@ impl<C: Configuration> For<C> {
 			);
 			let mut for_items = ::#asteracea::bumpalo::vec![in #bump];
 			for item in sequence {
-				let (#pat, #field_name) = item?;
+				let (#pat, #field_name)#type_ = item?;
 				let this = #field_name;
 				for_items.push(#content)
 			}
