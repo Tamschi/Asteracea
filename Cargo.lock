@@ -530,7 +530,7 @@ checksum = "9e69cdf6b85b5c8dce514f694089a2cf8b1a702f6cd28607bcb3cf296c9778db"
 [[package]]
 name = "linotype"
 version = "0.0.1"
-source = "git+https://github.com/Tamschi/linotype.git?branch=develop#3bcaeb28134b90d607c5bbbef09ad9f801147047"
+source = "git+https://github.com/Tamschi/linotype.git?branch=develop#4d6b31cbd3975cf23f8bc9f8bc1f02cdcc27821f"
 dependencies = [
  "scopeguard",
  "tap",

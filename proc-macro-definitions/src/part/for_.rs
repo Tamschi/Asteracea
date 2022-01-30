@@ -3,14 +3,17 @@ use crate::{
 	asteracea_ident,
 	part::{BlockParentParameters, CaptureDefinition},
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
-	storage_context::ParseWithContext,
+	storage_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use proc_macro2::{Span, TokenStream};
-use quote::quote_spanned;
-use syn::{Expr, Ident, Pat, Result, Token, Type};
+use quote::{quote_spanned, ToTokens};
+use syn::{
+	parse::{Parse, ParseStream},
+	Error, Expr, FnArg, Ident, Pat, PatType, Result, Token, Type,
+};
 use tap::Pipe;
 use unquote::unquote;
 
@@ -25,22 +28,44 @@ pub struct For<C: Configuration> {
 	field_name: Ident,
 	type_configuration: StorageTypeConfiguration,
 	pat: Pat,
-	keyed: kw::keyed,
-	key: Expr,
-	r_arrow: Token![=>],
-	key_type: Type,
+	colon: Token![:],
+	type_: Type,
+	selector: Option<Selector>,
 	in_: Token![in],
 	iterable: Expr,
 	comma: Token![,],
 	content: Box<Part<C>>,
 }
 
+struct Selector {
+	keyed: kw::keyed,
+	key: Expr,
+	key_type: Option<(Token![=>], Type)>,
+}
+
+impl Parse for Selector {
+	fn parse(input: ParseStream) -> Result<Self> {
+		unquote! {input,
+			#let keyed
+			#let key
+		}
+		Ok(Self {
+			keyed,
+			key,
+			key_type: input
+				.peek(Token![=>])
+				.then(|| Ok::<_, Error>((input.parse()?, input.parse()?)))
+				.transpose()?,
+		})
+	}
+}
+
 impl<C: Configuration> ParseWithContext for For<C> {
 	type Output = Self;
 
 	fn parse_with_context(
-		input: syn::parse::ParseStream<'_>,
-		cx: &mut crate::storage_context::ParseContext,
+		input: ParseStream<'_>,
+		cx: &mut ParseContext,
 		parent_parameter_parser: &mut dyn super::ParentParameterParser,
 	) -> Result<Self::Output> {
 		//TODO: Very broken, refactor this into `Part` in general and just have these preface any part.
@@ -51,11 +76,34 @@ impl<C: Configuration> ParseWithContext for For<C> {
 		unquote! {input,
 			#for_
 			#storage_configuration
-			#let pat
-			#let keyed
-			#let key
-			#let r_arrow
-			#let key_type
+			#let pat_type
+		};
+
+		let (pat, colon, type_) = match pat_type {
+			FnArg::Receiver(receiver) => {
+				return Err(Error::new_spanned(receiver, "Expected `pat: Type`."))
+			}
+			FnArg::Typed(PatType {
+				attrs,
+				pat,
+				colon_token,
+				ty,
+			}) if attrs.is_empty() => (*pat, colon_token, *ty),
+			FnArg::Typed(PatType { attrs, .. }) => {
+				return Err(Error::new_spanned(
+					attrs
+						.into_iter()
+						.flat_map(ToTokens::into_token_stream)
+						.collect::<TokenStream>(),
+					"Unexpected attributes: No attributes expected.",
+				))
+			}
+		};
+
+		let selector: Option<Selector> =
+			input.peek(kw::keyed).then(|| input.parse()).transpose()?;
+
+		unquote! {input,
 			#let in_
 			#let iterable
 			#let comma
@@ -93,16 +141,23 @@ impl<C: Configuration> ParseWithContext for For<C> {
 
 		let asteracea = asteracea_ident(for_.span);
 		let node = quote_spanned!(for_.span=> node);
+
+		let k = if let Some(selector) = &selector {
+			selector.key_type.as_ref().map(|(_, key_type)| key_type)
+		} else {
+			Some(&type_)
+		}.into_iter();
 		call2_strict(
 			quote_spanned! {for_.span.resolved_at(Span::mixed_site())=>
-				pin |
+				|
 					#visibility #field_name =
-						::#asteracea::storage::For::<'static, #type_path, #key_type>
-						::new({
-							#[allow(unused_variables)]
-							let #node = ::std::sync::Arc::clone(&#node);
-							move || Ok(#manufactured_item_state)
-						})
+						::core::cell::RefCell::<::#asteracea::storage::For::<'static, #type_path#(, #k)*>>::new(
+							::#asteracea::storage::For::new({
+								#[allow(unused_variables)]
+								let #node = ::std::sync::Arc::clone(&#node);
+								move || Ok(#manufactured_item_state)
+							})
+						)
 				|;
 			},
 			|input| {
@@ -138,10 +193,9 @@ impl<C: Configuration> ParseWithContext for For<C> {
 			field_name,
 			type_configuration,
 			pat,
-			keyed,
-			key,
-			r_arrow,
-			key_type,
+			colon,
+			type_,
+			selector,
 			in_,
 			iterable,
 			comma,
@@ -155,15 +209,43 @@ impl<C: Configuration> For<C> {
 		let asteracea = asteracea_ident(self.for_.span);
 		let bump = Ident::new("bump", self.for_.span);
 
-		let field_name = &self.field_name;
-		let field_pinned = Ident::new(&format!("{}_pinned", field_name), field_name.span());
+		let Self {
+			for_,
+			field_name,
+			pat,
+			selector,
+			iterable,
+			content,
+			..
+		} = self;
 
-		let Self { pat, iterable, .. } = self;
+		let for_ = for_.span.resolved_at(Span::mixed_site());
 
-		quote_spanned!(self.for_.span.resolved_at(Span::mixed_site())=> {
-			let sequence = ::core::iter::IntoIterator::into_iter(#iterable);
-			let for_items = ::#asteracea::bumpalo::vec![in #bump];
-			for #pat in sequence {}
+		let selector = if let Some(Selector { keyed, key, .. }) = selector {
+			quote_spanned! {keyed.span.resolved_at(Span::mixed_site())=>
+				|#pat| ::core::result::Result::Ok(#key)
+			}
+		} else {
+			quote_spanned! {for_=>
+				|item: &mut _| ::core::result::Result::Ok(&*item)
+			}
+		};
+
+		let content = content.part_tokens(cx)?;
+
+		quote_spanned!(for_=> {
+			let mut for_ = ::core::cell::RefCell::borrow_mut(&this.#field_name);
+			let for_ = &mut *for_;
+			let sequence = for_.__Asteracea__update_try_by(
+				#iterable,
+				#selector,
+			);
+			let mut for_items = ::#asteracea::bumpalo::vec![in #bump];
+			for item in sequence {
+				let (#pat, #field_name) = item?;
+				let this = #field_name;
+				for_items.push(#content)
+			}
 			::#asteracea::lignin::Node::Multi(for_items.into_bump_slice())
 		})
 		.pipe(Ok)
