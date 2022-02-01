@@ -45,3 +45,13 @@ asteracea::component! {
 // 		!"{}"(i)
 // 	}
 // }
+
+asteracea::component! {
+  pub Looped()() -> Sync
+
+  for c: &str in "This is a test.".split(' ') {[
+	  <li
+		!"{:?}"(c)
+	  > "\n"
+  ]}
+}

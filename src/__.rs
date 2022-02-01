@@ -4,6 +4,8 @@ use std::{
 	fmt::{self, Formatter},
 	mem::ManuallyDrop,
 	pin::Pin,
+	rc::Rc,
+	sync::Arc,
 };
 use try_lazy_init::Lazy;
 
@@ -178,3 +180,63 @@ impl Debug for NotValueNotDebugDebug {
 /// This is needed to de-collide [`CoerceTracingValue`] due to [`impl<T: ?Sized + Debug> Debug for &T`](https://doc.rust-lang.org/stable/core/fmt/trait.Debug.html#implementors),
 /// for example.
 pub struct InertWrapper<T: ?Sized>(pub T);
+
+pub trait UnBorrow {
+	type Target: ?Sized;
+
+	fn one_borrow(&self) -> &Self::Target;
+}
+
+impl<T: ?Sized + UnBorrow> UnBorrow for &T {
+	type Target = T::Target;
+
+	fn one_borrow(&self) -> &Self::Target {
+		<T as UnBorrow>::one_borrow(self)
+	}
+}
+
+impl<T: ?Sized + UnBorrow> UnBorrow for &mut T {
+	type Target = T::Target;
+
+	fn one_borrow(&self) -> &Self::Target {
+		<T as UnBorrow>::one_borrow(self)
+	}
+}
+
+macro_rules! impl_un_borrow {
+	($($type:ty),*$(,)?) => {$(
+		impl UnBorrow for $type {
+			type Target = Self;
+
+			fn one_borrow(&self) -> &Self::Target {
+				self
+			}
+		}
+	)*};
+}
+
+impl_un_borrow!(char, u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, str, String, usize, isize);
+
+impl<T: ?Sized> UnBorrow for Box<T> {
+	type Target = Self;
+
+	fn one_borrow(&self) -> &Self::Target {
+		self
+	}
+}
+
+impl<T: ?Sized> UnBorrow for Rc<T> {
+	type Target = Self;
+
+	fn one_borrow(&self) -> &Self::Target {
+		self
+	}
+}
+
+impl<T: ?Sized> UnBorrow for Arc<T> {
+	type Target = Self;
+
+	fn one_borrow(&self) -> &Self::Target {
+		self
+	}
+}

@@ -9,8 +9,11 @@ use crate::{
 use call2_for_syn::call2_strict;
 use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
 use proc_macro2::{Span, TokenStream};
-use quote::quote_spanned;
-use syn::{braced, parse::ParseStream, token::Brace, Error, Expr, Ident, Pat, Result, Token, Type};
+use quote::{quote_spanned, ToTokens};
+use syn::{
+	braced, parse::ParseStream, parse_quote_spanned, spanned::Spanned, token::Brace,
+	visit_mut::VisitMut, Error, Expr, Ident, Pat, Result, Token, Type, TypeReference,
+};
 use tap::Pipe;
 use unquote::unquote;
 
@@ -65,7 +68,7 @@ impl<C: Configuration> ParseWithContext for For<C> {
 			.map(|colon| Ok::<_, Error>((colon, input.parse()?)))
 			.transpose()?;
 
-		let key_type = input
+		let key_type: Option<(_, Type)> = input
 			.parse::<Option<Token![=>]>>()
 			.expect("infallible")
 			.map(|colon| Ok::<_, Error>((colon, input.parse()?)))
@@ -114,9 +117,14 @@ impl<C: Configuration> ParseWithContext for For<C> {
 		let node = quote_spanned!(for_.span=> node);
 
 		let k = if let Some((_, key_type)) = &key_type {
-			Some(key_type)
+			Some(key_type.to_token_stream())
 		} else {
-			type_.as_ref().map(|(_, type_)| type_)
+			type_.as_ref().map(|(colon, type_): &(_, Type)| {
+				let type_ = make_type_static(type_.clone());
+				quote_spanned! {colon.span.resolved_at(Span::mixed_site())=>
+					<<#type_ as ::#asteracea::__::UnBorrow>::Target as ::std::borrow::ToOwned>::Owned
+				}
+			})
 		}
 		.into_iter();
 		call2_strict(
@@ -176,6 +184,20 @@ impl<C: Configuration> ParseWithContext for For<C> {
 	}
 }
 
+fn make_type_static(mut type_: Type) -> Type {
+	struct StaticInserter;
+	impl VisitMut for StaticInserter {
+		fn visit_type_reference_mut(&mut self, i: &mut TypeReference) {
+			i.lifetime =
+				Some(parse_quote_spanned!(i.span().resolved_at(Span::mixed_site())=> 'static));
+			syn::visit_mut::visit_type_reference_mut(self, i)
+		}
+	}
+
+	StaticInserter.visit_type_mut(&mut type_);
+	type_
+}
+
 impl<C: Configuration> For<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		let asteracea = asteracea_ident(self.for_.span);
@@ -201,11 +223,17 @@ impl<C: Configuration> For<C> {
 			}
 		} else {
 			quote_spanned! {for_span_mixed_site=>
-				|item: &mut _| ::core::result::Result::Ok(&*item)
+				|item: &mut _| ::core::result::Result::Ok(::#asteracea::__::UnBorrow::one_borrow(item))
 			}
 		};
 
-		let type_ = type_.as_ref().map(|(colon, type_)| {
+		let generics = type_.as_ref().map(|(colon, type_)| {
+			quote_spanned! {colon.span.resolved_at(Span::mixed_site())=>
+				::<_, <#type_ as ::#asteracea::__::UnBorrow>::Target, _, _>
+			}
+		});
+
+		let item_type = type_.as_ref().map(|(colon, type_)| {
 			quote_spanned! {for_span_mixed_site=>
 				#colon (#type_, _)
 			}
@@ -213,7 +241,7 @@ impl<C: Configuration> For<C> {
 
 		let content = content.part_tokens(cx)?;
 		let content = quote_spanned! {for_span_mixed_site=>
-			let (#pat, reorderable_storage)#type_ = item?;
+			let (#pat, reorderable_storage)#item_type = item?;
 			let #field_name = reorderable_storage.as_ref().storage();
 			let this = #field_name;
 			for_items.push(::#asteracea::lignin::ReorderableFragment {
@@ -228,7 +256,7 @@ impl<C: Configuration> For<C> {
 		quote_spanned!(for_span_mixed_site=> {
 			let mut for_ = ::core::cell::RefCell::borrow_mut(&this.#field_name);
 			let for_ = &mut *for_;
-			let sequence = for_.__Asteracea__update_try_by(
+			let sequence = for_.__Asteracea__reproject_try_by#generics(
 				#iterable,
 				#selector,
 			);

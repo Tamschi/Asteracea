@@ -16,27 +16,27 @@ use std::{
 /// >
 /// > Right now, a plain [`lignin::Node::Multi`] is generated, which means internal component state is affixed properly while external component state is not.
 /// > (The unbinding and binding functionality still runs appropriately, so this doesn't cause extremely severe issues, but it can lead to UX degradation in many cases.)
-pub struct For<'a, Storage, K = MixedKey, S = RandomState> {
-	build_hasher: S,
+pub struct For<'a, Storage, K = MixedKey, St = RandomState> {
+	build_hasher: St,
 	storage: Pin<OwnedProjection<K, Reorderable<Storage>>>,
 	factory: Box<dyn 'a + FnMut() -> Result<Storage, Escalation>>,
 }
 
-impl<'a, Storage, K, S> For<'a, Storage, K, S> {
+impl<'a, Storage, K, St> For<'a, Storage, K, St> {
 	/// Creates a new instance of the [`For`] for expression storage.
 	pub fn new(factory: impl 'static + FnMut() -> Result<Storage, Escalation>) -> Self
 	where
-		S: Default,
+		St: Default,
 	{
 		Self::new_(Box::new(factory))
 	}
 
 	fn new_(factory: Box<dyn 'static + FnMut() -> Result<Storage, Escalation>>) -> Self
 	where
-		S: Default,
+		St: Default,
 	{
 		Self {
-			build_hasher: S::default(),
+			build_hasher: St::default(),
 			storage: OwnedProjection::new().pin(),
 			factory,
 		}
@@ -45,16 +45,18 @@ impl<'a, Storage, K, S> For<'a, Storage, K, S> {
 	/// Implementation detail.
 	#[doc(hidden)]
 	#[allow(clippy::type_complexity, non_snake_case)]
-	pub fn __Asteracea__update_try_by<'b, 'c: 'b, T, Q: 'b>(
+	pub fn __Asteracea__reproject_try_by<'b, 'c: 'b, T, Q, I, S>(
 		&'b mut self,
-		items: impl 'c + IntoIterator<Item = T>,
-		selector: impl 'c + FnMut(&mut T) -> Result<&Q, Escalation>,
+		items: I,
+		selector: S,
 	) -> Box<dyn 'b + Iterator<Item = Result<(T, Pin<&mut Reorderable<Storage>>), Escalation>>>
 	where
-		T: 'b,
 		K: Borrow<Q> + ReprojectionKey,
-		Q: Eq + ToOwned<Owned = K>,
-		S: BuildHasher,
+		St: BuildHasher,
+		T: 'b,
+		Q: 'b + ?Sized + Eq + ToOwned<Owned = K>,
+		I: 'c + IntoIterator<Item = T>,
+		S: 'c + FnMut(&mut T) -> Result<&Q, Escalation>,
 	{
 		let factory = &mut self.factory;
 		let hasher = &self.build_hasher;
