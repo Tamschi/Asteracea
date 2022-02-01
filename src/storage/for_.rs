@@ -148,7 +148,7 @@ macro_rules! impl_reprojection_keys {
 	)*};
 }
 
-impl_reprojection_keys!(bool, u8, u16, u32);
+impl_reprojection_keys!(bool, char, u8, u16, u32);
 
 impl ReprojectionKey for u64 {
 	fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32 {
