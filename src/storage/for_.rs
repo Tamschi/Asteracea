@@ -114,6 +114,8 @@ pub trait ReprojectionKey {
 	fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32;
 }
 
+// TODO: Reevaluate use a hasher here. It works, but it's probably not great in terms of speed.
+
 macro_rules! impl_reprojection_keys_abs {
 	($($type:ty),*$(,)?) => {$(
 		impl ReprojectionKey for $type {
@@ -122,7 +124,7 @@ macro_rules! impl_reprojection_keys_abs {
 					assert!(mem::size_of::<$type>() <= mem::size_of::<u32>())
 				};
 				let mut hasher = build_hasher.build_hasher();
-				hasher.write_u8(0);
+				hasher.write_u8(0); // TODO: Is this necessary?
 				let base = hasher.finish() as u32;
 				base.wrapping_add((*self).wrapping_abs() as u32)
 			}
