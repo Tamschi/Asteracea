@@ -48,3 +48,5 @@ where
 - `: ⦃T⦄` determines the type of items in the sequence,
 - `keyed ⦃selector⦄` projects `&mut T` to `&Q` where `Q: Eq + ToOwned<Owned = K>` and
 - `=> ⦃K⦄` where `K: ReprojectionKey` determines the type of state keys cached internally.
+
+Each of these parts is optional, but currently at least some are required for type resolution. This requirement is expected to disappear with [future Rust language improvements](https://github.com/rust-lang/rust/issues/63063).
