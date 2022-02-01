@@ -193,35 +193,39 @@ impl<C: Configuration> For<C> {
 			..
 		} = self;
 
-		let for_ = for_.span.resolved_at(Span::mixed_site());
+		let for_span_mixed_site = for_.span.resolved_at(Span::mixed_site());
 
 		let selector = if let Some((keyed, key)) = key {
 			quote_spanned! {keyed.span.resolved_at(Span::mixed_site())=>
 				|#pat| ::core::result::Result::Ok(#key)
 			}
 		} else {
-			quote_spanned! {for_=>
+			quote_spanned! {for_span_mixed_site=>
 				|item: &mut _| ::core::result::Result::Ok(&*item)
 			}
 		};
 
 		let type_ = type_.as_ref().map(|(colon, type_)| {
-			quote_spanned! {for_=>
+			quote_spanned! {for_span_mixed_site=>
 				#colon (#type_, _)
 			}
 		});
 
 		let content = content.part_tokens(cx)?;
-		let content = quote_spanned! {for_=>
-			let (#pat, #field_name)#type_ = item?;
+		let content = quote_spanned! {for_span_mixed_site=>
+			let (#pat, reorderable_storage)#type_ = item?;
+			let #field_name = reorderable_storage.as_ref().storage();
 			let this = #field_name;
-			for_items.push(#content)
+			for_items.push(::#asteracea::lignin::ReorderableFragment {
+				dom_key: reorderable_storage.dom_key,
+				content: #content,
+			})
 		};
 		let content = quote_spanned!(brace.span=> {
 			#content
 		});
 
-		quote_spanned!(for_=> {
+		quote_spanned!(for_span_mixed_site=> {
 			let mut for_ = ::core::cell::RefCell::borrow_mut(&this.#field_name);
 			let for_ = &mut *for_;
 			let sequence = for_.__Asteracea__update_try_by(
@@ -230,7 +234,7 @@ impl<C: Configuration> For<C> {
 			);
 			let mut for_items = ::#asteracea::bumpalo::vec![in #bump];
 			for item in sequence #content
-			::#asteracea::lignin::Node::Multi(for_items.into_bump_slice())
+			::#asteracea::lignin::Node::Keyed(for_items.into_bump_slice())
 		})
 		.pipe(Ok)
 	}

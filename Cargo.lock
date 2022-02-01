@@ -429,6 +429,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "higher-order-closure"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c450d87a307c754cbd7718dfca84b8904e313157191fae5b249d37aab216c89"
+
+[[package]]
 name = "html5ever"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -530,8 +536,10 @@ checksum = "9e69cdf6b85b5c8dce514f694089a2cf8b1a702f6cd28607bcb3cf296c9778db"
 [[package]]
 name = "linotype"
 version = "0.0.1"
-source = "git+https://github.com/Tamschi/linotype.git?branch=develop#4d6b31cbd3975cf23f8bc9f8bc1f02cdcc27821f"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "265f5d4bcc8cd79556fb80b2a140dd477d2b01c9016d04ad9a315559d49a2e1e"
 dependencies = [
+ "higher-order-closure",
  "scopeguard",
  "tap",
  "typed-arena",

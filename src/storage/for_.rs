@@ -1,8 +1,12 @@
-use std::{borrow::Borrow, pin::Pin};
-
-use linotype::{Linotype, PinningLinotype};
-
 use crate::error::Escalation;
+use core::mem;
+use linotype::{OwnedProjection, PinningOwnedProjection};
+use std::{
+	borrow::Borrow,
+	collections::hash_map::RandomState,
+	hash::{BuildHasher, Hasher},
+	pin::Pin,
+};
 
 /// Storage for [`for`](`For`) expressions.
 ///
@@ -12,20 +16,28 @@ use crate::error::Escalation;
 /// >
 /// > Right now, a plain [`lignin::Node::Multi`] is generated, which means internal component state is affixed properly while external component state is not.
 /// > (The unbinding and binding functionality still runs appropriately, so this doesn't cause extremely severe issues, but it can lead to UX degradation in many cases.)
-pub struct For<'a, Storage, K = MixedKey> {
-	linotype: Pin<Linotype<K, Storage>>,
+pub struct For<'a, Storage, K = MixedKey, S = RandomState> {
+	build_hasher: S,
+	storage: Pin<OwnedProjection<K, Reorderable<Storage>>>,
 	factory: Box<dyn 'a + FnMut() -> Result<Storage, Escalation>>,
 }
 
-impl<'a, Storage, K> For<'a, Storage, K> {
+impl<'a, Storage, K, S> For<'a, Storage, K, S> {
 	/// Creates a new instance of the [`For`] for expression storage.
-	pub fn new(factory: impl 'static + FnMut() -> Result<Storage, Escalation>) -> Self {
+	pub fn new(factory: impl 'static + FnMut() -> Result<Storage, Escalation>) -> Self
+	where
+		S: Default,
+	{
 		Self::new_(Box::new(factory))
 	}
 
-	fn new_(factory: Box<dyn 'static + FnMut() -> Result<Storage, Escalation>>) -> Self {
+	fn new_(factory: Box<dyn 'static + FnMut() -> Result<Storage, Escalation>>) -> Self
+	where
+		S: Default,
+	{
 		Self {
-			linotype: Linotype::new().pin(),
+			build_hasher: S::default(),
+			storage: OwnedProjection::new().pin(),
 			factory,
 		}
 	}
@@ -37,24 +49,33 @@ impl<'a, Storage, K> For<'a, Storage, K> {
 		&'b mut self,
 		items: impl 'c + IntoIterator<Item = T>,
 		selector: impl 'c + FnMut(&mut T) -> Result<&Q, Escalation>,
-	) -> Box<dyn 'b + Iterator<Item = Result<(T, Pin<&mut Storage>), Escalation>>>
+	) -> Box<dyn 'b + Iterator<Item = Result<(T, Pin<&mut Reorderable<Storage>>), Escalation>>>
 	where
 		T: 'b,
-		K: Borrow<Q>,
+		K: Borrow<Q> + ReprojectionKey,
 		Q: Eq + ToOwned<Owned = K>,
+		S: BuildHasher,
 	{
 		let factory = &mut self.factory;
-		<Pin<Linotype<K, Storage>> as PinningLinotype>::update_try_by_try_with(
-			&mut self.linotype,
-			items,
-			selector,
-			move |_| factory(),
-		)
+		let hasher = &self.build_hasher;
+		self.storage
+			.reproject_try_by_try_with(items, selector, move |_item, k| {
+				Ok(Reorderable {
+					dom_key: ReprojectionKey::to_dom_key(k, hasher),
+					storage: factory()?,
+				})
+			})
 	}
 }
 
 pub struct MixedKey {
 	// variant: MixedKey_,
+}
+
+impl ReprojectionKey for MixedKey {
+	fn to_dom_key(&self, _build_hasher: &impl BuildHasher) -> u32 {
+		todo!()
+	}
 }
 
 // #[allow(incorrect_ident_case)]
@@ -77,3 +98,104 @@ pub struct MixedKey {
 // 	bool(bool),
 // 	String(String),
 // }
+
+pub struct Reorderable<Storage> {
+	pub dom_key: u32,
+	storage: Storage,
+}
+
+impl<Storage> Reorderable<Storage> {
+	pub fn storage(self: Pin<&Self>) -> Pin<&Storage> {
+		unsafe { self.map_unchecked(|this| &this.storage) }
+	}
+}
+
+pub trait ReprojectionKey {
+	fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32;
+}
+
+macro_rules! impl_reprojection_keys_abs {
+	($($type:ty),*$(,)?) => {$(
+		impl ReprojectionKey for $type {
+			fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32 {
+				const _: () = {
+					assert!(mem::size_of::<$type>() <= mem::size_of::<u32>())
+				};
+				let mut hasher = build_hasher.build_hasher();
+				hasher.write_u8(0);
+				let base = hasher.finish() as u32;
+				base.wrapping_add((*self).wrapping_abs() as u32)
+			}
+		}
+	)*};
+}
+
+impl_reprojection_keys_abs!(i8, i16, i32);
+
+macro_rules! impl_reprojection_keys {
+	($($type:ty),*$(,)?) => {$(
+		impl ReprojectionKey for $type {
+			fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32 {
+				const _: () = {
+					assert!(mem::size_of::<$type>() <= mem::size_of::<u32>())
+				};
+				let mut hasher = build_hasher.build_hasher();
+				hasher.write_u8(0);
+				let base = hasher.finish() as u32;
+				base.wrapping_add(*self as u32)
+			}
+		}
+	)*};
+}
+
+impl_reprojection_keys!(bool, u8, u16, u32);
+
+impl ReprojectionKey for u64 {
+	fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32 {
+		let mut hasher = build_hasher.build_hasher();
+		hasher.write_u64(*self);
+		#[allow(clippy::cast_possible_truncation)]
+		let dom_key = hasher.finish() as u32;
+		dom_key
+	}
+}
+
+impl ReprojectionKey for u128 {
+	fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32 {
+		let mut hasher = build_hasher.build_hasher();
+		hasher.write_u128(*self);
+		#[allow(clippy::cast_possible_truncation)]
+		let dom_key = hasher.finish() as u32;
+		dom_key
+	}
+}
+
+impl ReprojectionKey for i64 {
+	fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32 {
+		let mut hasher = build_hasher.build_hasher();
+		hasher.write_i64(*self);
+		#[allow(clippy::cast_possible_truncation)]
+		let dom_key = hasher.finish() as u32;
+		dom_key
+	}
+}
+
+impl ReprojectionKey for i128 {
+	fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32 {
+		let mut hasher = build_hasher.build_hasher();
+		hasher.write_i128(*self);
+		#[allow(clippy::cast_possible_truncation)]
+		let dom_key = hasher.finish() as u32;
+		dom_key
+	}
+}
+
+impl ReprojectionKey for String {
+	fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32 {
+		let mut hasher = build_hasher.build_hasher();
+		hasher.write(self.as_bytes());
+		#[allow(clippy::cast_possible_truncation)]
+		let dom_key = hasher.finish() as u32;
+		dom_key
+	}
+}
