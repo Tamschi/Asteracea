@@ -209,6 +209,7 @@ impl<C: Configuration> For<C> {
 			pat,
 			type_,
 			key,
+			key_type,
 			iterable,
 			brace,
 			content,
@@ -221,9 +222,15 @@ impl<C: Configuration> For<C> {
 			quote_spanned! {keyed.span.resolved_at(Span::mixed_site())=>
 				|#pat| ::core::result::Result::Ok(#key)
 			}
-		} else {
+		} else if key_type.is_none() {
 			quote_spanned! {for_span_mixed_site=>
 				|item: &mut _| ::core::result::Result::Ok(::#asteracea::__::UnBorrow::one_borrow(item))
+			}
+		} else {
+			//FIXME: This is necessary to resolve e.g. `for i => u8 in &[1, 2, 3, 4, 5]` "backwards",
+			// but is there a broader way to do that?
+			quote_spanned! {for_span_mixed_site=>
+				|item: &mut _| ::core::result::Result::Ok(::core::ops::Deref::deref(item))
 			}
 		};
 
