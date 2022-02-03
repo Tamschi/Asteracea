@@ -112,7 +112,7 @@ asteracea::component! {
 asteracea::component! {
   Offset(base: usize)(offset: usize) -> usize
 
-  |pub base: usize = {base}|; // ²
+  let pub self.base: usize = base; // ²
   { self.base + offset }
 }
 
@@ -164,7 +164,7 @@ component! {
   ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
   // shorthand capture; Defines a struct field.
-  |value = Cell::<i32>::new(initial)|;
+  let self.value = Cell::<i32>::new(initial);
 
   <div
     // conditional attribute from `Option<&'bump str>`

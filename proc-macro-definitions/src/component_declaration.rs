@@ -4,26 +4,26 @@ use self::{
 };
 use crate::{
 	asteracea_ident,
-	part::{BlockParentParameters, GenerateContext},
+	part::{BlockParentParameters, GenerateContext, LetSelf},
 	storage_configuration::StorageTypeConfiguration,
 	storage_context::{ParseContext, ParseWithContext, StorageContext},
 	syn_ext::{AddOptionExt, *},
 	warn, Configuration, MapMessage, Part,
 };
 use call2_for_syn::call2_strict;
-use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapNone as _};
+use debugless_unwrap::{DebuglessUnwrap as _};
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use std::rc::Rc;
 use syn::{
 	parenthesized,
 	parse::{discouraged, Parse, ParseStream, Result},
-	parse2,
+	parse2, parse_quote_spanned,
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent, PatType,
-	ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
+	AttrStyle, Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent,
+	PatType, ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -71,7 +71,7 @@ pub struct FieldDefinition {
 	pub attributes: Vec<Attribute>,
 	pub visibility: Visibility,
 	pub name: Ident,
-	pub field_type: TokenStream,
+	pub field_type: Type,
 	pub initial_value: TokenStream,
 	pub structurally_pinned: bool,
 }
@@ -263,18 +263,28 @@ impl Parse for ComponentDeclaration {
 					} = fn_arg;
 					quote!(#pat#colon_token #ty)
 				};
+
+				let attrs = attrs
+					.iter()
+					.map(|attr| Attribute {
+						style: AttrStyle::Inner(Token![!](
+							attr.pound_token.span.resolved_at(Span::mixed_site()),
+						)),
+						..attr.clone()
+					})
+					.collect::<Vec<_>>();
+
 				call2_strict(
-					quote_spanned!(span=> |#(#attrs)* #visibility #arg = {#pat}|;),
+					quote_spanned!(span=> let #visibility self.#arg = #(#attrs)* #pat;),
 					|input| {
-						Part::<ComponentRenderConfiguration>::parse_with_context(
+						LetSelf::<ComponentRenderConfiguration>::parse_with_context(
 							input,
 							&mut cx,
 							&mut BlockParentParameters,
 						)
 					},
 				)
-				.debugless_unwrap()?
-				.debugless_unwrap_none()
+				.debugless_unwrap()?;
 			}
 		}
 
@@ -372,7 +382,7 @@ impl ComponentDeclaration {
 				attributes: vec![],
 				visibility: Visibility::Inherited,
 				name: name.clone(),
-				field_type: quote_spanned! {parameter_type.span().resolved_at(Span::mixed_site())=>
+				field_type: parse_quote_spanned! {parameter_type.span().resolved_at(Span::mixed_site())=>
 					::#asteracea::__::DroppableLazyCallbackRegistration::<
 						#component_name,
 						fn(#parameter_type),
