@@ -15,6 +15,8 @@ asteracea::component! {
 	} <*Router
 		.path={path}
 		.rest={&rest}
+
+		//TODO: Using inline wildcards isn't ideal.
 		->path={"/div/*"} <div !(rest.get())>
 		->path={"/span/*"} <span !(rest.get())>
 	/Router>
