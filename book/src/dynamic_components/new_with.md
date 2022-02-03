@@ -28,10 +28,7 @@ asteracea::component! {
     let quoted = format!("‘{}’", text);
   }
 
-  //TODO:
-  // Captures should be legal for all dynamic value expressions…
-  // This code will turn into `!|quote: String = { quoted }|` then.
-  |quote: String = { quoted }|;
+  let self.quote: String = quoted;
 
   !(self.quote)
 }

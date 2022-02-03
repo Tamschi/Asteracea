@@ -1,6 +1,6 @@
 use std::{collections::HashSet, iter};
 
-use super::{CaptureDefinition, GenerateContext};
+use super::{GenerateContext, LetSelf};
 use crate::{
 	asteracea_ident,
 	part::Part,
@@ -27,7 +27,7 @@ pub enum Component<C: Configuration> {
 	Instantiated {
 		open_span: Span,
 		path: ExprPath,
-		capture: CaptureDefinition<C>,
+		capture: LetSelf<C>,
 		render_params: Vec<Parameter<Token![.]>>,
 		content_children: Vec<ContentChild<C>>,
 	},
@@ -179,13 +179,12 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				open_span,
 				capture: call2_strict(
 					quote_spanned! {open_span=>
-						pin |#visibility #field_name = #path::new(&node, #new_params)?|
+						let #visibility self.#field_name = pin #path::new(&node, #new_params)?;
 					},
-					|input| CaptureDefinition::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
+					|input| LetSelf::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
 				)
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
-				.expect("Component::parse_with_context capture"),
+				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?,
 				path,
 			render_params,
 			content_children,

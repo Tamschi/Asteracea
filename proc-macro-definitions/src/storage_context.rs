@@ -167,7 +167,7 @@ impl StorageContext {
 				vis: f.visibility.clone(),
 				ident: Some(f.name.clone()),
 				colon_token: Some(Token![:](f.name.span())),
-				ty: Type::Verbatim(f.field_type.clone()),
+				ty: f.field_type.clone(),
 			})
 			.collect();
 

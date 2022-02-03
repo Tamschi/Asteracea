@@ -17,7 +17,7 @@ asteracea::component! {
     class?: &'bump str,
   ) -> !Sync
 
-  |value = Cell::<i32>::new(initial)|;
+  let self.value = Cell::<i32>::new(initial);
 
   //
 

@@ -1,13 +1,13 @@
 use super::{GenerateContext, Part};
 use crate::{
 	asteracea_ident,
-	part::{BlockParentParameters, CaptureDefinition},
+	part::{BlockParentParameters, LetSelf},
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
 	storage_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
-use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
+use debugless_unwrap::DebuglessUnwrap;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 use syn::{
@@ -129,24 +129,18 @@ impl<C: Configuration> ParseWithContext for For<C> {
 		.into_iter();
 		call2_strict(
 			quote_spanned! {for_.span.resolved_at(Span::mixed_site())=>
-				|
-					#visibility #field_name =
-						::core::cell::RefCell::<::#asteracea::storage::For::<'static, #type_path#(, #k)*>>::new(
-							::#asteracea::storage::For::new({
-								#[allow(unused_variables)]
-								let #node = ::std::sync::Arc::clone(&#node);
-								move || Ok(#manufactured_item_state)
-							})
-						)
-				|;
+				let #visibility self.#field_name = ::core::cell::RefCell::<::#asteracea::storage::For::<'static, #type_path#(, #k)*>>::new(
+					::#asteracea::storage::For::new({
+						#[allow(unused_variables)]
+						let #node = ::std::sync::Arc::clone(&#node);
+						move || Ok(#manufactured_item_state)
+					})
+				);
 			},
-			|input| {
-				CaptureDefinition::<C>::parse_with_context(input, cx, &mut BlockParentParameters)
-			},
+			|input| LetSelf::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
 		)
 		.debugless_unwrap()
-		.unwrap()
-		.debugless_unwrap_none();
+		.expect("for loop storage let self");
 
 		if type_configuration.type_is_generated() {
 			cx.assorted_items.extend(

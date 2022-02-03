@@ -1,7 +1,6 @@
 mod bind;
 mod box_expression;
 mod bump_format_shorthand;
-mod capture_definition;
 mod component;
 mod content;
 mod defer;
@@ -9,13 +8,14 @@ mod event_binding;
 mod for_;
 mod html_comment;
 mod html_definition;
+mod let_self;
 
 pub use component::{BlockParentParameters, ParentParameterParser};
 
 //TODO: Rename module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
 //TODO: Rust expressions shouldn't automatically be blocks except for ones after `with`.
 
-pub use self::capture_definition::CaptureDefinition;
+pub use self::let_self::LetSelf;
 use self::{
 	bind::Bind, box_expression::BoxExpression, component::Component, content::Content,
 	defer::Defer, for_::For, html_comment::HtmlComment, html_definition::HtmlDefinition,
@@ -29,7 +29,7 @@ use core::result::Result as coreResult;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapErr as _};
 use event_binding::EventBindingDefinition;
 use proc_macro2::{Span, TokenStream, TokenTree};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote_spanned, ToTokens};
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
@@ -46,7 +46,6 @@ pub(crate) enum Part<C: Configuration> {
 	Bind(Bind<C>),
 	Box(BoxExpression<C>),
 	BumpFormat(BumpFormat),
-	Capture(CaptureDefinition<C>),
 	Content(Content),
 	Comment(HtmlComment),
 	Component(Component<C>),
@@ -93,7 +92,6 @@ impl<C: Configuration> Part<C> {
 			Part::Bind(_)
 			| Part::Box(_)
 			| Part::BumpFormat(_)
-			| Part::Capture(_)
 			| Part::Comment(_)
 			| Part::Component(_)
 			| Part::Content(_)
@@ -347,13 +345,18 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 				braced!(expression in input),
 				expression.parse()?,
 			))
-		} else if lookahead.peek(capture_definition::kw::pin)
-			|| lookahead.peek(Token![#])
-			|| lookahead.peek(Token![|])
+		} else if lookahead.peek(Token![let])
+			&& (input.peek2(Token![self])
+				|| input.peek3(Token![self])
+				|| input.peek2(Token![pub])
+				|| input.peek3(Token![pub])
+				|| input.peek2(Token![priv])
+				|| input.peek3(Token![priv]))
 		{
 			if C::CAN_CAPTURE {
-				CaptureDefinition::parse_with_context(input, cx, parent_parameter_parser)?
-					.map(Part::Capture)
+				// Let bindings are phantom here: They never generate child nodes by themselves.
+				LetSelf::<C>::parse_with_context(input, cx, parent_parameter_parser)?;
+				None
 			} else {
 				return Err(Error::new(
 					lookahead.error().span(),
@@ -397,7 +400,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
                 \"text\"
                 <element …>
                 {rust expression}
-                ⟦pin⟧ |declaration: Only = capture|;
+                let ⟦visibility⟧ self.ident: Type = ⟦pin⟧ expression;
                 |capture: With = declaration|(and, render, call)
 				+\"event_name\" = |event| handler()
 				with { …; } <…>",
@@ -487,7 +490,6 @@ impl<C: Configuration> Part<C> {
 				// Making each of these a full Rust block is a bit strange too, but likely the lesser issue.
 				quote_spanned!(brace.span.resolved_at(Span::mixed_site())=> { #statements })
 			}
-			Part::Capture(capture) => quote!(#capture),
 			Part::Multi(bracket, m) => {
 				let asteracea = asteracea_ident(bracket.span);
 				let m = m
