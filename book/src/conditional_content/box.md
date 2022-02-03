@@ -65,8 +65,8 @@ use std::mem::size_of;
 asteracea::component! {
   Heavy()()
 
-  #[allow(dead_code)]
-  let self.large: [u8; 1_000] = [0; 1_000]; // 1 KB
+  let self.large: [u8; 1_000] = #![allow(dead_code)]
+    [0; 1_000]; // 1 KB
 
   "Hello!"
 }
