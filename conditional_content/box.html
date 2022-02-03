@@ -189,7 +189,7 @@
 If you have a better example to demonstrate recursion with, please <a href="">let me know</a>!</p>
 </blockquote>
 <p>Note the use of <code>dyn if</code> to prevent infinite eager initialisation.</p>
-<p>You can alternatively combine <code>spread if</code> with <code>lazy ⟦move⟧</code> to avoid throwing away heap allocations once they exist. This is better in cases where the recursion depth changes quickly or </p>
+<p>You can alternatively combine <code>spread if</code> with <code>lazy ⟦move⟧</code> to avoid throwing away heap allocations once they exist. This is better in cases where the recursion depth changes quickly or</p>
 <h2 id="memory-savings"><a class="header" href="#memory-savings">Memory savings</a></h2>
 <p>The container component size reduction isn't very useful in most cases, since Asteracea initialises child components eagerly, but can be used to great effect with <strong><code>dyn</code> branching if certain arms require especially large storage</strong>.</p>
 <!-- TODO: Check if it's possible to let Clippy warn about that. -->
@@ -202,9 +202,9 @@ If you have a better example to demonstrate recursion with, please <a href="">le
 asteracea::component! {
   Heavy()()
 
-  #[allow(dead_code)]
-  |large: [u8; 1_000] = {[0; 1_000]}|; // 1 KB
-  
+  let self.large: [u8; 1_000] = #![allow(dead_code)]
+    [0; 1_000]; // 1 KB
+
   &quot;Hello!&quot;
 }
 
@@ -233,8 +233,8 @@ asteracea::component! {
 asteracea::component! {
   Heavy()()
 
-  #[allow(dead_code)]
-  |large: [u8; 1_000] = {[0; 1_000]}|; // 1 KB
+  let self.large: [u8; 1_000] = #![allow(dead_code)]
+    [0; 1_000]; // 1 KB
 
   &quot;Hello!&quot;
 }

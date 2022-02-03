@@ -286,7 +286,7 @@ asteracea::component! {
     class?: &amp;'bump str,
   ) -&gt; !Sync
 
-  |value = Cell::&lt;i32&gt;::new(initial)|;
+  let self.value = Cell::&lt;i32&gt;::new(initial);
 
   //
 
@@ -942,11 +942,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x563ec1d78940.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x563ec1d78940.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x563ec1d78948.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x563ec1d78940.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x563ec1d78940.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x563ee7808860.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x563ee7808860.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x563ee7808868.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x563ee7808860.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x563ee7808860.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
@@ -1074,10 +1074,7 @@ asteracea::component! {
     let quoted = format!(&quot;‘{}’&quot;, text);
   }
 
-  //TODO:
-  // Captures should be legal for all dynamic value expressions…
-  // This code will turn into `!|quote: String = { quoted }|` then.
-  |quote: String = { quoted }|;
+  let self.quote: String = quoted;
 
   !(self.quote)
 }
@@ -1592,7 +1589,7 @@ asteracea::component! {
 If you have a better example to demonstrate recursion with, please <a href="conditional_content/">let me know</a>!</p>
 </blockquote>
 <p>Note the use of <code>dyn if</code> to prevent infinite eager initialisation.</p>
-<p>You can alternatively combine <code>spread if</code> with <code>lazy ⟦move⟧</code> to avoid throwing away heap allocations once they exist. This is better in cases where the recursion depth changes quickly or </p>
+<p>You can alternatively combine <code>spread if</code> with <code>lazy ⟦move⟧</code> to avoid throwing away heap allocations once they exist. This is better in cases where the recursion depth changes quickly or</p>
 <h2 id="memory-savings"><a class="header" href="#memory-savings">Memory savings</a></h2>
 <p>The container component size reduction isn't very useful in most cases, since Asteracea initialises child components eagerly, but can be used to great effect with <strong><code>dyn</code> branching if certain arms require especially large storage</strong>.</p>
 <!-- TODO: Check if it's possible to let Clippy warn about that. -->
@@ -1605,9 +1602,9 @@ If you have a better example to demonstrate recursion with, please <a href="cond
 asteracea::component! {
   Heavy()()
 
-  #[allow(dead_code)]
-  |large: [u8; 1_000] = {[0; 1_000]}|; // 1 KB
-  
+  let self.large: [u8; 1_000] = #![allow(dead_code)]
+    [0; 1_000]; // 1 KB
+
   &quot;Hello!&quot;
 }
 
@@ -1636,8 +1633,8 @@ asteracea::component! {
 asteracea::component! {
   Heavy()()
 
-  #[allow(dead_code)]
-  |large: [u8; 1_000] = {[0; 1_000]}|; // 1 KB
+  let self.large: [u8; 1_000] = #![allow(dead_code)]
+    [0; 1_000]; // 1 KB
 
   &quot;Hello!&quot;
 }
@@ -1795,7 +1792,7 @@ component! {
     class?: &amp;'bump str,
   ) -&gt; !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
-  |value = Cell::&lt;i32&gt;::new(initial)|; // shorthand capture
+  let self.value = Cell::&lt;i32&gt;::new(initial); // shorthand capture
 
   &lt;div
     // Attribute usage is validated statically.

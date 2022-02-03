@@ -176,7 +176,7 @@ component! {
     class?: &amp;'bump str,
   ) -&gt; !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
-  |value = Cell::&lt;i32&gt;::new(initial)|; // shorthand capture
+  let self.value = Cell::&lt;i32&gt;::new(initial); // shorthand capture
 
   &lt;div
     // Attribute usage is validated statically.
