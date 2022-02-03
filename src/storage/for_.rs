@@ -1,6 +1,5 @@
 use crate::error::Escalation;
-use core::hash::Hash;
-use core::mem;
+use core::{hash::Hash, mem};
 use linotype::{OwnedProjection, PinningOwnedProjection};
 use std::{
 	any::{Any, TypeId},
