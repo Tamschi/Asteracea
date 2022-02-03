@@ -1,4 +1,4 @@
-use super::{BlockParentParameters, GenerateContext, LetSelf, ParentParameterParser, Part};
+use super::{GenerateContext, LetSelf, Part};
 use crate::{
 	asteracea_ident,
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
@@ -29,11 +29,7 @@ pub struct Defer<C: Configuration> {
 impl<C: Configuration> ParseWithContext for Defer<C> {
 	type Output = Self;
 
-	fn parse_with_context(
-		input: ParseStream<'_>,
-		cx: &mut ParseContext,
-		parent_parameter_parser: &mut dyn ParentParameterParser,
-	) -> Result<Self::Output> {
+	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let defer: kw::defer = input.parse()?;
 		let storage_configuration: StorageConfiguration = input.parse()?;
 
@@ -57,7 +53,6 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		let content = Box::new(Part::parse_required_with_context(
 			input,
 			&mut parse_context,
-			parent_parameter_parser,
 		)?);
 
 		let type_path =
@@ -80,7 +75,7 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 						move || Ok(#deferred_value)
 					}));
 			},
-			|input| LetSelf::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
+			|input| LetSelf::<C>::parse_with_context(input, cx),
 		)
 		.debugless_unwrap()
 		.expect("defer storage let self");

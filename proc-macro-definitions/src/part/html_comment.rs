@@ -1,4 +1,3 @@
-use super::ParentParameterParser;
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
@@ -19,7 +18,6 @@ impl ParseWithContext for HtmlComment {
 	fn parse_with_context(
 		input: ParseStream<'_>,
 		_cx: &mut ParseContext,
-		_: &mut dyn ParentParameterParser,
 	) -> syn::Result<Self::Output> {
 		let open_span;
 		let text;

@@ -1,4 +1,3 @@
-use super::ParentParameterParser;
 use crate::storage_context::{ParseContext, ParseWithContext};
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
@@ -12,11 +11,7 @@ pub struct Content {
 impl ParseWithContext for Content {
 	type Output = Self;
 
-	fn parse_with_context(
-		input: ParseStream<'_>,
-		_cx: &mut ParseContext,
-		_: &mut dyn ParentParameterParser,
-	) -> Result<Self::Output> {
+	fn parse_with_context(input: ParseStream<'_>, _cx: &mut ParseContext) -> Result<Self::Output> {
 		Ok(Self {
 			dot2: input.parse()?,
 		})

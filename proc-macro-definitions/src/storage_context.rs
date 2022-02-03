@@ -1,8 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-	component_declaration::FieldDefinition, part::ParentParameterParser,
-	storage_configuration::StorageTypeConfiguration,
+	component_declaration::FieldDefinition, storage_configuration::StorageTypeConfiguration,
 };
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
@@ -203,11 +202,7 @@ pub trait ParseWithContext {
 	//WAITING: https://github.com/rust-lang/rust/issues/29661, = Self
 	type Output;
 
-	fn parse_with_context(
-		input: ParseStream<'_>,
-		cx: &mut ParseContext,
-		parent_parameter_parser: &mut dyn ParentParameterParser,
-	) -> Result<Self::Output>;
+	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output>;
 }
 
 fn strip_params(

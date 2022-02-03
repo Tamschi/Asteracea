@@ -1,7 +1,7 @@
 use super::{GenerateContext, Part};
 use crate::{
 	asteracea_ident,
-	part::{BlockParentParameters, LetSelf},
+	part::LetSelf,
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
 	storage_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
@@ -40,14 +40,7 @@ pub struct For<C: Configuration> {
 impl<C: Configuration> ParseWithContext for For<C> {
 	type Output = Self;
 
-	fn parse_with_context(
-		input: ParseStream<'_>,
-		cx: &mut ParseContext,
-		parent_parameter_parser: &mut dyn super::ParentParameterParser,
-	) -> Result<Self::Output> {
-		//TODO: Very broken, refactor this into `Part` in general and just have these preface any part.
-		parent_parameter_parser.parse_any(input, cx)?;
-
+	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let storage_configuration: StorageConfiguration;
 		let for_: Token![for];
 		unquote! {input,
@@ -101,7 +94,6 @@ impl<C: Configuration> ParseWithContext for For<C> {
 		let content = Box::new(Part::parse_required_with_context(
 			&content,
 			&mut parse_context,
-			parent_parameter_parser,
 		)?);
 
 		let type_path =
@@ -137,7 +129,7 @@ impl<C: Configuration> ParseWithContext for For<C> {
 					})
 				);
 			},
-			|input| LetSelf::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
+			|input| LetSelf::<C>::parse_with_context(input, cx, ),
 		)
 		.debugless_unwrap()
 		.expect("for loop storage let self");

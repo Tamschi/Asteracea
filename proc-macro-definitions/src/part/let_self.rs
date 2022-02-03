@@ -1,4 +1,3 @@
-use super::ParentParameterParser;
 use crate::{
 	component_declaration::FieldDefinition,
 	storage_context::{ParseContext, ParseWithContext},
@@ -26,11 +25,7 @@ pub mod kw {
 /// The access expression is only used by other expressions that partially lower into these bindings.
 impl<C> ParseWithContext for LetSelf<C> {
 	type Output = Self;
-	fn parse_with_context(
-		input: ParseStream<'_>,
-		cx: &mut ParseContext,
-		_: &mut dyn ParentParameterParser,
-	) -> Result<Self::Output> {
+	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let mut attributes = input.call(Attribute::parse_outer)?;
 
 		let _let_: Token![let] = input.parse()?;

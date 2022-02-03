@@ -10,8 +10,6 @@ mod html_comment;
 mod html_definition;
 mod let_self;
 
-pub use component::{BlockParentParameters, ParentParameterParser};
-
 //TODO: Rename module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
 //TODO: Rust expressions shouldn't automatically be blocks except for ones after `with`.
 
@@ -142,7 +140,6 @@ impl<C: Configuration> Parse for Part<C> {
 		Self::parse_with_context(
 			input,
 			&mut ParseContext::new_fragment(&Visibility::Inherited, &Generics::default()),
-			&mut BlockParentParameters,
 		)
 		.and_then(|part| {
 			if let Some(part) = part {
@@ -161,10 +158,9 @@ impl<C: Configuration> Part<C> {
 	pub fn parse_required_with_context(
 		input: ParseStream<'_>,
 		cx: &mut ParseContext,
-		parent_parameter_parser: &mut dyn ParentParameterParser,
 	) -> Result<Self> {
 		let span = input.span();
-		Self::parse_with_context(input, cx, parent_parameter_parser).and_then(|part| {
+		Self::parse_with_context(input, cx).and_then(|part| {
 			if let Some(part) = part {
 				Ok(part)
 			} else {
@@ -179,42 +175,18 @@ impl<C: Configuration> Part<C> {
 
 impl<C: Configuration> ParseWithContext for Part<C> {
 	type Output = Option<Self>;
-	fn parse_with_context(
-		input: ParseStream<'_>,
-		cx: &mut ParseContext,
-		parent_parameter_parser: &mut dyn ParentParameterParser,
-	) -> Result<Self::Output> {
+	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let lookahead = input.lookahead1();
 		if lookahead.peek(bind::kw::bind) {
-			Some(Part::Bind(Bind::parse_with_context(
-				input,
-				cx,
-				parent_parameter_parser,
-			)?))
+			Some(Part::Bind(Bind::parse_with_context(input, cx)?))
 		} else if lookahead.peek(Token![box]) {
-			Some(Part::Box(BoxExpression::parse_with_context(
-				input,
-				cx,
-				parent_parameter_parser,
-			)?))
+			Some(Part::Box(BoxExpression::parse_with_context(input, cx)?))
 		} else if lookahead.peek(Token![..]) {
-			Some(Part::Content(Content::parse_with_context(
-				input,
-				cx,
-				parent_parameter_parser,
-			)?))
+			Some(Part::Content(Content::parse_with_context(input, cx)?))
 		} else if lookahead.peek(defer::kw::defer) {
-			Some(Part::Defer(Defer::parse_with_context(
-				input,
-				cx,
-				parent_parameter_parser,
-			)?))
+			Some(Part::Defer(Defer::parse_with_context(input, cx)?))
 		} else if input.peek(Token![for]) {
-			Some(Part::For(For::parse_with_context(
-				input,
-				cx,
-				parent_parameter_parser,
-			)?))
+			Some(Part::For(For::parse_with_context(input, cx)?))
 		} else if lookahead.peek(LitStr) {
 			Some(Part::Text(input.parse()?))
 		} else if lookahead.peek(Token![<]) {
@@ -223,16 +195,14 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 				input.parse::<Token![<]>().unwrap();
 				input.parse::<TokenTree>()?
 			} {
-				TokenTree::Punct(punct) if punct.as_char() == '!' => Some(Part::Comment(
-					HtmlComment::parse_with_context(input, cx, parent_parameter_parser)?,
-				)),
-				TokenTree::Punct(punct) if punct.as_char() == '*' => Some(Part::Component(
-					Component::parse_with_context(input, cx, parent_parameter_parser)?,
-				)),
+				TokenTree::Punct(punct) if punct.as_char() == '!' => {
+					Some(Part::Comment(HtmlComment::parse_with_context(input, cx)?))
+				}
+				TokenTree::Punct(punct) if punct.as_char() == '*' => {
+					Some(Part::Component(Component::parse_with_context(input, cx)?))
+				}
 				_ => Some(Part::Html(HtmlDefinition::<C>::parse_with_context(
-					input,
-					cx,
-					parent_parameter_parser,
+					input, cx,
 				)?)),
 			}
 		} else if input.peek(Token![if]) {
@@ -255,9 +225,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 				InitMode::Dyn(_) => {
 					todo!("`dyn if`")
 				}
-				InitMode::Spread(_) => {
-					Part::parse_required_with_context(input, cx, &mut BlockParentParameters)?
-				}
+				InitMode::Spread(_) => Part::parse_required_with_context(input, cx)?,
 			};
 			let (else_, else_arm) = if let Some(else_) = input.parse().unwrap() {
 				(
@@ -266,11 +234,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 						InitMode::Dyn(_) => {
 							todo!("`dyn if else`")
 						}
-						InitMode::Spread(_) => Part::parse_required_with_context(
-							input,
-							cx,
-							&mut BlockParentParameters,
-						)?,
+						InitMode::Spread(_) => Part::parse_required_with_context(input, cx)?,
 					}
 					.pipe(Box::new),
 				)
@@ -278,7 +242,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 				(
 					Token![else](if_.span),
 					call2_for_syn::call2_strict(quote_spanned!(if_.span=> []), |input| {
-						Part::parse_required_with_context(input, cx, &mut BlockParentParameters)
+						Part::parse_required_with_context(input, cx)
 					})
 					.debugless_unwrap()
 					.unwrap()
@@ -326,11 +290,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 						InitMode::Dyn(_) => {
 							todo!("`dyn match arm`")
 						}
-						InitMode::Spread(_) => Part::parse_required_with_context(
-							input,
-							cx,
-							&mut BlockParentParameters,
-						)?,
+						InitMode::Spread(_) => Part::parse_required_with_context(input, cx)?,
 					}
 					.pipe(Box::new);
 					arms.push((attrs, pats, guard, fat_arrow, part))
@@ -355,7 +315,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 		{
 			if C::CAN_CAPTURE {
 				// Let bindings are phantom here: They never generate child nodes by themselves.
-				LetSelf::<C>::parse_with_context(input, cx, parent_parameter_parser)?;
+				LetSelf::<C>::parse_with_context(input, cx)?;
 				None
 			} else {
 				return Err(Error::new(
@@ -367,13 +327,9 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 			let content;
 			let bracket = bracketed!(content in input);
 
-			parent_parameter_parser.parse_any(input, cx)?;
-
 			let mut inner_parts = Vec::new();
 			while !content.is_empty() {
-				if let Some(inner_part) =
-					Part::<C>::parse_with_context(&content, cx, &mut BlockParentParameters)?
-				{
+				if let Some(inner_part) = Part::<C>::parse_with_context(&content, cx)? {
 					inner_parts.push(inner_part);
 				}
 			}
@@ -391,7 +347,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 				#let with
 				#let block
 			};
-			let part = Part::parse_with_context(input, cx, parent_parameter_parser)?.map(Box::new);
+			let part = Part::parse_with_context(input, cx)?.map(Box::new);
 			Some(Part::With(with, block, part))
 		} else {
 			return Err(Error::new(

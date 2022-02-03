@@ -1,4 +1,4 @@
-use super::{BlockParentParameters, GenerateContext, LetSelf, ParentParameterParser, Part};
+use super::{GenerateContext, LetSelf, Part};
 use crate::{
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
 	storage_context::{ParseContext, ParseWithContext},
@@ -23,11 +23,7 @@ pub struct BoxExpression<C: Configuration> {
 impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 	type Output = Self;
 
-	fn parse_with_context(
-		input: ParseStream<'_>,
-		cx: &mut ParseContext,
-		parent_parameter_parser: &mut dyn ParentParameterParser,
-	) -> Result<Self::Output> {
+	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let box_: Token![box] = input.parse()?;
 		let storage_configuration: StorageConfiguration = input.parse()?;
 
@@ -51,7 +47,6 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		let content = Box::new(Part::parse_required_with_context(
 			input,
 			&mut parse_context,
-			parent_parameter_parser,
 		)?);
 
 		let type_path =
@@ -67,7 +62,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			quote_spanned! {box_.span=>
 				let #visibility self.#field_name: ::std::pin::Pin<::std::boxed::Box<#type_path>> = ::std::boxed::Box::pin(#boxed_value);
 			},
-			|input| LetSelf::<C>::parse_with_context(input, cx, &mut BlockParentParameters),
+			|input| LetSelf::<C>::parse_with_context(input, cx, ),
 		)
 		.debugless_unwrap()
 		.expect("box expression let self");

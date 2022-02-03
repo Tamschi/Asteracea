@@ -1,4 +1,4 @@
-use super::{BlockParentParameters, GenerateContext, ParentParameterParser, Part, PartKind};
+use super::{GenerateContext, Part, PartKind};
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
@@ -113,11 +113,7 @@ pub(crate) struct HtmlDefinition<C: Configuration> {
 
 impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 	type Output = Self;
-	fn parse_with_context(
-		input: ParseStream<'_>,
-		cx: &mut ParseContext,
-		parent_parameter_parser: &mut dyn ParentParameterParser,
-	) -> Result<Self> {
+	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self> {
 		let lt = input.parse::<Token![<]>()?;
 		let name = if let Some(name @ LitStr { .. }) = input.parse().unwrap() {
 			if name.value().contains(' ') {
@@ -135,8 +131,6 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 				"Expected identifier or string literal (element name)",
 			));
 		};
-
-		parent_parameter_parser.parse_any(input, cx)?;
 
 		let attributes = {
 			let mut attributes = Vec::new();
@@ -174,7 +168,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 
 		let mut parts = Vec::new();
 		while !input.peek(Token![>]) && !input.peek(Token![/]) {
-			if let Some(part) = Part::parse_with_context(input, cx, &mut BlockParentParameters)? {
+			if let Some(part) = Part::parse_with_context(input, cx)? {
 				parts.push(part);
 			}
 		}
