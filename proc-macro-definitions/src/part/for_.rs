@@ -7,7 +7,7 @@ use crate::{
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
-use debugless_unwrap::{DebuglessUnwrap};
+use debugless_unwrap::DebuglessUnwrap;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 use syn::{

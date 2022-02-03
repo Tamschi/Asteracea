@@ -23,10 +23,10 @@ asteracea::component! {
 }
 
 asteracea::component! {
-	pub Attributed()() -> Sync
+  pub Attributed()() -> Sync
 
-	// TODO: Also support outer attributes again.
-	let self.a: u8 = #![allow(dead_code)] 0;
+  // TODO: Also support outer attributes again.
+  let self.a: u8 = #![allow(dead_code)] 0;
 
-	"Hello!"
-  }
+  "Hello!"
+}

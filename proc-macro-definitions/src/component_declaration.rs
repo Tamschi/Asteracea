@@ -11,7 +11,7 @@ use crate::{
 	warn, Configuration, MapMessage, Part,
 };
 use call2_for_syn::call2_strict;
-use debugless_unwrap::{DebuglessUnwrap as _};
+use debugless_unwrap::DebuglessUnwrap as _;
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use std::rc::Rc;
