@@ -16,7 +16,7 @@ use syn::{
 	spanned::Spanned,
 	token::{Brace, Eq, Paren, Question},
 	visit_mut::{visit_expr_mut, VisitMut},
-	Error, Expr, ExprPath, Ident, Pat, PatIdent, PatTuple, PatTupleStruct, Result, Token,
+	Error, Expr, ExprPath, Ident, Label, Pat, PatIdent, PatTuple, PatTupleStruct, Result, Token,
 	Visibility,
 };
 use syn_mid::Block;
@@ -58,19 +58,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				render_params.push(param)
 			}
 
-			let mut content_children = vec![];
-			while !input.peek(Token![>]) {
-				let span = input.span();
-				let parent_parameters = parse_parent_parameters(input)?;
-				let part = Part::<C>::parse_with_context(input, cx)?;
-				if let Some(part) = part {
-					content_children.push(ContentChild {
-						span,
-						parent_parameters,
-						part,
-					})
-				}
-			}
+			let content_children = parse_content_children(input, cx)?;
 
 			if input.peek(Token![>]) {
 				unquote!(input, >);
@@ -122,19 +110,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				render_params.push(input.parse()?)
 			}
 
-			let mut content_children = vec![];
-			while !input.peek(Token![/]) && !input.peek(Token![>]) {
-				let span = input.span();
-				let parent_parameters = parse_parent_parameters(input)?;
-				let part = Part::<C>::parse_with_context(input, cx)?;
-				if let Some(part) = part {
-					content_children.push(ContentChild {
-						span,
-						parent_parameters,
-						part,
-					})
-				}
-			}
+			let content_children = parse_content_children(input, cx)?;
 
 			if input.peek(Token![/]) {
 				let closing_name: Ident;
@@ -183,6 +159,25 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 		})
 		}
 	}
+}
+
+fn parse_content_children<C: Configuration>(
+	input: ParseStream,
+	cx: &mut ParseContext,
+) -> Result<Vec<ContentChild<C>>> {
+	let mut content_children = vec![];
+	while !input.peek(Token![/]) && !input.peek(Token![>]) {
+		content_children.push(ContentChild {
+			slot: input.parse()?,
+			parent_parameters: parse_parent_parameters(input)?,
+			part: loop {
+				if let Some(part) = Part::<C>::parse_with_context(input, cx)? {
+					break part;
+				}
+			},
+		})
+	}
+	Ok(content_children)
 }
 
 impl<C: Configuration> Component<C> {
@@ -499,14 +494,39 @@ fn parameter_struct_expression<C: Configuration, P: Spanned>(
 }
 
 pub struct ContentChild<C: Configuration> {
-	span: Span,
+	slot: Slot,
 	parent_parameters: Vec<Parameter<Token![->]>>,
 	part: Part<C>,
 }
 
+enum Slot {
+	Anonymous(Span),
+	Named(Label),
+}
+
+impl Parse for Slot {
+	fn parse(input: ParseStream) -> Result<Self> {
+		match input.parse()? {
+			Some(label) => Self::Named(label),
+			None => Self::Anonymous(input.span()),
+		}
+		.pipe(Ok)
+	}
+}
+
 impl<C: Configuration> ContentChild<C> {
 	fn parameter_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
-		let span = self.span.resolved_at(Span::mixed_site());
+		let (span, slot) = match &self.slot {
+			Slot::Anonymous(span) => {
+				let span = span.resolved_at(Span::mixed_site());
+				(span, Ident::new("__Asteracea__anonymous_content", span))
+			}
+			Slot::Named(label) => (
+				label.colon_token.span.resolved_at(Span::mixed_site()),
+				label.name.ident.clone(),
+			),
+		};
+
 		let asteracea = asteracea_ident(span);
 
 		let parent_parameter_tokens = parameter_struct_expression::<C, Token![->]>(
@@ -521,7 +541,7 @@ impl<C: Configuration> ContentChild<C> {
 		let bump = Ident::new("bump", span.resolved_at(Span::call_site()));
 		let bump_time = quote_spanned!(bump.span()=> 'bump);
 		quote_spanned! {span=>
-			.__Asteracea__anonymous_content((
+			.#slot((
 				{
 					// Many thanks to Yandros for help with the type inference here:
 					let phantom = [];
