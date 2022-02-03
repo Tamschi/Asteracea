@@ -47,11 +47,19 @@ asteracea::component! {
 }
 
 asteracea::component! {
-  pub Looped()() -> Sync
+  pub Split()() -> Sync
 
-  for c: &str in "This is a test.".split(' ') {[
+  for c in "This is a test.".split(' ') {[
 	  <li
 		!"{:?}"(c)
 	  > "\n"
   ]}
+}
+
+asteracea::component! {
+  pub Child()() -> Sync
+
+  for _ in 0..5 {
+	  <*ForImplicit>
+  }
 }
