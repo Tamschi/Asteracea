@@ -1,7 +1,9 @@
 use crate::error::Escalation;
+use core::hash::Hash;
 use core::mem;
 use linotype::{OwnedProjection, PinningOwnedProjection};
 use std::{
+	any::{Any, TypeId},
 	borrow::Borrow,
 	collections::hash_map::RandomState,
 	hash::{BuildHasher, Hasher},
@@ -16,7 +18,7 @@ use std::{
 /// >
 /// > Right now, a plain [`lignin::Node::Multi`] is generated, which means internal component state is affixed properly while external component state is not.
 /// > (The unbinding and binding functionality still runs appropriately, so this doesn't cause extremely severe issues, but it can lead to UX degradation in many cases.)
-pub struct For<'a, Storage, K = MixedKey, St = RandomState> {
+pub struct For<'a, Storage, K = BoxedAnyOneK, St = RandomState> {
 	build_hasher: St,
 	storage: Pin<OwnedProjection<K, Reorderable<Storage>>>,
 	factory: Box<dyn 'a + FnMut() -> Result<Storage, Escalation>>,
@@ -70,36 +72,92 @@ impl<'a, Storage, K, St> For<'a, Storage, K, St> {
 	}
 }
 
-pub struct MixedKey {
-	// variant: MixedKey_,
+pub struct BoxedAnyOneK {
+	// These are cached, so it's not TOO horrible, but it's still inefficient.
+	dynamic: Box<dyn DynamicReprojectionKey>,
 }
 
-impl ReprojectionKey for MixedKey {
-	fn to_dom_key(&self, _build_hasher: &impl BuildHasher) -> u32 {
-		todo!()
+/// # Safety
+///
+/// `.downcast_ref_(…)` must assert that the given [`TypeId`] is that of the target of the returned pointer.
+unsafe trait DynamicReprojectionKey: Any {
+	fn downcast_ref_(&self, type_id: TypeId) -> *const ();
+	fn hash(&self, state: &mut dyn Hasher);
+}
+impl dyn DynamicReprojectionKey {
+	fn downcast_ref<T: 'static>(&self) -> &T {
+		let ptr = self.downcast_ref_(TypeId::of::<T>()).cast::<T>();
+		unsafe { &*(ptr) }
 	}
 }
 
-// #[allow(incorrect_ident_case)]
-// enum MixedKey_ {
-// 	char(char),
-// 	i8(i8),
-// 	i16(i16),
-// 	i32(i32),
-// 	i64(i64),
-// 	i128(i128),
-// 	isize(isize),
-// 	u8(u8),
-// 	u16(u16),
-// 	u32(u32),
-// 	u64(u64),
-// 	u128(u128),
-// 	usize(usize),
-// 	f32(f32),
-// 	f64(f64),
-// 	bool(bool),
-// 	String(String),
-// }
+unsafe impl<T> DynamicReprojectionKey for T
+where
+	T: Any + Hash,
+{
+	fn downcast_ref_(&self, type_id: TypeId) -> *const () {
+		assert_eq!(type_id, TypeId::of::<Self>(), "Attempted to borrow `BoxedAnyOneK` as mismatching `InferredQ`: This construct is a workaround pending better type inference and doesn't support mixing stored key types.");
+		(self as *const Self).cast::<()>()
+	}
+
+	fn hash(&self, mut state: &mut dyn Hasher) {
+		Hash::hash(&self, &mut state)
+	}
+}
+
+impl<Q: ?Sized> Borrow<InferredQ<Q>> for BoxedAnyOneK
+where
+	Q: ToOwned,
+	Q::Owned: 'static,
+{
+	fn borrow(&self) -> &InferredQ<Q> {
+		let q = self
+			.dynamic
+			.downcast_ref::<<Q as ToOwned>::Owned>()
+			.borrow();
+		InferredQ::from_ref(q)
+	}
+}
+
+#[derive(PartialEq, Eq)]
+pub struct InferredQ<Q: ?Sized>(Q);
+
+impl<Q: ?Sized> InferredQ<Q> {
+	pub fn from_ref(q: &Q) -> &Self {
+		unsafe {
+			//SAFETY: `Self` is transparent towards `Q`.
+			&*(q as *const _ as *const _)
+		}
+	}
+}
+
+impl<Q: ?Sized> ToOwned for InferredQ<Q>
+where
+	Q: ToOwned,
+	Q::Owned: 'static + Hash,
+{
+	type Owned = BoxedAnyOneK;
+
+	fn to_owned(&self) -> Self::Owned {
+		BoxedAnyOneK {
+			dynamic: Box::new(self.0.to_owned()),
+		}
+	}
+}
+
+impl ReprojectionKey for BoxedAnyOneK {
+	// Not an exact science.
+	// There may be spurious GUI rebuilds,
+	// though no inconsistency except for very rare focus shifts and such,
+	// and only when the input sequence is really being changed.
+	#[allow(clippy::cast_possible_truncation)]
+	fn to_dom_key(&self, build_hasher: &impl BuildHasher) -> u32 {
+		let mut hasher = build_hasher.build_hasher();
+		self.dynamic.hash(&mut hasher);
+
+		hasher.finish() as u32
+	}
+}
 
 pub struct Reorderable<Storage> {
 	pub dom_key: u32,
@@ -107,6 +165,7 @@ pub struct Reorderable<Storage> {
 }
 
 impl<Storage> Reorderable<Storage> {
+	#[must_use]
 	pub fn storage(self: Pin<&Self>) -> Pin<&Storage> {
 		unsafe { self.map_unchecked(|this| &this.storage) }
 	}

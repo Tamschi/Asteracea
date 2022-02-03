@@ -1,10 +1,10 @@
-// asteracea::component! {
-// 	pub ForImplicit()() -> Sync
+asteracea::component! {
+	pub ForImplicit()() -> Sync
 
-// 	for i in [1, 2, 3, 4, 5] {
-//  	!"{}"(i)
-// 	}
-// }
+	for i in [1, 2, 3, 4, 5i32] {
+	 !"{}"(i)
+	}
+}
 
 asteracea::component! {
 	pub ForImplicitSelector()() -> Sync
@@ -38,13 +38,13 @@ asteracea::component! {
 	}
 }
 
-// asteracea::component! {
-// 	pub ForUntyped()() -> Sync
+asteracea::component! {
+	pub ForUntyped()() -> Sync
 
-// 	for i keyed i in [1, 2, 3, 4, 5] {
-// 		!"{}"(i)
-// 	}
-// }
+	for i keyed i in [1, 2, 3, 4, 5] {
+		!"{}"(i)
+	}
+}
 
 asteracea::component! {
   pub Looped()() -> Sync

@@ -6,9 +6,9 @@
 asteracea::component! {
   pub Looping()() -> Sync
 
-  for c: &str in "This is a test.".split(' ') {[
+  for word in "This is a test.".split(' ') {[
       <li
-        !"{:?}"(c)
+        !"{:?}"(word)
       > "\n"
   ]}
 }
@@ -45,8 +45,10 @@ asteracea::component! {
 
 where
 
+- `i` is the item pattern, used both for the loop body (by value) and the selector,
 - `: ⦃T⦄` determines the type of items in the sequence,
-- `keyed ⦃selector⦄` projects `&mut T` to `&Q` where `Q: Eq + ToOwned<Owned = K>` and
-- `=> ⦃K⦄` where `K: ReprojectionKey` determines the type of state keys cached internally.
+- `keyed ⦃selector⦄` projects `&mut T` to `&Q` where `Q: Eq + ToOwned<Owned = K>`,
+- `=> ⦃K⦄` where `K: ReprojectionKey` determines the type of state keys cached internally and
+- `0..255` is an [`IntoIterator`](https://doc.rust-lang.org/std/iter/trait.IntoIterator.html) to use as item source.
 
-Each of these parts is optional, but currently at least some are required for type resolution. This requirement is expected to disappear with [future Rust language improvements](https://github.com/rust-lang/rust/issues/63063).
+Each of these parts is optional, but currently it may be occasionally necessary to specify a type. **Specifying neither `T` nor `K` also means a loop will use somewhat less efficient dynamically typed stored keys that always incur a heap allocation when an item is added to the list.** Both most annotation requirements and relative inefficiency of unannotated loops is expected to disappear with [future Rust language improvements](https://github.com/rust-lang/rust/issues/63063).

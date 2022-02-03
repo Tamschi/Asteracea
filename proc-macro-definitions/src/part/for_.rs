@@ -218,20 +218,37 @@ impl<C: Configuration> For<C> {
 
 		let for_span_mixed_site = for_.span.resolved_at(Span::mixed_site());
 
-		let selector = if let Some((keyed, key)) = key {
-			quote_spanned! {keyed.span.resolved_at(Span::mixed_site())=>
-				|#pat| ::core::result::Result::Ok(#key)
+		let selector = match (type_, key, key_type) {
+			(None, Some((keyed, key)), None) => {
+				quote_spanned! {keyed.span.resolved_at(Span::mixed_site())=>
+					// There is really nothing to go on here. Use dynamically typed keys.
+					|#pat| ::core::result::Result::Ok(
+						::#asteracea::storage::for_::InferredQ::from_ref(#key)
+					)
+				}
 			}
-		} else if key_type.is_none() {
-			quote_spanned! {for_span_mixed_site=>
+			(None, None, None) => quote_spanned! {for_span_mixed_site=>
+				// There is really nothing to go on here. Use dynamically typed keys.
+				|item: &mut _| ::core::result::Result::Ok(
+					::#asteracea::storage::for_::InferredQ::from_ref(
+						::#asteracea::__::UnBorrow::one_borrow(item)
+					)
+				)
+			},
+			(_, Some((keyed, key)), _) => {
+				quote_spanned! {keyed.span.resolved_at(Span::mixed_site())=>
+					|#pat| ::core::result::Result::Ok(#key)
+				}
+			}
+			(Some(_), _, _) => quote_spanned! {for_span_mixed_site=>
+				// There is a key type, so infer/derive forwards towards Q:
 				|item: &mut _| ::core::result::Result::Ok(::#asteracea::__::UnBorrow::one_borrow(item))
-			}
-		} else {
-			//FIXME: This is necessary to resolve e.g. `for i => u8 in &[1, 2, 3, 4, 5]` "backwards",
-			// but is there a broader way to do that?
-			quote_spanned! {for_span_mixed_site=>
+			},
+			(None, _, Some(_)) => quote_spanned! {for_span_mixed_site=>
+				//Help Wanted: This is necessary to resolve e.g. `for i => u8 in &[1, 2, 3, 4, 5]` "backwards",
+				// but is there a broader way to do that?
 				|item: &mut _| ::core::result::Result::Ok(::core::ops::Deref::deref(item))
-			}
+			},
 		};
 
 		let generics = type_.as_ref().map(|(colon, type_)| {
