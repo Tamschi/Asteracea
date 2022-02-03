@@ -54,6 +54,7 @@ dependencies = [
  "lignin",
  "lignin-html",
  "lignin-schema",
+ "linotype",
  "rhizome",
  "static_assertions",
  "tap",
@@ -428,6 +429,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "higher-order-closure"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c450d87a307c754cbd7718dfca84b8904e313157191fae5b249d37aab216c89"
+
+[[package]]
 name = "html5ever"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -525,6 +532,18 @@ name = "line-col"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e69cdf6b85b5c8dce514f694089a2cf8b1a702f6cd28607bcb3cf296c9778db"
+
+[[package]]
+name = "linotype"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "265f5d4bcc8cd79556fb80b2a140dd477d2b01c9016d04ad9a315559d49a2e1e"
+dependencies = [
+ "higher-order-closure",
+ "scopeguard",
+ "tap",
+ "typed-arena",
+]
 
 [[package]]
 name = "lock_api"
@@ -1453,6 +1472,12 @@ name = "try-lazy-init"
 version = "0.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8da954976b3cfd8a4d73b3ebb573e4b0f4c92326e5c1366a1c7b11e1eb11745"
+
+[[package]]
+name = "typed-arena"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0685c84d5d54d1c26f7d3eb96cd41550adb97baed141a761cf335d3d33bcd0ae"
 
 [[package]]
 name = "typed-builder"

@@ -35,7 +35,7 @@
   - [`spread if {…} <…>`](./conditional_content/spread_if.md)
   - [`spread if …… else <…>`](./conditional_content/spread_if_else.md)
   - [`dyn if {…} ⟦as ⟦pub⟧ …⟦: ⟦enum⟧ …⟧⟧ ⟦dyn ⟦move⟧⟧ <…> ⟦else ⟦dyn ⟦move⟧⟧ <…>⟧`]()
-  - [`for … in <…> by <…> ⟦priv …⟦: ⟦struct⟧ …⟧⟧ <…> ⟦else <…>⟧`]()
+  - [`for`-loops](./conditional_content/for.md)
   - [`spread match { … } [ … ]`](./conditional_content/spread_match.md)
   - [`dyn match <…> [ … ]`]()
   - [`box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ <…>`](./conditional_content/box.md)
