@@ -68,7 +68,7 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		let node = quote_spanned!(defer.span=> node);
 		call2_strict(
 			quote_spanned! {defer.span.resolved_at(Span::mixed_site())=>
-				let #visibility self.#field_name = pin ::#asteracea::storage::Defer::<'static, #type_path>
+				let #visibility self.#field_name = pin ::#asteracea::include::Defer::<'static, #type_path>
 					::new(::std::boxed::Box::new({
 						#[allow(unused_variables)]
 						let #node = ::std::sync::Arc::clone(&#node);

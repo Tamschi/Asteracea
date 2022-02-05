@@ -121,8 +121,8 @@ impl<C: Configuration> ParseWithContext for For<C> {
 		.into_iter();
 		call2_strict(
 			quote_spanned! {for_.span.resolved_at(Span::mixed_site())=>
-				let #visibility self.#field_name = ::core::cell::RefCell::<::#asteracea::storage::For::<'static, #type_path#(, #k)*>>::new(
-					::#asteracea::storage::For::new({
+				let #visibility self.#field_name = ::core::cell::RefCell::<::#asteracea::include::For::<'static, #type_path#(, #k)*>>::new(
+					::#asteracea::include::For::new({
 						#[allow(unused_variables)]
 						let #node = ::std::sync::Arc::clone(&#node);
 						move || Ok(#manufactured_item_state)
@@ -209,14 +209,14 @@ impl<C: Configuration> For<C> {
 				quote_spanned! {keyed.span.resolved_at(Span::mixed_site())=>
 					// There is really nothing to go on here. Use dynamically typed keys.
 					|#pat| ::core::result::Result::Ok(
-						::#asteracea::storage::for_::InferredQ::from_ref(#key)
+						::#asteracea::include::for_::InferredQ::from_ref(#key)
 					)
 				}
 			}
 			(None, None, None) => quote_spanned! {for_span_mixed_site=>
 				// There is really nothing to go on here. Use dynamically typed keys.
 				|item: &mut _| ::core::result::Result::Ok(
-					::#asteracea::storage::for_::InferredQ::from_ref(
+					::#asteracea::include::for_::InferredQ::from_ref(
 						::#asteracea::__::UnBorrow::one_borrow(item)
 					)
 				)
