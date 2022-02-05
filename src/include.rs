@@ -5,9 +5,9 @@
 //!
 //! See the individual item documentation for which of Asteracea's grammar features requires which of them.
 
-mod defer;
 #[doc(hidden)]
 pub mod __for_;
+mod defer;
 
-pub use defer::Defer;
 pub use __for_::For;
+pub use defer::Defer;
