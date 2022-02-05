@@ -209,14 +209,14 @@ impl<C: Configuration> For<C> {
 				quote_spanned! {keyed.span.resolved_at(Span::mixed_site())=>
 					// There is really nothing to go on here. Use dynamically typed keys.
 					|#pat| ::core::result::Result::Ok(
-						::#asteracea::include::for_::InferredQ::from_ref(#key)
+						::#asteracea::include::__for_::InferredQ::from_ref(#key)
 					)
 				}
 			}
 			(None, None, None) => quote_spanned! {for_span_mixed_site=>
 				// There is really nothing to go on here. Use dynamically typed keys.
 				|item: &mut _| ::core::result::Result::Ok(
-					::#asteracea::include::for_::InferredQ::from_ref(
+					::#asteracea::include::__for_::InferredQ::from_ref(
 						::#asteracea::__::UnBorrow::one_borrow(item)
 					)
 				)

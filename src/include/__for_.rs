@@ -10,13 +10,6 @@ use std::{
 };
 
 /// Storage for [`for`](`For`) expressions.
-///
-/// > BUG:
-/// >
-/// > Instead of storing only Storage, this needs to also store a [`u32`] to set up a [`lignin::Node::Keyed`].
-/// >
-/// > Right now, a plain [`lignin::Node::Multi`] is generated, which means internal component state is affixed properly while external component state is not.
-/// > (The unbinding and binding functionality still runs appropriately, so this doesn't cause extremely severe issues, but it can lead to UX degradation in many cases.)
 pub struct For<'a, Storage, K = BoxedAnyOneK, St = RandomState> {
 	build_hasher: St,
 	storage: Pin<OwnedProjection<K, Reorderable<Storage>>>,

@@ -7,7 +7,7 @@
 
 mod defer;
 #[doc(hidden)]
-pub mod for_;
+pub mod __for_;
 
 pub use defer::Defer;
-pub use for_::For;
+pub use __for_::For;
