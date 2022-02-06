@@ -57,6 +57,7 @@ rhizome = { version = "0.0.1", features = ["macros"] } # public
 static_assertions = "1.1.0"
 typed-builder = "0.9.0" # semi-public
 tracing = { version = "0.1.29", optional = true, default-features = false }
+futures-core = "0.3.19"
 
 [dev-dependencies]
 cargo-husky = "1.5.0"
