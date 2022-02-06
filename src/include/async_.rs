@@ -1,26 +1,102 @@
 use super::render_callback::{RenderCallback, RenderMut, RenderOnce};
-use crate::error::Escalation;
-use crate::error::Result;
+use crate::error::{Caught, EscalateResult, Escalation, Result};
 use bumpalo::Bump;
 use futures_core::FusedFuture;
 use lignin::{Node, ThreadSafety};
 use std::{
+	any::Any,
 	cell::RefCell,
+	error::Error,
+	fmt,
+	fmt::{Display, Formatter},
 	future::Future,
 	ops::Deref,
+	panic::AssertUnwindSafe,
 	pin::Pin,
 	ptr::NonNull,
+	result::Result as stdResult,
 	sync::{
 		atomic::{AtomicUsize, Ordering},
-		Mutex, RwLock,
+		Mutex, RwLock, RwLockReadGuard,
 	},
 	task::{Context, Poll},
 };
 use tiptoe::{Arc, IntrusivelyCountable, TipToe};
 
+#[derive(Debug)]
+struct FailedPreviouslyError;
+impl Error for FailedPreviouslyError {}
+impl Display for FailedPreviouslyError {
+	fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+		f.write_str("`Async` had failed previously. Check earlier error.")
+	}
+}
+
+/// Storage type for asynchronously initialised Asteracea template expressions.
 pub struct Async<Storage, F = Box<dyn Future<Output = Result<Storage>>>> {
 	state: RwLock<AsyncState<Storage, F>>,
 	handle: RefCell<Option<Arc<UntypedHandle>>>,
+}
+impl<Storage: 'static, F: 'static + Future<Output = Result<Storage>>> Async<Storage, F> {
+	/// Creates a new instance of [`Async`] holding the given future.
+	pub fn new(future_storage: F) -> Self {
+		Self {
+			state: AsyncState::Pending(future_storage).into(),
+			handle: None.into(),
+		}
+	}
+
+	/// Borrows this [`Async`] to pass it as content child to another component,
+	/// along with the given render callback `on_done`.
+	#[must_use]
+	pub fn as_async_content<R: ?Sized + RenderCallback>(
+		self: Pin<&Self>,
+		on_done: Box<R>,
+	) -> AsyncContent<'_, R> {
+		AsyncContent {
+			async_: self,
+			on_done,
+		}
+	}
+
+	pub fn storage_pinned<'a>(self: Pin<&'a Self>) -> Result<Pin<StorageGuard<'a, Storage, F>>> {
+		let state = &self.get_ref().state;
+		let read = state.read().unwrap();
+		match &*read {
+			AsyncState::Pending(_) => panic!(
+				"Tried to get `asteracea::include::async::Async` storage before it was ready."
+			),
+			AsyncState::Ready(_) => return Ok(unsafe { Pin::new_unchecked(StorageGuard(read)) }),
+			AsyncState::Failed(escalation) => match escalation {
+				None => return Err(FailedPreviouslyError).escalate(),
+				// Drop and re-lock:
+				Some(_) => (),
+			},
+		}
+
+		match &mut *self.state.write().unwrap() {
+			AsyncState::Pending(_) | AsyncState::Ready(_) => unreachable!(),
+			AsyncState::Failed(caught) => {
+				if let Some(caught) = caught.take() {
+					Err(caught).escalate()
+				} else {
+					Err(FailedPreviouslyError).escalate()
+				}
+			}
+		}
+	}
+}
+
+pub struct StorageGuard<'a, Storage, F>(RwLockReadGuard<'a, AsyncState<Storage, F>>);
+impl<Storage, F> Deref for StorageGuard<'_, Storage, F> {
+	type Target = Storage;
+
+	fn deref(&self) -> &Self::Target {
+		match &*self.0 {
+			AsyncState::Ready(storage) => storage,
+			AsyncState::Pending(_) | AsyncState::Failed(_) => unreachable!(),
+		}
+	}
 }
 
 struct Dereferenceable<T: ?Sized>(NonNull<T>);
@@ -50,13 +126,13 @@ unsafe impl IntrusivelyCountable for UntypedHandle {
 enum AsyncState<Storage, F> {
 	Pending(F),
 	Ready(Storage),
-	Failed(Option<Escalation>),
+	Failed(Option<Caught<dyn Send + Any>>),
 }
 
 enum AsyncStateProjectedMut<'proj, Storage, F> {
 	Pending(Pin<&'proj mut F>),
 	Ready(Pin<&'proj mut Storage>),
-	Failed(&'proj mut Option<Escalation>),
+	Failed(&'proj mut Option<Caught<dyn Send + Any>>),
 }
 
 impl<Storage, F> AsyncState<Storage, F> {
@@ -73,6 +149,32 @@ impl<Storage, F> AsyncState<Storage, F> {
 	}
 }
 
+trait PollTranspose {
+	type Output;
+	fn transpose(self) -> Self::Output;
+}
+impl<T, E> PollTranspose for Poll<stdResult<T, E>> {
+	type Output = stdResult<Poll<T>, E>;
+
+	fn transpose(self) -> Self::Output {
+		Ok(match self {
+			Poll::Ready(ready) => Poll::Ready(ready?),
+			Poll::Pending => Poll::Pending,
+		})
+	}
+}
+impl<T, E> PollTranspose for stdResult<Poll<T>, E> {
+	type Output = Poll<stdResult<T, E>>;
+
+	fn transpose(self) -> Self::Output {
+		match self {
+			Ok(Poll::Ready(ok)) => Poll::Ready(Ok(ok)),
+			Ok(Poll::Pending) => Poll::Pending,
+			Err(error) => Poll::Ready(Err(error)),
+		}
+	}
+}
+
 impl<Storage, F: Future<Output = Result<Storage>>> AsyncState_ for RwLock<AsyncState<Storage, F>> {
 	fn poll(self: Pin<&Self>, cx: &mut Context<'_>) -> Poll<()> {
 		let mut write = match self.write() {
@@ -85,10 +187,18 @@ impl<Storage, F: Future<Output = Result<Storage>>> AsyncState_ for RwLock<AsyncS
 		};
 
 		let result = match unsafe { Pin::new_unchecked(&mut *write) }.project_mut() {
-			AsyncStateProjectedMut::Pending(future) => match future.poll(cx) {
-				Poll::Ready(ready) => ready,
-				Poll::Pending => return Poll::Pending,
-			},
+			AsyncStateProjectedMut::Pending(future) => {
+				match Escalation::catch_any(AssertUnwindSafe(
+					//UNWIND-SAFETY:
+					// The future is dropped a bit below, before it can be interacted with again.
+					|| future.poll(cx).transpose(),
+				))
+				.transpose()
+				{
+					Poll::Ready(result) => result,
+					Poll::Pending => return Poll::Pending,
+				}
+			}
 
 			// Similarly here, we don't need to care how it completed, just *that* it completed.
 			// (Any `Escalation` is re-thrown during rendering.)
@@ -220,13 +330,13 @@ impl<'a, R: ?Sized + RenderCallback> AsyncContent<'a, R> {
 
 impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderOnce<'_, 'bump, S>> {
 	fn render(self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
-		todo!()
+		self.async_.is_done().then(|| (self.on_done)(bump))
 	}
 }
 
 impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderMut<'_, 'bump, S>> {
 	fn render(&mut self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
-		todo!()
+		self.async_.is_done().then(|| (self.on_done)(bump))
 	}
 }
 
@@ -257,6 +367,32 @@ impl Future for ContentFuture {
 	type Output = ();
 
 	fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-		todo!()
+		let handle = &*self.0;
+
+		// It *may* be a good idea to make sure this happens before trying to take the lock.
+		if handle.subscribers.load(Ordering::Acquire) == 0 {
+			return Poll::Ready(());
+		}
+
+		match &*handle.state.lock().unwrap() {
+			None => Poll::Ready(()),
+			Some(state) => state.as_ref().poll(cx),
+		}
+	}
+}
+
+impl FusedFuture for ContentFuture {
+	fn is_terminated(&self) -> bool {
+		let handle = &*self.0;
+
+		// It *may* be a good idea to make sure this happens before trying to take the lock.
+		if handle.subscribers.load(Ordering::Acquire) == 0 {
+			return true;
+		}
+
+		match &*handle.state.lock().unwrap() {
+			None => true,
+			Some(state) => state.as_ref().is_done(),
+		}
 	}
 }

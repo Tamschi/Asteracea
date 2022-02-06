@@ -5,11 +5,11 @@
 //!
 //! See the individual item documentation for which of Asteracea's grammar features requires which of them.
 
-pub mod async_;
-mod defer;
 #[doc(hidden)]
 pub mod __for_;
+pub mod async_;
+mod defer;
 pub mod render_callback;
 
-pub use defer::Defer;
 pub use __for_::For;
+pub use defer::Defer;
