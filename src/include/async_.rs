@@ -1,55 +1,81 @@
+use super::render_callback::{RenderCallback, RenderMut, RenderOnce};
+use crate::error::Escalation;
+use crate::error::Result;
+use bumpalo::Bump;
+use futures_core::FusedFuture;
+use lignin::{Node, ThreadSafety};
 use std::{
+	cell::RefCell,
 	future::Future,
+	ops::Deref,
 	pin::Pin,
-	sync::{Arc, Mutex, RwLock, Weak},
+	ptr::NonNull,
+	sync::{
+		atomic::{AtomicUsize, Ordering},
+		Mutex, RwLock,
+	},
 	task::{Context, Poll},
 };
+use tiptoe::{Arc, IntrusivelyCountable, TipToe};
 
-use futures_core::FusedFuture;
-
-use crate::error::Escalation;
-
-pub struct Async<'a, Storage, F = Box<dyn Future<Output = Result<Storage, Escalation>>>> {
-	state: RwLock<AsyncState<'a, Storage, F>>,
+pub struct Async<Storage, F = Box<dyn Future<Output = Result<Storage>>>> {
+	state: RwLock<AsyncState<Storage, F>>,
+	handle: RefCell<Option<Arc<UntypedHandle>>>,
 }
 
-type TypedHandle<'a, Storage, F> = Mutex<Option<Pin<&'a Async<'a, Storage, F>>>>;
-type UntypedHandle<'a> = Mutex<Option<Pin<&'a dyn Async_>>>;
+struct Dereferenceable<T: ?Sized>(NonNull<T>);
+impl<T: ?Sized> Deref for Dereferenceable<T> {
+	type Target = T;
 
-enum AsyncState<'a, Storage, F> {
-	Pending {
-		future: F,
-		handle: Option<Arc<TypedHandle<'a, Storage, F>>>,
-	},
+	fn deref(&self) -> &Self::Target {
+		unsafe { self.0.as_ref() }
+	}
+}
+
+struct UntypedHandle {
+	counter: TipToe,
+	/// Not actually static but always dereferenceable.
+	state: Mutex<Option<Pin<Dereferenceable<dyn AsyncState_>>>>,
+	subscribers: AtomicUsize,
+}
+
+unsafe impl IntrusivelyCountable for UntypedHandle {
+	type RefCounter = TipToe;
+
+	fn ref_counter(&self) -> &Self::RefCounter {
+		&self.counter
+	}
+}
+
+enum AsyncState<Storage, F> {
+	Pending(F),
 	Ready(Storage),
 	Failed(Option<Escalation>),
 }
 
-enum AsyncState_<'a, 'proj, Storage, F> {
-	Pending {
-		future: Pin<&'proj mut F>,
-		handle: &'proj Option<Arc<TypedHandle<'a, Storage, F>>>,
-	},
+enum AsyncStateProjectedMut<'proj, Storage, F> {
+	Pending(Pin<&'proj mut F>),
 	Ready(Pin<&'proj mut Storage>),
 	Failed(&'proj mut Option<Escalation>),
 }
 
-impl<'a, Storage, F> AsyncState<'a, Storage, F> {
-	fn project_mut(self: Pin<&mut Self>) -> AsyncState_<'a, '_, Storage, F> {
+impl<Storage, F> AsyncState<Storage, F> {
+	fn project_mut(self: Pin<&mut Self>) -> AsyncStateProjectedMut<'_, Storage, F> {
 		match unsafe { Pin::into_inner_unchecked(self) } {
-			AsyncState::Pending { future, handle } => AsyncState_::Pending {
-				future: unsafe { Pin::new_unchecked(future) },
-				handle,
-			},
-			AsyncState::Ready(ready) => AsyncState_::Ready(unsafe { Pin::new_unchecked(ready) }),
-			AsyncState::Failed(failed) => AsyncState_::Failed(failed),
+			AsyncState::Pending(future) => {
+				AsyncStateProjectedMut::Pending(unsafe { Pin::new_unchecked(future) })
+			}
+			AsyncState::Ready(ready) => {
+				AsyncStateProjectedMut::Ready(unsafe { Pin::new_unchecked(ready) })
+			}
+			AsyncState::Failed(failed) => AsyncStateProjectedMut::Failed(failed),
 		}
 	}
 }
 
-impl<Storage, F: Future<Output = Result<Storage, Escalation>>> Async_ for Async<'_, Storage, F> {
+impl<Storage, F: Future<Output = Result<Storage>>> AsyncState_ for RwLock<AsyncState<Storage, F>> {
 	fn poll(self: Pin<&Self>, cx: &mut Context<'_>) -> Poll<()> {
-		let write = match self.state.write() {
+		let mut write = match self.write() {
 			Ok(write) => write,
 
 			// The untyped future here is purely to run evaluation,
@@ -59,14 +85,16 @@ impl<Storage, F: Future<Output = Result<Storage, Escalation>>> Async_ for Async<
 		};
 
 		let result = match unsafe { Pin::new_unchecked(&mut *write) }.project_mut() {
-			AsyncState_::Pending { future, handle } => match future.poll(cx) {
+			AsyncStateProjectedMut::Pending(future) => match future.poll(cx) {
 				Poll::Ready(ready) => ready,
 				Poll::Pending => return Poll::Pending,
 			},
 
 			// Similarly here, we don't need to care how it completed, just *that* it completed.
 			// (Any `Escalation` is re-thrown during rendering.)
-			AsyncState_::Ready(_) | AsyncState_::Failed(_) => return Poll::Ready(()),
+			AsyncStateProjectedMut::Ready(_) | AsyncStateProjectedMut::Failed(_) => {
+				return Poll::Ready(())
+			}
 		};
 
 		*write = match result {
@@ -75,21 +103,74 @@ impl<Storage, F: Future<Output = Result<Storage, Escalation>>> Async_ for Async<
 		};
 		Poll::Ready(())
 	}
-}
 
-impl<'a, Storage, F: Future<Output = Result<Storage, Escalation>>> Future
-	for Async<'a, Storage, F>
-{
-	type Output = ();
-
-	fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-		Async_::poll(self.into_ref(), cx)
+	fn is_done(&self) -> bool {
+		match &*self.read().unwrap() {
+			AsyncState::Pending(_) => false,
+			AsyncState::Ready(_) | AsyncState::Failed(_) => true,
+		}
 	}
 }
 
-impl<Storage, F: Future<Output = Result<Storage, Escalation>>> FusedFuture
-	for Async<'_, Storage, F>
-{
+impl<Storage: 'static, F: 'static + Future<Output = Result<Storage>>> Async_ for Async<Storage, F> {
+	fn synchronize(
+		self: Pin<&Self>,
+		anchor: &mut Option<AsyncContentSubscription>,
+	) -> Option<ContentFuture> {
+		let mut handle = self.handle.borrow_mut();
+		let handle = match &*self.state.read().unwrap() {
+			AsyncState::Pending(_) => Some(handle.get_or_insert_with(|| {
+				Arc::new(UntypedHandle {
+					counter: TipToe::new(),
+					state: Mutex::new(Some(unsafe {
+						Pin::new_unchecked(Dereferenceable(NonNull::new_unchecked(
+							&self.state as *const _ as *mut RwLock<AsyncState<Storage, F>>
+								as *mut _,
+						)))
+					})),
+					subscribers: 0.into(),
+				})
+			})),
+			AsyncState::Ready(_) | AsyncState::Failed(_) => {
+				drop(handle.take());
+				None
+			}
+		};
+
+		match (handle, anchor) {
+			(None, None) => None,
+			(None, anchor @ Some(_)) => {
+				drop(anchor.take());
+				None
+			}
+			(Some(a), Some(b)) if Arc::ptr_eq(a, &b.0) => None,
+			(Some(handle), anchor) => {
+				*anchor = Some(AsyncContentSubscription::new(Arc::clone(handle)));
+				Some(ContentFuture(Arc::clone(handle)))
+			}
+		}
+	}
+
+	fn is_done(&self) -> bool {
+		match &*self.state.read().unwrap() {
+			AsyncState::Pending(_) => false,
+			AsyncState::Ready(_) | AsyncState::Failed(_) => true,
+		}
+	}
+}
+
+impl<'a, Storage, F: Future<Output = Result<Storage>>> Future for Async<Storage, F> {
+	type Output = ();
+
+	fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+		AsyncState_::poll(
+			unsafe { self.into_ref().map_unchecked(|this| &this.state) },
+			cx,
+		)
+	}
+}
+
+impl<Storage, F: Future<Output = Result<Storage>>> FusedFuture for Async<Storage, F> {
 	fn is_terminated(&self) -> bool {
 		let read = match self.state.read() {
 			Ok(read) => read,
@@ -103,19 +184,66 @@ impl<Storage, F: Future<Output = Result<Storage, Escalation>>> FusedFuture
 }
 
 trait Async_ {
-	fn poll(self: Pin<&Self>, cx: &mut Context<'_>) -> Poll<()>;
+	fn synchronize(
+		self: Pin<&Self>,
+		anchor: &mut Option<AsyncContentSubscription>,
+	) -> Option<ContentFuture>;
+	fn is_done(&self) -> bool;
 }
 
-impl Future for Pin<&dyn Async_> {
+trait AsyncState_ {
+	fn poll(self: Pin<&Self>, cx: &mut Context<'_>) -> Poll<()>;
+	fn is_done(&self) -> bool;
+}
+
+impl Future for Pin<&dyn AsyncState_> {
 	type Output = ();
 
 	fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-		Async_::poll(*self, cx)
+		AsyncState_::poll(*self, cx)
 	}
 }
 
-pub trait AsyncContent {
-	fn synchronize(&mut self, anchor: &mut Option<AsyncContentAnchor>) -> Synchronized {}
+pub struct AsyncContent<'a, R: ?Sized + RenderCallback> {
+	async_: Pin<&'a dyn Async_>,
+	on_done: Box<R>,
+}
+
+impl<'a, R: ?Sized + RenderCallback> AsyncContent<'a, R> {
+	fn synchronize(&mut self, anchor: &mut Option<AsyncContentSubscription>) -> Synchronized {
+		match self.async_.synchronize(anchor) {
+			Some(future) => Synchronized::Reset(future),
+			None => Synchronized::Unchanged,
+		}
+	}
+}
+
+impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderOnce<'_, 'bump, S>> {
+	fn render(self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
+		todo!()
+	}
+}
+
+impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderMut<'_, 'bump, S>> {
+	fn render(&mut self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
+		todo!()
+	}
+}
+
+struct AsyncContentSubscription(Arc<UntypedHandle>);
+
+impl AsyncContentSubscription {
+	fn new(arc: Arc<UntypedHandle>) -> Self {
+		arc.subscribers.fetch_add(1, Ordering::Relaxed);
+		Self(arc)
+	}
+}
+
+impl Drop for AsyncContentSubscription {
+	fn drop(&mut self) {
+		// This is simply a cancellation, so there's no data dependency here.
+		self.0.subscribers.fetch_sub(1, Ordering::Relaxed);
+	}
 }
 
 pub enum Synchronized {
@@ -123,9 +251,7 @@ pub enum Synchronized {
 	Reset(ContentFuture),
 }
 
-pub struct ContentFuture {
-	weak: Weak<Handle>,
-}
+pub struct ContentFuture(Arc<UntypedHandle>);
 
 impl Future for ContentFuture {
 	type Output = ();

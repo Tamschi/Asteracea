@@ -2,7 +2,7 @@
 
 use crate::error::Result;
 use bumpalo::Bump;
-use lignin::Node;
+use lignin::{Node, ThreadSafety};
 
 /// A render callback that can be called at most once.
 ///
@@ -13,3 +13,22 @@ pub type RenderOnce<'a, 'bump, S> = dyn 'a + FnOnce(&'bump Bump) -> Result<Node<
 ///
 /// Inherits an `S` is [`ThreadSafety`] constraint.
 pub type RenderMut<'a, 'bump, S> = dyn 'a + FnMut(&'bump Bump) -> Result<Node<'bump, S>>;
+
+mod sealed {
+	use lignin::ThreadSafety;
+
+	use super::{RenderMut, RenderOnce};
+
+	pub trait Sealed {}
+	impl<S: ThreadSafety> Sealed for RenderOnce<'_, '_, S> {}
+	impl<S: ThreadSafety> Sealed for RenderMut<'_, '_, S> {}
+}
+use sealed::Sealed;
+
+/// An unspecific thread render callback.
+///
+/// This is mainly used to constrain meta implementations in this crate *as a hint* and shouldn't be minded by component implementations
+/// (which should expect [`RenderOnce`] or [`RenderMut`] directly instead).
+pub trait RenderCallback: Sealed {}
+impl<'bump, S: ThreadSafety> RenderCallback for RenderOnce<'_, 'bump, S> {}
+impl<'bump, S: ThreadSafety> RenderCallback for RenderMut<'_, 'bump, S> {}
