@@ -7,8 +7,8 @@
 
 #[doc(hidden)]
 pub mod __for_;
-pub mod render_callback;
 mod defer;
+pub mod render_callback;
 
 pub use __for_::For;
 pub use defer::Defer;
