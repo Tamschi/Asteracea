@@ -1,3 +1,7 @@
+//! Supporting implementation for `async` expressions in Asteracea templates.
+//! 
+//! TODO: Does the [`Future`] still need some kind of multi-dispatch-wrapper?
+
 use super::render_callback::{RenderCallback, RenderMut, RenderOnce};
 use crate::error::{Caught, EscalateResult, Escalation, Result};
 use bumpalo::Bump;
@@ -87,6 +91,7 @@ impl<Storage: 'static, F: 'static + Future<Output = Result<Storage>>> Async<Stor
 	}
 }
 
+/// Holds a reference to Asteracea expression storage for an [`Async`] that is ready.
 pub struct StorageGuard<'a, Storage, F>(RwLockReadGuard<'a, AsyncState<Storage, F>>);
 impl<Storage, F> Deref for StorageGuard<'_, Storage, F> {
 	type Target = Storage;
@@ -314,6 +319,7 @@ impl Future for Pin<&dyn AsyncState_> {
 	}
 }
 
+/// Analogous to a [`RenderCallback`] passed as part of a content child argument.
 pub struct AsyncContent<'a, R: ?Sized + RenderCallback> {
 	async_: Pin<&'a dyn Async_>,
 	on_done: Box<R>,
@@ -340,6 +346,7 @@ impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderMut<'_, 'bump, S>> {
 	}
 }
 
+/// Iff all of these are dropped, then the respective [`ContentFuture`]s are cancelled.
 struct AsyncContentSubscription(Arc<UntypedHandle>);
 
 impl AsyncContentSubscription {
@@ -356,10 +363,15 @@ impl Drop for AsyncContentSubscription {
 	}
 }
 
+/// May hold a new [`ContentFuture`] to schedule.
+#[must_use = "Asynchronous content children are only evaluated by polling their associated `ContentFuture`."]
 pub enum Synchronized {
 	Unchanged,
 	Reset(ContentFuture),
 }
+
+/// Schedule to evaluate an async content child.
+/// ('static + [`Unpin`] + [`Future`] + [`FusedFuture`])
 
 pub struct ContentFuture(Arc<UntypedHandle>);
 
