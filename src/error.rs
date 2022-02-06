@@ -8,8 +8,12 @@ use std::{
 	error::Error,
 	fmt::{self, Debug, Display, Formatter},
 	panic::{catch_unwind, panic_any, resume_unwind, UnwindSafe},
+	result::Result as stdResult,
 	writeln,
 };
+
+/// [`Result`](`core::result::Result`) shorthand for Asteracea-components.
+pub type Result<T> = stdResult<T, Escalation>;
 
 /// An error propagated along the component tree.
 ///
@@ -163,8 +167,8 @@ pub trait EscalateResult {
 	/// Converts a compatible [`Result`] into one that may have been escalated by the call.
 	fn escalate(self) -> Self::Output;
 }
-impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
-	type Output = Result<Ok, E::Output>;
+impl<Ok, E: Escalate> EscalateResult for stdResult<Ok, E> {
+	type Output = stdResult<Ok, E::Output>;
 
 	fn escalate(self) -> Self::Output {
 		self.map_err(|e| e.escalate())
@@ -251,9 +255,9 @@ impl Escalation {
 	/// # Errors
 	///
 	/// Iff an [`Escalation`] is caught, it is returned in the [`Err`] variant.
-	pub fn catch_any<F, T>(f: F) -> Result<T, Caught<dyn Send + Any>>
+	pub fn catch_any<F, T>(f: F) -> stdResult<T, Caught<dyn Send + Any>>
 	where
-		F: UnwindSafe + FnOnce() -> Result<T, Escalation>,
+		F: UnwindSafe + FnOnce() -> Result<T>,
 	{
 		#[allow(clippy::match_same_arms)]
 		match catch_unwind(f) {
@@ -288,9 +292,9 @@ impl Escalation {
 	/// # Errors
 	///
 	/// Iff a [`Escalation`] or panic is caught and successfully downcast to `E`, it is returned in the [`Err`] variant.
-	pub fn catch<F, T, E: Error>(f: F) -> Result<Result<T, Escalation>, Caught<E>>
+	pub fn catch<F, T, E: Error>(f: F) -> stdResult<Result<T>, Caught<E>>
 	where
-		F: UnwindSafe + FnOnce() -> Result<T, Escalation>,
+		F: UnwindSafe + FnOnce() -> Result<T>,
 		E: 'static,
 	{
 		let (thrown, was_panic) = match catch_unwind(f) {

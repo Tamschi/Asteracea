@@ -9,6 +9,7 @@ pub mod async_;
 mod defer;
 #[doc(hidden)]
 pub mod __for_;
+pub mod render_callback;
 
 pub use defer::Defer;
 pub use __for_::For;

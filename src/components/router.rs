@@ -2,12 +2,14 @@
 
 use crate::{
 	error::Escalation,
+	error::Result,
+	include::render_callback::RenderOnce,
 	__::{tracing::debug_span, Built},
 };
 use ::std::pin::Pin;
 use bumpalo::Bump;
-use lignin::{Node, ThreadSafe};
-use std::{any::type_name, cell::Cell, sync::Arc};
+use lignin::{Node, ThreadSafe, ThreadSafety};
+use std::{any::type_name, cell::Cell, marker::PhantomData, sync::Arc};
 use typed_builder::TypedBuilder;
 
 // A simple page router.
@@ -19,20 +21,20 @@ const _: () = {
 		pub fn new(
 			_parent_node: &Arc<rhizome::Node>,
 			RouterNewArgs {}: RouterNewArgs,
-		) -> Result<Self, Escalation> {
+		) -> Result<Self> {
 			let _span = debug_span!("Router::new").entered();
 			Ok(Self)
 		}
 
-		pub fn render<'bump>(
+		pub fn render<'bump, S: ThreadSafety>(
 			self: Pin<&Self>,
 			bump: &'bump Bump,
 			RouterRenderArgs {
 				__Asteracea__anonymous_content,
 				path,
 				rest,
-			}: RouterRenderArgs<'_, 'bump>,
-		) -> Result<Node<'bump, ThreadSafe>, Escalation> {
+			}: RouterRenderArgs<'_, 'bump, S>,
+		) -> Result<Node<'bump, S>> {
 			let _span = debug_span!("Router::render", path).entered();
 			for route in __Asteracea__anonymous_content {
 				let (RouterParentParameters { paths }, render_content) = route;
@@ -65,8 +67,8 @@ const _: () = {
 			RouterNewArgs::builder()
 		}
 
-		pub fn render_args_builder<'RENDER, 'bump: 'RENDER>(
-		) -> RouterRenderArgsBuilder<'RENDER, 'bump> {
+		pub fn render_args_builder<'RENDER, 'bump: 'RENDER, S: ThreadSafety>(
+		) -> RouterRenderArgsBuilder<'RENDER, 'bump, S> {
 			RouterRenderArgsBuilder {
 				rest: None,
 				__Asteracea__anonymous_content: vec![],
@@ -77,17 +79,17 @@ const _: () = {
 	#[derive(TypedBuilder)]
 	pub struct RouterNewArgs {}
 
-	pub struct RouterRenderArgsBuilder<'RENDER, 'bump: 'RENDER> {
+	pub struct RouterRenderArgsBuilder<'RENDER, 'bump: 'RENDER, S: ThreadSafety> {
 		/// FIXME: Should statically work only once.
 		rest: Option<&'RENDER Cell<&'bump str>>,
 		__Asteracea__anonymous_content: Vec<(
 			RouterParentParameters<'RENDER>,
-			Box<dyn 'RENDER + FnOnce(&'bump Bump) -> Result<Node<'bump, ThreadSafe>, Escalation>>,
+			Box<RenderOnce<'RENDER, 'bump, S>>,
 		)>,
 	}
 
-	impl<'RENDER, 'bump: 'RENDER> RouterRenderArgsBuilder<'RENDER, 'bump> {
-		pub fn path(self, path: &'bump str) -> RouterRenderArgs<'RENDER, 'bump> {
+	impl<'RENDER, 'bump: 'RENDER, S: ThreadSafety> RouterRenderArgsBuilder<'RENDER, 'bump, S> {
+		pub fn path(self, path: &'bump str) -> RouterRenderArgs<'RENDER, 'bump, S> {
 			let Self {
 				rest,
 				__Asteracea__anonymous_content,
@@ -112,10 +114,7 @@ const _: () = {
 			mut self,
 			route: (
 				RouterParentParameters<'RENDER>,
-				Box<
-					dyn 'RENDER
-						+ FnOnce(&'bump Bump) -> Result<Node<'bump, ThreadSafe>, Escalation>,
-				>,
+				Box<RenderOnce<'RENDER, 'bump, S>>,
 			),
 		) -> Self {
 			self.__Asteracea__anonymous_content.push(route);
@@ -123,17 +122,17 @@ const _: () = {
 		}
 	}
 
-	pub struct RouterRenderArgs<'RENDER, 'bump: 'RENDER> {
+	pub struct RouterRenderArgs<'RENDER, 'bump: 'RENDER, S: ThreadSafety> {
 		//FIXME: Should be statically required.
 		path: &'bump str,
 		rest: Option<&'RENDER Cell<&'bump str>>,
 		__Asteracea__anonymous_content: Vec<(
 			RouterParentParameters<'RENDER>,
-			Box<dyn 'RENDER + FnOnce(&'bump Bump) -> Result<Node<'bump, ThreadSafe>, Escalation>>,
+			Box<RenderOnce<'RENDER, 'bump, S>>,
 		)>,
 	}
 
-	impl<'RENDER, 'bump: 'RENDER> RouterRenderArgs<'RENDER, 'bump> {
+	impl<'RENDER, 'bump: 'RENDER, S: ThreadSafety> RouterRenderArgs<'RENDER, 'bump, S> {
 		pub fn build(self) -> Self {
 			self
 		}
@@ -151,10 +150,7 @@ const _: () = {
 			mut self,
 			route: (
 				RouterParentParameters<'RENDER>,
-				Box<
-					dyn 'RENDER
-						+ FnOnce(&'bump Bump) -> Result<Node<'bump, ThreadSafe>, Escalation>,
-				>,
+				Box<RenderOnce<'RENDER, 'bump, S>>,
 			),
 		) -> Self {
 			self.__Asteracea__anonymous_content.push(route);
