@@ -1,5 +1,5 @@
 //! Supporting implementation for `async` expressions in Asteracea templates.
-//! 
+//!
 //! TODO: Does the [`Future`] still need some kind of multi-dispatch-wrapper?
 
 use super::render_callback::{RenderCallback, RenderMut, RenderOnce};
@@ -326,7 +326,7 @@ pub struct AsyncContent<'a, R: ?Sized + RenderCallback> {
 }
 
 impl<'a, R: ?Sized + RenderCallback> AsyncContent<'a, R> {
-	fn synchronize(&mut self, anchor: &mut Option<AsyncContentSubscription>) -> Synchronized {
+	pub fn synchronize(&mut self, anchor: &mut Option<AsyncContentSubscription>) -> Synchronized {
 		match self.async_.synchronize(anchor) {
 			Some(future) => Synchronized::Reset(future),
 			None => Synchronized::Unchanged,
@@ -347,7 +347,7 @@ impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderMut<'_, 'bump, S>> {
 }
 
 /// Iff all of these are dropped, then the respective [`ContentFuture`]s are cancelled.
-struct AsyncContentSubscription(Arc<UntypedHandle>);
+pub struct AsyncContentSubscription(Arc<UntypedHandle>);
 
 impl AsyncContentSubscription {
 	fn new(arc: Arc<UntypedHandle>) -> Self {
