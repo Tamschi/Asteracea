@@ -40,6 +40,7 @@ mod kw {
 pub struct ComponentDeclaration {
 	attributes: Vec<Attribute>,
 	visibility: Visibility,
+	async_: Option<Token![async]>,
 	name: Ident,
 	component_generics: Generics,
 	storage_context: StorageContext,
@@ -86,6 +87,7 @@ impl Parse for ComponentDeclaration {
 	fn parse(input: ParseStream<'_>) -> Result<Self> {
 		let attributes = input.call(Attribute::parse_outer)?;
 		let visibility = input.parse()?;
+		let async_ = input.parse().expect("infallible");
 
 		let component_name: Ident = input
 			.parse()
@@ -303,6 +305,7 @@ impl Parse for ComponentDeclaration {
 			attributes,
 			storage_context,
 			visibility,
+			async_,
 			name: component_name,
 			component_generics,
 			constructor_attributes,
@@ -351,6 +354,7 @@ impl ComponentDeclaration {
 		let Self {
 			attributes,
 			visibility,
+			async_,
 			name: component_name,
 			mut storage_context,
 			component_generics,
@@ -653,7 +657,7 @@ impl ComponentDeclaration {
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
 				#(#constructor_attributes)*
-				pub fn #new#new_generics(
+				pub #async_ fn #new#new_generics(
 					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
 					args: #new_args_name#new_args_generic_args,
 				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
