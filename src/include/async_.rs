@@ -91,6 +91,14 @@ impl<Storage: 'static, F: 'static + Future<Output = Result<Storage>>> Async<Stor
 	}
 }
 
+impl<Storage, F> Drop for Async<Storage, F> {
+	fn drop(&mut self) {
+		if let Some(handle) = self.handle.get_mut() {
+			*handle.state.lock().unwrap() = None
+		}
+	}
+}
+
 /// Holds a reference to Asteracea expression storage for an [`Async`] that is ready.
 pub struct StorageGuard<'a, Storage, F>(RwLockReadGuard<'a, AsyncState<Storage, F>>);
 impl<Storage, F> Deref for StorageGuard<'_, Storage, F> {
