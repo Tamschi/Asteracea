@@ -62,7 +62,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 			quote_spanned! {box_.span=>
 				let #visibility self.#field_name: ::std::pin::Pin<::std::boxed::Box<#type_path>> = ::std::boxed::Box::pin(#boxed_value);
 			},
-			|input| LetSelf::<C>::parse_with_context(input, cx, ),
+			|input| LetSelf::<C>::parse_with_context(input, cx),
 		)
 		.debugless_unwrap()
 		.expect("box expression let self");

@@ -161,7 +161,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 					quote_spanned! {open_span=>
 						let #visibility self.#field_name = pin #path::new(&node, #new_params)#dot_await?;
 					},
-					|input| LetSelf::<C>::parse_with_context(input, cx, ),
+					|input| LetSelf::<C>::parse_with_context(input, cx),
 				)
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?,

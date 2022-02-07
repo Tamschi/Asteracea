@@ -75,7 +75,7 @@ impl<C: Configuration> ParseWithContext for Bind<C> {
 				let #visibility self.#field_name = pin ::#asteracea::try_lazy_init::LazyTransform::<::std::sync::Arc<::#asteracea::rhizome::Node>, #type_path>
 					::new(::std::sync::Arc::clone(&#node));
 			},
-			|input| LetSelf::<C>::parse_with_context(input, cx, ),
+			|input| LetSelf::<C>::parse_with_context(input, cx),
 		)
 		.debugless_unwrap()
 		.expect("bind storage let self");
