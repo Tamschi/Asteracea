@@ -78,8 +78,20 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 		} else {
 			// TypePath actually would lead to a better error message here (regarding ::<> use),
 			// but that gobbles up eventual nested child components.
-			let path: ExprPath;
-			unquote!(input, #path);
+			let path: ExprPath = input.parse()?;
+
+			let dot_await: Option<(Token![.], Token![await])> =
+				(input.peek(Token![.]) && input.peek2(Token![await])).then(|| {
+					(
+						input.parse().expect("unreachable"),
+						input.parse().expect("unreachable"),
+					)
+				});
+			let dot_await = dot_await.map(|(dot, await_)| {
+				quote_spanned! {await_.span=>
+					#dot#await_
+				}
+			});
 
 			let (field_name, visibility) = if input.peek(Token![priv]) {
 				let field_name;
@@ -147,16 +159,16 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				open_span,
 				capture: call2_strict(
 					quote_spanned! {open_span=>
-						let #visibility self.#field_name = pin #path::new(&node, #new_params)?;
+						let #visibility self.#field_name = pin #path::new(&node, #new_params)#dot_await?;
 					},
 					|input| LetSelf::<C>::parse_with_context(input, cx, ),
 				)
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
 				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?,
 				path,
-			render_params,
-			content_children,
-		})
+				render_params,
+				content_children,
+			})
 		}
 	}
 }
