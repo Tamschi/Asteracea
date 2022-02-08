@@ -3,7 +3,7 @@ use crate::{
 		async_::{AsyncContent, AsyncContentSubscription, Synchronized},
 		render_callback::RenderOnce,
 	},
-	__::{tracing::debug_span, Built},
+	__::Built,
 };
 use lignin::{Node, ThreadSafety};
 use std::cell::UnsafeCell;
@@ -28,7 +28,6 @@ asteracea::component! {
 	let self.subscription = UnsafeCell::<Option<AsyncContentSubscription>>::new(None);
 
 	{
-		let _span = debug_span!("Suspense::render").entered();
 		match ready.1.synchronize(unsafe{&mut *self.subscription.get()}) {
 			Synchronized::Unchanged => (),
 			Synchronized::Reset(future) => todo!(),
