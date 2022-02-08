@@ -552,6 +552,17 @@ impl<C: Configuration> ContentChild<C> {
 
 		let bump = Ident::new("bump", span.resolved_at(Span::call_site()));
 		let bump_time = quote_spanned!(bump.span()=> 'bump);
+		let part = match &self.part {
+			Part::Async(_) => part,
+			_ => quote_spanned! {span=>
+				::std::boxed::Box::new(
+					|#bump: &#bump_time ::#asteracea::bumpalo::Bump| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+						::core::result::Result::Ok(#part)
+					}
+				)
+			},
+		};
+
 		quote_spanned! {span=>
 			.#slot((
 				{
@@ -563,11 +574,7 @@ impl<C: Configuration> ContentChild<C> {
 						#parent_parameter_tokens
 					}
 				},
-				::std::boxed::Box::new(
-					|bump: &#bump_time ::#asteracea::bumpalo::Bump| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
-						::core::result::Result::Ok(#part)
-					}
-				),
+				#part,
 			))
 		}
 		.to_token_stream()

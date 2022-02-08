@@ -37,7 +37,7 @@ impl Display for FailedPreviouslyError {
 }
 
 /// Storage type for asynchronously initialised Asteracea template expressions.
-pub struct Async<Storage, F = Box<dyn Future<Output = Result<Storage>>>> {
+pub struct Async<Storage, F = Pin<Box<dyn Future<Output = Result<Storage>>>>> {
 	state: RwLock<AsyncState<Storage, F>>,
 	handle: RefCell<Option<Arc<UntypedHandle>>>,
 }
@@ -334,7 +334,7 @@ pub struct AsyncContent<'a, R: ?Sized + RenderCallback> {
 }
 
 impl<'a, R: ?Sized + RenderCallback> AsyncContent<'a, R> {
-	pub fn synchronize(&mut self, anchor: &mut Option<AsyncContentSubscription>) -> Synchronized {
+	pub fn synchronize(&self, anchor: &mut Option<AsyncContentSubscription>) -> Synchronized {
 		match self.async_.synchronize(anchor) {
 			Some(future) => Synchronized::Reset(future),
 			None => Synchronized::Unchanged,
@@ -343,13 +343,13 @@ impl<'a, R: ?Sized + RenderCallback> AsyncContent<'a, R> {
 }
 
 impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderOnce<'_, 'bump, S>> {
-	fn render(self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
+	pub fn render(self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
 		self.async_.is_done().then(|| (self.on_done)(bump))
 	}
 }
 
 impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderMut<'_, 'bump, S>> {
-	fn render(&mut self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
+	pub fn render(&mut self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
 		self.async_.is_done().then(|| (self.on_done)(bump))
 	}
 }
