@@ -37,11 +37,11 @@ impl Display for FailedPreviouslyError {
 }
 
 /// Storage type for asynchronously initialised Asteracea template expressions.
-pub struct Async<Storage, F = Pin<Box<dyn Future<Output = Result<Storage>>>>> {
+pub struct Async<Storage, F = Pin<Box<dyn Send + Future<Output = Result<Storage>>>>> {
 	state: RwLock<AsyncState<Storage, F>>,
 	handle: RefCell<Option<Arc<UntypedHandle>>>,
 }
-impl<Storage: 'static, F: 'static + Future<Output = Result<Storage>>> Async<Storage, F> {
+impl<Storage: 'static, F: 'static + Send + Future<Output = Result<Storage>>> Async<Storage, F> {
 	/// Creates a new instance of [`Async`] holding the given future.
 	pub fn new(future_storage: F) -> Self {
 		Self {
@@ -235,7 +235,9 @@ impl<Storage, F: Future<Output = Result<Storage>>> AsyncState_ for RwLock<AsyncS
 	}
 }
 
-impl<Storage: 'static, F: 'static + Future<Output = Result<Storage>>> Async_ for Async<Storage, F> {
+impl<Storage: 'static, F: 'static + Send + Future<Output = Result<Storage>>> Async_
+	for Async<Storage, F>
+{
 	fn synchronize(
 		self: Pin<&Self>,
 		anchor: &mut Option<AsyncContentSubscription>,
