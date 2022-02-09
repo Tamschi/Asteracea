@@ -12,7 +12,7 @@ asteracea::component! {
     priv early: &'static str,
   )()
 
-  ["Constructor parameter: " !"{:?}"{self.early}]
+  ["Constructor parameter: " !"{:?}"(self.early)]
 }
 
 asteracea::component! {

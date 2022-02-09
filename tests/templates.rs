@@ -42,12 +42,12 @@ impl<T> Select for T {
 
 // 	// This is a top-level capture expression.
 // 	// `c` is a field on the final struct, A its type (which can't be inferred) and a its value (which currently must be braced).
-// 	|c: A = {a}|;
+// 	let self.c: A = a;
 
 // 	/// You can use any number of top-level captures, which may be public and documented.
 // 	/// The documentation is pasted above the resulting field declaration, which means it works as normal.
 // 	/// (Outer documentation is a series of outer attributes, which means any outer attributes work here.)
-// 	|null: usize = {d.into()}|;
+// 	let self.null: usize = d.into();
 
 // 	// Any node-producing part is valid here, but you need only one.
 // 	// (This is pretty lenient. Any nodes that produce a value matching the render return type will work.)
@@ -83,15 +83,12 @@ impl<T> Select for T {
 // 		 }.select(|x| x) // Attached access expressions work on Rust blocks too.
 
 // 		/// Inner captures also exist.
-// 		|
+// 		let _d: Vec<Vec<Vec<Vec<Vec<Vec<Vec<Vec<Vec<()>>>>>>>>> =
 // 			//! Inner attributes are supported for all captures.
 // 			//! This may be useful if the capture is very long.
-// 			/// Inner attributes can be followed by outer ones here (but not the other way around, as per usual).
-// 			/// It's really all pasted as a sequence of outer ones on the field declaration, though, so it's just cosmetic.
+// 			/// It's really all pasted as a sequence of outer ones on the field declaration, though.
 // 			#[allow(clippy::type_complexity)]
-// 			_d: Vec<Vec<Vec<Vec<Vec<Vec<Vec<Vec<Vec<()>>>>>>>>>
-// 			= {vec![vec![vec![vec![vec![vec![vec![vec![vec![()]]]]]]]]]}
-// 		|;
+// 			vec![vec![vec![vec![vec![vec![vec![vec![vec![()]]]]]]]]];
 
 // 		// Inner captures are perfect for child components.
 // 		// Here you can see a shorthand for constructed captures (with the caveat that field type type parameters can't be inferred).
@@ -139,8 +136,8 @@ impl<T> Select for T {
 // 	(render_arg: &str)
 
 // 	[
-// 		"new_arg: " !{self.new_arg} <br>
-// 		"render_arg: " !{render_arg}
+// 		"new_arg: " !(self.new_arg) <br>
+// 		"render_arg: " !(render_arg)
 // 	]
 // }
 

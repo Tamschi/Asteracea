@@ -4,14 +4,17 @@
 [![Crates.io](https://img.shields.io/crates/v/asteracea)](https://crates.io/crates/asteracea)
 [![Docs.rs](https://docs.rs/asteracea/badge.svg)](https://docs.rs/asteracea)
 
-![Rust 1.51](https://img.shields.io/static/v1?logo=Rust&label=&message=1.51&color=grey)
+![Rust 1.57](https://img.shields.io/static/v1?logo=Rust&label=&message=1.57&color=grey)
 [![CI](https://github.com/Tamschi/Asteracea/workflows/CI/badge.svg?branch=develop)](https://github.com/Tamschi/Asteracea/actions?query=workflow%3ACI+branch%3Adevelop)
 ![Crates.io - License](https://img.shields.io/crates/l/asteracea/0.0.2)
 
 [![GitHub](https://img.shields.io/static/v1?logo=GitHub&label=&message=%20&color=grey)](https://github.com/Tamschi/Asteracea)
 [![open issues](https://img.shields.io/github/issues-raw/Tamschi/Asteracea)](https://github.com/Tamschi/Asteracea/issues)
 [![open pull requests](https://img.shields.io/github/issues-pr-raw/Tamschi/Asteracea)](https://github.com/Tamschi/Asteracea/pulls)
+[![good first issues](https://img.shields.io/github/issues-raw/Tamschi/Asteracea/good%20first%20issue?label=good+first+issues)](https://github.com/Tamschi/Asteracea/contribute)
+
 [![crev reviews](https://web.crev.dev/rust-reviews/badge/crev_count/asteracea.svg)](https://web.crev.dev/rust-reviews/crate/asteracea/)
+[![Zulip Chat](https://img.shields.io/endpoint?label=chat&url=https%3A%2F%2Fiteration-square-automation.schichler.dev%2F.netlify%2Ffunctions%2Fstream_subscribers_shield%3Fstream%3Dproject%252FAsteracea)](https://iteration-square.schichler.dev/#narrow/stream/project.2FAsteracea)
 
 Asteracea is a web application framework aiming to combine the strengths of [Angular] and [React] while fully supporting Rust's lifetime model.
 
@@ -31,13 +34,13 @@ cargo add asteracea
 
 ## Design goals
 
-* Little boilerplate / Useful defaults
+- Little boilerplate / Useful defaults
 
   Most generated boilerplate code is adjusted automatically to what is required. For example, the signature of a component's `.render` method changes if a `Node` is generated.
 
   [There is still room for improvement here without sacrificing readability.](https://github.com/Tamschi/Asteracea/projects/2)
 
-* Co-location / [DRY]
+- Co-location / [DRY]
 
   Intent shouldn't need to be reiterated in multiple places (split declaration, initialisation and usage).
 
@@ -47,7 +50,7 @@ cargo add asteracea
 
   [DRY]: https://en.wikipedia.org/w/index.php?title=Don%27t_repeat_yourself&oldid=972595923
 
-* Robust code
+- Robust code
 
   Element names are statically checked against [`lignin-schema`] by default, but other schemata can be defined similarly. Empty elements like `<br>` cannot contain children.
 
@@ -55,7 +58,7 @@ cargo add asteracea
 
   [`lignin-schema`]: https://github.com/Tamschi/lignin-schema
 
-* No default runtime
+- No default runtime
 
   Asteracea components compile to plain Rust code with few dependencies, which helps keep bundles small.
 
@@ -65,6 +68,8 @@ cargo add asteracea
   [`lignin-html`]: https://github.com/Tamschi/lignin-html
 
 ## Examples
+
+Additional examples can be found [in the examples directory](examples#list-of-examples).
 
 ### Empty component
 
@@ -107,7 +112,7 @@ asteracea::component! {
 asteracea::component! {
   Offset(base: usize)(offset: usize) -> usize
 
-  |pub base: usize = {base}|; // ²
+  let pub self.base: usize = base; // ²
   { self.base + offset }
 }
 
@@ -159,18 +164,18 @@ component! {
   ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
   // shorthand capture; Defines a struct field.
-  |value = Cell::<i32>::new(initial)|;
+  let self.value = Cell::<i32>::new(initial);
 
   <div
     // conditional attribute from `Option<&'bump str>`
     ."class"? = {class}
 
     // Anything within curlies is plain Rust.
-    "The current value is: " !{self.value()} <br>
+    "The current value is: " !(self.value()) <br>
 
     <button
       ."disabled"? = {!self.enabled} // boolean attribute from `bool`
-      "+" !{self.step} // shorthand `bump_format` call
+      "+" !(self.step) // shorthand `bump_format` call
       on bubble click = Self::on_click_plus
     >
   >
@@ -210,9 +215,9 @@ asteracea::component! {
 
 Licensed under either of
 
-* Apache License, Version 2.0
+- Apache License, Version 2.0
    ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-* MIT license
+- MIT license
    ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
@@ -222,6 +227,8 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
+
+See [CONTRIBUTING](CONTRIBUTING.md) for more information.
 
 ## [Code of Conduct](CODE_OF_CONDUCT.md)
 
@@ -233,12 +240,15 @@ dual licensed as above, without any additional terms or conditions.
 
 Asteracea strictly follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) with the following exceptions:
 
-* The minor version will not reset to 0 on major version changes (except for v1).  
+- The minor version will not reset to 0 on major version changes (except for v1).  
 Consider it the global feature level.
-* The patch version will not reset to 0 on major or minor version changes (except for v0.1 and v1).  
+- The patch version will not reset to 0 on major or minor version changes (except for v0.1 and v1).  
 Consider it the global patch level.
 
 This includes the Rust version requirement specified above.  
 Earlier Rust versions may be compatible, but this can change with minor or patch releases.
 
 Which versions are affected by features and patches can be determined from the respective headings in [CHANGELOG.md](CHANGELOG.md).
+
+Note that dependencies of this crate may have a more lenient MSRV policy!
+Please use `cargo +nightly update -Z minimal-versions` in your automation if you don't generate Cargo.lock manually (or as necessary) and require support for a compiler older than current stable.

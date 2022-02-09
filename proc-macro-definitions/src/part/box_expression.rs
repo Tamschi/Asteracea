@@ -1,11 +1,11 @@
-use super::{CaptureDefinition, GenerateContext, Part};
+use super::{GenerateContext, LetSelf, Part};
 use crate::{
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
 	storage_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
-use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
+use debugless_unwrap::DebuglessUnwrap;
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
 use syn::{parse::ParseStream, Ident, Result, Token, Visibility};
@@ -60,13 +60,12 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 
 		call2_strict(
 			quote_spanned! {box_.span=>
-				|#visibility #field_name: ::std::pin::Pin<::std::boxed::Box<#type_path>> = {::std::boxed::Box::pin(#boxed_value)}|;
+				let #visibility self.#field_name: ::std::pin::Pin<::std::boxed::Box<#type_path>> = ::std::boxed::Box::pin(#boxed_value);
 			},
-			|input| CaptureDefinition::<C>::parse_with_context(input, cx),
+			|input| LetSelf::<C>::parse_with_context(input, cx, ),
 		)
 		.debugless_unwrap()
-		.unwrap()
-		.debugless_unwrap_none();
+		.expect("box expression let self");
 
 		if type_configuration.type_is_generated() {
 			cx.assorted_items.extend(

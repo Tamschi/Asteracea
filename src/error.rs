@@ -1,3 +1,5 @@
+//! GUI error escalation.
+
 #![allow(clippy::module_name_repetitions)]
 
 use std::{
@@ -6,8 +8,12 @@ use std::{
 	error::Error,
 	fmt::{self, Debug, Display, Formatter},
 	panic::{catch_unwind, panic_any, resume_unwind, UnwindSafe},
+	result::Result as stdResult,
 	writeln,
 };
+
+/// [`Result`](`core::result::Result`) shorthand for Asteracea-components.
+pub type Result<T> = stdResult<T, Escalation>;
 
 /// An error propagated along the component tree.
 ///
@@ -103,6 +109,7 @@ enum Impl {
 	Extant(Throwable),
 }
 
+/// [`Send`] + [`Any`] + [`Error`]
 //TODO: This *probably* needs some clean-up.
 pub trait SendAnyError: Send + Any + Error {}
 impl<E: Send + Any + Error> SendAnyError for E {}
@@ -125,8 +132,12 @@ impl<E: SendAnyError> SendAnyErrorCasting for E {
 	}
 }
 
+/// Extension trait to GUI-escalate compatible errors.
+//TODO: Sealed?
 pub trait Escalate {
+	/// The type that is escalated.
 	type Output;
+	/// Escalates an error along the GUI call stack.
 	fn escalate(self) -> Self::Output;
 }
 impl<E: SendAnyError> Escalate for E {
@@ -149,12 +160,15 @@ impl<E: SendAnyError> Escalate for E {
 	}
 }
 
+/// Extension trait to convert compatible [`Result`]s into potentially escalated results.
 pub trait EscalateResult {
+	/// The type that is escalated.
 	type Output;
+	/// Converts a compatible [`Result`] into one that may have been escalated by the call.
 	fn escalate(self) -> Self::Output;
 }
-impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
-	type Output = Result<Ok, E::Output>;
+impl<Ok, E: Escalate> EscalateResult for stdResult<Ok, E> {
+	type Output = stdResult<Ok, E::Output>;
 
 	fn escalate(self) -> Self::Output {
 		self.map_err(|e| e.escalate())
@@ -164,9 +178,6 @@ impl<Ok, E: Escalate> EscalateResult for Result<Ok, E> {
 /// A caught [`Escalation`], which may have originated as error or panic.
 ///
 /// Re-escalating this type always panics if it was created from a panic, in order to preserve unwind-safety-related errors.
-///
-/// Panics resumed from this type (including via tracing instrumentation with `"backtrace"` enabled) are wrapped to enable tracing if that was not the case before.
-/// This is transparent towards the `Escalation::catch…` functions and other APIs inside this module, but may affect error handlers from other crates.
 #[must_use = "Please ignore caught escalations explicitly with `let _ =` if this is intentional."]
 pub struct Caught<E: ?Sized> {
 	// An error or panic.
@@ -175,12 +186,14 @@ pub struct Caught<E: ?Sized> {
 	was_panic: bool,
 }
 impl<E: ?Sized> Caught<E> {
+	/// Unwraps the boxed error or panic, discarding the trace.
 	#[must_use]
 	pub fn into_boxed(self) -> Box<E> {
 		self.boxed
 	}
 }
 impl<E> Caught<E> {
+	/// Unwraps the boxed error or panic by value, discarding the trace.
 	#[must_use]
 	pub fn into_inner(self) -> E {
 		*self.boxed
@@ -237,21 +250,20 @@ impl<E: Error> Error for Caught<E> {
 impl Escalation {
 	/// Catches any [`Escalation`] currently unwinding the stack.
 	///
-	/// Plain panics are considered to also be escalations,
-	/// and re-escalating them always leads to instrumentation for tracing.
+	/// Plain panics are considered to also be escalations.
 	///
 	/// # Errors
 	///
 	/// Iff an [`Escalation`] is caught, it is returned in the [`Err`] variant.
-	pub fn catch_any<F, T>(f: F) -> Result<T, Caught<dyn Send + Any>>
+	pub fn catch_any<F, T>(f: F) -> stdResult<T, Caught<dyn Send + Any>>
 	where
-		F: UnwindSafe + FnOnce() -> Result<T, Escalation>,
+		F: UnwindSafe + FnOnce() -> Result<T>,
 	{
 		#[allow(clippy::match_same_arms)]
 		match catch_unwind(f) {
 			Ok(Ok(t)) => Ok(t),
 			#[cfg(feature = "force-unwind")]
-			Ok(Err(_)) => Err(()).expect("unreachable"),
+			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
 			Ok(Err(Escalation(Impl::Extant(Throwable { source, trace })))) => Err(Caught {
 				boxed: source,
@@ -275,20 +287,20 @@ impl Escalation {
 
 	/// Catches [`Escalation`]s and, if possible, (other) panics currently unwinding the stack that are an `E`.
 	///
-	/// Even if not caught, panics are converted into [`GuiError`]s (which may re-panic them).
+	/// Even if not caught, panics are converted into [`Escalation`]s (which may re-panic them).
 	///
 	/// # Errors
 	///
 	/// Iff a [`Escalation`] or panic is caught and successfully downcast to `E`, it is returned in the [`Err`] variant.
-	pub fn catch<F, T, E: Error>(f: F) -> Result<Result<T, Escalation>, Caught<E>>
+	pub fn catch<F, T, E: Error>(f: F) -> stdResult<Result<T>, Caught<E>>
 	where
-		F: UnwindSafe + FnOnce() -> Result<T, Escalation>,
+		F: UnwindSafe + FnOnce() -> Result<T>,
 		E: 'static,
 	{
 		let (thrown, was_panic) = match catch_unwind(f) {
 			Ok(Ok(t)) => return Ok(Ok(t)),
 			#[cfg(feature = "force-unwind")]
-			Ok(Err(_)) => Err(()).expect("unreachable"),
+			Ok(Err(_)) => unreachable!(),
 			#[cfg(not(feature = "force-unwind"))]
 			Ok(Err(Escalation(Impl::Extant(thrown)))) => (thrown, false),
 			Err(panic) => match Box::<dyn Send + Any>::downcast::<Throwable>(panic) {
@@ -343,9 +355,7 @@ impl Escalation {
 			}
 			{
 				#![allow(unreachable_code)]
-				Err(()).expect(
-					"Workaround for clippy::missing_panic_docs. Only reachable if the \"force-unwind\" feature is both active and not active.",
-				)
+				unreachable!()
 			}
 		}
 	}

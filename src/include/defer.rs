@@ -7,7 +7,7 @@ use std::{
 };
 use try_lazy_init::LazyTransform;
 
-/// Storage for [`defer`](Defer) expressions.
+/// Storage for [`defer`](`Defer`) expressions.
 pub struct Defer<'a, Storage>(
 	LazyTransform<Box<dyn 'a + FnOnce() -> Result<Storage, Escalation>>, Storage>,
 );
@@ -48,6 +48,7 @@ impl<'a, Storage> Defer<'a, Storage> {
 			})
 	}
 
+	/// Retrieves a reference to the constructed `Storage`, iff one is available already.
 	#[must_use]
 	pub fn get(self: Pin<&Self>) -> Option<Pin<&Storage>> {
 		self.0

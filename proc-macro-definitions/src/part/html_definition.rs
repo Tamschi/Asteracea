@@ -134,7 +134,8 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 
 		let attributes = {
 			let mut attributes = Vec::new();
-			while let Ok(dot) = input.parse::<Token![.]>() {
+			while input.peek(Token![.]) && !input.peek(Token![..]) {
+				let dot = input.parse::<Token![.]>().expect("unreachable");
 				attributes.push(if input.peek(Ident) || input.peek(LitStr) {
 					let key;
 					let question: Option<Token![?]>;
@@ -146,7 +147,7 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 							value.span(),
 							format!(
 							"Expected Rust block value for optional HTML attribute, but found `{}`",
-							value.to_token_stream().to_string(),
+							value.to_token_stream(),
 						),
 						));
 					}
@@ -396,24 +397,23 @@ impl<C: Configuration> HtmlDefinition<C> {
 					}
 				});
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
-					let children = #children;
 					//TODO: Add MathML and SVG support.
 					::#asteracea::lignin::Node::HtmlElement::<'bump, #thread_safety> {
-						element: #bump.alloc_with(|| {
+						element: #bump.alloc_try_with(|| -> ::core::result::Result::<_, ::#asteracea::error::Escalation> {
 							#validate_has_content
 							#(#validate_attributes)*
 							#document_closing
 							//TODO: Validate attributes.
 							//TODO: Validate events.
 
-							::#asteracea::lignin::Element {
+							::core::result::Result::Ok(::#asteracea::lignin::Element {
 								name: ::#asteracea::__::lignin_schema::html::elements::#name::TAG_NAME,
 								creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
 								attributes: #attributes,
-								content: children,
 								event_bindings: #event_bindings,
-							}
-						}),
+								content: #children,
+							})
+						})?,
 						//TODO: Add DOM binding support.
 						dom_binding: None,
 					}

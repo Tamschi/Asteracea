@@ -166,7 +166,7 @@ impl StorageContext {
 				vis: f.visibility.clone(),
 				ident: Some(f.name.clone()),
 				colon_token: Some(Token![:](f.name.span())),
-				ty: Type::Verbatim(f.field_type.clone()),
+				ty: f.field_type.clone(),
 			})
 			.collect();
 
@@ -201,6 +201,7 @@ impl StorageContext {
 pub trait ParseWithContext {
 	//WAITING: https://github.com/rust-lang/rust/issues/29661, = Self
 	type Output;
+
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output>;
 }
 

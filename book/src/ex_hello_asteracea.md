@@ -22,18 +22,20 @@ component! {
     class?: &'bump str,
   ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
 
-  |value = Cell::<i32>::new(initial)|; // shorthand capture
+  let self.value = Cell::<i32>::new(initial); // shorthand capture
 
   <div
     // Attribute usage is validated statically.
     // (Write its name as `str` literal to sidestep that.)
+    // Anything within curlies is plain Rust.
     .class? = {class}
 
-    // Three content nodes in this line. Anything within curlies is plain Rust.
-    "The current value is: " !{self.value()} <br>
+    // Three content nodes in this line,
+    // with a shorthand bump_format call in the middle.
+    "The current value is: " !(self.value()) <br>
 
     <button
-      "+" !{self.step} // shorthand bump_format call
+      "+" !(self.step)
 
       // Correct event usage is validated statically.
       // (Write its name as `str` literal to sidestep that.)

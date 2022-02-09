@@ -33,7 +33,7 @@ asteracea::component! {
   )
 
   [
-    !{i}
+    !(i)
     dyn if {i > 0} [
       "\n"
       box <*Countdown .i = {i - 1}>
@@ -49,7 +49,7 @@ asteracea::component! {
 
 Note the use of `dyn if` to prevent infinite eager initialisation.
 
-You can alternatively combine `spread if` with `lazy ⟦move⟧` to avoid throwing away heap allocations once they exist. This is better in cases where the recursion depth changes quickly or 
+You can alternatively combine `spread if` with `lazy ⟦move⟧` to avoid throwing away heap allocations once they exist. This is better in cases where the recursion depth changes quickly or
 
 ## Memory savings
 
@@ -65,9 +65,9 @@ use std::mem::size_of;
 asteracea::component! {
   Heavy()()
 
-  #[allow(dead_code)]
-  |large: [u8; 1_000] = {[0; 1_000]}|; // 1 KB
-  
+  let self.large: [u8; 1_000] = #![allow(dead_code)]
+    [0; 1_000]; // 1 KB
+
   "Hello!"
 }
 
@@ -77,7 +77,7 @@ asteracea::component! {
   )
 
   [
-    "Holder size: " !{size_of::<Self>()} " bytes"
+    "Holder size: " !(size_of::<Self>()) " bytes"
     spread if {show} //TODO: Replace `spread` with `dyn`!
       <*Heavy>
   ]
@@ -94,8 +94,8 @@ use std::mem::size_of;
 asteracea::component! {
   Heavy()()
 
-  #[allow(dead_code)]
-  |large: [u8; 1_000] = {[0; 1_000]}|; // 1 KB
+  let self.large: [u8; 1_000] = #![allow(dead_code)]
+    [0; 1_000]; // 1 KB
 
   "Hello!"
 }
@@ -106,7 +106,7 @@ asteracea::component! {
   )
 
   [
-    "Holder size: " !{size_of::<Self>()} " bytes"
+    "Holder size: " !(size_of::<Self>()) " bytes"
     spread if {show} //TODO: Replace `spread` with `dyn`!
       box <*Heavy>
   ]

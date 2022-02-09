@@ -1,0 +1,37 @@
+name: Zulip Automation
+
+permissions: {} # None should be needed.
+
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+*
+
+jobs:
+  create_or_update_zulip_stream:
+    name: Create or Update Zulip Stream
+    runs-on: ubuntu-latest
+    steps:
+      # `--fail-with-body` would be better but isn't known yet.
+      - run: >
+          curl -X POST https://iteration-square-automation.schichler.dev/.netlify/functions/create_or_update_project_stream
+          --data-raw ${{ github.event.repository.name }}
+          --header "Authorization: ${{ secrets.GITHUB_TOKEN }}"
+          --fail
+
+  announce_tag:
+    name: Announce Tag
+    needs: create_or_update_zulip_stream
+    runs-on: ubuntu-latest
+    steps:
+      - name: find tag
+        id: find_tag
+        run: echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/} # See <https://github.community/t/how-to-get-just-the-tag-name/16241/11>.
+      # `--fail-with-body` would be better but isn't known yet.
+      - run: >
+          curl -X POST https://iteration-square-automation.schichler.dev/.netlify/functions/announce_tag
+          --header "Authorization: ${{ secrets.GITHUB_TOKEN }}"
+          --header 'Project: ${{ github.event.repository.name }}'
+          --header 'Tag: ${{ steps.find_tag.outputs.SOURCE_TAG }}'
+          -d ""
+          --fail

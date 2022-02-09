@@ -17,17 +17,17 @@ asteracea::component! {
     class?: &'bump str,
   ) -> !Sync
 
-  |value = Cell::<i32>::new(initial)|;
+  let self.value = Cell::<i32>::new(initial);
 
   //
 
   <div
     .class? = {class}
-    "The current value is: " !{self.value()} <br>
+    "The current value is: " !(self.value()) <br>
 
     <button
       .disabled? = {!self.enabled}
-      "+" !{self.step}
+      "+" !(self.step)
       on bubble click = Self::on_click_plus
     >
   >

@@ -1,4 +1,4 @@
-use super::{CaptureDefinition, GenerateContext, Part};
+use super::{GenerateContext, LetSelf, Part};
 use crate::{
 	asteracea_ident,
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
@@ -6,7 +6,7 @@ use crate::{
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
-use debugless_unwrap::{DebuglessUnwrap, DebuglessUnwrapNone};
+use debugless_unwrap::DebuglessUnwrap;
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
 use syn::{parse::ParseStream, Ident, Result, Visibility};
@@ -68,21 +68,17 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		let node = quote_spanned!(defer.span=> node);
 		call2_strict(
 			quote_spanned! {defer.span.resolved_at(Span::mixed_site())=>
-				pin |
-					#visibility #field_name =
-						::#asteracea::storage::Defer::<'static, #type_path>
-						::new(::std::boxed::Box::new({
-							#[allow(unused_variables)]
-							let #node = ::std::sync::Arc::clone(&#node);
-							move || Ok(#deferred_value)
-						}))
-				|;
+				let #visibility self.#field_name = pin ::#asteracea::include::Defer::<'static, #type_path>
+					::new(::std::boxed::Box::new({
+						#[allow(unused_variables)]
+						let #node = ::std::sync::Arc::clone(&#node);
+						move || Ok(#deferred_value)
+					}));
 			},
-			|input| CaptureDefinition::<C>::parse_with_context(input, cx),
+			|input| LetSelf::<C>::parse_with_context(input, cx),
 		)
 		.debugless_unwrap()
-		.unwrap()
-		.debugless_unwrap_none();
+		.expect("defer storage let self");
 
 		if type_configuration.type_is_generated() {
 			cx.assorted_items.extend(

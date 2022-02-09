@@ -19,8 +19,8 @@ doc = false
 
 #TODO: This can be cleaned up a lot with better code organisation.
 [dependencies]
-asteracea = { path = "..", features = ["backtrace"] }
-debugless-unwrap = "0.0.3"
+asteracea = { path = ".." }
+debugless-unwrap = "0.0.4"
 lignin = "0.1.0"
 lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
 line-col = "0.2.1"
@@ -34,7 +34,7 @@ quote = "1.0.7"
 version-sync = "0.9.1"
 
 [build-dependencies]
-asteracea = { path = "..", features = ["backtrace"] }
+asteracea = { path = ".." }
 mdbook = { version = "0.4.5", default-features = false, features = ["search"] }
 lignin = "0.1.0"
 lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }

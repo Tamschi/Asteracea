@@ -1,5 +1,9 @@
 # Largely inspired by https://github.com/dtolnay/syn/blob/master/.github/workflows/ci.yml under MIT OR Apache-2.0.
 name: CI
+
+permissions:
+  contents: read
+
 on:
   pull_request:
   push:
@@ -10,18 +14,22 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.4.0
     - uses: actions-rs/toolchain@v1.0.7
     - run: cat CI.toml >> Cargo.toml
     - run: cargo test --workspace --locked --no-default-features
     - run: cargo test --workspace --locked
     - run: cargo test --workspace --locked --all-features
+    # Test the main crate separately, since the examples pull in features.
+    - run: cargo test --locked --no-default-features
+    - run: cargo test --locked
+    - run: cargo test --locked --all-features
 
   browser-test:
     name: Browser Test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.4.0
     - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: stable
@@ -39,12 +47,12 @@ jobs:
     strategy:
       matrix:
         os: [macos, ubuntu, windows]
-        rust: ['1.51', stable, beta, nightly]
+        rust: ['1.57', stable, beta, nightly]
     env:
       target: ${{matrix.target && format('--target={0}', matrix.target)}}
       workspace: ${{matrix.no-workspace || '--workspace'}}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.4.0
     - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: ${{matrix.rust}}
@@ -59,7 +67,7 @@ jobs:
     name: Minimal Versions
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.4.0
     - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: nightly
@@ -73,7 +81,7 @@ jobs:
     name: Book
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.4.0
     - uses: actions-rs/toolchain@v1
     - run: cat CI.toml >> Cargo.toml
     - run: cd book && cargo run

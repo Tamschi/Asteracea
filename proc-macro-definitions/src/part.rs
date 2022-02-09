@@ -1,20 +1,22 @@
 mod bind;
 mod box_expression;
 mod bump_format_shorthand;
-mod capture_definition;
 mod component;
+mod content;
 mod defer;
 mod event_binding;
+mod for_;
 mod html_comment;
 mod html_definition;
+mod let_self;
 
-//TODO: Renamed module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
+//TODO: Rename module and struct to `element_expression` / `ElementExpression`, factor out text expressions and value expressions.
 //TODO: Rust expressions shouldn't automatically be blocks except for ones after `with`.
 
-pub use self::capture_definition::CaptureDefinition;
+pub use self::let_self::LetSelf;
 use self::{
-	bind::Bind, box_expression::BoxExpression, component::Component, defer::Defer,
-	html_comment::HtmlComment, html_definition::HtmlDefinition,
+	bind::Bind, box_expression::BoxExpression, component::Component, content::Content,
+	defer::Defer, for_::For, html_comment::HtmlComment, html_definition::HtmlDefinition,
 };
 use crate::{
 	asteracea_ident,
@@ -25,7 +27,7 @@ use core::result::Result as coreResult;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapErr as _};
 use event_binding::EventBindingDefinition;
 use proc_macro2::{Span, TokenStream, TokenTree};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote_spanned, ToTokens};
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
@@ -42,11 +44,12 @@ pub(crate) enum Part<C: Configuration> {
 	Bind(Bind<C>),
 	Box(BoxExpression<C>),
 	BumpFormat(BumpFormat),
-	Capture(CaptureDefinition<C>),
+	Content(Content),
 	Comment(HtmlComment),
 	Component(Component<C>),
 	Defer(Defer<C>),
 	EventBinding(EventBindingDefinition),
+	For(For<C>),
 	RustBlock(Brace, TokenStream),
 	Html(HtmlDefinition<C>),
 	If(
@@ -87,10 +90,11 @@ impl<C: Configuration> Part<C> {
 			Part::Bind(_)
 			| Part::Box(_)
 			| Part::BumpFormat(_)
-			| Part::Capture(_)
 			| Part::Comment(_)
 			| Part::Component(_)
+			| Part::Content(_)
 			| Part::Defer(_)
+			| Part::For(_)
 			| Part::RustBlock(_, _)
 			| Part::Html(_)
 			| Part::If(_, _, _, _, _, _)
@@ -177,8 +181,12 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 			Some(Part::Bind(Bind::parse_with_context(input, cx)?))
 		} else if lookahead.peek(Token![box]) {
 			Some(Part::Box(BoxExpression::parse_with_context(input, cx)?))
+		} else if lookahead.peek(Token![..]) {
+			Some(Part::Content(Content::parse_with_context(input, cx)?))
 		} else if lookahead.peek(defer::kw::defer) {
 			Some(Part::Defer(Defer::parse_with_context(input, cx)?))
+		} else if input.peek(Token![for]) {
+			Some(Part::For(For::parse_with_context(input, cx)?))
 		} else if lookahead.peek(LitStr) {
 			Some(Part::Text(input.parse()?))
 		} else if lookahead.peek(Token![<]) {
@@ -265,6 +273,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 					let attrs = input.call(Attribute::parse_outer)?;
 					let pats = {
 						let mut pats = vec![];
+						#[allow(clippy::blocks_in_if_conditions)]
 						while {
 							unquote!(input, #let maybe_pipe #let pat);
 							pats.push((maybe_pipe, pat));
@@ -296,12 +305,18 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 				braced!(expression in input),
 				expression.parse()?,
 			))
-		} else if lookahead.peek(capture_definition::kw::pin)
-			|| lookahead.peek(Token![#])
-			|| lookahead.peek(Token![|])
+		} else if lookahead.peek(Token![let])
+			&& (input.peek2(Token![self])
+				|| input.peek3(Token![self])
+				|| input.peek2(Token![pub])
+				|| input.peek3(Token![pub])
+				|| input.peek2(Token![priv])
+				|| input.peek3(Token![priv]))
 		{
 			if C::CAN_CAPTURE {
-				CaptureDefinition::parse_with_context(input, cx)?.map(Part::Capture)
+				// Let bindings are phantom here: They never generate child nodes by themselves.
+				LetSelf::<C>::parse_with_context(input, cx)?;
+				None
 			} else {
 				return Err(Error::new(
 					lookahead.error().span(),
@@ -311,6 +326,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 		} else if lookahead.peek(Bracket) {
 			let content;
 			let bracket = bracketed!(content in input);
+
 			let mut inner_parts = Vec::new();
 			while !content.is_empty() {
 				if let Some(inner_part) = Part::<C>::parse_with_context(&content, cx)? {
@@ -340,7 +356,7 @@ impl<C: Configuration> ParseWithContext for Part<C> {
                 \"text\"
                 <element …>
                 {rust expression}
-                ⟦pin⟧ |declaration: Only = capture|;
+                let ⟦visibility⟧ self.ident: Type = ⟦pin⟧ expression;
                 |capture: With = declaration|(and, render, call)
 				+\"event_name\" = |event| handler()
 				with { …; } <…>",
@@ -368,8 +384,10 @@ impl<C: Configuration> Part<C> {
 				tokens
 			}
 			Part::Comment(html_comment) => html_comment.part_tokens(),
-			Part::Component(component) => component.part_tokens(),
+			Part::Component(component) => component.part_tokens(cx)?,
+			Part::Content(content) => content.part_tokens(),
 			Part::Defer(defer) => defer.part_tokens(cx)?,
+			Part::For(for_) => for_.part_tokens(cx)?,
 			Part::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span()=>
@@ -428,7 +446,6 @@ impl<C: Configuration> Part<C> {
 				// Making each of these a full Rust block is a bit strange too, but likely the lesser issue.
 				quote_spanned!(brace.span.resolved_at(Span::mixed_site())=> { #statements })
 			}
-			Part::Capture(capture) => quote!(#capture),
 			Part::Multi(bracket, m) => {
 				let asteracea = asteracea_ident(bracket.span);
 				let m = m
