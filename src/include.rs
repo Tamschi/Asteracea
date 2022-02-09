@@ -7,6 +7,7 @@
 
 #[doc(hidden)]
 pub mod __for_;
+pub mod async_;
 mod defer;
 pub mod render_callback;
 

@@ -247,6 +247,14 @@ impl<E: Error> Error for Caught<E> {
 	}
 }
 
+impl Escalate for Caught<dyn Send + Any> {
+	type Output = Escalation;
+
+	fn escalate(self) -> Self::Output {
+		Escalation::from(self)
+	}
+}
+
 impl Escalation {
 	/// Catches any [`Escalation`] currently unwinding the stack.
 	///

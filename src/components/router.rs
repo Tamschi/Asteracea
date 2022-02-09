@@ -1,8 +1,7 @@
 #![allow(warnings)] //FIXME
 
 use crate::{
-	error::Escalation,
-	error::Result,
+	error::{Escalation, Result},
 	include::render_callback::RenderOnce,
 	__::{tracing::debug_span, Built},
 };

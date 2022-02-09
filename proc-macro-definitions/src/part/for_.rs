@@ -129,7 +129,7 @@ impl<C: Configuration> ParseWithContext for For<C> {
 					})
 				);
 			},
-			|input| LetSelf::<C>::parse_with_context(input, cx, ),
+			|input| LetSelf::<C>::parse_with_context(input, cx),
 		)
 		.debugless_unwrap()
 		.expect("for loop storage let self");

@@ -1,3 +1,4 @@
+mod async_;
 mod bind;
 mod box_expression;
 mod bump_format_shorthand;
@@ -15,8 +16,9 @@ mod let_self;
 
 pub use self::let_self::LetSelf;
 use self::{
-	bind::Bind, box_expression::BoxExpression, component::Component, content::Content,
-	defer::Defer, for_::For, html_comment::HtmlComment, html_definition::HtmlDefinition,
+	async_::Async, bind::Bind, box_expression::BoxExpression, component::Component,
+	content::Content, defer::Defer, for_::For, html_comment::HtmlComment,
+	html_definition::HtmlDefinition,
 };
 use crate::{
 	asteracea_ident,
@@ -41,6 +43,7 @@ use unquote::unquote;
 
 #[allow(clippy::large_enum_variant, clippy::type_complexity)]
 pub(crate) enum Part<C: Configuration> {
+	Async(Async<C>),
 	Bind(Bind<C>),
 	Box(BoxExpression<C>),
 	BumpFormat(BumpFormat),
@@ -87,7 +90,8 @@ enum PartKind {
 impl<C: Configuration> Part<C> {
 	fn kind(&self) -> PartKind {
 		match self {
-			Part::Bind(_)
+			Part::Async(_)
+			| Part::Bind(_)
 			| Part::Box(_)
 			| Part::BumpFormat(_)
 			| Part::Comment(_)
@@ -177,7 +181,9 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 	type Output = Option<Self>;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let lookahead = input.lookahead1();
-		if lookahead.peek(bind::kw::bind) {
+		if lookahead.peek(Token![async]) {
+			Some(Part::Async(Async::parse_with_context(input, cx)?))
+		} else if lookahead.peek(bind::kw::bind) {
 			Some(Part::Bind(Bind::parse_with_context(input, cx)?))
 		} else if lookahead.peek(Token![box]) {
 			Some(Part::Box(BoxExpression::parse_with_context(input, cx)?))
@@ -376,6 +382,7 @@ impl<C: Configuration> Part<C> {
 		let thread_safety = &cx.thread_safety;
 		let prefer_thread_safe = &cx.prefer_thread_safe;
 		let mut part_tokens = match self {
+			Part::Async(async_) => async_.part_tokens(cx)?,
 			Part::Bind(bind) => bind.part_tokens(cx)?,
 			Part::Box(box_expression) => box_expression.part_tokens(cx)?,
 			Part::BumpFormat(bump_format) => {
@@ -475,7 +482,11 @@ impl<C: Configuration> Part<C> {
 				})
 			}
 		};
-		cx.prefer_thread_safe.to_tokens(&mut part_tokens);
+
+		match self {
+			Self::Async(_) => (),
+			_ => cx.prefer_thread_safe.to_tokens(&mut part_tokens),
+		}
 		Ok(part_tokens)
 	}
 }
