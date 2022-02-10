@@ -107,6 +107,19 @@ fn suspense() {
 
 		assert_eq!(fragment, "Like a record!");
 	}
+
+	bump.reset();
+
+	{
+		let vdom = app
+			.render(&bump, Instant::render_args_builder().build())
+			.unwrap();
+
+		let mut fragment = String::new();
+		render_fragment(&vdom, &mut fragment, 1).unwrap();
+
+		assert_eq!(fragment, "Like a record!");
+	}
 }
 
 fn fake_waker() -> Waker {
