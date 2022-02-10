@@ -66,5 +66,6 @@ ergo-pin = "0.1.0"
 git_info = "0.1.2"
 lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
 tap = "1.0.1"
+this-is-fine = "0.0.1"
 version-sync = "0.9.1"
 wasm-bindgen-test = "0.3.27"

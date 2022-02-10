@@ -65,6 +65,7 @@ dependencies = [
  "rhizome",
  "static_assertions",
  "tap",
+ "this-is-fine",
  "tiptoe",
  "tracing",
  "try-lazy-init",
@@ -1097,7 +1098,7 @@ dependencies = [
 [[package]]
 name = "rhizome"
 version = "0.0.1"
-source = "git+https://github.com/Tamschi/rhizome.git?branch=develop#124cc37220875e89b3298bdb59d506111920ce1d"
+source = "git+https://github.com/Tamschi/rhizome.git?branch=develop#61a124a5a41659681e1675974b3d7b8015f8e4fe"
 dependencies = [
  "fruit-salad",
  "pin-project",

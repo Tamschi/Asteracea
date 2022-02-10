@@ -381,9 +381,18 @@ pub enum Synchronized {
 }
 
 /// Schedule to evaluate an async content child.
-/// ('static + [`Unpin`] + [`Future`] + [`FusedFuture`])
+/// ('static + [`Unpin`] + [`Send`] + [`Future`] + [`FusedFuture`])
 
 pub struct ContentFuture(Arc<UntypedHandle>);
+
+/// # Safety Notes
+///
+/// > The tricky bit here is the [`Caught<dyn Send + Any>`](`Caught`) stored inside an [`RwLock`],
+/// > which requires also [`Sync`] to be thread-safe.
+/// >
+/// > However, that instance is never shared (instead it is removed while a write lock is taken out),
+/// > so implementing [`Send`] here *should* be fine.
+unsafe impl Send for ContentFuture {}
 
 impl Future for ContentFuture {
 	type Output = ();
