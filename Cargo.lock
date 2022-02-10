@@ -102,14 +102,14 @@ dependencies = [
  "heck",
  "lazy_static",
  "merging-iterator",
- "proc-macro-crate 1.1.0",
+ "proc-macro-crate",
  "proc-macro2",
  "quote",
  "syn",
  "syn-mid",
  "take_mut",
  "tap",
- "unquote",
+ "unquote 0.0.6 (git+https://github.com/Tamschi/unquote.git?branch=develop)",
  "unzip-n",
 ]
 
@@ -348,6 +348,30 @@ checksum = "5fc25a87fa4fd2094bffb06925852034d90a17f0d1e05197d4956d3555752191"
 dependencies = [
  "matches",
  "percent-encoding",
+]
+
+[[package]]
+name = "fruit-salad"
+version = "0.0.2"
+source = "git+https://github.com/Tamschi/fruit-salad.git?branch=develop#b2c543543f219e388300a650bc3dcdaa890dd55b"
+dependencies = [
+ "fruit-salad_proc-macro-definitions",
+ "static_assertions",
+]
+
+[[package]]
+name = "fruit-salad_proc-macro-definitions"
+version = "0.0.2"
+source = "git+https://github.com/Tamschi/fruit-salad.git?branch=develop#b2c543543f219e388300a650bc3dcdaa890dd55b"
+dependencies = [
+ "call2-for-syn",
+ "debugless-unwrap",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "syn-mid",
+ "tap",
+ "unquote 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -614,12 +638,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e2e65a1a2e43cfcb47a895c4c8b10d1f4a61097f9f254f183aee60cad9c651d"
 
 [[package]]
-name = "mapped-guard"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09b84e446df4ed52dc594d80772b68792a6a26084de6e8c23dc7542c8808decf"
-
-[[package]]
 name = "markup5ever"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -851,10 +869,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "pin-project"
+version = "1.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58ad3879ad3baf4e44784bc6a718a8698867bb991f8ce24d1bcbe2cfb4c3a75e"
+dependencies = [
+ "pin-project-internal",
+]
+
+[[package]]
+name = "pin-project-internal"
+version = "1.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "744b6f092ba29c3650faf274db506afd39944f48420f6c86b17cfe0ee1cb36bb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "pin-project-lite"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e280fbe77cc62c91527259e9442153f4688736748d24660126286329742b4c6c"
+
+[[package]]
+name = "pinus"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0c548c34332c783b4bbfcdf4425e8e5bebe278766b29bdae3f01d8817103a9c"
+dependencies = [
+ "bumpalo",
+ "parking_lot",
+ "tap",
+ "this-is-fine",
+]
 
 [[package]]
 name = "ppv-lite86"
@@ -867,15 +917,6 @@ name = "precomputed-hash"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
-
-[[package]]
-name = "proc-macro-crate"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d6ea3c4595b96363c13943497db34af4460fb474a95c43f4446ad341b8c9785"
-dependencies = [
- "toml",
-]
 
 [[package]]
 name = "proc-macro-crate"
@@ -1056,25 +1097,15 @@ dependencies = [
 [[package]]
 name = "rhizome"
 version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2baa7eeebd4d9d0e3c8c86a0d986bc3365a575847dd657c09d214dda1f623ac"
+source = "git+https://github.com/Tamschi/rhizome.git?branch=develop#124cc37220875e89b3298bdb59d506111920ce1d"
 dependencies = [
- "mapped-guard",
- "rhizome_proc-macro-definitions",
-]
-
-[[package]]
-name = "rhizome_proc-macro-definitions"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20c74af5edf7484bc8978e3992c10347a24c728409d2443f92fd87aadc70bc0d"
-dependencies = [
- "lazy_static",
- "proc-macro-crate 0.1.5",
- "proc-macro2",
- "quote",
- "syn",
- "syn-mid",
+ "fruit-salad",
+ "pin-project",
+ "pinus",
+ "tap",
+ "this-is-fine",
+ "tiptoe",
+ "tracing",
 ]
 
 [[package]]
@@ -1241,9 +1272,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.85"
+version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a684ac3dcd8913827e18cd09a68384ee66c1de24157e3c556c9ab16d85695fb7"
+checksum = "8a65b3f4ffa0092e9887669db0eae07941f023991ab58ea44da8fe8e2d511c6b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1315,6 +1346,12 @@ checksum = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 dependencies = [
  "unicode-width",
 ]
+
+[[package]]
+name = "this-is-fine"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e922c27d74e8b47199e9a701eadf67135ae4f605a7eef123757ad500ce1c278"
 
 [[package]]
 name = "thiserror"
@@ -1567,6 +1604,18 @@ name = "unicode-xid"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ccb82d61f80a663efe1f787a51b16b5a51e3314d6ac365b08639f52387b33f3"
+
+[[package]]
+name = "unquote"
+version = "0.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91870f447501f37a53f6fed1e8d6d87758ff699097ed410215907b3bb105ff55"
+dependencies = [
+ "call2-for-syn",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "unquote"

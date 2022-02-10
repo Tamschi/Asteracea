@@ -200,7 +200,8 @@ pub fn discard_these_attribute_args(args: TokenStream1, item: TokenStream1) -> T
 	item
 }
 
-/// Returns just an `::asteracea::__::tracing::Span`, preserving [`Span`] location but resolving it at [`Span::mixed_site()`](`Span::mixed_site`).
+/// Returns just an `::asteracea::__::tracing::Span`,
+/// preserving [`Span`] location but resolving it at [`Span::mixed_site()`](`Span::mixed_site`).
 #[proc_macro]
 pub fn fake_span(input: TokenStream1) -> TokenStream1 {
 	let span = input
@@ -209,4 +210,15 @@ pub fn fake_span(input: TokenStream1) -> TokenStream1 {
 		.resolved_at(Span::mixed_site());
 	let asteracea = asteracea_ident(span);
 	quote_spanned!(span=> ::#asteracea::__::tracing::Span).into()
+}
+
+/// Discards all tokens and outputs an empty block instead,
+/// preserving [`Span`] location but resolving it at [`Span::mixed_site()`](`Span::mixed_site`).
+#[proc_macro]
+pub fn empty_block(input: TokenStream1) -> TokenStream1 {
+	let span = input
+		.conv::<TokenStream2>()
+		.span()
+		.resolved_at(Span::mixed_site());
+	quote_spanned!(span=> {}).into()
 }

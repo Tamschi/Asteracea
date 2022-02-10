@@ -1,5 +1,5 @@
 //! Injectable services.
 
-mod scheduler;
+mod content_runtime;
 
-pub use scheduler::Scheduler;
+pub use content_runtime::ContentRuntime;

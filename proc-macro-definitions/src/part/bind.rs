@@ -72,8 +72,15 @@ impl<C: Configuration> ParseWithContext for Bind<C> {
 		let node = quote_spanned!(bind.span=> node);
 		call2_strict(
 			quote_spanned! {bind.span.resolved_at(Span::mixed_site())=>
-				let #visibility self.#field_name = pin ::#asteracea::try_lazy_init::LazyTransform::<::std::sync::Arc<::#asteracea::rhizome::Node>, #type_path>
-					::new(::std::sync::Arc::clone(&#node));
+				let #visibility self.#field_name = pin ::#asteracea::try_lazy_init::LazyTransform::<
+						#asteracea::__::rhizome::sync::NodeHandle<
+							::core::any::TypeId,
+							::core::any::TypeId,
+							::#asteracea::__::rhizome::sync::DynValue,
+						>,
+						#type_path,
+					>
+					::new(#node.clone_handle());
 			},
 			|input| LetSelf::<C>::parse_with_context(input, cx),
 		)

@@ -8,7 +8,13 @@ use crate::{
 use ::std::pin::Pin;
 use bumpalo::Bump;
 use lignin::{Node, ThreadSafe, ThreadSafety};
-use std::{any::type_name, cell::Cell, marker::PhantomData, sync::Arc};
+use rhizome::sync::DynValue;
+use std::{
+	any::{type_name, TypeId},
+	cell::Cell,
+	marker::PhantomData,
+	sync::Arc,
+};
 use typed_builder::TypedBuilder;
 
 // A simple page router.
@@ -18,7 +24,7 @@ pub struct Router;
 const _: () = {
 	impl Router {
 		pub fn new(
-			_parent_node: &Arc<rhizome::Node>,
+			_parent_node: Pin<&Arc<rhizome::sync::Node<TypeId, TypeId, DynValue>>>,
 			RouterNewArgs {}: RouterNewArgs,
 		) -> Result<Self> {
 			let _span = debug_span!("Router::new").entered();

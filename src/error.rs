@@ -12,6 +12,14 @@ use std::{
 	writeln,
 };
 
+mod incompatible_runtime_dependency;
+mod runtime_dependency_missing;
+
+pub use {
+	incompatible_runtime_dependency::IncompatibleRuntimeDependency,
+	runtime_dependency_missing::RuntimeDependencyMissing,
+};
+
 /// [`Result`](`core::result::Result`) shorthand for Asteracea-components.
 pub type Result<T> = stdResult<T, Escalation>;
 

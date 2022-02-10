@@ -10,6 +10,7 @@ use std::{
 use try_lazy_init::Lazy;
 
 pub use lignin_schema;
+pub use rhizome;
 pub use static_assertions;
 pub use try_lazy_init;
 pub use typed_builder;
@@ -19,7 +20,7 @@ pub use tracing;
 
 #[cfg(not(feature = "tracing"))]
 pub mod tracing {
-	pub use asteracea_proc_macro_definitions::fake_span as debug_span;
+	pub use asteracea_proc_macro_definitions::{empty_block as error, fake_span as debug_span};
 
 	pub struct Span;
 	impl Span {

@@ -13,6 +13,7 @@ use crate::asteracea_ident;
 
 pub struct ConstructorArgument {
 	pub capture: Capture,
+	pub injection_dyn: Option<Token![dyn]>,
 	pub argument: Argument,
 }
 
@@ -57,6 +58,7 @@ impl Parse for ConstructorArgument {
 		unquote!(input,
 			#do let Attributes::parse_outer => attrs
 			#let capture
+			#let injection_dyn
 			#let pat
 			#let question
 			#let colon_token
@@ -64,6 +66,8 @@ impl Parse for ConstructorArgument {
 			#do let DefaultParameter::parse => default
 		);
 		Ok(Self {
+			capture,
+			injection_dyn,
 			argument: Argument {
 				fn_arg: PatType {
 					attrs: attrs.into_inner(),
@@ -74,7 +78,6 @@ impl Parse for ConstructorArgument {
 				question,
 				default: default.into_inner(),
 			},
-			capture,
 		})
 	}
 }

@@ -1,3 +1,4 @@
+use crate::services::ContentRuntime;
 use crate::{
 	include::{
 		async_::{AsyncContent, AsyncContentSubscription, Synchronized},
@@ -20,7 +21,9 @@ impl Built for NoParentParameters {
 }
 
 asteracea::component! {
-	pub Suspense()<S: 'bump + ThreadSafety>(
+	pub Suspense(
+		priv dyn runtime: dyn ContentRuntime,
+	)<S: 'bump + ThreadSafety>(
 		spinner: (NoParentParameters, Box<RenderOnce<'_, 'bump, S>>),
 		mut ready: (NoParentParameters, AsyncContent<'_, RenderOnce<'_, 'bump, S>>),
 	) -> Node::<'bump, S>
@@ -30,7 +33,7 @@ asteracea::component! {
 	{
 		match ready.1.synchronize(unsafe{&mut *self.subscription.get()}) {
 			Synchronized::Unchanged => (),
-			Synchronized::Reset(future) => todo!(),
+			Synchronized::Reset(future) => self.runtime.start_content_future(future),
 		}
 
 		ready.1.render(bump).unwrap_or_else(|| (spinner.1)(bump))?
