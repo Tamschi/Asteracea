@@ -295,7 +295,7 @@ impl<'a> CodeState<'a> {
 
 				let root = {
 					struct Root;
-					asteracea::rhizome::Node::new_for::<Root>().into()
+					asteracea::rhizome::sync::Node::new_for::<Root>().into()
 				};
 				let component = Box::pin(NAME::new(&root, NAME::new_args_builder()CONSTRUCTOR_BUILD.build())?);
 

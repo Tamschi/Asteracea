@@ -67,7 +67,7 @@ impl<C: Configuration> ParseWithContext for Async<C> {
 				let #visibility self.#field_name =
 					pin ::#asteracea::include::async_::Async::<#type_path>
 					::new(::std::boxed::Box::pin({
-						let #node = ::std::sync::Arc::clone(&#node);
+						let #node = #node.clone_handle();
 						async move { ::#asteracea::error::Result::Ok(#storage_value) }
 					}));
 			},

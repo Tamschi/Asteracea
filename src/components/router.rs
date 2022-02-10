@@ -24,7 +24,7 @@ pub struct Router;
 const _: () = {
 	impl Router {
 		pub fn new(
-			_parent_node: Pin<&Arc<rhizome::sync::Node<TypeId, TypeId, DynValue>>>,
+			_parent_node: Pin<&rhizome::sync::Node<TypeId, TypeId, DynValue>>,
 			RouterNewArgs {}: RouterNewArgs,
 		) -> Result<Self> {
 			let _span = debug_span!("Router::new").entered();

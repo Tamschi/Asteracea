@@ -153,7 +153,7 @@ impl<T> Select for T {
 // 	use std::sync::Arc;
 
 // 	enum RootTag {}
-// 	let parent_node = Arc::new(rhizome::Node::new_for::<RootTag>());
+// 	let parent_node = Arc::new(rhizome::sync::Node::new_for::<RootTag>());
 
 // 	Box::pin(
 // 		AVeryComplexComponent::<i32>::new(

@@ -124,7 +124,7 @@ impl<C: Configuration> ParseWithContext for For<C> {
 				let #visibility self.#field_name = ::core::cell::RefCell::<::#asteracea::include::For::<'static, #type_path#(, #k)*>>::new(
 					::#asteracea::include::For::new({
 						#[allow(unused_variables)]
-						let #node = ::std::sync::Arc::clone(&#node);
+						let #node = #node.clone_handle();
 						move || Ok(#manufactured_item_state)
 					})
 				);

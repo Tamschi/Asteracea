@@ -71,7 +71,7 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 				let #visibility self.#field_name = pin ::#asteracea::include::Defer::<'static, #type_path>
 					::new(::std::boxed::Box::new({
 						#[allow(unused_variables)]
-						let #node = ::std::sync::Arc::clone(&#node);
+						let #node = #node.clone_handle();
 						move || Ok(#deferred_value)
 					}));
 			},

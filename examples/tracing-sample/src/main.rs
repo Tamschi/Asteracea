@@ -1,6 +1,6 @@
 use asteracea::{bumpalo::Bump, __::AnonymousContentParentParameters};
 use core::pin::Pin;
-use rhizome::Node;
+use rhizome::sync::Node;
 use tracing::instrument;
 use tracing_flame::FlameLayer;
 use tracing_subscriber::prelude::*;

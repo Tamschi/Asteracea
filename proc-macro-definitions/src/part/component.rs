@@ -159,7 +159,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				open_span,
 				capture: call2_strict(
 					quote_spanned! {open_span=>
-						let #visibility self.#field_name = pin #path::new(&node, #new_params)#dot_await?;
+						let #visibility self.#field_name = pin #path::new(node.as_ref(), #new_params)#dot_await?;
 					},
 					|input| LetSelf::<C>::parse_with_context(input, cx),
 				)

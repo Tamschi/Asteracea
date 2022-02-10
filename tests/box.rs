@@ -1,8 +1,8 @@
-use std::pin::Pin;
+use std::{pin::Pin, any::TypeId};
 
 use bumpalo::Bump;
 use debugless_unwrap::DebuglessUnwrap;
-use rhizome::Node;
+use rhizome::sync::Node;
 
 asteracea::component! {
 	Boxed()() []
@@ -30,9 +30,9 @@ asteracea::component! {
 
 #[test]
 fn simple() {
-	let root = Node::new_for::<()>();
+	let root = Node::new(TypeId::of::<()>());
 	let component =
-		Simple::new(&root.into(), Simple::new_args_builder().build()).debugless_unwrap();
+		Simple::new(root.as_ref(), Simple::new_args_builder().build()).debugless_unwrap();
 
 	let bump = Bump::new();
 	let _vdom = Box::pin(component)
@@ -48,9 +48,9 @@ asteracea::component! {
 
 #[test]
 fn named() {
-	let root = Node::new_for::<()>();
+	let root = Node::new(TypeId::of::<()>());
 	let component =
-		Box::pin(Named::new(&root.into(), Named::new_args_builder().build()).debugless_unwrap());
+		Box::pin(Named::new(root.as_ref(), Named::new_args_builder().build()).debugless_unwrap());
 
 	let bump = Bump::new();
 	let _vdom = component
@@ -76,9 +76,9 @@ mod a_module {
 fn public() {
 	use a_module::Public;
 
-	let root = Node::new_for::<()>();
+	let root = Node::new(TypeId::of::<()>());
 	let component =
-		Box::pin(Public::new(&root.into(), Public::new_args_builder().build()).debugless_unwrap());
+		Box::pin(Public::new(root.as_ref(), Public::new_args_builder().build()).debugless_unwrap());
 
 	let bump = Bump::new();
 	let _vdom = component
@@ -96,9 +96,9 @@ asteracea::component! {
 
 #[test]
 fn typed() {
-	let root = Node::new_for::<()>();
+	let root = Node::new(TypeId::of::<()>());
 	let component =
-		Box::pin(Typed::new(&root.into(), Typed::new_args_builder().build()).debugless_unwrap());
+		Box::pin(Typed::new(root.as_ref(), Typed::new_args_builder().build()).debugless_unwrap());
 
 	let bump = Bump::new();
 	let _vdom = component
@@ -136,9 +136,9 @@ asteracea::component! {
 
 #[test]
 fn reused() {
-	let root = Node::new_for::<()>();
+	let root = Node::new(TypeId::of::<()>());
 	let component = Box::pin(
-		TypeReused::new(&root.into(), TypeReused::new_args_builder().build()).debugless_unwrap(),
+		TypeReused::new(root.as_ref(), TypeReused::new_args_builder().build()).debugless_unwrap(),
 	);
 
 	let bump = Bump::new();
@@ -170,8 +170,8 @@ asteracea::component! {
 
 #[test]
 fn multi() {
-	let root = Node::new_for::<()>();
-	let component = Multi::new(&root.into(), Multi::new_args_builder().build()).debugless_unwrap();
+	let root = Node::new(TypeId::of::<()>());
+	let component = Multi::new(root.as_ref(), Multi::new_args_builder().build()).debugless_unwrap();
 
 	let bump = Bump::new();
 	let _vdom = Box::pin(component)
