@@ -1,4 +1,4 @@
-use std::{pin::Pin, any::TypeId};
+use std::{any::TypeId, pin::Pin};
 
 use bumpalo::Bump;
 use debugless_unwrap::DebuglessUnwrap;

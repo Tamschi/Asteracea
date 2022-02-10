@@ -2,8 +2,7 @@ use rhizome::sync::DynValue;
 use std::{
 	any::type_name,
 	error::Error,
-	fmt::{self, Display},
-	fmt::{Debug, Formatter},
+	fmt::{self, Debug, Display, Formatter},
 	marker::PhantomData,
 	pin::Pin,
 };

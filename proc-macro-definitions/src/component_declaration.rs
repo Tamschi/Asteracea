@@ -652,6 +652,19 @@ impl ComponentDeclaration {
 		let mut render_span_name = Literal::string(&format!("{}::{}", component_name, render));
 		render_span_name.set_span(render.span().resolved_at(Span::mixed_site()));
 
+		//FIXME:
+		//  This can be solved for async components using <https://github.com/tokio-rs/tracing/pull/1819> once that lands.
+		//  However, that macro is currently unhygienic (which causes e.g. the parameter names `debug` and `display` to collide), so that issue must be solved too.
+		let constructor_tracing_span = if async_.is_none() {
+			Some(quote_spanned! {Span::mixed_site()=>
+				// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.
+				// The following should be equivalent to skipping all fields and setting them one by one:
+				let _tracing_span = ::#asteracea::__::tracing::debug_span!(#new_span_name, #(#constructor_args_tracing_fields,)*).entered();
+			})
+		} else {
+			None
+		};
+
 		Ok(quote_spanned! {Span::mixed_site()=>
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
@@ -675,9 +688,7 @@ impl ComponentDeclaration {
 					>>,
 					args: #new_args_name#new_args_generic_args,
 				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
-					// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.
-					// The following should be equivalent to skipping all fields and setting them one by one:
-					let _tracing_span = ::#asteracea::__::tracing::debug_span!(#new_span_name, #(#constructor_args_tracing_fields,)*).entered();
+					#constructor_tracing_span
 
 					// These are assigned at once to make sure name collisions error.
 					let (#new_args_name {

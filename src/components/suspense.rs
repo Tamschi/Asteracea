@@ -1,9 +1,9 @@
-use crate::services::ContentRuntime;
 use crate::{
 	include::{
 		async_::{AsyncContent, AsyncContentSubscription, Synchronized},
 		render_callback::RenderOnce,
 	},
+	services::ContentRuntime,
 	__::Built,
 };
 use lignin::{Node, ThreadSafety};
