@@ -1,6 +1,5 @@
-use rhizome::sync::derive_dependency;
-
 use crate::include::async_::ContentFuture;
+use rhizome::sync::derive_dependency;
 
 /// A resource used by [`Suspense`](`crate::components::Suspense`) to schedule [`ContentFuture`]s.
 pub trait ContentRuntime {
