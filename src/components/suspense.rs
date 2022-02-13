@@ -3,7 +3,7 @@ use crate::{
 		async_::{AsyncContent, AsyncContentSubscription, Synchronized},
 		render_callback::RenderOnce,
 	},
-	services::ContentRuntime,
+	services::{ContentRuntime, Invalidator},
 	__::Built,
 };
 use lignin::{Node, ThreadSafety};
@@ -23,6 +23,7 @@ impl Built for NoParentParameters {
 asteracea::component! {
 	pub Suspense(
 		priv dyn runtime: dyn ContentRuntime,
+		priv dyn invalidator?: dyn Invalidator,
 	)<S: 'bump + ThreadSafety>(
 		spinner: (NoParentParameters, Box<RenderOnce<'_, 'bump, S>>),
 		mut ready: (NoParentParameters, AsyncContent<'_, RenderOnce<'_, 'bump, S>>),
@@ -33,7 +34,7 @@ asteracea::component! {
 	{
 		match ready.1.synchronize(unsafe{&mut *self.subscription.get()}) {
 			Synchronized::Unchanged => (),
-			Synchronized::Reset(future) => self.runtime.start_content_future(future),
+			Synchronized::Reset(future) => self.runtime.start_content_future(future, self.invalidator.clone()),
 		}
 
 		ready.1.render(bump).unwrap_or_else(|| (spinner.1)(bump))?

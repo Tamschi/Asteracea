@@ -1,10 +1,15 @@
-use asteracea::{components::Suspense, include::async_::ContentFuture, services::ContentRuntime};
+use asteracea::{
+	components::Suspense,
+	include::async_::ContentFuture,
+	services::{ContentRuntime, Invalidator, ServiceHandle},
+};
 use bumpalo::Bump;
 use futures_core::Future;
 use lignin_html::render_fragment;
 use rhizome::sync::{Inject, Node};
 use std::{
 	any::TypeId,
+	borrow::BorrowMut,
 	pin::Pin,
 	sync::Mutex,
 	task::{Context, Poll, RawWaker, RawWakerVTable, Waker},
@@ -42,11 +47,18 @@ asteracea::component! {
 fn suspense() {
 	let root = Node::new(TypeId::of::<()>());
 
-	let future: Mutex<Option<ContentFuture>> = Mutex::default();
-	let future: &Mutex<Option<ContentFuture>> = unsafe { &*(&future as *const _) }; // Needs to be `'static`.
+	let future: Mutex<Option<(ContentFuture, Option<ServiceHandle<dyn Invalidator>>)>> =
+		Mutex::default();
+	let future: &Mutex<Option<(ContentFuture, Option<ServiceHandle<dyn Invalidator>>)>> =
+		unsafe { &*(&future as *const _) }; // Needs to be `'static`.
 
-	<dyn ContentRuntime>::inject(root.as_ref(), move |content_future| {
-		if future.lock().unwrap().replace(content_future).is_some() {
+	<dyn ContentRuntime>::inject(root.as_ref(), move |content_future, invalidator| {
+		if future
+			.lock()
+			.unwrap()
+			.replace((content_future, invalidator))
+			.is_some()
+		{
 			panic!("`ContentFuture` scheduled repeatedly!")
 		}
 	})
@@ -90,6 +102,8 @@ fn suspense() {
 		.unwrap()
 		.as_mut()
 		.unwrap()
+		.0
+		.borrow_mut()
 		.pipe(Pin::new)
 		.poll(&mut Context::from_waker(&fake_waker()))
 		.pipe(|poll| match poll {
