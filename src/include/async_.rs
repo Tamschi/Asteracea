@@ -6,7 +6,7 @@ use super::render_callback::{RenderCallback, RenderMut, RenderOnce};
 use crate::error::{Caught, EscalateResult, Escalation, Result};
 use bumpalo::Bump;
 use futures_core::FusedFuture;
-use lignin::{Node, ThreadSafety};
+use lignin::{Guard, Node, ThreadSafety};
 use std::{
 	any::Any,
 	cell::RefCell,
@@ -345,13 +345,13 @@ impl<'a, R: ?Sized + RenderCallback> AsyncContent<'a, R> {
 }
 
 impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderOnce<'_, 'bump, S>> {
-	pub fn render(self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
+	pub fn render(self, bump: &'bump Bump) -> Option<Result<Guard<'bump, S>>> {
 		self.async_.is_done().then(|| (self.on_done)(bump))
 	}
 }
 
 impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderMut<'_, 'bump, S>> {
-	pub fn render(&mut self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
+	pub fn render(&mut self, bump: &'bump Bump) -> Option<Result<Guard<'bump, S>>> {
 		self.async_.is_done().then(|| (self.on_done)(bump))
 	}
 }

@@ -429,7 +429,25 @@ impl ComponentDeclaration {
 			},
 		};
 
-		let body = body.part_tokens(&cx)?;
+		let body = match body {
+			rust @ Part::RustBlock { .. } => rust.part_tokens(&cx)?,
+			body => {
+				let body = body.part_tokens(&cx)?;
+				let body = quote_spanned! {render_paren.span.resolved_at(Span::mixed_site())=>
+					::#asteracea::lignin::Guard::new(#body, on_vdom_drop)
+				};
+				match &render_type {
+					RenderType::AutoSafe | RenderType::ExplicitAutoSync(_, _, _) => {
+						quote_spanned! {render_paren.span.resolved_at(Span::mixed_site())=>
+							::#asteracea::lignin::guard::auto_safety::IntoAutoSafe::into_auto_safe(#body)
+						}
+					}
+					RenderType::Explicit(_, _)
+					| RenderType::Sync(_, _)
+					| RenderType::UnSync(_, _, _) => body,
+				}
+			}
+		};
 
 		let new_lifetime: Lifetime = parse2(quote_spanned!(Span::call_site()=> 'NEW)).unwrap();
 		let render_lifetime: Lifetime =
@@ -606,13 +624,13 @@ impl ComponentDeclaration {
 				);
 				random_items.push(
 					parse2(quote! {
-						::#asteracea::lignin::auto_safety::AutoSafe_alias!(pub(crate) #auto_safe);
+						::#asteracea::lignin::guard::auto_safety::AutoSafe_alias!(pub(crate) #auto_safe);
 					})
 					.expect("RenderType::AutoSafe __Asteracea__AutoSafe"),
 				);
 				parse2(quote! {
 					-> ::std::result::Result<
-						impl #auto_safe<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>>,
+						impl #auto_safe<BoundOrActual = ::#asteracea::lignin::Guard<'bump, ::#asteracea::lignin::ThreadBound>>,
 						::#asteracea::error::Escalation,
 					>
 				})
@@ -628,7 +646,7 @@ impl ComponentDeclaration {
 			RenderType::ExplicitAutoSync(_, _, question) => {
 				parse2(quote_spanned! {question.span=>
 					-> ::std::result::Result<
-						impl ::#asteracea::lignin::auto_safety::AutoSafe::<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>>,
+						impl ::#asteracea::lignin::guard::auto_safety::AutoSafe::<::#asteracea::lignin::Guard<'bump, ::#asteracea::lignin::ThreadBound>>,
 						::#asteracea::error::Escalation,
 					>
 				})
@@ -637,7 +655,7 @@ impl ComponentDeclaration {
 			RenderType::Sync(r_arrow, _) | RenderType::UnSync(r_arrow, _, _) => {
 				let thread_safety = &cx.thread_safety;
 				parse2(quote_spanned! {r_arrow.span()=>
-					-> ::std::result::Result<::#asteracea::lignin::Node<'bump, #thread_safety>, ::#asteracea::error::Escalation>
+					-> ::std::result::Result<::#asteracea::lignin::Guard<'bump, #thread_safety>, ::#asteracea::error::Escalation>
 				})
 				.expect("render_type explicit thread safety")
 			}
@@ -732,6 +750,10 @@ impl ComponentDeclaration {
 						#(#render_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					} = args;
+
+					let mut on_vdom_drop: ::core::option::Option<
+						::#asteracea::lignin::guard::ConsumedCallback
+					> = None;
 
 					let this = #render_self;
 					::std::result::Result::Ok(#body)

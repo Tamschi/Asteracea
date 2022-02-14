@@ -202,26 +202,28 @@ impl<C: Configuration> Component<C> {
 				render_params,
 				content_children,
 			} => {
-let render_call= {
-	let render_params = parameter_struct_expression(
-		Some(cx),
-		open_span.resolved_at(Span::mixed_site()),
-		parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
-		render_params.as_slice(),
-		content_children.as_slice(),
-	)?;
-	quote_spanned!(*open_span=> .render(bump, #render_params)?)
-};
+				let render_call= {
+					let render_params = parameter_struct_expression(
+						Some(cx),
+						open_span.resolved_at(Span::mixed_site()),
+						parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
+						render_params.as_slice(),
+						content_children.as_slice(),
+					)?;
+					quote_spanned!(*open_span=> .render(bump, #render_params)?)
+				};
 
 				let asteracea = asteracea_ident(Span::mixed_site());
+				let bump = quote_spanned!(Span::call_site()=> bump);
+
 				let mut expr = parse2(quote!({
 					let rendered = #capture#render_call;
-
-					{
-						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
-						#[allow(deprecated)]
-						rendered.deanonymize()
-					}
+					// Deref specialisation.
+					let vdom = ::#asteracea::lignin::guard::auto_safety::AutoSafe::deanonymize(
+						&mut &mut ::#asteracea::lignin::guard::auto_safety::IntoAutoSafe::into_auto_safe(rendered)
+					)
+						.peel(&mut on_vdom_drop, || #bump.alloc_with(|| ::core::mem::MaybeUninit::uninit()));
+					vdom
 				}))
 				.expect("Component::Instantiated");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
@@ -248,14 +250,14 @@ let render_call= {
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					#binding
 					let rendered = reference.render(#bump, #render_params)?;
-
-					{
-						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
-						#[allow(deprecated)]
-						rendered.deanonymize()
-					}
+					// Deref specialisation.
+					let guard; = ::#asteracea::lignin::guard::auto_safety::AutoSafe::deanonymize(
+						&mut &mut ::#asteracea::lignin::guard::auto_safety::IntoAutoSafe::into_auto_safe(rendered)
+					);
+					let vdom = unsafe { guard.peel(&mut on_vdom_drop, || #bump.alloc_with(|| ::core::mem::MaybeUninit::uninit())) };
+					vdom
 				}))
-				.expect("Component::part_tokens Instanced expr");
+					.expect("Component::part_tokens Instanced expr");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
 				quote!(#expr)
 			}

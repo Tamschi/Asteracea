@@ -7,7 +7,7 @@ use crate::{
 };
 use ::std::pin::Pin;
 use bumpalo::Bump;
-use lignin::{Node, ThreadSafe, ThreadSafety};
+use lignin::{Guard, Node, ThreadSafe, ThreadSafety};
 use rhizome::sync::DynValue;
 use std::{
 	any::{type_name, TypeId},
@@ -39,7 +39,7 @@ const _: () = {
 				path,
 				rest,
 			}: RouterRenderArgs<'_, 'bump, S>,
-		) -> Result<Node<'bump, S>> {
+		) -> Result<Guard<'bump, S>> {
 			let _span = debug_span!("Router::render", path).entered();
 			for route in __Asteracea__anonymous_content {
 				let (RouterParentParameters { paths }, render_content) = route;

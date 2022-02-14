@@ -6,7 +6,7 @@ use crate::{
 	services::{ContentRuntime, Invalidator},
 	__::Built,
 };
-use lignin::{Node, ThreadSafety};
+use lignin::{Guard, Node, ThreadSafety};
 use std::cell::UnsafeCell;
 use typed_builder::TypedBuilder;
 
@@ -27,7 +27,7 @@ asteracea::component! {
 	)<S: 'bump + ThreadSafety>(
 		spinner: (NoParentParameters, Box<RenderOnce<'_, 'bump, S>>),
 		mut ready: (NoParentParameters, AsyncContent<'_, RenderOnce<'_, 'bump, S>>),
-	) -> Node::<'bump, S>
+	) -> Guard::<'bump, S>
 
 	let self.subscription = UnsafeCell::<Option<AsyncContentSubscription>>::new(None);
 
