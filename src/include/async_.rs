@@ -6,7 +6,7 @@ use super::render_callback::{RenderCallback, RenderMut, RenderOnce};
 use crate::error::{Caught, EscalateResult, Escalation, Result};
 use bumpalo::Bump;
 use futures_core::FusedFuture;
-use lignin::{Guard, Node, ThreadSafety};
+use lignin::{Guard, ThreadSafety};
 use std::{
 	any::Any,
 	cell::RefCell,

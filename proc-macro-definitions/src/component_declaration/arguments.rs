@@ -1,3 +1,4 @@
+use crate::asteracea_ident;
 use proc_macro2::Span;
 use quote::{quote_spanned, ToTokens};
 use syn::{
@@ -8,8 +9,6 @@ use syn::{
 };
 use tap::Pipe;
 use unquote::unquote;
-
-use crate::asteracea_ident;
 
 pub struct ConstructorArgument {
 	pub capture: Capture,
@@ -98,7 +97,7 @@ impl Parse for Argument {
 						::#asteracea::__::AnonymousContentParentParameters,
 						::std::boxed::Box::<
 							dyn '_ + ::core::ops::FnOnce(&#bump ::#asteracea::bumpalo::Bump) -> ::std::result::Result::<
-								::#asteracea::lignin::Node::<
+								::#asteracea::lignin::Guard::<
 									#bump,
 									::#asteracea::lignin::ThreadSafe,
 								>,

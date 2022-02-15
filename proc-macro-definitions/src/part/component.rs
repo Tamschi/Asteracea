@@ -219,9 +219,10 @@ impl<C: Configuration> Component<C> {
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					let rendered = #capture#render_call;
 					// Deref specialisation.
-					let guard = ::#asteracea::lignin::guard::auto_safety::AutoSafe::deanonymize(
-						&mut &mut ::#asteracea::lignin::guard::auto_safety::IntoAutoSafe::into_auto_safe(rendered)
-					);
+					let guard = unsafe {
+						use asteracea::lignin::guard::auto_safety::Deanonymize;
+						(&&::core::mem::ManuallyDrop::new(rendered)).deanonymize()
+					};
 					let vdom = unsafe { guard.peel(&mut on_vdom_drop, || #bump.alloc_with(|| ::core::mem::MaybeUninit::uninit())) };
 					vdom
 				}))
@@ -251,9 +252,10 @@ impl<C: Configuration> Component<C> {
 					#binding
 					let rendered = reference.render(#bump, #render_params)?;
 					// Deref specialisation.
-					let guard = ::#asteracea::lignin::guard::auto_safety::AutoSafe::deanonymize(
-						&mut &mut ::#asteracea::lignin::guard::auto_safety::IntoAutoSafe::into_auto_safe(rendered)
-					);
+					let guard = unsafe {
+						use asteracea::lignin::guard::auto_safety::Deanonymize;
+						(&&::core::mem::ManuallyDrop::new(rendered)).deanonymize()
+					};
 					let vdom = unsafe { guard.peel(&mut on_vdom_drop, || #bump.alloc_with(|| ::core::mem::MaybeUninit::uninit())) };
 					vdom
 				}))
@@ -559,7 +561,13 @@ impl<C: Configuration> ContentChild<C> {
 			_ => quote_spanned! {span=>
 				::std::boxed::Box::new(
 					|#bump: &#bump_time ::#asteracea::bumpalo::Bump| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
-						::core::result::Result::Ok(#part)
+						let mut on_vdom_drop: ::core::option::Option<::#asteracea::lignin::guard::ConsumedCallback> = None;
+						::core::result::Result::Ok(
+							::#asteracea::lignin::Guard::new(
+								#part,
+								on_vdom_drop,
+							)
+						)
 					}
 				)
 			},

@@ -120,7 +120,15 @@ impl<C: Configuration> Async<C> {
 					let this = this.#field_name_pinned().storage_pinned()?;
 					let #field_name = this.as_ref();
 					let this = #field_name;
-					::#asteracea::error::Result::Ok(#content)
+					let mut on_vdom_drop: ::core::option::Option<
+						::#asteracea::lignin::guard::ConsumedCallback
+					> = None;
+					::#asteracea::error::Result::Ok(
+						::#asteracea::lignin::Guard::new(
+							#content,
+							on_vdom_drop,
+						)
+					)
 				}))
 			}),
 		)

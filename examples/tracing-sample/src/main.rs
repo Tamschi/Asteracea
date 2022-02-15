@@ -1,6 +1,6 @@
 #![allow(clippy::needless_question_mark)] //FIXME
 
-use asteracea::{bumpalo::Bump, __::AnonymousContentParentParameters};
+use asteracea::{bumpalo::Bump, __::AnonymousContentParentParameters, lignin::Guard};
 use core::pin::Pin;
 use rhizome::sync::Node;
 use std::any::TypeId;
@@ -85,7 +85,7 @@ fn print_app(bump: &Bump, app: Pin<&ContainerComponent>) {
 				.__Asteracea__anonymous_content((
 					//FIXME: This should not be directly typed.
 					AnonymousContentParentParameters {},
-					Box::new(|_| Ok(asteracea::lignin::Node::Multi(&[]))),
+					Box::new(|_| Ok(Guard::new(asteracea::lignin::Node::Multi(&[]), None))),
 				))
 				.build(),
 		)

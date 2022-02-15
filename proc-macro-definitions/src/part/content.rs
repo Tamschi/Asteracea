@@ -21,8 +21,9 @@ impl ParseWithContext for Content {
 impl Content {
 	pub fn part_tokens(&self) -> TokenStream {
 		let bump = Ident::new("bump", self.dot2.span());
-		quote_spanned! {self.dot2.span().resolved_at(Span::mixed_site())=>
-			(__Asteracea__anonymous_content.1)(#bump)?
-		}
+		quote_spanned!(self.dot2.span().resolved_at(Span::mixed_site())=> {
+			let guard = (__Asteracea__anonymous_content.1)(#bump)?;
+			unsafe { guard.peel(&mut on_vdom_drop, || #bump.alloc_with(|| ::core::mem::MaybeUninit::uninit())) }
+		})
 	}
 }

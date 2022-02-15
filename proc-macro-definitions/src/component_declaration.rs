@@ -431,22 +431,18 @@ impl ComponentDeclaration {
 
 		let body = match body {
 			rust @ Part::RustBlock { .. } => rust.part_tokens(&cx)?,
-			body => {
-				let body = body.part_tokens(&cx)?;
-				let body = quote_spanned! {render_paren.span.resolved_at(Span::mixed_site())=>
-					::#asteracea::lignin::Guard::new(#body, on_vdom_drop)
-				};
-				match &render_type {
-					RenderType::AutoSafe | RenderType::ExplicitAutoSync(_, _, _) => {
-						quote_spanned! {render_paren.span.resolved_at(Span::mixed_site())=>
-							::#asteracea::lignin::guard::auto_safety::IntoAutoSafe::into_auto_safe(#body)
-						}
+			body => match &render_type {
+				RenderType::Explicit(_, _) => body.part_tokens(&cx)?,
+				RenderType::AutoSafe
+				| RenderType::ExplicitAutoSync(_, _, _)
+				| RenderType::Sync(_, _)
+				| RenderType::UnSync(_, _, _) => {
+					let body = body.part_tokens(&cx)?;
+					quote_spanned! {render_paren.span.resolved_at(Span::mixed_site())=>
+						::#asteracea::lignin::Guard::new(#body, on_vdom_drop)
 					}
-					RenderType::Explicit(_, _)
-					| RenderType::Sync(_, _)
-					| RenderType::UnSync(_, _, _) => body,
 				}
-			}
+			},
 		};
 
 		let new_lifetime: Lifetime = parse2(quote_spanned!(Span::call_site()=> 'NEW)).unwrap();
@@ -630,7 +626,7 @@ impl ComponentDeclaration {
 				);
 				parse2(quote_spanned! {Span::mixed_site()=>
 					-> ::std::result::Result<
-						impl #auto_safe<BoundOrActual = ::#asteracea::lignin::Guard<'bump, ::#asteracea::lignin::ThreadBound>>,
+						impl #auto_safe<Bound = ::#asteracea::lignin::Guard<'bump, ::#asteracea::lignin::ThreadBound>>,
 						::#asteracea::error::Escalation,
 					>
 				})
@@ -646,7 +642,7 @@ impl ComponentDeclaration {
 			RenderType::ExplicitAutoSync(_, _, question) => {
 				parse2(quote_spanned! {question.span.resolved_at(Span::mixed_site())=>
 					-> ::std::result::Result<
-						impl ::#asteracea::lignin::guard::auto_safety::AutoSafe::<::#asteracea::lignin::Guard<'bump, ::#asteracea::lignin::ThreadBound>>,
+						impl ::#asteracea::lignin::guard::auto_safety::AutoSafe::<Bound = ::#asteracea::lignin::Guard<'bump, ::#asteracea::lignin::ThreadBound>>,
 						::#asteracea::error::Escalation,
 					>
 				})
