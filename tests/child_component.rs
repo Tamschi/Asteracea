@@ -1,7 +1,7 @@
 #[allow(dead_code)]
 
 asteracea::component! {
-	Child()()
+	Child()() -> Sync
 
 	[]
 }

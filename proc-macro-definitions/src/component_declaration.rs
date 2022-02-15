@@ -623,12 +623,12 @@ impl ComponentDeclaration {
 					Span::mixed_site(),
 				);
 				random_items.push(
-					parse2(quote! {
+					parse2(quote_spanned! {Span::mixed_site()=>
 						::#asteracea::lignin::guard::auto_safety::AutoSafe_alias!(pub(crate) #auto_safe);
 					})
 					.expect("RenderType::AutoSafe __Asteracea__AutoSafe"),
 				);
-				parse2(quote! {
+				parse2(quote_spanned! {Span::mixed_site()=>
 					-> ::std::result::Result<
 						impl #auto_safe<BoundOrActual = ::#asteracea::lignin::Guard<'bump, ::#asteracea::lignin::ThreadBound>>,
 						::#asteracea::error::Escalation,
@@ -644,7 +644,7 @@ impl ComponentDeclaration {
 				.expect("RenderType::Explicit"),
 			),
 			RenderType::ExplicitAutoSync(_, _, question) => {
-				parse2(quote_spanned! {question.span=>
+				parse2(quote_spanned! {question.span.resolved_at(Span::mixed_site())=>
 					-> ::std::result::Result<
 						impl ::#asteracea::lignin::guard::auto_safety::AutoSafe::<::#asteracea::lignin::Guard<'bump, ::#asteracea::lignin::ThreadBound>>,
 						::#asteracea::error::Escalation,

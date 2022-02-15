@@ -9,7 +9,7 @@ use crate::{
 };
 use call2_for_syn::call2_strict;
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
 	parse2, parse_quote_spanned,
@@ -216,18 +216,18 @@ impl<C: Configuration> Component<C> {
 				let asteracea = asteracea_ident(Span::mixed_site());
 				let bump = quote_spanned!(Span::call_site()=> bump);
 
-				let mut expr = parse2(quote!({
+				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					let rendered = #capture#render_call;
 					// Deref specialisation.
-					let vdom = ::#asteracea::lignin::guard::auto_safety::AutoSafe::deanonymize(
+					let guard = ::#asteracea::lignin::guard::auto_safety::AutoSafe::deanonymize(
 						&mut &mut ::#asteracea::lignin::guard::auto_safety::IntoAutoSafe::into_auto_safe(rendered)
-					)
-						.peel(&mut on_vdom_drop, || #bump.alloc_with(|| ::core::mem::MaybeUninit::uninit()));
+					);
+					let vdom = unsafe { guard.peel(&mut on_vdom_drop, || #bump.alloc_with(|| ::core::mem::MaybeUninit::uninit())) };
 					vdom
 				}))
 				.expect("Component::Instantiated");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
-				quote!(#expr)
+				expr.into_token_stream()
 			}
 			Component::Instanced {
 				open_span,
@@ -251,7 +251,7 @@ impl<C: Configuration> Component<C> {
 					#binding
 					let rendered = reference.render(#bump, #render_params)?;
 					// Deref specialisation.
-					let guard; = ::#asteracea::lignin::guard::auto_safety::AutoSafe::deanonymize(
+					let guard = ::#asteracea::lignin::guard::auto_safety::AutoSafe::deanonymize(
 						&mut &mut ::#asteracea::lignin::guard::auto_safety::IntoAutoSafe::into_auto_safe(rendered)
 					);
 					let vdom = unsafe { guard.peel(&mut on_vdom_drop, || #bump.alloc_with(|| ::core::mem::MaybeUninit::uninit())) };
@@ -259,7 +259,7 @@ impl<C: Configuration> Component<C> {
 				}))
 					.expect("Component::part_tokens Instanced expr");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
-				quote!(#expr)
+				expr.into_token_stream()
 			}
 		}.pipe(Ok)
 	}
