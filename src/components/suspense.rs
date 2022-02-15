@@ -6,7 +6,7 @@ use crate::{
 	services::{ContentRuntime, Invalidator},
 	__::Built,
 };
-use lignin::{Guard, Node, ThreadSafety};
+use lignin::{Guard, ThreadSafety};
 use std::cell::UnsafeCell;
 use typed_builder::TypedBuilder;
 
