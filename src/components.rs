@@ -1,9 +1,9 @@
 //! Common components.
 
-mod relaxed;
+mod remember;
 mod router;
 mod suspense;
 
-pub use relaxed::Relaxed;
+pub use remember::Remember;
 pub use router::Router;
 pub use suspense::Suspense;

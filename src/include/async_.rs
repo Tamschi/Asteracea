@@ -2,7 +2,10 @@
 //!
 //! TODO: Does the [`Future`] still need some kind of multi-dispatch-wrapper?
 
-use super::render_callback::{RenderCallback, RenderMut, RenderOnce};
+use super::{
+	private::Dereferenceable,
+	render_callback::{RenderCallback, RenderMut, RenderOnce},
+};
 use crate::error::{Caught, EscalateResult, Escalation, Result};
 use bumpalo::Bump;
 use futures_core::FusedFuture;
@@ -109,15 +112,6 @@ impl<Storage, F> Deref for StorageGuard<'_, Storage, F> {
 			AsyncState::Ready(storage) => storage,
 			AsyncState::Pending(_) | AsyncState::Failed(_) => unreachable!(),
 		}
-	}
-}
-
-struct Dereferenceable<T: ?Sized>(NonNull<T>);
-impl<T: ?Sized> Deref for Dereferenceable<T> {
-	type Target = T;
-
-	fn deref(&self) -> &Self::Target {
-		unsafe { self.0.as_ref() }
 	}
 }
 
@@ -248,7 +242,7 @@ impl<Storage: 'static, F: 'static + Send + Future<Output = Result<Storage>>> Asy
 				Arc::new(UntypedHandle {
 					counter: TipToe::new(),
 					state: Mutex::new(Some(unsafe {
-						Pin::new_unchecked(Dereferenceable(NonNull::new_unchecked(
+						Pin::new_unchecked(Dereferenceable::new(NonNull::new_unchecked(
 							&self.state as *const _ as *mut RwLock<AsyncState<Storage, F>>
 								as *mut _,
 						)))

@@ -24,3 +24,9 @@ const _: () = {
 		handle
 	}
 };
+
+//TODO: Make the macro implement this too?
+// Likely not, but Asteracea should have a macro that does this, and have this as associated function.
+// impl dyn Invalidator {
+// 	// pub fn inject()
+// }

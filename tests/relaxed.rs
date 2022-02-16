@@ -1,11 +1,11 @@
-use asteracea::components::Paused;
+use asteracea::components::Remember;
 
 asteracea::component! {
 	FrequentlyUnchanged()()
 
-	<*Relaxed
+	<*Remember
 		// .for_unchanged={&()}
-		.unless={|| false}
+		.or_unless={|| false}
 		"Content!"
 	>
 }
