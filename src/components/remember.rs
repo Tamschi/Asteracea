@@ -11,6 +11,7 @@ use std::{
 	hash::Hasher,
 	marker::PhantomPinned,
 	mem,
+	ops::Deref,
 	pin::Pin,
 	sync::{
 		atomic::{AtomicBool, AtomicU32, Ordering},
@@ -60,7 +61,7 @@ asteracea::component! {
 	}
 	let self._pinned = PhantomPinned::default();
 	let self.this_set: AtomicBool = false.into();
-	let self.this: Pin<Arc<Mutex<Option<Pin<Dereferenceable<Self>>>>>> = this;
+	let self.this: ClearOnDrop<S> = ClearOnDrop(this);
 
 	let self.invalidated: AtomicBool = true.into();
 
@@ -119,4 +120,18 @@ unsafe impl<T> Sync for SafetyHack<T> {}
 
 unsafe fn detach_guard<S: ThreadSafety>(guard: Guard<'_, S>) -> Guard<'static, S> {
 	mem::transmute(guard)
+}
+
+struct ClearOnDrop<S: ThreadSafety>(Pin<Arc<Mutex<Option<Pin<Dereferenceable<Remember<S>>>>>>>);
+impl<S: ThreadSafety> Drop for ClearOnDrop<S> {
+	fn drop(&mut self) {
+		*self.0.lock().unwrap() = None
+	}
+}
+impl<S: ThreadSafety> Deref for ClearOnDrop<S> {
+	type Target = Pin<Arc<Mutex<Option<Pin<Dereferenceable<Remember<S>>>>>>>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
 }
