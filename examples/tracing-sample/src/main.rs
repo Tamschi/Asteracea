@@ -1,6 +1,6 @@
 #![allow(clippy::needless_question_mark)] //FIXME
 
-use asteracea::{bumpalo::Bump, __::AnonymousContentParentParameters, lignin::Guard};
+use asteracea::{bumpalo::Bump, lignin::Guard, __::AnonymousContentParentParameters};
 use core::pin::Pin;
 use rhizome::sync::Node;
 use std::any::TypeId;

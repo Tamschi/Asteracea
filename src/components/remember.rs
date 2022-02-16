@@ -1,18 +1,17 @@
 use crate::{
-	include::{__for_::BoxedAnyOneK, private::Dereferenceable, render_callback::RenderOnce},
+	include::{private::Dereferenceable, render_callback::RenderOnce},
 	services::Invalidator,
 	__::Built,
 };
 use bumpalo::Bump;
-use lignin::{Guard, ThreadSafety};
+use lignin::{guard::ConsumedCallback, Guard, Node, ThreadSafety};
 use rhizome::sync::Inject;
 use std::{
-	any::Any,
 	collections::hash_map::DefaultHasher,
 	hash::Hasher,
 	marker::PhantomPinned,
+	mem,
 	pin::Pin,
-	ptr::NonNull,
 	sync::{
 		atomic::{AtomicBool, AtomicU32, Ordering},
 		Arc, Mutex,
@@ -33,10 +32,12 @@ impl Built for NoParentParameters {
 static GLOBAL_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 asteracea::component! {
-	pub Remember(
+	/// Tries(!) to skip rendering. `.or_unless` is only evaluated if the content didn't [invalidate](`dyn Invalidator`) itself, and not on first render.
+	///
+	/// > **Optimize me!**: The current implementation does what it should, but is very inefficient.
+	pub Remember<S: ThreadSafety>(
 		dyn invalidator?: dyn Invalidator,
-	)
-	<S: ThreadSafety>(
+	)(
 		// for_unchanged?: &R,
 		or_unless?: impl FnOnce() -> bool,
 		__Asteracea__anonymous_content: (NoParentParameters, Box<RenderOnce<'_, 'bump, S>>),
@@ -46,9 +47,9 @@ asteracea::component! {
 		let this = Arc::pin(Mutex::new(None::<Pin<Dereferenceable<Self>>>));
 		if let Some(invalidator) = invalidator {
 			<dyn Invalidator>::inject(node.as_ref(), {
-				let this = Pin::clone(&this);
+				let this = SafetyHack(Pin::clone(&this));
 				move || {
-					if let Some(this) = this.lock().unwrap().as_ref() {
+					if let Some(this) = this.0.lock().unwrap().as_ref() {
 						this.invalidated.store(true, Ordering::Release)
 					}
 					invalidator.invalidate()
@@ -70,6 +71,11 @@ asteracea::component! {
 		hasher.into()
 	};
 
+	let self.current = Mutex::<Arc::<(Mutex<Bump>, Guard<'static, S>)>>::new(Arc::new((
+		Bump::new().into(),
+		Guard::new(Node::Multi(&[]), None),
+	)));
+
 	{
 		if !self.this_set.load(Ordering::Acquire) {
 			*self.this.lock().unwrap() = Some(unsafe {
@@ -78,12 +84,38 @@ asteracea::component! {
 			self.this_set.store(true, Ordering::Release);
 		}
 
+		let mut hasher = self.hasher.lock().unwrap();
+		let mut current = self.current.lock().unwrap();
 		if self.invalidated.swap(false, Ordering::SeqCst)
 			|| or_unless.map(|f| f()).unwrap_or(false) {
-				//TODO
+				let inner_bump = Bump::new();
+				let guard = __Asteracea__anonymous_content.1(unsafe { &*(&inner_bump as *const _) })?;
+
+				*current = {
+					hasher.write_u8(1);
+					Arc::new((
+						inner_bump.into(),
+						unsafe { detach_guard(guard) },
+					))
+				};
 		}
 
-		//TODO
-		__Asteracea__anonymous_content.1(bump)?
+		unsafe {
+			detach_guard(Guard::new(
+				Node::Memoized{ state_key: hasher.finish(), content: &*current.1 },
+				Some(unsafe { ConsumedCallback::new(
+					|payload_ptr| drop(Arc::from_raw(payload_ptr as *const (Mutex<Bump>, Guard<'static, S>))),
+					Arc::into_raw(Arc::clone(&*current)).cast(),
+				) }),
+			))
+		}
 	}
+}
+
+struct SafetyHack<T>(T);
+unsafe impl<T> Send for SafetyHack<T> {}
+unsafe impl<T> Sync for SafetyHack<T> {}
+
+unsafe fn detach_guard<S: ThreadSafety>(guard: Guard<'_, S>) -> Guard<'static, S> {
+	mem::transmute(guard)
 }
