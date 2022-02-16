@@ -35,6 +35,7 @@ asteracea::component! {
 	/// Tries(!) to skip rendering. `.or_unless` is only evaluated if the content didn't [invalidate](`dyn Invalidator`) itself, and not on first render.
 	///
 	/// > **Optimize me!**: The current implementation does what it should, but is very inefficient.
+	//TODO: Move this generic onto the render method, if possible.
 	pub Remember<S: ThreadSafety>(
 		dyn invalidator?: dyn Invalidator,
 	)(

@@ -1,9 +1,10 @@
 use asteracea::components::Remember;
+use lignin::ThreadSafe;
 
 asteracea::component! {
 	FrequentlyUnchanged()()
 
-	<*Remember
+	<*Remember::<ThreadSafe>
 		// .for_unchanged={&()}
 		.or_unless={|| false}
 		"Content!"
