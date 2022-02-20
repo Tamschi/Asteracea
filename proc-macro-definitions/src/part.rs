@@ -16,8 +16,8 @@ mod let_self;
 
 pub use self::let_self::LetSelf;
 use self::{
-	asterisk_for::AsteriskFor, bind::Bind, box_expression::BoxExpression,
-	component::Component, content::Content, defer::Defer, for_::For, html_comment::HtmlComment,
+	asterisk_for::AsteriskFor, bind::Bind, box_expression::BoxExpression, component::Component,
+	content::Content, defer::Defer, for_::For, html_comment::HtmlComment,
 	html_definition::HtmlDefinition,
 };
 use crate::{
