@@ -9,11 +9,8 @@ use crate::{
 use call2_for_syn::call2_strict;
 use debugless_unwrap::DebuglessUnwrap;
 use proc_macro2::{Span, TokenStream};
-use quote::{quote_spanned, ToTokens};
-use syn::{
-	braced, parse::ParseStream, parse_quote_spanned, spanned::Spanned, token::Brace,
-	visit_mut::VisitMut, Error, Expr, Ident, Label, Pat, Result, Token, Type, TypeReference,
-};
+use quote::quote_spanned;
+use syn::{braced, parse::ParseStream, token::Brace, Expr, Ident, Label, Pat, Result, Token};
 use tap::Pipe;
 use unquote::unquote;
 
@@ -85,9 +82,6 @@ impl<C: Configuration> ParseWithContext for AsteriskFor<C> {
 			auto_generics,
 		);
 
-		let asteracea = asteracea_ident(for_.span);
-		let node = quote_spanned!(for_.span=> node);
-
 		let item_state = quote_spanned!(for_.span.resolved_at(Span::mixed_site())=> asterisk_for.push(#item_state));
 		let braced_item_state = quote_spanned!(brace.span=> { #item_state });
 
@@ -146,13 +140,13 @@ impl<C: Configuration> AsteriskFor<C> {
 
 		let Self {
 			label,
-			asterisk,
+			asterisk: _,
 			for_,
-			type_configuration,
+			type_configuration: _,
 			field_name,
-			pat,
+			pat: _,
 			in_,
-			iterable,
+			iterable: _,
 			brace,
 			content,
 		} = self;
@@ -173,7 +167,7 @@ impl<C: Configuration> AsteriskFor<C> {
 			let asterisk_for = &this.#field_name;
 			let asterisk_for = &**asterisk_for;
 			let mut asterisk_for_items = ::#asteracea::bumpalo::vec![in #bump];
-			#label #for_ #field_name in asterisk_for.iter() #content
+			#label #for_ #field_name #in_ asterisk_for.iter() #content
 			::#asteracea::lignin::Node::Multi(asterisk_for_items.into_bump_slice())
 		})
 		.pipe(Ok)
