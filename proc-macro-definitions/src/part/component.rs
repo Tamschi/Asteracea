@@ -101,12 +101,12 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 			};
 
 			let mut new_params: Vec<Parameter<Token![*]>> = vec![];
-			while input.peek(Token![*]) {
+			while input.peek(Token![*]) && input.peek2(Ident) {
 				new_params.push(input.parse()?)
 			}
 
 			let mut render_params: Vec<Parameter<Token![.]>> = vec![];
-			while input.peek(Token![.]) && !input.peek(Token![..]) {
+			while input.peek(Token![.]) && input.peek2(Ident) {
 				render_params.push(input.parse()?)
 			}
 
