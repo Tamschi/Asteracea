@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-#![allow(clippy::unneeded_field_pattern)]
+#![allow(clippy::needless_late_init, clippy::unneeded_field_pattern)]
 
 extern crate proc_macro;
 
