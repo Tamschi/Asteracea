@@ -1,3 +1,4 @@
+mod asterisk_for;
 mod async_;
 mod bind;
 mod box_expression;
@@ -16,7 +17,7 @@ mod let_self;
 
 pub use self::let_self::LetSelf;
 use self::{
-	async_::Async, bind::Bind, box_expression::BoxExpression, component::Component,
+	asterisk_for::AsteriskFor, async_::Async, bind::Bind, box_expression::BoxExpression, component::Component,
 	content::Content, defer::Defer, for_::For, html_comment::HtmlComment,
 	html_definition::HtmlDefinition,
 };
@@ -35,7 +36,7 @@ use syn::{
 	parse::{Parse, ParseStream, Result},
 	spanned::Spanned as _,
 	token::{Brace, Bracket},
-	Attribute, Error, Expr, Generics, Ident, LitStr, Pat, Token, Visibility,
+	Attribute, Error, Expr, Generics, Ident, Label, LitStr, Pat, Token, Visibility,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -43,6 +44,7 @@ use unquote::unquote;
 
 #[allow(clippy::large_enum_variant, clippy::type_complexity)]
 pub(crate) enum Part<C: Configuration> {
+	AsteriskFor(AsteriskFor<C>),
 	Async(Async<C>),
 	Bind(Bind<C>),
 	Box(BoxExpression<C>),
@@ -90,7 +92,8 @@ enum PartKind {
 impl<C: Configuration> Part<C> {
 	fn kind(&self) -> PartKind {
 		match self {
-			Part::Async(_)
+			Part::AsteriskFor(_)
+			| Part::Async(_)
 			| Part::Bind(_)
 			| Part::Box(_)
 			| Part::BumpFormat(_)
@@ -181,7 +184,19 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 	type Output = Option<Self>;
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let lookahead = input.lookahead1();
-		if lookahead.peek(Token![async]) {
+		if lookahead.peek(Token![*]) && {
+			let input = input.fork();
+			input.parse::<Token![*]>().expect("infallible");
+			input.parse::<Option<Label>>().expect("infallible");
+			input
+				.parse::<Option<Token![for]>>()
+				.expect("infallible")
+				.is_some()
+		} {
+			Some(Part::AsteriskFor(AsteriskFor::parse_with_context(
+				input, cx,
+			)?))
+		} else if lookahead.peek(Token![async]) {
 			Some(Part::Async(Async::parse_with_context(input, cx)?))
 		} else if lookahead.peek(bind::kw::bind) {
 			Some(Part::Bind(Bind::parse_with_context(input, cx)?))
@@ -382,6 +397,7 @@ impl<C: Configuration> Part<C> {
 		let thread_safety = &cx.thread_safety;
 		let prefer_thread_safe = &cx.prefer_thread_safe;
 		let mut part_tokens = match self {
+			Part::AsteriskFor(asterisk_for) => asterisk_for.part_tokens(cx)?,
 			Part::Async(async_) => async_.part_tokens(cx)?,
 			Part::Bind(bind) => bind.part_tokens(cx)?,
 			Part::Box(box_expression) => box_expression.part_tokens(cx)?,
