@@ -1,5 +1,7 @@
+use std::any::TypeId;
+
 use bumpalo::Bump;
-use rhizome::Node;
+use rhizome::sync::Node;
 
 asteracea::component! {
 	Deferred()() []
@@ -33,8 +35,8 @@ asteracea::component! {
 
 #[test]
 fn defer() {
-	let root = Node::new_for::<()>();
-	let component = Deferrer::new(&root.into(), Deferrer::new_args_builder().build()).unwrap();
+	let root = Node::new(TypeId::of::<()>());
+	let component = Deferrer::new(root.as_ref(), Deferrer::new_args_builder().build()).unwrap();
 
 	let bump = Bump::new();
 	let _vdom = Box::pin(component)

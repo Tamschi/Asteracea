@@ -335,7 +335,7 @@ impl EventBindingDefinition {
 				);
 				let panic = quote_spanned! {active.span.resolved_at(Span::mixed_site())=>
 					const fn #const_name() {
-						panic!("Keyword `active` is not valid for this event; the event is not cancelable.")
+						panic!("Keyword `active` is not valid for this event; the event is not cancellable.")
 					}
 					#const_name()
 				};

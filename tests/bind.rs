@@ -1,5 +1,7 @@
+use std::any::TypeId;
+
 use bumpalo::Bump;
-use rhizome::Node;
+use rhizome::sync::Node;
 use tap::Pipe;
 
 asteracea::component! {
@@ -63,8 +65,8 @@ asteracea::component! {
 
 #[test]
 fn bind() {
-	let root = std::sync::Arc::new(Node::new_for::<()>());
-	let component = Binder::new(&root, Binder::new_args_builder().build()).unwrap();
+	let root = Node::new(TypeId::of::<()>());
+	let component = Binder::new(root.as_ref(), Binder::new_args_builder().build()).unwrap();
 
 	let bump = Bump::new();
 	let _vdom = Box::pin(component)
@@ -72,21 +74,21 @@ fn bind() {
 		.render(&bump, Binder::render_args_builder().build())
 		.unwrap();
 
-	BinderMover::new(&root, BinderMover::new_args_builder().build())
+	BinderMover::new(root.as_ref(), BinderMover::new_args_builder().build())
 		.unwrap()
 		.pipe(Box::pin)
 		.as_ref()
 		.render(&bump, BinderMover::render_args_builder().build())
 		.unwrap();
 
-	Named::new(&root, Named::new_args_builder().build())
+	Named::new(root.as_ref(), Named::new_args_builder().build())
 		.unwrap()
 		.pipe(Box::pin)
 		.as_ref()
 		.render(&bump, Named::render_args_builder().build())
 		.unwrap();
 
-	NamedMoved::new(&root, NamedMoved::new_args_builder().build())
+	NamedMoved::new(root.as_ref(), NamedMoved::new_args_builder().build())
 		.unwrap()
 		.pipe(Box::pin)
 		.as_ref()

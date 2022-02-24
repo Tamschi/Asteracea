@@ -58,11 +58,7 @@ impl AddExt for Generics {
 				debug_assert!(other.lt_token.is_some())
 			}
 			Cow::Owned(Generics {
-				lt_token: self
-					.lt_token
-					.as_ref()
-					.or_else(|| other.lt_token.as_ref())
-					.cloned(),
+				lt_token: self.lt_token.as_ref().or(other.lt_token.as_ref()).cloned(),
 				params: merging_iterator::MergeIter::with_custom_ordering(
 					self.params.iter(),
 					other.params.iter(),
@@ -76,11 +72,7 @@ impl AddExt for Generics {
 				)
 				.cloned()
 				.collect(),
-				gt_token: self
-					.gt_token
-					.as_ref()
-					.or_else(|| other.gt_token.as_ref())
-					.cloned(),
+				gt_token: self.gt_token.as_ref().or(other.gt_token.as_ref()).cloned(),
 				where_clause: self
 					.where_clause
 					.add(&other.where_clause)

@@ -1,4 +1,5 @@
 mod asterisk_for;
+mod async_;
 mod bind;
 mod box_expression;
 mod bump_format_shorthand;
@@ -16,8 +17,8 @@ mod let_self;
 
 pub use self::let_self::LetSelf;
 use self::{
-	asterisk_for::AsteriskFor, bind::Bind, box_expression::BoxExpression, component::Component,
-	content::Content, defer::Defer, for_::For, html_comment::HtmlComment,
+	asterisk_for::AsteriskFor, async_::Async, bind::Bind, box_expression::BoxExpression,
+	component::Component, content::Content, defer::Defer, for_::For, html_comment::HtmlComment,
 	html_definition::HtmlDefinition,
 };
 use crate::{
@@ -44,6 +45,7 @@ use unquote::unquote;
 #[allow(clippy::large_enum_variant, clippy::type_complexity)]
 pub(crate) enum Part<C: Configuration> {
 	AsteriskFor(AsteriskFor<C>),
+	Async(Async<C>),
 	Bind(Bind<C>),
 	Box(BoxExpression<C>),
 	BumpFormat(BumpFormat),
@@ -91,6 +93,7 @@ impl<C: Configuration> Part<C> {
 	fn kind(&self) -> PartKind {
 		match self {
 			Part::AsteriskFor(_)
+			| Part::Async(_)
 			| Part::Bind(_)
 			| Part::Box(_)
 			| Part::BumpFormat(_)
@@ -193,6 +196,8 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 			Some(Part::AsteriskFor(AsteriskFor::parse_with_context(
 				input, cx,
 			)?))
+		} else if lookahead.peek(Token![async]) {
+			Some(Part::Async(Async::parse_with_context(input, cx)?))
 		} else if lookahead.peek(bind::kw::bind) {
 			Some(Part::Bind(Bind::parse_with_context(input, cx)?))
 		} else if lookahead.peek(Token![box]) {
@@ -393,6 +398,7 @@ impl<C: Configuration> Part<C> {
 		let prefer_thread_safe = &cx.prefer_thread_safe;
 		let mut part_tokens = match self {
 			Part::AsteriskFor(asterisk_for) => asterisk_for.part_tokens(cx)?,
+			Part::Async(async_) => async_.part_tokens(cx)?,
 			Part::Bind(bind) => bind.part_tokens(cx)?,
 			Part::Box(box_expression) => box_expression.part_tokens(cx)?,
 			Part::BumpFormat(bump_format) => {
@@ -492,7 +498,11 @@ impl<C: Configuration> Part<C> {
 				})
 			}
 		};
-		cx.prefer_thread_safe.to_tokens(&mut part_tokens);
+
+		match self {
+			Self::Async(_) => (),
+			_ => cx.prefer_thread_safe.to_tokens(&mut part_tokens),
+		}
 		Ok(part_tokens)
 	}
 }

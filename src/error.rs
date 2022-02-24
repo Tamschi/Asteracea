@@ -12,6 +12,12 @@ use std::{
 	writeln,
 };
 
+mod incompatible_runtime_dependency;
+mod runtime_dependency_missing;
+
+pub use incompatible_runtime_dependency::IncompatibleRuntimeDependency;
+pub use runtime_dependency_missing::RuntimeDependencyMissing;
+
 /// [`Result`](`core::result::Result`) shorthand for Asteracea-components.
 pub type Result<T> = stdResult<T, Escalation>;
 
@@ -59,7 +65,7 @@ impl From<Caught<dyn Send + Any>> for Escalation {
 	fn from(caught: Caught<dyn Send + Any>) -> Self {
 		let throwable = Throwable {
 			source: caught.boxed,
-			trace: caught.trace.unwrap_or_else(Vec::new),
+			trace: caught.trace.unwrap_or_default(),
 		};
 		if cfg!(feature = "force-unwind") || caught.was_panic {
 			resume_unwind(Box::new(throwable))
@@ -78,7 +84,7 @@ impl<E: Send + Any> From<Caught<E>> for Escalation {
 	fn from(caught: Caught<E>) -> Self {
 		let throwable = Throwable {
 			source: caught.boxed,
-			trace: caught.trace.unwrap_or_else(Vec::new),
+			trace: caught.trace.unwrap_or_default(),
 		};
 		if cfg!(feature = "force-unwind") || caught.was_panic {
 			resume_unwind(Box::new(throwable))
@@ -244,6 +250,14 @@ impl<E: Display> Display for Caught<E> {
 impl<E: Error> Error for Caught<E> {
 	fn cause(&self) -> Option<&dyn Error> {
 		Some(&self.boxed)
+	}
+}
+
+impl Escalate for Caught<dyn Send + Any> {
+	type Output = Escalation;
+
+	fn escalate(self) -> Self::Output {
+		Escalation::from(self)
 	}
 }
 

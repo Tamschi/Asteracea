@@ -1,6 +1,8 @@
+use std::any::TypeId;
+
 use bumpalo::Bump;
 use ergo_pin::ergo_pin;
-use rhizome::Node;
+use rhizome::sync::Node;
 
 asteracea::component! {
 	Container()(..)
@@ -27,8 +29,8 @@ asteracea::component! {
 #[test]
 #[ergo_pin]
 fn content_in_container() {
-	let root = Node::new_for::<()>().into_arc();
-	let parent = pin!(Parent::new(&root, Parent::new_args_builder().build()).unwrap());
+	let root = Node::new(TypeId::of::<()>());
+	let parent = pin!(Parent::new(root.as_ref(), Parent::new_args_builder().build()).unwrap());
 	let bump = Bump::new();
 	let vdom = parent
 		.as_ref()

@@ -1,5 +1,6 @@
 use super::{GenerateContext, LetSelf, Part};
 use crate::{
+	asteracea_ident,
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
 	storage_context::{ParseContext, ParseWithContext},
 	workaround_module::Configuration,
@@ -10,21 +11,22 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
 use syn::{parse::ParseStream, Ident, Result, Token, Visibility};
 
+//TODO?: Explicit moving into the render closure?
 #[allow(clippy::type_complexity)]
 #[allow(dead_code)]
-pub struct BoxExpression<C: Configuration> {
-	box_: Token![box],
+pub struct Async<C: Configuration> {
+	async_: Token![async],
 	visibility: Visibility,
 	field_name: Ident,
 	type_configuration: StorageTypeConfiguration,
 	content: Box<Part<C>>,
 }
 
-impl<C: Configuration> ParseWithContext for BoxExpression<C> {
+impl<C: Configuration> ParseWithContext for Async<C> {
 	type Output = Self;
 
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
-		let box_: Token![box] = input.parse()?;
+		let async_: Token![async] = input.parse()?;
 		let storage_configuration: StorageConfiguration = input.parse()?;
 
 		let visibility = storage_configuration.visibility();
@@ -32,7 +34,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		let field_name = storage_configuration
 			.field_name()
 			.cloned()
-			.unwrap_or_else(|| cx.storage_context.next_field(box_.span));
+			.unwrap_or_else(|| cx.storage_context.next_field(async_.span));
 
 		let type_configuration = storage_configuration.type_configuration();
 
@@ -52,15 +54,22 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		let type_path =
 			type_configuration.type_path(&cx.storage_context, &field_name, cx.storage_generics)?;
 
-		let boxed_value = parse_context.storage_context.value(
+		let storage_value = parse_context.storage_context.value(
 			type_configuration.type_is_generated(),
 			&type_path,
 			auto_generics,
 		);
 
+		let asteracea = asteracea_ident(async_.span);
+		let node = quote_spanned!(async_.span.resolved_at(Span::call_site())=> node);
 		call2_strict(
-			quote_spanned! {box_.span=>
-				let #visibility self.#field_name: ::std::pin::Pin<::std::boxed::Box<#type_path>> = ::std::boxed::Box::pin(#boxed_value);
+			quote_spanned! {async_.span=>
+				let #visibility self.#field_name =
+					pin ::#asteracea::include::async_::Async::<#type_path>
+					::new(::std::boxed::Box::pin({
+						let #node = #node.clone_handle();
+						async move { ::#asteracea::error::Result::Ok(#storage_value) }
+					}));
 			},
 			|input| LetSelf::<C>::parse_with_context(input, cx),
 		)
@@ -88,7 +97,7 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 		cx.assorted_items.extend(parse_context.assorted_items);
 
 		Ok(Self {
-			box_,
+			async_,
 			visibility,
 			field_name,
 			type_configuration,
@@ -97,16 +106,22 @@ impl<C: Configuration> ParseWithContext for BoxExpression<C> {
 	}
 }
 
-impl<C: Configuration> BoxExpression<C> {
+impl<C: Configuration> Async<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		let field_name = &self.field_name;
+		let field_name_pinned = Ident::new(&format!("{}_pinned", field_name), field_name.span());
+		let bump = quote_spanned!(self.async_.span.resolved_at(Span::call_site())=> bump);
 		let content = self.content.part_tokens(cx)?;
 
+		let asteracea = asteracea_ident(self.async_.span);
 		Ok(
-			quote_spanned! (self.box_.span.resolved_at(Span::mixed_site())=> {
-				let #field_name = this.#field_name.as_ref();
-				let this = #field_name;
-				#content
+			quote_spanned! (self.async_.span.resolved_at(Span::mixed_site())=> {
+				this.#field_name_pinned().as_async_content(Box::new(|#bump| {
+					let this = this.#field_name_pinned().storage_pinned()?;
+					let #field_name = this.as_ref();
+					let this = #field_name;
+					::#asteracea::error::Result::Ok(#content)
+				}))
 			}),
 		)
 	}

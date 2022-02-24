@@ -295,9 +295,9 @@ impl<'a> CodeState<'a> {
 
 				let root = {
 					struct Root;
-					asteracea::rhizome::Node::new_for::<Root>().into()
+					asteracea::__::rhizome::sync::Node::new(core::any::TypeId::of::<Root>())
 				};
-				let component = Box::pin(NAME::new(&root, NAME::new_args_builder()CONSTRUCTOR_BUILD.build())?);
+				let component = Box::pin(NAME::new(root.as_ref(), NAME::new_args_builder()CONSTRUCTOR_BUILD.build())?);
 
 				let bump = asteracea::bumpalo::Bump::new();
 				let rendered = component.as_ref().render(&bump, NAME::render_args_builder()RENDER_BUILD.build())?;

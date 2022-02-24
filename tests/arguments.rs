@@ -1,6 +1,8 @@
+use std::any::TypeId;
+
 use asteracea::component;
 use bumpalo::Bump;
-use rhizome::Node;
+use rhizome::sync::Node;
 
 component! {
 	pub Greeting()(
@@ -52,7 +54,7 @@ asteracea::component! {
 fn test() {
 	let outer = Box::pin(
 		Outer::new(
-			&Node::new_for::<()>().into_arc(),
+			Node::new(TypeId::of::<()>()).as_ref(),
 			Outer::new_args_builder().build(),
 		)
 		.unwrap(),

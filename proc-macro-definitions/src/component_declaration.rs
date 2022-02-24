@@ -40,6 +40,7 @@ mod kw {
 pub struct ComponentDeclaration {
 	attributes: Vec<Attribute>,
 	visibility: Visibility,
+	async_: Option<Token![async]>,
 	name: Ident,
 	component_generics: Generics,
 	storage_context: StorageContext,
@@ -54,7 +55,6 @@ pub struct ComponentDeclaration {
 	render_type: RenderType,
 	constructor_block: Option<(kw::new, kw::with, Block)>,
 	body: Part<ComponentRenderConfiguration>,
-	rhizome_extractions: Vec<TokenStream>,
 	assorted_items: Vec<Item>,
 	callback_registrations: Vec<(Ident, Type)>,
 }
@@ -86,6 +86,7 @@ impl Parse for ComponentDeclaration {
 	fn parse(input: ParseStream<'_>) -> Result<Self> {
 		let attributes = input.call(Attribute::parse_outer)?;
 		let visibility = input.parse()?;
+		let async_ = input.parse().expect("infallible");
 
 		let component_name: Ident = input
 			.parse()
@@ -181,50 +182,7 @@ impl Parse for ComponentDeclaration {
 
 		let render_type = input.parse()?;
 
-		let mut rhizome_extractions = Vec::new();
-
 		let mut cx = ParseContext::new_root(&visibility, &component_name, &component_generics);
-
-		// Dependency extraction:
-		while let Some(ref_token) = input.parse::<Option<Token![ref]>>().expect("infallible") {
-			let rhizome_lookahead = input.lookahead1();
-			if rhizome_lookahead.peek(Token![;]) {
-				input.parse::<Token![;]>()?;
-				//TODO: Warn if this is unnecessary!
-				continue;
-			} else if rhizome_lookahead.peek(Token![for]) {
-				let extracted_for = input.parse::<Token![for]>()?;
-				let scope: Lifetime = input.parse()?;
-				if scope.ident != "NEW" {
-					return Err(Error::new_spanned(scope, "Expected 'NEW."));
-				}
-
-				let extracted_let = quote_spanned!(ref_token.span=> let);
-				let extracted_name: Ident = input.parse()?;
-				let extracted_colon: Token![:] = input.parse()?;
-				let extracted_type: Type = input.parse()?;
-				let extracted_question: Token![?] = input.parse()?;
-
-				let semi = Token![;](extracted_question.span);
-
-				let asteracea = asteracea_ident(extracted_for.span);
-
-				//TODO: Is there a way to write this span more nicely?
-				let ref_statement_span = quote!(#ref_token #extracted_for #scope #extracted_name #extracted_colon #extracted_type).span();
-				let call_site_node =
-					Ident::new("node", ref_statement_span.resolved_at(Span::call_site()));
-				rhizome_extractions.push({
-					quote_spanned! {
-						ref_statement_span=>
-						#extracted_let #extracted_name#extracted_colon std::sync::Arc<#extracted_type>
-						= <#extracted_type>::extract_from(&#call_site_node)
-							.map_err(|error| ::#asteracea::error::Escalate2::escalate(::std::format!("Dependency resolution error in component {}: {}", ::std::stringify!(#component_name), error)))#extracted_question#semi
-					}
-				})
-			} else {
-				return Err(rhizome_lookahead.error());
-			}
-		}
 
 		let constructor_block = if input.peek(kw::new) {
 			unquote! {input,
@@ -248,6 +206,7 @@ impl Parse for ComponentDeclaration {
 		for constructor_argument in constructor_args.iter() {
 			if let ConstructorArgument {
 				capture: arguments::Capture::Yes(visibility),
+				injection_dyn,
 				argument: Argument { fn_arg, .. },
 			} = constructor_argument
 			{
@@ -261,6 +220,20 @@ impl Parse for ComponentDeclaration {
 					let PatType {
 						colon_token, ty, ..
 					} = fn_arg;
+
+					let ty = match injection_dyn {
+						None => Type::clone(ty),
+						Some(dyn_) => {
+							let asteracea = asteracea_ident(dyn_.span);
+							parse_quote_spanned! {dyn_.span.resolved_at(Span::mixed_site())=>
+								<
+									<#ty as ::#asteracea::__::rhizome::sync::Extract>::Extracted
+									as ::#asteracea::__::rhizome::sync::Extracted<::core::any::TypeId>
+								>::Extracted
+							}
+						}
+					};
+
 					quote!(#pat#colon_token #ty)
 				};
 
@@ -303,6 +276,7 @@ impl Parse for ComponentDeclaration {
 			attributes,
 			storage_context,
 			visibility,
+			async_,
 			name: component_name,
 			component_generics,
 			constructor_attributes,
@@ -316,7 +290,6 @@ impl Parse for ComponentDeclaration {
 			render_type,
 			constructor_block,
 			body,
-			rhizome_extractions,
 			callback_registrations: Rc::try_unwrap(callback_registrations)
 				.expect(
 					"Internal Asteracea error: `callback_registrations` still referenced elsewhere",
@@ -351,6 +324,7 @@ impl ComponentDeclaration {
 		let Self {
 			attributes,
 			visibility,
+			async_,
 			name: component_name,
 			mut storage_context,
 			component_generics,
@@ -365,7 +339,6 @@ impl ComponentDeclaration {
 			render_type,
 			constructor_block,
 			body,
-			rhizome_extractions,
 			assorted_items: mut random_items,
 			callback_registrations,
 		} = self;
@@ -453,6 +426,47 @@ impl ComponentDeclaration {
 		let new_lifetime: Lifetime = parse2(quote_spanned!(Span::call_site()=> 'NEW)).unwrap();
 		let render_lifetime: Lifetime =
 			parse2(quote_spanned!(Span::call_site()=> 'RENDER)).unwrap();
+
+		let (injected_args, constructor_args): (Vec<_>, Vec<_>) = constructor_args
+			.into_iter()
+			.partition(|arg| arg.injection_dyn.is_some());
+
+		let mut injected_pats = Vec::<&Pat>::new();
+		let mut dependency_extractions = Vec::<TokenStream>::new();
+		for injected_arg in &injected_args {
+			injected_pats.push(&*injected_arg.argument.fn_arg.pat);
+
+			let span = injected_arg
+				.injection_dyn
+				.as_ref()
+				.unwrap()
+				.span
+				.resolved_at(Span::mixed_site());
+			let ty = &*injected_arg.argument.fn_arg.ty;
+			let value = quote_spanned! {span=>
+				<#ty as ::#asteracea::__::rhizome::sync::Extract>::extract(parent_node)
+					.map_err(::#asteracea::error::IncompatibleRuntimeDependency::<#ty>::new_and_log)
+					.map_err(::#asteracea::error::Escalate::escalate)?
+			};
+			let value = match (
+				injected_arg.argument.question.as_ref(),
+				injected_arg.argument.default.as_ref(),
+			) {
+				(None, None) => quote_spanned! {span=>
+					#value
+						.ok_or_else(|| ::#asteracea::error::RuntimeDependencyMissing::<#ty>::new_and_log())
+						.map_err(::#asteracea::error::Escalate::escalate)?
+				},
+				(None, Some((eq, default))) => {
+					quote_spanned! {eq.span.resolved_at(Span::mixed_site())=>
+						#value.unwrap_or_else(|| #default)
+					}
+				}
+				(Some(_), None) => todo!(),
+				(Some(_), Some(_)) => todo!(),
+			};
+			dependency_extractions.push(value);
+		}
 
 		let custom_new_args = constructor_args
 			.iter()
@@ -638,6 +652,19 @@ impl ComponentDeclaration {
 		let mut render_span_name = Literal::string(&format!("{}::{}", component_name, render));
 		render_span_name.set_span(render.span().resolved_at(Span::mixed_site()));
 
+		//FIXME:
+		//  This can be solved for async components using <https://github.com/tokio-rs/tracing/pull/1819> once that lands.
+		//  However, that macro is currently unhygienic (which causes e.g. the parameter names `debug` and `display` to collide), so that issue must be solved too.
+		let constructor_tracing_span = if async_.is_none() {
+			Some(quote_spanned! {Span::mixed_site()=>
+				// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.
+				// The following should be equivalent to skipping all fields and setting them one by one:
+				let _tracing_span = ::#asteracea::__::tracing::debug_span!(#new_span_name, #(#constructor_args_tracing_fields,)*).entered();
+			})
+		} else {
+			None
+		};
+
 		Ok(quote_spanned! {Span::mixed_site()=>
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
@@ -652,45 +679,40 @@ impl ComponentDeclaration {
 			#(#struct_definition)*
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
+				/// <!-- (suppress `missing_docs`) -->
 				#(#constructor_attributes)*
-				pub fn #new#new_generics(
-					parent_node: &::std::sync::Arc<#asteracea::rhizome::Node>,
+				pub #async_ fn #new#new_generics(
+					parent_node: ::core::pin::Pin<&::#asteracea::__::rhizome::sync::Node<
+						::core::any::TypeId,
+						::core::any::TypeId,
+						::#asteracea::__::rhizome::sync::DynValue,
+					>>,
 					args: #new_args_name#new_args_generic_args,
 				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
-					// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.
-					// The following should be equivalent to skipping all fields and setting them one by one:
-					let _tracing_span = ::#asteracea::__::tracing::debug_span!(#new_span_name, #(#constructor_args_tracing_fields,)*).entered();
+					#constructor_tracing_span
 
-					let #new_args_name {
+					// These are assigned at once to make sure name collisions error.
+					let (#new_args_name {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
-					} = args;
+					}, (#(#injected_pats,)*)) = (args, (#(#dependency_extractions,)*));
 
-					let #call_site_node = #asteracea::rhizome::extensions::TypeTaggedNodeArc::derive_for::<Self>(parent_node);
-					#(#rhizome_extractions)*
-					let mut #call_site_node = #call_site_node;
+					let mut #call_site_node = parent_node.branch_for(::core::any::TypeId::of::<Self>());
 
 					{} // Isolate constructor block.
 					#constructor_block_statements
 					{} // Dito.
 
-					//FIXME: The eager heap allocation here isn't great.
-					// It would probably be sensible to make this lazy through
-					// a "seed" or handle placed on the stack that can be referenced
-					// by child nodes and derived from further. A dependency extraction
-					// or seed lifetime extension would then initialise the backing
-					// data structure as needed.
-					// I really should add benchmarks before trying this, though.
-					let #call_site_node = #call_site_node.into_arc();
-
 					::std::result::Result::Ok(#constructed_value)
 				}
 
+				/// <!-- (suppress `missing_docs`) -->
 				pub fn new_args_builder#new_args_builder_generics()
 				-> #new_args_builder_name#new_args_builder_generic_args {
 					#new_args_name::builder()
 				}
 
+				/// <!-- (suppress `missing_docs`) -->
 				#(#render_attributes)*
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
@@ -710,6 +732,7 @@ impl ComponentDeclaration {
 					::std::result::Result::Ok(#body)
 				}
 
+				/// <!-- (suppress `missing_docs`) -->
 				pub fn render_args_builder#render_args_builder_generics()
 				-> #render_args_builder_name#render_args_builder_generic_args {
 					#render_args_name::builder()

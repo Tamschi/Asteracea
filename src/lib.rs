@@ -36,7 +36,6 @@ extern crate self as asteracea;
 pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
 pub use bumpalo;
 pub use lignin;
-pub use rhizome;
 pub use try_lazy_init;
 
 #[cfg(doctest)]
@@ -46,8 +45,6 @@ mod readme {}
 pub mod components;
 pub mod error;
 pub mod include;
-
-#[cfg(feature = "services")]
 pub mod services;
 
 /// Types implementing this trait can be accepted as value by conditional attributes.
