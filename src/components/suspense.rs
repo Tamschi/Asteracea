@@ -1,6 +1,6 @@
 use crate::{
 	include::{
-		async_::{AsyncContent, AsyncContentSubscription, Synchronized},
+		async_::{AsyncContent, ContentSubscription, Synchronized},
 		render_callback::RenderOnce,
 	},
 	services::{ContentRuntime, Invalidator},
@@ -21,6 +21,9 @@ impl Built for NoParentParameters {
 }
 
 asteracea::component! {
+	/// Renders `'spinner` unless `'ready` has finished construction.
+	///
+	/// `'ready`'s construction is scheduled automatically.
 	pub Suspense(
 		priv dyn runtime: dyn ContentRuntime,
 		priv dyn invalidator?: dyn Invalidator,
@@ -29,7 +32,7 @@ asteracea::component! {
 		mut ready: (NoParentParameters, AsyncContent<'_, RenderOnce<'_, 'bump, S>>),
 	) -> Node::<'bump, S>
 
-	let self.subscription = UnsafeCell::<Option<AsyncContentSubscription>>::new(None);
+	let self.subscription = UnsafeCell::<Option<ContentSubscription>>::new(None);
 
 	{
 		match ready.1.synchronize(unsafe{&mut *self.subscription.get()}) {
