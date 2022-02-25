@@ -34,7 +34,7 @@ impl Built for NoParentParameters {
 static GLOBAL_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 asteracea::component! {
-	/// Tries(!) to skip rendering. `.or_unless` is only evaluated if the content didn't [invalidate](`dyn Invalidator`) itself, and not on first render.
+	/// Tries(!) to skip rendering. `.or_unless` is only evaluated if the content didn't [invalidate](`Invalidator`) itself, and not on first render.
 	///
 	/// > **Optimize me!**: The current implementation does what it should, but is very inefficient.
 	//TODO: Move this generic onto the render method.
@@ -61,12 +61,9 @@ asteracea::component! {
 				// There's a good chance that implementing the method separately is better, or maybe the context should just be generally optional at the service side.
 				move |context: Option<&mut Context<'_>>| {
 					if let Some(this) = this.0.lock().unwrap().as_ref() {
-						this.invalidated.store(true, Ordering::Release)
+						this.invalidated.store(true, Ordering::Release);
 					}
-					match context {
-						Some(context) => invalidator.invalidate_with_context(context),
-						None => invalidator.invalidate(),
-					}
+					invalidator.invalidate_with_context(context);
 				}
 			}).1.ok().expect("Failed to inject new invalidator in `Remember`.");
 		}
