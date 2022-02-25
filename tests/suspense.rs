@@ -47,10 +47,9 @@ asteracea::component! {
 fn suspense() {
 	let root = Node::new(TypeId::of::<()>());
 
-	let future: Mutex<Option<(ContentFuture, Option<ServiceHandle<dyn Invalidator>>)>> =
-		Mutex::default();
-	let future: &Mutex<Option<(ContentFuture, Option<ServiceHandle<dyn Invalidator>>)>> =
-		unsafe { &*(&future as *const _) }; // Needs to be `'static`.
+	type FutureSlot = Mutex<Option<(ContentFuture, Option<ServiceHandle<dyn Invalidator>>)>>;
+	let future: FutureSlot = Mutex::default();
+	let future: &FutureSlot = unsafe { &*(&future as *const _) }; // Needs to be `'static`.
 
 	<dyn ContentRuntime>::inject(root.as_ref(), move |content_future, invalidator| {
 		if future

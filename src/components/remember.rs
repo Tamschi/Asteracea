@@ -17,6 +17,7 @@ use std::{
 		atomic::{AtomicBool, AtomicU32, Ordering},
 		Arc, Mutex,
 	},
+	task::Context,
 };
 use typed_builder::TypedBuilder;
 
@@ -51,11 +52,18 @@ asteracea::component! {
 		if let Some(invalidator) = invalidator {
 			<dyn Invalidator>::inject(node.as_ref(), {
 				let this = SafetyHack(Pin::clone(&this));
-				move || {
+
+				//TODO:
+				// I'm not certain merging and splitting the control/call flow here is a good idea.
+				// There's a good chance that implementing the method separately is better, or maybe the context should just be generally optional at the service side.
+				move |context: Option<&mut Context<'_>>| {
 					if let Some(this) = this.0.lock().unwrap().as_ref() {
 						this.invalidated.store(true, Ordering::Release)
 					}
-					invalidator.invalidate()
+					match context {
+						Some(context) => invalidator.invalidate_with_context(context),
+						None => invalidator.invalidate(),
+					}
 				}
 			}).1.ok().expect("Failed to inject new invalidator in `Remember`.");
 		}

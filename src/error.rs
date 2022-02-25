@@ -65,7 +65,7 @@ impl From<Caught<dyn Send + Any>> for Escalation {
 	fn from(caught: Caught<dyn Send + Any>) -> Self {
 		let throwable = Throwable {
 			source: caught.boxed,
-			trace: caught.trace.unwrap_or_else(Vec::new),
+			trace: caught.trace.unwrap_or_default(),
 		};
 		if cfg!(feature = "force-unwind") || caught.was_panic {
 			resume_unwind(Box::new(throwable))
@@ -84,7 +84,7 @@ impl<E: Send + Any> From<Caught<E>> for Escalation {
 	fn from(caught: Caught<E>) -> Self {
 		let throwable = Throwable {
 			source: caught.boxed,
-			trace: caught.trace.unwrap_or_else(Vec::new),
+			trace: caught.trace.unwrap_or_default(),
 		};
 		if cfg!(feature = "force-unwind") || caught.was_panic {
 			resume_unwind(Box::new(throwable))

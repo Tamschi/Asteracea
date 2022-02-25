@@ -701,6 +701,7 @@ impl ComponentDeclaration {
 			#(#struct_definition)*
 
 			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
+				/// <!-- (suppress `missing_docs`) -->
 				#(#constructor_attributes)*
 				pub #async_ fn #new#new_generics(
 					parent_node: ::core::pin::Pin<&::#asteracea::__::rhizome::sync::Node<
@@ -727,11 +728,13 @@ impl ComponentDeclaration {
 					::std::result::Result::Ok(#constructed_value)
 				}
 
+				/// <!-- (suppress `missing_docs`) -->
 				pub fn new_args_builder#new_args_builder_generics()
 				-> #new_args_builder_name#new_args_builder_generic_args {
 					#new_args_name::builder()
 				}
 
+				/// <!-- (suppress `missing_docs`) -->
 				#(#render_attributes)*
 				pub fn #render#render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
@@ -755,6 +758,7 @@ impl ComponentDeclaration {
 					::std::result::Result::Ok(#body)
 				}
 
+				/// <!-- (suppress `missing_docs`) -->
 				pub fn render_args_builder#render_args_builder_generics()
 				-> #render_args_builder_name#render_args_builder_generic_args {
 					#render_args_name::builder()
