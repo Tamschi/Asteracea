@@ -50,6 +50,9 @@ asteracea::component! {
 	new with {
 		let this = Arc::pin(Mutex::new(None::<Pin<Dereferenceable<Self>>>));
 		if let Some(invalidator) = invalidator {
+
+			//TODO: This is not currently exposed to content children, but needs to be.
+			// Should the resource node borrow node be threaded back out with the same lifetime through a `Cow`, as second constructor return value? (Probably yes.)
 			<dyn Invalidator>::inject(node.as_ref(), {
 				let this = SafetyHack(Pin::clone(&this));
 
