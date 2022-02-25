@@ -207,7 +207,9 @@ impl Parse for ComponentDeclaration {
 			if let ConstructorArgument {
 				capture: arguments::Capture::Yes(visibility),
 				injection_dyn,
-				argument: Argument { fn_arg, .. },
+				argument: Argument {
+					fn_arg, question, ..
+				},
 			} = constructor_argument
 			{
 				let span = match visibility {
@@ -221,7 +223,7 @@ impl Parse for ComponentDeclaration {
 						colon_token, ty, ..
 					} = fn_arg;
 
-					let ty = match injection_dyn {
+					let mut ty = match injection_dyn {
 						None => Type::clone(ty),
 						Some(dyn_) => {
 							let asteracea = asteracea_ident(dyn_.span);
@@ -233,6 +235,12 @@ impl Parse for ComponentDeclaration {
 							}
 						}
 					};
+
+					if let Some(question) = question {
+						ty = parse_quote_spanned! {question.span.resolved_at(Span::mixed_site())=>
+							::core::option::Option::<#ty>
+						}
+					}
 
 					quote!(#pat#colon_token #ty)
 				};
@@ -462,8 +470,8 @@ impl ComponentDeclaration {
 						#value.unwrap_or_else(|| #default)
 					}
 				}
-				(Some(_), None) => todo!(),
-				(Some(_), Some(_)) => todo!(),
+				(Some(_), None) => value,
+				(Some(_), Some(_)) => todo!("explicitly optional dependency with default"),
 			};
 			dependency_extractions.push(value);
 		}

@@ -1,3 +1,4 @@
+use super::{Invalidator, ServiceHandle};
 use crate::include::async_::ContentFuture;
 use rhizome::sync::derive_dependency;
 
@@ -22,12 +23,20 @@ pub trait ContentRuntime {
 	///
 	/// For best compatibility, callers of this method should take these possibilities into account.
 	/// However, it is possible (and often sensible) for a component to be compatible with only a certain subset of possible scheduler behaviour.
-	fn start_content_future(&self, content_future: ContentFuture);
+	fn start_content_future(
+		&self,
+		content_future: ContentFuture,
+		invalidator: Option<ServiceHandle<dyn Invalidator>>,
+	);
 }
 derive_dependency!(dyn ContentRuntime);
 
-impl<F: Fn(ContentFuture)> ContentRuntime for F {
-	fn start_content_future(&self, content_future: ContentFuture) {
-		self(content_future)
+impl<F: Fn(ContentFuture, Option<ServiceHandle<dyn Invalidator>>)> ContentRuntime for F {
+	fn start_content_future(
+		&self,
+		content_future: ContentFuture,
+		invalidator: Option<ServiceHandle<dyn Invalidator>>,
+	) {
+		self(content_future, invalidator)
 	}
 }
