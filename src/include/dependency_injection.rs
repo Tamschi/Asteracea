@@ -1,11 +1,5 @@
 use rhizome::sync::{DynValue, Node, NodeHandle};
-use std::{
-	any::TypeId,
-	borrow::BorrowMut,
-	cell::{RefCell, UnsafeCell},
-	ops::Deref,
-	pin::Pin,
-};
+use std::{any::TypeId, pin::Pin};
 
 pub type ResourceNode = Node<TypeId, TypeId, DynValue>;
 pub type ResourceNodeHandle = NodeHandle<TypeId, TypeId, DynValue>;
@@ -15,9 +9,10 @@ enum ParentOrBranched<'a> {
 	Branched(ResourceNodeHandle),
 }
 
+#[must_use = "This should be passed further along as `SparseNode`."]
 pub struct BranchOnBorrow<'a> {
 	tag: TypeId,
-	state: UnsafeCell<ParentOrBranched<'a>>,
+	state: ParentOrBranched<'a>,
 }
 
 impl<'a> BranchOnBorrow<'a> {
@@ -28,28 +23,27 @@ impl<'a> BranchOnBorrow<'a> {
 	pub fn new(tag: TypeId, parent: Pin<&'a ResourceNode>) -> Self {
 		Self {
 			tag,
-			state: ParentOrBranched::Parent(parent).into(),
+			state: ParentOrBranched::Parent(parent),
 		}
 	}
 
 	#[must_use = "This operation is usually not free, so discarding the result is usually not what you want. If you just want to make sure a node is created, you can discard explicitly."]
 	pub fn borrow(self: Pin<&mut Self>) -> Pin<&ResourceNode> {
-		unsafe {
-			if let ParentOrBranched::Parent(parent) = &*self.state.get() {
-				*self.state.get() = ParentOrBranched::Branched(parent.branch_for(self.tag));
-			}
+		let this = unsafe { Pin::into_inner_unchecked(self) };
+
+		if let ParentOrBranched::Parent(parent) = this.state {
+			this.state = ParentOrBranched::Branched(parent.branch_for(this.tag));
 		}
 
-		match unsafe { &*self.state.get() } {
-			ParentOrBranched::Parent(parent) => *parent,
+		match &this.state {
+			ParentOrBranched::Parent(_) => unreachable!(),
 			ParentOrBranched::Branched(branched) => branched.as_ref(),
 		}
 	}
 
+	#[must_use]
 	pub fn into_sparse_node(self) -> SparseNode<'a> {
-		SparseNode {
-			value: self.state.into_inner(),
-		}
+		SparseNode { value: self.state }
 	}
 }
 
