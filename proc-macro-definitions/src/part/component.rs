@@ -58,9 +58,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				render_params.push(param)
 			}
 
-			let sparse_resource_node = cx.push_sparse_resource_node();
 			let content_children = parse_content_children(input, cx)?;
-			cx.pop_sparse_resource_node();
 
 			if input.peek(Token![>]) {
 				unquote!(input, >);
@@ -124,7 +122,9 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				render_params.push(input.parse()?)
 			}
 
+			let sparse_resource_node = cx.storage_context.push_sparse_resource_node(open_span);
 			let content_children = parse_content_children(input, cx)?;
+			cx.storage_context.pop_sparse_resource_node();
 
 			if input.peek(Token![/]) {
 				let closing_name: Ident;
@@ -157,11 +157,16 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				&[],
 			)?;
 
+			let resource_node = cx.storage_context.active_resource_node();
 			Ok(Self::Instantiated {
 				open_span,
 				capture: call2_strict(
 					quote_spanned! {open_span=>
-						let #visibility self.#field_name = pin #path::new(node.as_ref(), #new_params)#dot_await?;
+						let #visibility self.#field_name: #path = pin {
+							let constructed = #path::new(#resource_node.as_ref(), #new_params)#dot_await?;
+							#sparse_resource_node = constructed.1;
+							constructed.0
+						};
 					},
 					|input| LetSelf::<C>::parse_with_context(input, cx),
 				)

@@ -30,7 +30,11 @@ asteracea::component! {
 #[ergo_pin]
 fn content_in_container() {
 	let root = Node::new(TypeId::of::<()>());
-	let parent = pin!(Parent::new(root.as_ref(), Parent::new_args_builder().build()).unwrap());
+	let parent = pin!(
+		Parent::new(root.as_ref(), Parent::new_args_builder().build())
+			.unwrap()
+			.0
+	);
 	let bump = Bump::new();
 	let vdom = parent
 		.as_ref()

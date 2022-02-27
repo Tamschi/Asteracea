@@ -7,11 +7,13 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
 use syn::{
 	parse::ParseStream,
+	parse_quote_spanned,
 	punctuated::{Pair, Punctuated},
 	spanned::Spanned,
 	ExprPath, Field, GenericParam, Generics, Ident, Item, LifetimeDef, Result, Token, Type,
 	TypeParam, Visibility,
 };
+use vec1::{vec1, Vec1};
 
 pub struct ParseContext<'a> {
 	pub item_visibility: &'a Visibility,
@@ -37,7 +39,9 @@ impl<'a> ParseContext<'a> {
 				field_definitions: vec![],
 				generated_names: 0,
 				local_sparse_resource_nodes: vec![],
-				active_sparse_resource_nodes_stack: vec![],
+				active_resource_nodes_stack: vec1![
+					parse_quote_spanned!(Span::mixed_site()=> resource_node)
+				],
 			},
 			assorted_items: vec![],
 			callback_registrations: Rc::default(),
@@ -54,7 +58,9 @@ impl<'a> ParseContext<'a> {
 				field_definitions: vec![],
 				generated_names: 0,
 				local_sparse_resource_nodes: vec![],
-				active_sparse_resource_nodes_stack: vec![],
+				active_resource_nodes_stack: vec1![
+					parse_quote_spanned!(Span::mixed_site()=> resource_node)
+				],
 			},
 			assorted_items: vec![],
 			callback_registrations: Rc::default(),
@@ -75,7 +81,9 @@ impl<'a> ParseContext<'a> {
 				field_definitions: vec![],
 				generated_names: 0,
 				local_sparse_resource_nodes: vec![],
-				active_sparse_resource_nodes_stack: vec![],
+				active_resource_nodes_stack: vec1![
+					parse_quote_spanned!(Span::mixed_site()=> resource_node)
+				],
 			},
 			assorted_items: vec![],
 			callback_registrations: Rc::clone(&self.callback_registrations),
@@ -88,7 +96,7 @@ pub struct StorageContext {
 	field_definitions: Vec<FieldDefinition>,
 	generated_names: usize,
 	local_sparse_resource_nodes: Vec<Ident>,
-	active_sparse_resource_nodes_stack: Vec<Ident>,
+	active_resource_nodes_stack: Vec1<Ident>,
 }
 
 impl StorageContext {
@@ -152,12 +160,22 @@ impl StorageContext {
 				None
 			};
 
-		quote_spanned! {type_path.span().resolved_at(Span::mixed_site())=>
+		let value = quote_spanned! {type_path.span().resolved_at(Span::mixed_site())=>
 			#type_path {
 				#(#field_names: (#field_values),)* // The parentheses around #field_values stop the grammar from breaking as much if no value is provided.
 				#phantom_data
 				#phantom_pinned
 			}
+		};
+
+		if self.local_sparse_resource_nodes.is_empty() {
+			value
+		} else {
+			let local_sparse_resource_nodes = self.local_sparse_resource_nodes.iter();
+			quote_spanned!(type_path.span().resolved_at(Span::mixed_site())=> {
+				#(let #local_sparse_resource_nodes;)*
+				#value
+			})
 		}
 	}
 
@@ -203,6 +221,30 @@ impl StorageContext {
 		}
 
 		fields
+	}
+
+	#[must_use]
+	pub fn push_sparse_resource_node(&mut self, span: Span) -> Ident {
+		let new_ident = Ident::new(
+			&format!(
+				"sparse_resource_node_{}",
+				self.local_sparse_resource_nodes.len()
+			),
+			span.resolved_at(Span::mixed_site()),
+		);
+
+		self.local_sparse_resource_nodes.push(new_ident.clone());
+		self.active_resource_nodes_stack.push(new_ident.clone());
+		new_ident
+	}
+
+	pub fn pop_sparse_resource_node(&mut self) {
+		self.active_resource_nodes_stack.pop();
+	}
+
+	#[must_use]
+	pub fn active_resource_node(&mut self) -> &Ident {
+		self.active_resource_nodes_stack.last()
 	}
 }
 
