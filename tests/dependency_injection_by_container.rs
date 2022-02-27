@@ -1,10 +1,17 @@
+use asteracea::services::Invalidator;
 use bumpalo::Bump;
 use ergo_pin::ergo_pin;
+use rhizome::sync::Inject;
 use rhizome::sync::Node;
 use std::any::TypeId;
+use std::task::Context;
 
 asteracea::component! {
 	Container()(..)
+
+	new with {
+		<dyn Invalidator>::inject(local_resource_node.borrow(), |_: Option<&mut Context<'_>>| ());
+	}
 
 	<"custom-container"
 		..
@@ -12,7 +19,9 @@ asteracea::component! {
 }
 
 asteracea::component! {
-	Content()()
+	Content(
+		dyn _invalidator: dyn Invalidator,
+	)()
 
 	<"custom-content">
 }
