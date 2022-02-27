@@ -58,7 +58,9 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				render_params.push(param)
 			}
 
+			let sparse_resource_node = cx.push_sparse_resource_node();
 			let content_children = parse_content_children(input, cx)?;
+			cx.pop_sparse_resource_node();
 
 			if input.peek(Token![>]) {
 				unquote!(input, >);

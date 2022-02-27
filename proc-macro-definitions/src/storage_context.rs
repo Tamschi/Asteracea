@@ -36,6 +36,8 @@ impl<'a> ParseContext<'a> {
 				type_name: component_name.clone(),
 				field_definitions: vec![],
 				generated_names: 0,
+				local_sparse_resource_nodes: vec![],
+				active_sparse_resource_nodes_stack: vec![],
 			},
 			assorted_items: vec![],
 			callback_registrations: Rc::default(),
@@ -51,6 +53,8 @@ impl<'a> ParseContext<'a> {
 				type_name: Ident::new("UNUSED", Span::mixed_site()),
 				field_definitions: vec![],
 				generated_names: 0,
+				local_sparse_resource_nodes: vec![],
+				active_sparse_resource_nodes_stack: vec![],
 			},
 			assorted_items: vec![],
 			callback_registrations: Rc::default(),
@@ -70,6 +74,8 @@ impl<'a> ParseContext<'a> {
 				type_name: type_name_as_if_generated,
 				field_definitions: vec![],
 				generated_names: 0,
+				local_sparse_resource_nodes: vec![],
+				active_sparse_resource_nodes_stack: vec![],
 			},
 			assorted_items: vec![],
 			callback_registrations: Rc::clone(&self.callback_registrations),
@@ -81,6 +87,8 @@ pub struct StorageContext {
 	type_name: Ident,
 	field_definitions: Vec<FieldDefinition>,
 	generated_names: usize,
+	local_sparse_resource_nodes: Vec<Ident>,
+	active_sparse_resource_nodes_stack: Vec<Ident>,
 }
 
 impl StorageContext {
