@@ -1,7 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-	component_declaration::FieldDefinition, storage_configuration::StorageTypeConfiguration,
+	asteracea_ident, component_declaration::FieldDefinition,
+	storage_configuration::StorageTypeConfiguration,
 };
 use proc_macro2::{Span, TokenStream};
 use quote::quote_spanned;
@@ -172,8 +173,9 @@ impl StorageContext {
 			value
 		} else {
 			let local_sparse_resource_nodes = self.local_sparse_resource_nodes.iter();
+			let asteracea = asteracea_ident(Span::mixed_site());
 			quote_spanned!(type_path.span().resolved_at(Span::mixed_site())=> {
-				#(let #local_sparse_resource_nodes;)*
+				#(let #local_sparse_resource_nodes: ::#asteracea::include::dependency_injection::SparseResourceNodeHandle;)*
 				#value
 			})
 		}
