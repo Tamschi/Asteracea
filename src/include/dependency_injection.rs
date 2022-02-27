@@ -9,13 +9,19 @@ enum ParentOrBranched<'a> {
 	Branched(ResourceNodeHandle),
 }
 
-#[must_use = "This should be passed further along as `SparseNode`."]
-pub struct BranchOnBorrow<'a> {
+/// A "branch on borrow" handle.
+///
+/// This is exposed, by reference, to constructor-scoped user code in Asteracea components,
+/// and can be used to inject resources after borrowing from it.
+///
+/// If the latter is not done, then no resource node is created for the current component.
+#[must_use = "This should be passed further along as `SparseResourceNode`."]
+pub struct ResourceBob<'a> {
 	tag: TypeId,
 	state: ParentOrBranched<'a>,
 }
 
-impl<'a> BranchOnBorrow<'a> {
+impl<'a> ResourceBob<'a> {
 	pub fn new_for<T: 'static>(parent: Pin<&'a ResourceNode>) -> Self {
 		Self::new(TypeId::of::<T>(), parent)
 	}
@@ -42,16 +48,20 @@ impl<'a> BranchOnBorrow<'a> {
 	}
 
 	#[must_use]
-	pub fn into_sparse_node(self) -> SparseNode<'a> {
-		SparseNode { value: self.state }
+	pub fn into_sparse_node(self) -> SparseResourceNodeHandle<'a> {
+		SparseResourceNodeHandle { value: self.state }
 	}
 }
 
-pub struct SparseNode<'a> {
+/// Returned as second value from each Asteracea component constructor.
+///
+/// The lifetime `'a` matches that of the parent [`&ResourceNode`](`ResourceNode`),
+/// and indeed that reference may be contained here directly.
+pub struct SparseResourceNodeHandle<'a> {
 	value: ParentOrBranched<'a>,
 }
 
-impl SparseNode<'_> {
+impl SparseResourceNodeHandle<'_> {
 	pub fn as_ref(&self) -> Pin<&ResourceNode> {
 		match &self.value {
 			ParentOrBranched::Parent(ref_) => *ref_,
