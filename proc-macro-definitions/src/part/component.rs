@@ -122,7 +122,32 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				render_params.push(input.parse()?)
 			}
 
+			let resource_node = cx.storage_context.active_resource_node().clone();
 			let sparse_resource_node = cx.storage_context.push_sparse_resource_node(open_span);
+			let capture = {
+				let new_params = parameter_struct_expression::<C, Token![*]>(
+					None,
+					open_span,
+					parse2(quote_spanned! (open_span=> #path::new_args_builder()))
+						.expect("new_params make_builder"),
+					new_params.as_slice(),
+					&[],
+				)?;
+
+				call2_strict(
+					quote_spanned! {open_span=>
+						let #visibility self.#field_name: #path = pin {
+							let child_constructed = #path::new(#resource_node.as_ref(), #new_params)#dot_await?;
+							#sparse_resource_node = child_constructed.1;
+							child_constructed.0
+						};
+					},
+					|input| LetSelf::<C>::parse_with_context(input, cx),
+				)
+				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
+				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
+			};
+
 			let content_children = parse_content_children(input, cx)?;
 			cx.storage_context.pop_sparse_resource_node();
 
@@ -148,30 +173,9 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				));
 			}
 
-			let new_params = parameter_struct_expression::<C, Token![*]>(
-				None,
-				open_span,
-				parse2(quote_spanned! (open_span=> #path::new_args_builder()))
-					.expect("new_params make_builder"),
-				new_params.as_slice(),
-				&[],
-			)?;
-
-			let resource_node = cx.storage_context.active_resource_node();
 			Ok(Self::Instantiated {
 				open_span,
-				capture: call2_strict(
-					quote_spanned! {open_span=>
-						let #visibility self.#field_name: #path = pin {
-							let child_constructed = #path::new(#resource_node.as_ref(), #new_params)#dot_await?;
-							#sparse_resource_node = child_constructed.1;
-							child_constructed.0
-						};
-					},
-					|input| LetSelf::<C>::parse_with_context(input, cx),
-				)
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?,
+				capture,
 				path,
 				render_params,
 				content_children,
