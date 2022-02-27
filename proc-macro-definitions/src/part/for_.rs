@@ -106,7 +106,6 @@ impl<C: Configuration> ParseWithContext for For<C> {
 		);
 
 		let asteracea = asteracea_ident(for_.span);
-		let node = quote_spanned!(for_.span=> node);
 
 		let k = if let Some((_, key_type)) = &key_type {
 			Some(key_type.to_token_stream())
@@ -124,7 +123,7 @@ impl<C: Configuration> ParseWithContext for For<C> {
 				let #visibility self.#field_name = ::core::cell::RefCell::<::#asteracea::include::For::<'static, #type_path#(, #k)*>>::new(
 					::#asteracea::include::For::new({
 						#[allow(unused_variables)]
-						let #node = #node.clone_handle();
+						let resource_node = resource_node.clone_handle();
 						move || Ok(#manufactured_item_state)
 					})
 				);

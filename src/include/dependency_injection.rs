@@ -1,5 +1,5 @@
 use rhizome::sync::{DynValue, Node, NodeHandle};
-use std::{any::TypeId, pin::Pin};
+use std::{any::TypeId, marker::PhantomPinned, ops::Deref, pin::Pin};
 
 pub type ResourceNode = Node<TypeId, TypeId, DynValue>;
 pub type ResourceNodeHandle = NodeHandle<TypeId, TypeId, DynValue>;
@@ -19,6 +19,7 @@ enum ParentOrBranched<'a> {
 pub struct ResourceBob<'a> {
 	tag: TypeId,
 	state: ParentOrBranched<'a>,
+	_pinned: PhantomPinned,
 }
 
 impl<'a> ResourceBob<'a> {
@@ -30,6 +31,7 @@ impl<'a> ResourceBob<'a> {
 		Self {
 			tag,
 			state: ParentOrBranched::Parent(parent),
+			_pinned: PhantomPinned,
 		}
 	}
 
@@ -48,7 +50,7 @@ impl<'a> ResourceBob<'a> {
 	}
 
 	#[must_use]
-	pub fn into_sparse_node(self) -> SparseResourceNodeHandle<'a> {
+	pub fn into_sparse_node_handle(self) -> SparseResourceNodeHandle<'a> {
 		SparseResourceNodeHandle { value: self.state }
 	}
 }

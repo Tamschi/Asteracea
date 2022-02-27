@@ -22,8 +22,9 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	AttrStyle, Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent,
-	PatType, ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
+	AttrStyle, Attribute, Error, FieldPat, GenericParam, Generics, Ident, Item, Lifetime,
+	LifetimeDef, Member, Pat, PatIdent, PatType, ReturnType, Token, Type, Visibility, WhereClause,
+	WherePredicate,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -533,6 +534,17 @@ impl ComponentDeclaration {
 			&new_lifetime,
 		);
 
+		let new_generics = {
+			let mut new_generics = new_generics;
+			new_generics.params.insert(
+				0,
+				GenericParam::Lifetime(LifetimeDef::new(
+					parse_quote_spanned!(Span::mixed_site()=> 'parent_resource_node_borrow),
+				)),
+			);
+			new_generics
+		};
+
 		let ParameterHelperDefinitions {
 			on_parameter_struct: render_args_generics,
 			parameter_struct_body: render_args_body,
@@ -660,7 +672,7 @@ impl ComponentDeclaration {
 		let constructor_block_statements =
 			constructor_block.map(|(_new, _with, block)| block.stmts);
 
-		let call_site_node = Ident::new("node", Span::call_site());
+		let call_site_resource_node = Ident::new("local_resource_node", Span::call_site());
 
 		let (component_impl_generics, component_type_generics, component_where_clause) =
 			component_generics.split_for_impl();
@@ -704,13 +716,14 @@ impl ComponentDeclaration {
 				/// <!-- (suppress `missing_docs`) -->
 				#(#constructor_attributes)*
 				pub #async_ fn #new#new_generics(
-					parent_node: ::core::pin::Pin<&::#asteracea::__::rhizome::sync::Node<
-						::core::any::TypeId,
-						::core::any::TypeId,
-						::#asteracea::__::rhizome::sync::DynValue,
-					>>,
+					parent_node: ::core::pin::Pin<
+						&'parent_resource_node_borrow ::#asteracea::include::dependency_injection::ResourceNode
+					>,
 					args: #new_args_name#new_args_generic_args,
-				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+				) -> ::std::result::Result<
+						(Self, ::#asteracea::include::dependency_injection::SparseResourceNodeHandle<'parent_resource_node_borrow>),
+						::#asteracea::error::Escalation,
+					> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					#constructor_tracing_span
 
 					// These are assigned at once to make sure name collisions error.
@@ -719,13 +732,26 @@ impl ComponentDeclaration {
 						__Asteracea__phantom: _,
 					}, (#(#injected_pats,)*)) = (args, (#(#dependency_extractions,)*));
 
-					let mut #call_site_node = parent_node.branch_for(::core::any::TypeId::of::<Self>());
+					let mut resource_node = ::#asteracea::include::dependency_injection::ResourceBob::new_for::<Self>(parent_node);
+
+					// Swapping the resource node out entirely to break the parent chain is not supported right now.
+					//
+					// Allowing that would make it look like a security option, without that actually providing meaningful security.
+					let #call_site_resource_node = unsafe { ::core::pin::Pin::new_unchecked(&mut resource_node) };
 
 					{} // Isolate constructor block.
 					#constructor_block_statements
 					{} // Dito.
 
-					::std::result::Result::Ok(#constructed_value)
+					let resource_node = resource_node.into_sparse_node_handle();
+
+					::std::result::Result::Ok((
+						{
+							let resource_node = resource_node.as_ref();
+							#constructed_value
+						},
+						resource_node,
+					))
 				}
 
 				/// <!-- (suppress `missing_docs`) -->

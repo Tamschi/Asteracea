@@ -69,7 +69,6 @@ impl<C: Configuration> ParseWithContext for Bind<C> {
 		);
 
 		let asteracea = asteracea_ident(bind.span);
-		let node = quote_spanned!(bind.span=> node);
 		call2_strict(
 			quote_spanned! {bind.span.resolved_at(Span::mixed_site())=>
 				let #visibility self.#field_name = pin ::#asteracea::try_lazy_init::LazyTransform::<
@@ -80,7 +79,7 @@ impl<C: Configuration> ParseWithContext for Bind<C> {
 						>,
 						#type_path,
 					>
-					::new(#node.clone_handle());
+					::new(resource_node.clone_handle());
 			},
 			|input| LetSelf::<C>::parse_with_context(input, cx),
 		)
@@ -124,7 +123,6 @@ impl<C: Configuration> Bind<C> {
 		let asteracea = asteracea_ident(self.bind.span);
 		let field_name = &self.field_name;
 		let field_pinned = Ident::new(&format!("{}_pinned", field_name), field_name.span());
-		let node = quote_spanned!(self.bind.span=> node);
 		let move_ = &self.move_;
 		let binding_expression = &self.binding_expression;
 		let content = self.content.part_tokens(cx)?;
@@ -133,7 +131,7 @@ impl<C: Configuration> Bind<C> {
 			let #field_name = this.#field_pinned();
 			let #field_name = #field_name
 				.get_or_create_or_poison(
-					#move_ |#node| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+					#move_ |resource_node| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
 						Ok(#binding_expression)
 					}
 				)

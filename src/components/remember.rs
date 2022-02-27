@@ -53,7 +53,7 @@ asteracea::component! {
 
 			//TODO: This is not currently exposed to content children, but needs to be.
 			// Should the resource node borrow node be threaded back out with the same lifetime through a `Cow`, as second constructor return value? (Probably yes.)
-			<dyn Invalidator>::inject(node.as_ref(), {
+			<dyn Invalidator>::inject(local_resource_node.borrow(), {
 				let this = SafetyHack(Pin::clone(&this));
 
 				//TODO:
