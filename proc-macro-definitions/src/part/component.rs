@@ -163,9 +163,9 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				capture: call2_strict(
 					quote_spanned! {open_span=>
 						let #visibility self.#field_name: #path = pin {
-							let constructed = #path::new(#resource_node.as_ref(), #new_params)#dot_await?;
-							#sparse_resource_node = constructed.1;
-							constructed.0
+							let child_constructed = #path::new(#resource_node.as_ref(), #new_params)#dot_await?;
+							#sparse_resource_node = child_constructed.1;
+							child_constructed.0
 						};
 					},
 					|input| LetSelf::<C>::parse_with_context(input, cx),
