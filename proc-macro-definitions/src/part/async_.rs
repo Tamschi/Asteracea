@@ -61,12 +61,13 @@ impl<C: Configuration> ParseWithContext for Async<C> {
 		);
 
 		let asteracea = asteracea_ident(async_.span);
+		let resource_node = cx.storage_context.active_resource_node();
 		call2_strict(
 			quote_spanned! {async_.span=>
 				let #visibility self.#field_name =
 					pin ::#asteracea::include::async_::Async::<#type_path>
 					::new(::std::boxed::Box::pin({
-						let resource_node = resource_node.clone_handle();
+						let resource_node = #resource_node.as_ref().clone_handle();
 						async move { ::#asteracea::error::Result::Ok(#storage_value) }
 					}));
 			},

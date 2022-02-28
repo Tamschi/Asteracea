@@ -245,7 +245,7 @@ impl StorageContext {
 	}
 
 	#[must_use]
-	pub fn active_resource_node(&mut self) -> &Ident {
+	pub fn active_resource_node(&self) -> &Ident {
 		self.active_resource_nodes_stack.last()
 	}
 }

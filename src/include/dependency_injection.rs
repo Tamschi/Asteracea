@@ -4,9 +4,9 @@ use std::{any::TypeId, marker::PhantomPinned, ops::Deref, pin::Pin};
 pub type ResourceNode = Node<TypeId, TypeId, DynValue>;
 pub type ResourceNodeHandle = NodeHandle<TypeId, TypeId, DynValue>;
 
-enum ParentOrBranched<'a> {
+enum ParentOrOwned<'a> {
 	Parent(Pin<&'a ResourceNode>),
-	Branched(ResourceNodeHandle),
+	Owned(ResourceNodeHandle),
 }
 
 /// A "branch on borrow" handle.
@@ -18,7 +18,7 @@ enum ParentOrBranched<'a> {
 #[must_use = "This should be passed further along as `SparseResourceNode`."]
 pub struct ResourceBob<'a> {
 	tag: TypeId,
-	state: ParentOrBranched<'a>,
+	state: ParentOrOwned<'a>,
 	_pinned: PhantomPinned,
 }
 
@@ -30,7 +30,7 @@ impl<'a> ResourceBob<'a> {
 	pub fn new(tag: TypeId, parent: Pin<&'a ResourceNode>) -> Self {
 		Self {
 			tag,
-			state: ParentOrBranched::Parent(parent),
+			state: ParentOrOwned::Parent(parent),
 			_pinned: PhantomPinned,
 		}
 	}
@@ -39,13 +39,13 @@ impl<'a> ResourceBob<'a> {
 	pub fn borrow(self: Pin<&mut Self>) -> Pin<&ResourceNode> {
 		let this = unsafe { Pin::into_inner_unchecked(self) };
 
-		if let ParentOrBranched::Parent(parent) = this.state {
-			this.state = ParentOrBranched::Branched(parent.branch_for(this.tag));
+		if let ParentOrOwned::Parent(parent) = this.state {
+			this.state = ParentOrOwned::Owned(parent.branch_for(this.tag));
 		}
 
 		match &this.state {
-			ParentOrBranched::Parent(_) => unreachable!(),
-			ParentOrBranched::Branched(branched) => branched.as_ref(),
+			ParentOrOwned::Parent(_) => unreachable!(),
+			ParentOrOwned::Owned(branched) => branched.as_ref(),
 		}
 	}
 
@@ -60,14 +60,21 @@ impl<'a> ResourceBob<'a> {
 /// The lifetime `'a` matches that of the parent [`&ResourceNode`](`ResourceNode`),
 /// and indeed that reference may be contained here directly.
 pub struct SparseResourceNodeHandle<'a> {
-	value: ParentOrBranched<'a>,
+	value: ParentOrOwned<'a>,
 }
 
 impl SparseResourceNodeHandle<'_> {
 	pub fn as_ref(&self) -> Pin<&ResourceNode> {
 		match &self.value {
-			ParentOrBranched::Parent(ref_) => *ref_,
-			ParentOrBranched::Branched(handle) => handle.as_ref(),
+			ParentOrOwned::Parent(ref_) => *ref_,
+			ParentOrOwned::Owned(handle) => handle.as_ref(),
+		}
+	}
+
+	pub fn into_owned(self) -> ResourceNodeHandle {
+		match self.value {
+			ParentOrOwned::Parent(parent) => parent.clone_handle(),
+			ParentOrOwned::Owned(handle) => handle,
 		}
 	}
 }

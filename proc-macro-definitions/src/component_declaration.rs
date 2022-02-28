@@ -669,10 +669,17 @@ impl ComponentDeclaration {
 			}
 		};
 
+		let call_site_resource_node = Ident::new("local_resource_node", Span::call_site());
+
 		let constructor_block_statements =
 			constructor_block.map(|(_new, _with, block)| block.stmts);
 
-		let call_site_resource_node = Ident::new("local_resource_node", Span::call_site());
+		let clone_parent_node_for_async = async_.as_ref().map(|async_| {
+			quote_spanned! {async_.span.resolved_at(Span::mixed_site())=>
+				let parent_node = parent_node.clone_handle();
+				let parent_node = parent_node.as_ref();
+			}
+		});
 
 		let (component_impl_generics, component_type_generics, component_where_clause) =
 			component_generics.split_for_impl();
@@ -725,6 +732,8 @@ impl ComponentDeclaration {
 						::#asteracea::error::Escalation,
 					> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					#constructor_tracing_span
+
+					#clone_parent_node_for_async
 
 					// These are assigned at once to make sure name collisions error.
 					let (#new_args_name {

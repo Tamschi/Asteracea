@@ -36,7 +36,9 @@ asteracea::component! {
 #[test]
 fn defer() {
 	let root = Node::new(TypeId::of::<()>());
-	let component = Deferrer::new(root.as_ref(), Deferrer::new_args_builder().build()).unwrap();
+	let component = Deferrer::new(root.as_ref(), Deferrer::new_args_builder().build())
+		.unwrap()
+		.0;
 
 	let bump = Bump::new();
 	let _vdom = Box::pin(component)

@@ -69,6 +69,7 @@ impl<C: Configuration> ParseWithContext for Bind<C> {
 		);
 
 		let asteracea = asteracea_ident(bind.span);
+		let resource_node = cx.storage_context.active_resource_node();
 		call2_strict(
 			quote_spanned! {bind.span.resolved_at(Span::mixed_site())=>
 				let #visibility self.#field_name = pin ::#asteracea::try_lazy_init::LazyTransform::<
@@ -79,7 +80,7 @@ impl<C: Configuration> ParseWithContext for Bind<C> {
 						>,
 						#type_path,
 					>
-					::new(resource_node.clone_handle());
+					::new(#resource_node.as_ref().clone_handle());
 			},
 			|input| LetSelf::<C>::parse_with_context(input, cx),
 		)
