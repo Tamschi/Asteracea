@@ -128,14 +128,14 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				let new_params = parameter_struct_expression::<C, Token![*]>(
 					None,
 					open_span,
-					parse2(quote_spanned! (open_span=> #path::new_args_builder()))
+					parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::new_args_builder()))
 						.expect("new_params make_builder"),
 					new_params.as_slice(),
 					&[],
 				)?;
 
 				call2_strict(
-					quote_spanned! {open_span=>
+					quote_spanned! {open_span.resolved_at(Span::mixed_site())=>
 						let #visibility self.#field_name: #path = pin {
 							let child_constructed = #path::new(#resource_node.as_ref(), #new_params)#dot_await?;
 							#sparse_resource_node = child_constructed.1;
@@ -216,15 +216,16 @@ impl<C: Configuration> Component<C> {
 				let render_call= {
 					let render_params = parameter_struct_expression(
 						Some(cx),
-						open_span.resolved_at(Span::mixed_site()),
+						*open_span,
 						parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
 						render_params.as_slice(),
 						content_children.as_slice(),
 					)?;
-					quote_spanned!(*open_span=> .render(bump, #render_params)?)
+					let bump = quote_spanned!(open_span.resolved_at(Span::call_site())=> bump);
+					quote_spanned!(open_span.resolved_at(Span::mixed_site())=> .render(#bump, #render_params)?)
 				};
 
-				let bump = quote_spanned!(Span::call_site()=> bump);
+				let bump = quote_spanned!(open_span.resolved_at(Span::call_site())=> bump);
 
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					let rendered = #capture#render_call;
@@ -247,10 +248,10 @@ impl<C: Configuration> Component<C> {
 				content_children,
 			} => {
 				let binding = quote_spanned!(reference.brace_token.span.resolved_at(Span::mixed_site())=> let reference: ::std::pin::Pin<&_> = #reference;);
-				let bump = quote_spanned!(*open_span=> bump);
+				let bump = quote_spanned!(open_span.resolved_at(Span::call_site())=> bump);
 				let render_params = parameter_struct_expression(
 					Some(cx),
-					open_span.resolved_at(Span::mixed_site()),
+					*open_span,
 					parse2(
 						quote_spanned!(open_span.resolved_at(Span::mixed_site())=> reference.__Asteracea__ref_render_args_builder()),
 					).expect("render_params make_builder 2"),
@@ -337,6 +338,8 @@ fn parameter_struct_expression<C: Configuration, P: Spanned>(
 	parameters: &[Parameter<P>],
 	content_children: &[ContentChild<C>],
 ) -> Result<TokenStream> {
+	let fallback_span = fallback_span.resolved_at(Span::mixed_site());
+
 	if parameters
 		.iter()
 		.all(|parameter| parameter.question.is_none())
