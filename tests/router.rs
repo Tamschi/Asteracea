@@ -25,8 +25,9 @@ asteracea::component! {
 #[test]
 fn div() {
 	let root_node = Node::new(TypeId::of::<()>());
-	let router =
-		RouterTester::new(root_node.as_ref(), RouterTester::new_args_builder().build()).unwrap();
+	let router = RouterTester::new(root_node.as_ref(), RouterTester::new_args_builder().build())
+		.unwrap()
+		.0;
 	let router = unsafe { Pin::new_unchecked(&router) };
 	let bump = Bump::new();
 
@@ -48,8 +49,9 @@ fn div() {
 #[test]
 fn span() {
 	let root_node = Node::new(TypeId::of::<()>());
-	let router =
-		RouterTester::new(root_node.as_ref(), RouterTester::new_args_builder().build()).unwrap();
+	let router = RouterTester::new(root_node.as_ref(), RouterTester::new_args_builder().build())
+		.unwrap()
+		.0;
 	let router = unsafe { Pin::new_unchecked(&router) };
 	let bump = Bump::new();
 

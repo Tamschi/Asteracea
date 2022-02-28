@@ -66,7 +66,9 @@ asteracea::component! {
 #[test]
 fn bind() {
 	let root = Node::new(TypeId::of::<()>());
-	let component = Binder::new(root.as_ref(), Binder::new_args_builder().build()).unwrap();
+	let component = Binder::new(root.as_ref(), Binder::new_args_builder().build())
+		.unwrap()
+		.0;
 
 	let bump = Bump::new();
 	let _vdom = Box::pin(component)
@@ -76,6 +78,7 @@ fn bind() {
 
 	BinderMover::new(root.as_ref(), BinderMover::new_args_builder().build())
 		.unwrap()
+		.0
 		.pipe(Box::pin)
 		.as_ref()
 		.render(&bump, BinderMover::render_args_builder().build())
@@ -83,6 +86,7 @@ fn bind() {
 
 	Named::new(root.as_ref(), Named::new_args_builder().build())
 		.unwrap()
+		.0
 		.pipe(Box::pin)
 		.as_ref()
 		.render(&bump, Named::render_args_builder().build())
@@ -90,6 +94,7 @@ fn bind() {
 
 	NamedMoved::new(root.as_ref(), NamedMoved::new_args_builder().build())
 		.unwrap()
+		.0
 		.pipe(Box::pin)
 		.as_ref()
 		.render(&bump, NamedMoved::render_args_builder().build())

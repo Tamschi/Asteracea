@@ -674,10 +674,9 @@ impl ComponentDeclaration {
 		let constructor_block_statements =
 			constructor_block.map(|(_new, _with, block)| block.stmts);
 
-		let clone_parent_node_for_async = async_.as_ref().map(|async_| {
+		let into_owned_for_async = async_.as_ref().map(|async_| {
 			quote_spanned! {async_.span.resolved_at(Span::mixed_site())=>
-				let parent_node = parent_node.clone_handle();
-				let parent_node = parent_node.as_ref();
+				.into_owned()
 			}
 		});
 
@@ -733,15 +732,13 @@ impl ComponentDeclaration {
 					> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					#constructor_tracing_span
 
-					#clone_parent_node_for_async
-
 					// These are assigned at once to make sure name collisions error.
 					let (#new_args_name {
 						#(#constructor_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					}, (#(#injected_pats,)*)) = (args, (#(#dependency_extractions,)*));
 
-					let mut resource_node = ::#asteracea::include::dependency_injection::ResourceBob::new_for::<Self>(parent_node);
+					let mut resource_node = ::#asteracea::include::dependency_injection::ResourceBob::new_for::<Self>(parent_node)#into_owned_for_async;
 
 					// Swapping the resource node out entirely to break the parent chain is not supported right now.
 					//

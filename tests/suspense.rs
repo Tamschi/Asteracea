@@ -65,7 +65,9 @@ fn suspense() {
 	.map_err(|_| ())
 	.unwrap();
 
-	let app = Instant::new(root.as_ref(), Instant::new_args_builder().build()).unwrap();
+	let app = Instant::new(root.as_ref(), Instant::new_args_builder().build())
+		.unwrap()
+		.0;
 	let app = unsafe { Pin::new_unchecked(&app) };
 
 	let mut bump = Bump::new();

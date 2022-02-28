@@ -35,6 +35,17 @@ impl<'a> ResourceBob<'a> {
 		}
 	}
 
+	pub fn into_owned(self) -> ResourceBob<'static> {
+		ResourceBob {
+			tag: self.tag,
+			state: ParentOrOwned::Owned(match self.state {
+				ParentOrOwned::Parent(parent) => parent.branch_for(self.tag),
+				ParentOrOwned::Owned(owned) => owned,
+			}),
+			_pinned: PhantomPinned,
+		}
+	}
+
 	#[must_use = "This operation is usually not free, so discarding the result is usually not what you want. If you just want to make sure a node is created, you can discard explicitly."]
 	pub fn borrow(self: Pin<&mut Self>) -> Pin<&ResourceNode> {
 		let this = unsafe { Pin::into_inner_unchecked(self) };
