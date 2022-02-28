@@ -128,8 +128,10 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				let new_params = parameter_struct_expression::<C, Token![*]>(
 					None,
 					open_span,
-					parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::new_args_builder()))
-						.expect("new_params make_builder"),
+					parse2(
+						quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::new_args_builder()),
+					)
+					.expect("new_params make_builder"),
 					new_params.as_slice(),
 					&[],
 				)?;
