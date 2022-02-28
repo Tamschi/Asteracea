@@ -65,7 +65,8 @@ fn render_components() {
 			._stored(B)
 			.build(),
 	)
-	.unwrap();
+	.unwrap()
+	.0;
 	let app = pin!(app).as_ref();
 
 	let mut bump = Bump::new();

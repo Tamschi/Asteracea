@@ -63,7 +63,7 @@ impl<C: Configuration> ParseWithContext for Async<C> {
 		let asteracea = asteracea_ident(async_.span);
 		let resource_node = cx.storage_context.active_resource_node();
 		call2_strict(
-			quote_spanned! {async_.span=>
+			quote_spanned! {async_.span.resolved_at(Span::mixed_site())=>
 				let #visibility self.#field_name =
 					pin ::#asteracea::include::async_::Async::<#type_path>
 					::new(::std::boxed::Box::pin({
