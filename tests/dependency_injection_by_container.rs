@@ -1,10 +1,8 @@
 use asteracea::services::Invalidator;
 use bumpalo::Bump;
 use ergo_pin::ergo_pin;
-use rhizome::sync::Inject;
-use rhizome::sync::Node;
-use std::any::TypeId;
-use std::task::Context;
+use rhizome::sync::{Inject, Node};
+use std::{any::TypeId, task::Context};
 
 asteracea::component! {
 	Container()(..)
