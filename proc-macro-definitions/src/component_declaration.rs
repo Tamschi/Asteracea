@@ -749,7 +749,7 @@ impl ComponentDeclaration {
 					#constructor_block_statements
 					{} // Dito.
 
-					let resource_node = resource_node.into_sparse_node_handle();
+					let resource_node = resource_node.into_sparse_handle();
 
 					::std::result::Result::Ok((
 						{

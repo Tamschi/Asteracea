@@ -241,7 +241,9 @@ impl StorageContext {
 	}
 
 	pub fn pop_sparse_resource_node(&mut self) {
-		self.active_resource_nodes_stack.pop();
+		self.active_resource_nodes_stack
+			.pop()
+			.expect("pop active resource node");
 	}
 
 	#[must_use]

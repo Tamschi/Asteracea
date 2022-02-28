@@ -1,3 +1,5 @@
+#![allow(non_snake_case)] // For __Asteracea__anonymous_content
+
 use crate::{
 	include::{private::Dereferenceable, render_callback::RenderOnce},
 	services::Invalidator,
@@ -98,7 +100,7 @@ asteracea::component! {
 		let mut hasher = self.hasher.lock().unwrap();
 		let mut current = self.current.lock().unwrap();
 		if self.invalidated.swap(false, Ordering::SeqCst)
-			|| or_unless.map(|f| f()).unwrap_or(false) {
+			|| or_unless.map(|f| f()).unwrap_or_default() {
 				let inner_bump = Bump::new();
 				let guard = __Asteracea__anonymous_content.1(unsafe { &*(&inner_bump as *const _) })?;
 
@@ -114,10 +116,10 @@ asteracea::component! {
 		unsafe {
 			detach_guard(Guard::new(
 				Node::Memoized{ state_key: hasher.finish(), content: &*current.1 },
-				Some(unsafe { ConsumedCallback::new(
-					|payload_ptr| drop(Arc::from_raw(payload_ptr as *const (Mutex<Bump>, Guard<'static, S>))),
+				Some(ConsumedCallback::new(
+					|payload_ptr| drop(Arc::from_raw(payload_ptr.cast::<(Mutex<Bump>, Guard<S>)>())),
 					Arc::into_raw(Arc::clone(&*current)).cast(),
-				) }),
+				)),
 			))
 		}
 	}
@@ -131,6 +133,7 @@ unsafe fn detach_guard<S: ThreadSafety>(guard: Guard<'_, S>) -> Guard<'static, S
 	mem::transmute(guard)
 }
 
+#[allow(clippy::type_complexity)] // It's a mutable bounce pad, so the type is a bit long due to the through-access depth. Turning this pattern into a crate may be
 struct ClearOnDrop<S: ThreadSafety>(Pin<Arc<Mutex<Option<Pin<Dereferenceable<Remember<S>>>>>>>);
 impl<S: ThreadSafety> Drop for ClearOnDrop<S> {
 	fn drop(&mut self) {

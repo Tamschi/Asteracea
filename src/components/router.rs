@@ -35,7 +35,7 @@ const _: () = {
 			let _span = debug_span!("Router::new").entered();
 			Ok((
 				Self,
-				ResourceBob::new_for::<Self>(parent_node).into_sparse_node_handle(),
+				ResourceBob::new_for::<Self>(parent_node).into_sparse_handle(),
 			))
 		}
 

@@ -2,7 +2,7 @@
 
 use crate::error::Result;
 use bumpalo::Bump;
-use lignin::{Guard, Node, ThreadSafety};
+use lignin::{Guard, ThreadSafety};
 
 /// A render callback that can be called at most once.
 ///

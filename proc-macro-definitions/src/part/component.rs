@@ -224,7 +224,6 @@ impl<C: Configuration> Component<C> {
 					quote_spanned!(*open_span=> .render(bump, #render_params)?)
 				};
 
-				let asteracea = asteracea_ident(Span::mixed_site());
 				let bump = quote_spanned!(Span::call_site()=> bump);
 
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
@@ -247,7 +246,6 @@ impl<C: Configuration> Component<C> {
 				render_params,
 				content_children,
 			} => {
-				let asteracea = asteracea_ident(*open_span);
 				let binding = quote_spanned!(reference.brace_token.span.resolved_at(Span::mixed_site())=> let reference: ::std::pin::Pin<&_> = #reference;);
 				let bump = quote_spanned!(*open_span=> bump);
 				let render_params = parameter_struct_expression(
