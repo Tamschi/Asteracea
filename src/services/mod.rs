@@ -4,9 +4,11 @@ use rhizome::sync::{RefExtract, RefExtracted};
 use std::any::TypeId;
 
 mod content_runtime;
+mod event_handler_runtime;
 mod invalidator;
 
 pub use content_runtime::ContentRuntime;
+pub use event_handler_runtime::EventHandlerRuntime;
 pub use invalidator::{Invalidator, NextFrame};
 
 /// The type of (most) owned handles that are injected when using a trait as dependency key.

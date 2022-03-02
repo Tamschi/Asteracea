@@ -12,6 +12,7 @@ mod defer;
 pub mod dependency_injection;
 pub(crate) mod private;
 pub mod render_callback;
+pub mod async_event_binding;
 
 pub use __for_::For;
 pub use defer::Defer;
