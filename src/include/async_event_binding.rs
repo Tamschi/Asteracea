@@ -5,11 +5,13 @@ use crate::error::{
 };
 use crate::services::{EventHandlerRuntime, ServiceHandle};
 use core::future::Future;
+use core::ptr;
 use lignin::web::Event;
 use lignin::{CallbackRef, CallbackRegistration, ThreadSafe};
 use rhizome::sync::Extract;
 use std::pin::Pin;
 use std::ptr::NonNull;
+use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::{Arc, Mutex};
 
 /// A [`Future`] representing a triggered asynchronous event handler.
@@ -18,10 +20,9 @@ pub type EventHandlerFuture = Pin<Box<dyn 'static + Send + Future<Output = ()>>>
 pub struct AsyncEventBinding<Owner: ?Sized> {
 	runtime: ServiceHandle<dyn EventHandlerRuntime>,
 	registration: Mutex<Option<CallbackRegistration<ThreadSafe, fn(Event)>>>,
-	///TODO:
-	/// Not optimised. The outer `Mutex<Option<Pin<Arc<>>>>` can be replaced with an `AtomicPtr<>` here.
-	/// Doing so incurs a sporadic double-allocation of the bounce pad, but that's still more efficient than locking the [`Mutex`] on every render.
-	back_reference: Mutex<Option<Pin<Arc<Mutex<Option<Pin<Dereferenceable<Owner>>>>>>>>,
+	/// This [`AtomicPtr<_>`] replaces a `Mutex<Option<Pin<Arc<_>>>>`.
+	/// It's less unwieldy and just a little faster too. (Synchronised externally by `self.registration`.)
+	back_reference: AtomicPtr<Mutex<Option<Pin<Dereferenceable<Owner>>>>>,
 }
 impl<Owner: ?Sized> AsyncEventBinding<Owner> {
 	pub fn new(resource_node: Pin<&ResourceNode>) -> Result<Self, Escalation> {
@@ -32,7 +33,7 @@ impl<Owner: ?Sized> AsyncEventBinding<Owner> {
 				.ok_or_else(RuntimeDependencyMissing::<dyn EventHandlerRuntime>::new_and_log)
 				.escalate()?,
 			registration: None.into(),
-			back_reference: None.into(),
+			back_reference: AtomicPtr::new(ptr::null_mut()),
 		})
 	}
 
@@ -46,12 +47,15 @@ impl<Owner: ?Sized> AsyncEventBinding<Owner> {
 	{
 		let mut registration = self.registration.lock().unwrap();
 		if registration.is_none() {
-			let mut back_reference = self.back_reference.lock().unwrap();
-			*back_reference = Some(Arc::pin(Mutex::new(Some(unsafe {
+			let back_reference = Arc::new(Mutex::new(Some(unsafe {
 				Pin::new_unchecked(Dereferenceable::new(NonNull::new_unchecked(
-					owner.get_ref() as *const _ as *mut _,
+					owner.get_ref() as *const _ as *mut Owner,
 				)))
-			}))));
+			})));
+			self.back_reference.store(
+				Arc::into_raw(Arc::clone(&back_reference)) as *mut _,
+				Ordering::Relaxed,
+			);
 
 			todo!()
 		}
@@ -62,7 +66,9 @@ impl<Owner: ?Sized> AsyncEventBinding<Owner> {
 
 impl<Owner: ?Sized> Drop for AsyncEventBinding<Owner> {
 	fn drop(&mut self) {
-		if let Some(back_reference) = self.back_reference.lock().unwrap().as_ref() {
+		if let Some(back_reference) =
+			unsafe { self.back_reference.load(Ordering::Relaxed).as_ref() }
+		{
 			*back_reference.lock().unwrap() = None;
 		}
 	}
