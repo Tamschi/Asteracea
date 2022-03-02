@@ -36,6 +36,10 @@ impl<Owner: ?Sized> AsyncEventBinding<Owner> {
 		})
 	}
 
+	/// # Safety
+	///
+	/// This method must, for every one `self`, always be called with the same `owner`.
+	/// `self` must be dropped before `owner` is.
 	pub unsafe fn render(&self, owner: Pin<&Owner>) -> CallbackRef<ThreadSafe, fn(Event)>
 	where
 		Owner: Sync,
