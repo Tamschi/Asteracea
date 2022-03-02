@@ -6,13 +6,14 @@ use crate::error::{
 use crate::services::{EventHandlerRuntime, ServiceHandle};
 use core::future::Future;
 use lignin::web::Event;
-use lignin::{CallbackRegistration, ThreadSafe};
+use lignin::{CallbackRef, CallbackRegistration, ThreadSafe};
 use rhizome::sync::Extract;
 use std::pin::Pin;
+use std::ptr::NonNull;
 use std::sync::{Arc, Mutex};
 
 /// A [`Future`] representing a triggered asynchronous event handler.
-pub type EventHandlerFuture = Pin<Box<dyn Future<Output = ()>>>;
+pub type EventHandlerFuture = Pin<Box<dyn 'static + Send + Future<Output = ()>>>;
 
 pub struct AsyncEventBinding<Owner: ?Sized> {
 	runtime: ServiceHandle<dyn EventHandlerRuntime>,
@@ -33,6 +34,33 @@ impl<Owner: ?Sized> AsyncEventBinding<Owner> {
 			registration: None.into(),
 			back_reference: None.into(),
 		})
+	}
+
+	pub unsafe fn render(&self, owner: Pin<&Owner>) -> CallbackRef<ThreadSafe, fn(Event)>
+	where
+		Owner: Sync,
+	{
+		let mut registration = self.registration.lock().unwrap();
+		if registration.is_none() {
+			let mut back_reference = self.back_reference.lock().unwrap();
+			*back_reference = Some(Arc::pin(Mutex::new(Some(unsafe {
+				Pin::new_unchecked(Dereferenceable::new(NonNull::new_unchecked(
+					owner.get_ref() as *const _ as *mut _,
+				)))
+			}))));
+
+			todo!()
+		}
+
+		registration.as_ref().unwrap().to_ref()
+	}
+}
+
+impl<Owner: ?Sized> Drop for AsyncEventBinding<Owner> {
+	fn drop(&mut self) {
+		if let Some(back_reference) = self.back_reference.lock().unwrap().as_ref() {
+			*back_reference.lock().unwrap() = None;
+		}
 	}
 }
 
