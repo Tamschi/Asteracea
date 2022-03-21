@@ -32,7 +32,7 @@ jobs:
     - run: cat CI.toml >> Cargo.toml
     - run: cargo +nightly fmt --all
 
-    - uses: stefanzweifel/git-auto-commit-action@v4.13.1
+    - uses: stefanzweifel/git-auto-commit-action@v4.14.0
       with:
         commit_message: Automatic formatting commit (cargo +nightly fmt)
         file_pattern: '**/*.rs'
