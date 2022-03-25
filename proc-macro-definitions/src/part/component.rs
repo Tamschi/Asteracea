@@ -9,7 +9,7 @@ use crate::{
 };
 use call2_for_syn::call2_strict;
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream},
 	parse2, parse_quote_spanned,
@@ -122,7 +122,36 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				render_params.push(input.parse()?)
 			}
 
+			let resource_node = cx.storage_context.active_resource_node().clone();
+			let sparse_resource_node = cx.storage_context.push_sparse_resource_node(open_span);
+			let capture = {
+				let new_params = parameter_struct_expression::<C, Token![*]>(
+					None,
+					open_span,
+					parse2(
+						quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::new_args_builder()),
+					)
+					.expect("new_params make_builder"),
+					new_params.as_slice(),
+					&[],
+				)?;
+
+				call2_strict(
+					quote_spanned! {open_span.resolved_at(Span::mixed_site())=>
+						let #visibility self.#field_name: #path = pin {
+							let child_constructed = #path::new(#resource_node.as_ref(), #new_params)#dot_await?;
+							#sparse_resource_node = child_constructed.1;
+							child_constructed.0
+						};
+					},
+					|input| LetSelf::<C>::parse_with_context(input, cx),
+				)
+				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
+				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
+			};
+
 			let content_children = parse_content_children(input, cx)?;
+			cx.storage_context.pop_sparse_resource_node();
 
 			if input.peek(Token![/]) {
 				let closing_name: Ident;
@@ -146,25 +175,9 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				));
 			}
 
-			let new_params = parameter_struct_expression::<C, Token![*]>(
-				None,
-				open_span,
-				parse2(quote_spanned! (open_span=> #path::new_args_builder()))
-					.expect("new_params make_builder"),
-				new_params.as_slice(),
-				&[],
-			)?;
-
 			Ok(Self::Instantiated {
 				open_span,
-				capture: call2_strict(
-					quote_spanned! {open_span=>
-						let #visibility self.#field_name = pin #path::new(node.as_ref(), #new_params)#dot_await?;
-					},
-					|input| LetSelf::<C>::parse_with_context(input, cx),
-				)
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?
-				.map_err(|_| Error::new(open_span, "Internal Asteracea error: Child component element didn't produce parseable capture"))?,
+				capture,
 				path,
 				render_params,
 				content_children,
@@ -202,30 +215,33 @@ impl<C: Configuration> Component<C> {
 				render_params,
 				content_children,
 			} => {
-let render_call= {
-	let render_params = parameter_struct_expression(
-		Some(cx),
-		open_span.resolved_at(Span::mixed_site()),
-		parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
-		render_params.as_slice(),
-		content_children.as_slice(),
-	)?;
-	quote_spanned!(*open_span=> .render(bump, #render_params)?)
-};
+				let render_call= {
+					let render_params = parameter_struct_expression(
+						Some(cx),
+						*open_span,
+						parse2(quote_spanned! (open_span.resolved_at(Span::mixed_site())=> #path::render_args_builder())).expect("render_params make_builder 1"),
+						render_params.as_slice(),
+						content_children.as_slice(),
+					)?;
+					let bump = quote_spanned!(open_span.resolved_at(Span::call_site())=> bump);
+					quote_spanned!(open_span.resolved_at(Span::mixed_site())=> .render(#bump, #render_params)?)
+				};
 
-				let asteracea = asteracea_ident(Span::mixed_site());
-				let mut expr = parse2(quote!({
+				let bump = quote_spanned!(open_span.resolved_at(Span::call_site())=> bump);
+
+				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					let rendered = #capture#render_call;
-
-					{
-						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
-						#[allow(deprecated)]
-						rendered.deanonymize()
-					}
+					// Deref specialisation.
+					let guard = unsafe {
+						use asteracea::lignin::guard::auto_safety::Deanonymize;
+						(&&::core::mem::ManuallyDrop::new(rendered)).deanonymize()
+					};
+					let vdom = unsafe { guard.peel(&mut on_vdom_drop, || #bump.alloc_with(|| ::core::mem::MaybeUninit::uninit())) };
+					vdom
 				}))
 				.expect("Component::Instantiated");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
-				quote!(#expr)
+				expr.into_token_stream()
 			}
 			Component::Instanced {
 				open_span,
@@ -233,12 +249,11 @@ let render_call= {
 				render_params,
 				content_children,
 			} => {
-				let asteracea = asteracea_ident(*open_span);
 				let binding = quote_spanned!(reference.brace_token.span.resolved_at(Span::mixed_site())=> let reference: ::std::pin::Pin<&_> = #reference;);
-				let bump = quote_spanned!(*open_span=> bump);
+				let bump = quote_spanned!(open_span.resolved_at(Span::call_site())=> bump);
 				let render_params = parameter_struct_expression(
 					Some(cx),
-					open_span.resolved_at(Span::mixed_site()),
+					*open_span,
 					parse2(
 						quote_spanned!(open_span.resolved_at(Span::mixed_site())=> reference.__Asteracea__ref_render_args_builder()),
 					).expect("render_params make_builder 2"),
@@ -248,16 +263,17 @@ let render_call= {
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					#binding
 					let rendered = reference.render(#bump, #render_params)?;
-
-					{
-						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
-						#[allow(deprecated)]
-						rendered.deanonymize()
-					}
+					// Deref specialisation.
+					let guard = unsafe {
+						use asteracea::lignin::guard::auto_safety::Deanonymize;
+						(&&::core::mem::ManuallyDrop::new(rendered)).deanonymize()
+					};
+					let vdom = unsafe { guard.peel(&mut on_vdom_drop, || #bump.alloc_with(|| ::core::mem::MaybeUninit::uninit())) };
+					vdom
 				}))
-				.expect("Component::part_tokens Instanced expr");
+					.expect("Component::part_tokens Instanced expr");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
-				quote!(#expr)
+				expr.into_token_stream()
 			}
 		}.pipe(Ok)
 	}
@@ -324,6 +340,8 @@ fn parameter_struct_expression<C: Configuration, P: Spanned>(
 	parameters: &[Parameter<P>],
 	content_children: &[ContentChild<C>],
 ) -> Result<TokenStream> {
+	let fallback_span = fallback_span.resolved_at(Span::mixed_site());
+
 	if parameters
 		.iter()
 		.all(|parameter| parameter.question.is_none())
@@ -557,7 +575,13 @@ impl<C: Configuration> ContentChild<C> {
 			_ => quote_spanned! {span=>
 				::std::boxed::Box::new(
 					|#bump: &#bump_time ::#asteracea::bumpalo::Bump| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
-						::core::result::Result::Ok(#part)
+						let mut on_vdom_drop: ::core::option::Option<::#asteracea::lignin::guard::ConsumedCallback> = None;
+						::core::result::Result::Ok(
+							::#asteracea::lignin::Guard::new(
+								#part,
+								on_vdom_drop,
+							)
+						)
 					}
 				)
 			},

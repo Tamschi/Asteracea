@@ -57,7 +57,8 @@ fn test() {
 			Node::new(TypeId::of::<()>()).as_ref(),
 			Outer::new_args_builder().build(),
 		)
-		.unwrap(),
+		.unwrap()
+		.0,
 	);
 	outer
 		.as_ref()

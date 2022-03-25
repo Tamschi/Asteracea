@@ -2,12 +2,15 @@
 
 use crate::{
 	error::{Escalation, Result},
-	include::render_callback::RenderOnce,
+	include::{
+		dependency_injection::{ResourceBob, SparseResourceNodeHandle},
+		render_callback::RenderOnce,
+	},
 	__::{tracing::debug_span, Built},
 };
 use ::std::pin::Pin;
 use bumpalo::Bump;
-use lignin::{Node, ThreadSafe, ThreadSafety};
+use lignin::{Guard, Node, ThreadSafe, ThreadSafety};
 use rhizome::sync::DynValue;
 use std::{
 	any::{type_name, TypeId},
@@ -23,12 +26,17 @@ pub struct Router;
 
 const _: () = {
 	impl Router {
-		pub fn new(
-			_parent_node: Pin<&rhizome::sync::Node<TypeId, TypeId, DynValue>>,
+		pub fn new<'parent_resource_node_borrow>(
+			parent_node: Pin<
+				&'parent_resource_node_borrow rhizome::sync::Node<TypeId, TypeId, DynValue>,
+			>,
 			RouterNewArgs {}: RouterNewArgs,
-		) -> Result<Self> {
+		) -> Result<(Self, SparseResourceNodeHandle<'parent_resource_node_borrow>)> {
 			let _span = debug_span!("Router::new").entered();
-			Ok(Self)
+			Ok((
+				Self,
+				ResourceBob::new_for::<Self>(parent_node).into_sparse_handle(),
+			))
 		}
 
 		pub fn render<'bump, S: ThreadSafety>(
@@ -39,7 +47,7 @@ const _: () = {
 				path,
 				rest,
 			}: RouterRenderArgs<'_, 'bump, S>,
-		) -> Result<Node<'bump, S>> {
+		) -> Result<Guard<'bump, S>> {
 			let _span = debug_span!("Router::render", path).entered();
 			for route in __Asteracea__anonymous_content {
 				let (RouterParentParameters { paths }, render_content) = route;

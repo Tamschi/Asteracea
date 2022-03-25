@@ -8,6 +8,7 @@ resolver = "2"
 
 [patch.crates-io]
 asteracea = { path = "." }
+lignin = { git = "https://github.com/Tamschi/lignin.git", branch = "vdom-guards" }
 
 [package]
 name = "asteracea"

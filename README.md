@@ -89,7 +89,8 @@ let root = {
   rhizome::sync::Node::new(core::any::TypeId::of::<Root>())
 };
 assert!(matches!(
-  Box::pin(Empty::new(root.as_ref(), Empty::new_args_builder().build()).unwrap())
+  // The returned type is a drop guard (for caches) dereferenceable into the VDOM itself.
+  *Box::pin(Empty::new(root.as_ref(), Empty::new_args_builder().build()).unwrap().0)
     .as_ref()
     .render(&mut bump, Empty::render_args_builder().build())
     .unwrap(),
@@ -123,14 +124,14 @@ let root = {
   rhizome::sync::Node::new(core::any::TypeId::of::<Root>())
 };
 assert_eq!(
-  Box::pin(Unit::new(root.as_ref(), Unit::new_args_builder().build()).unwrap())
+  Box::pin(Unit::new(root.as_ref(), Unit::new_args_builder().build()).unwrap().0)
     .as_ref()
     .render(&mut bump, Unit::render_args_builder().build())
     .unwrap(),
   (),
 );
 assert_eq!(
-  Box::pin(Offset::new(root.as_ref(), Offset::new_args_builder().base(2).build()).unwrap())
+  Box::pin(Offset::new(root.as_ref(), Offset::new_args_builder().base(2).build()).unwrap().0)
     .as_ref()
     .render(&mut bump, Offset::render_args_builder().offset(3).build())
     .unwrap(),

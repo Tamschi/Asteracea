@@ -1,10 +1,20 @@
+use asteracea::services::Invalidator;
 use bumpalo::Bump;
+use debugless_unwrap::DebuglessUnwrap;
 use ergo_pin::ergo_pin;
-use rhizome::sync::Node;
-use std::any::TypeId;
+use rhizome::sync::{Inject, Node};
+use std::{any::TypeId, task::Context};
+use this_is_fine::FineExt;
 
 asteracea::component! {
 	Container()(..)
+
+	new with {
+		<dyn Invalidator>::inject(
+			local_resource_node.borrow(),
+			|_: Option<&mut Context<'_>>| unimplemented!(),
+		).not_fine().debugless_unwrap();
+	}
 
 	<"custom-container"
 		..
@@ -12,7 +22,9 @@ asteracea::component! {
 }
 
 asteracea::component! {
-	Content()()
+	Content(
+		dyn _invalidator: dyn Invalidator,
+	)()
 
 	<"custom-content">
 }

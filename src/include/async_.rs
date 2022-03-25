@@ -2,11 +2,14 @@
 //!
 //! TODO: Does the [`Future`] still need some kind of multi-dispatch-wrapper?
 
-use super::render_callback::{RenderCallback, RenderMut, RenderOnce};
+use super::{
+	private::Dereferenceable,
+	render_callback::{RenderCallback, RenderMut, RenderOnce},
+};
 use crate::error::{Caught, EscalateResult, Escalation, Result};
 use bumpalo::Bump;
 use futures_core::FusedFuture;
-use lignin::{Node, ThreadSafety};
+use lignin::{Guard, ThreadSafety};
 use std::{
 	any::Any,
 	cell::RefCell,
@@ -119,15 +122,6 @@ impl<Storage, F> Deref for StorageGuard<'_, Storage, F> {
 			AsyncState::Ready(storage) => storage,
 			AsyncState::Pending(_) | AsyncState::Failed(_) => unreachable!(),
 		}
-	}
-}
-
-struct Dereferenceable<T: ?Sized>(NonNull<T>);
-impl<T: ?Sized> Deref for Dereferenceable<T> {
-	type Target = T;
-
-	fn deref(&self) -> &Self::Target {
-		unsafe { self.0.as_ref() }
 	}
 }
 
@@ -258,7 +252,7 @@ impl<Storage: 'static, F: 'static + Send + Future<Output = Result<Storage>>> Asy
 				Arc::new(UntypedHandle {
 					counter: TipToe::new(),
 					state: Mutex::new(Some(unsafe {
-						Pin::new_unchecked(Dereferenceable(NonNull::new_unchecked(
+						Pin::new_unchecked(Dereferenceable::new(NonNull::new_unchecked(
 							&self.state as *const _ as *mut RwLock<AsyncState<Storage, F>>
 								as *mut _,
 						)))
@@ -374,7 +368,7 @@ impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderOnce<'_, 'bump, S>> {
 	///
 	/// If the associated [`ContentFuture`] has not been polled at all,
 	/// then this method will usually return [`None`] even if the content would be available immediately.
-	pub fn render(self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
+	pub fn render(self, bump: &'bump Bump) -> Option<Result<Guard<'bump, S>>> {
 		self.async_.is_done().then(|| (self.on_done)(bump))
 	}
 }
@@ -385,7 +379,7 @@ impl<'bump, S: ThreadSafety> AsyncContent<'_, RenderMut<'_, 'bump, S>> {
 	///
 	/// If the associated [`ContentFuture`] has not been polled at all,
 	/// then this method will usually return [`None`] even if the content would be available immediately.
-	pub fn render(&mut self, bump: &'bump Bump) -> Option<Result<Node<'bump, S>>> {
+	pub fn render(&mut self, bump: &'bump Bump) -> Option<Result<Guard<'bump, S>>> {
 		self.async_.is_done().then(|| (self.on_done)(bump))
 	}
 }

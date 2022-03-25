@@ -112,6 +112,7 @@ dependencies = [
  "tap",
  "unquote 0.0.6 (git+https://github.com/Tamschi/unquote.git?branch=develop)",
  "unzip-n",
+ "vec1",
 ]
 
 [[package]]
@@ -546,8 +547,7 @@ checksum = "1b03d17f364a3a042d5e5d46b053bbbf82c92c9430c592dd4c064dc6ee997125"
 [[package]]
 name = "lignin"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fac24f5e1ecf47470f0ff28d4ecc3f177f668457798143bde944df0a9498f0d7"
+source = "git+https://github.com/Tamschi/lignin.git?branch=vdom-guards#2f237cca9df5feef68404e4edd2da1bf27e5cd33"
 
 [[package]]
 name = "lignin-html"
@@ -1663,6 +1663,12 @@ name = "utf8-ranges"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ae116fef2b7fea257ed6440d3cfcff7f190865f170cdad00bb6465bf18ecba"
+
+[[package]]
+name = "vec1"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5fc1631c774f0f9570797191e01247cbefde789eebfbf128074cb934115a6133"
 
 [[package]]
 name = "vec_map"

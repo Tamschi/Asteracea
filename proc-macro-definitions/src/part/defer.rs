@@ -65,13 +65,13 @@ impl<C: Configuration> ParseWithContext for Defer<C> {
 		);
 
 		let asteracea = asteracea_ident(defer.span);
-		let node = quote_spanned!(defer.span=> node);
+		let resource_node = cx.storage_context.active_resource_node();
 		call2_strict(
 			quote_spanned! {defer.span.resolved_at(Span::mixed_site())=>
 				let #visibility self.#field_name = pin ::#asteracea::include::Defer::<'static, #type_path>
 					::new(::std::boxed::Box::new({
 						#[allow(unused_variables)]
-						let #node = #node.clone_handle();
+						let resource_node = #resource_node.as_ref().clone_handle();
 						move || Ok(#deferred_value)
 					}));
 			},

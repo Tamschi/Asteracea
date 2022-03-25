@@ -9,6 +9,8 @@
 pub mod __for_;
 pub mod async_;
 mod defer;
+pub mod dependency_injection;
+pub(crate) mod private;
 pub mod render_callback;
 
 pub use __for_::For;

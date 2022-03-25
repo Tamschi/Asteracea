@@ -22,8 +22,9 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	AttrStyle, Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent,
-	PatType, ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
+	AttrStyle, Attribute, Error, FieldPat, GenericParam, Generics, Ident, Item, Lifetime,
+	LifetimeDef, Member, Pat, PatIdent, PatType, ReturnType, Token, Type, Visibility, WhereClause,
+	WherePredicate,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -429,7 +430,21 @@ impl ComponentDeclaration {
 			},
 		};
 
-		let body = body.part_tokens(&cx)?;
+		let body = match body {
+			rust @ Part::RustBlock { .. } => rust.part_tokens(&cx)?,
+			body => match &render_type {
+				RenderType::Explicit(_, _) => body.part_tokens(&cx)?,
+				RenderType::AutoSafe
+				| RenderType::ExplicitAutoSync(_, _, _)
+				| RenderType::Sync(_, _)
+				| RenderType::UnSync(_, _, _) => {
+					let body = body.part_tokens(&cx)?;
+					quote_spanned! {render_paren.span.resolved_at(Span::mixed_site())=>
+						::#asteracea::lignin::Guard::new(#body, on_vdom_drop)
+					}
+				}
+			},
+		};
 
 		let new_lifetime: Lifetime = parse2(quote_spanned!(Span::call_site()=> 'NEW)).unwrap();
 		let render_lifetime: Lifetime =
@@ -519,6 +534,17 @@ impl ComponentDeclaration {
 			&new_lifetime,
 		);
 
+		let new_generics = {
+			let mut new_generics = new_generics;
+			new_generics.params.insert(
+				0,
+				GenericParam::Lifetime(LifetimeDef::new(
+					parse_quote_spanned!(Span::mixed_site()=> 'parent_resource_node_borrow),
+				)),
+			);
+			new_generics
+		};
+
 		let ParameterHelperDefinitions {
 			on_parameter_struct: render_args_generics,
 			parameter_struct_body: render_args_body,
@@ -605,14 +631,14 @@ impl ComponentDeclaration {
 					Span::mixed_site(),
 				);
 				random_items.push(
-					parse2(quote! {
-						::#asteracea::lignin::auto_safety::AutoSafe_alias!(pub(crate) #auto_safe);
+					parse2(quote_spanned! {Span::mixed_site()=>
+						::#asteracea::lignin::guard::auto_safety::AutoSafe_alias!(pub(crate) #auto_safe);
 					})
 					.expect("RenderType::AutoSafe __Asteracea__AutoSafe"),
 				);
-				parse2(quote! {
+				parse2(quote_spanned! {Span::mixed_site()=>
 					-> ::std::result::Result<
-						impl #auto_safe<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>>,
+						impl #auto_safe<Bound = ::#asteracea::lignin::Guard<'bump, ::#asteracea::lignin::ThreadBound>>,
 						::#asteracea::error::Escalation,
 					>
 				})
@@ -626,9 +652,9 @@ impl ComponentDeclaration {
 				.expect("RenderType::Explicit"),
 			),
 			RenderType::ExplicitAutoSync(_, _, question) => {
-				parse2(quote_spanned! {question.span=>
+				parse2(quote_spanned! {question.span.resolved_at(Span::mixed_site())=>
 					-> ::std::result::Result<
-						impl ::#asteracea::lignin::auto_safety::AutoSafe::<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>>,
+						impl ::#asteracea::lignin::guard::auto_safety::AutoSafe::<Bound = ::#asteracea::lignin::Guard<'bump, ::#asteracea::lignin::ThreadBound>>,
 						::#asteracea::error::Escalation,
 					>
 				})
@@ -637,16 +663,22 @@ impl ComponentDeclaration {
 			RenderType::Sync(r_arrow, _) | RenderType::UnSync(r_arrow, _, _) => {
 				let thread_safety = &cx.thread_safety;
 				parse2(quote_spanned! {r_arrow.span()=>
-					-> ::std::result::Result<::#asteracea::lignin::Node<'bump, #thread_safety>, ::#asteracea::error::Escalation>
+					-> ::std::result::Result<::#asteracea::lignin::Guard<'bump, #thread_safety>, ::#asteracea::error::Escalation>
 				})
 				.expect("render_type explicit thread safety")
 			}
 		};
 
+		let call_site_resource_node = Ident::new("local_resource_node", Span::call_site());
+
 		let constructor_block_statements =
 			constructor_block.map(|(_new, _with, block)| block.stmts);
 
-		let call_site_node = Ident::new("node", Span::call_site());
+		let into_owned_for_async = async_.as_ref().map(|async_| {
+			quote_spanned! {async_.span.resolved_at(Span::mixed_site())=>
+				.into_owned()
+			}
+		});
 
 		let (component_impl_generics, component_type_generics, component_where_clause) =
 			component_generics.split_for_impl();
@@ -690,13 +722,14 @@ impl ComponentDeclaration {
 				/// <!-- (suppress `missing_docs`) -->
 				#(#constructor_attributes)*
 				pub #async_ fn #new#new_generics(
-					parent_node: ::core::pin::Pin<&::#asteracea::__::rhizome::sync::Node<
-						::core::any::TypeId,
-						::core::any::TypeId,
-						::#asteracea::__::rhizome::sync::DynValue,
-					>>,
+					parent_node: ::core::pin::Pin<
+						&'parent_resource_node_borrow ::#asteracea::include::dependency_injection::ResourceNode
+					>,
 					args: #new_args_name#new_args_generic_args,
-				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
+				) -> ::std::result::Result<
+						(Self, ::#asteracea::include::dependency_injection::SparseResourceNodeHandle<'parent_resource_node_borrow>),
+						::#asteracea::error::Escalation,
+					> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					#constructor_tracing_span
 
 					// These are assigned at once to make sure name collisions error.
@@ -705,13 +738,26 @@ impl ComponentDeclaration {
 						__Asteracea__phantom: _,
 					}, (#(#injected_pats,)*)) = (args, (#(#dependency_extractions,)*));
 
-					let mut #call_site_node = parent_node.branch_for(::core::any::TypeId::of::<Self>());
+					let mut resource_node = ::#asteracea::include::dependency_injection::ResourceBob::new_for::<Self>(parent_node)#into_owned_for_async;
+
+					// Swapping the resource node out entirely to break the parent chain is not supported right now.
+					//
+					// Allowing that would make it look like a security option, without that actually providing meaningful security.
+					let #call_site_resource_node = unsafe { ::core::pin::Pin::new_unchecked(&mut resource_node) };
 
 					{} // Isolate constructor block.
 					#constructor_block_statements
 					{} // Dito.
 
-					::std::result::Result::Ok(#constructed_value)
+					let resource_node = resource_node.into_sparse_handle();
+
+					::std::result::Result::Ok((
+						{
+							let resource_node = resource_node.as_ref();
+							#constructed_value
+						},
+						resource_node,
+					))
 				}
 
 				/// <!-- (suppress `missing_docs`) -->
@@ -735,6 +781,10 @@ impl ComponentDeclaration {
 						#(#render_args_field_patterns,)*
 						__Asteracea__phantom: _,
 					} = args;
+
+					let mut on_vdom_drop: ::core::option::Option<
+						::#asteracea::lignin::guard::ConsumedCallback
+					> = None;
 
 					let this = #render_self;
 					::std::result::Result::Ok(#body)

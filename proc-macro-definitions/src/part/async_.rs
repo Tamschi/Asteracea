@@ -61,13 +61,13 @@ impl<C: Configuration> ParseWithContext for Async<C> {
 		);
 
 		let asteracea = asteracea_ident(async_.span);
-		let node = quote_spanned!(async_.span.resolved_at(Span::call_site())=> node);
+		let resource_node = cx.storage_context.active_resource_node();
 		call2_strict(
-			quote_spanned! {async_.span=>
+			quote_spanned! {async_.span.resolved_at(Span::mixed_site())=>
 				let #visibility self.#field_name =
 					pin ::#asteracea::include::async_::Async::<#type_path>
 					::new(::std::boxed::Box::pin({
-						let #node = #node.clone_handle();
+						let resource_node = #resource_node.as_ref().clone_handle();
 						async move { ::#asteracea::error::Result::Ok(#storage_value) }
 					}));
 			},
@@ -120,7 +120,15 @@ impl<C: Configuration> Async<C> {
 					let this = this.#field_name_pinned().storage_pinned()?;
 					let #field_name = this.as_ref();
 					let this = #field_name;
-					::#asteracea::error::Result::Ok(#content)
+					let mut on_vdom_drop: ::core::option::Option<
+						::#asteracea::lignin::guard::ConsumedCallback
+					> = None;
+					::#asteracea::error::Result::Ok(
+						::#asteracea::lignin::Guard::new(
+							#content,
+							on_vdom_drop,
+						)
+					)
 				}))
 			}),
 		)
