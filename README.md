@@ -191,7 +191,7 @@ impl Counter {
     self.value.set(value);
   }
 
-  // This may alternative take a `*const Self` or `Pin<&Self>`.
+  // This may alternatively take a `*const Self` or `Pin<&Self>`.
   // Inline handlers are also possible, but not much less verbose.
   fn on_click_plus(&self, _: Event) {
     self.value.set(self.value() + self.step);
