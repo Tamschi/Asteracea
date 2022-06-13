@@ -70,3 +70,4 @@ tap = "1.0.1"
 this-is-fine = "0.0.1"
 version-sync = "0.9.1"
 wasm-bindgen-test = "0.3.27"
+web-sys = { version = "0.3.57", features = ["Event"] }
