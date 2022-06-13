@@ -1,6 +1,4 @@
 {
-	"rust-analyzer.cargo.loadOutDirsFromCheck": true,
-	"rust-analyzer.checkOnSave.command": "clippy",
 	"rust-analyzer.procMacro.enable": true,
 	"todo-tree.general.tags": [
 		"BUG",
@@ -11,5 +9,6 @@
 		"todo!"
 	],
 	"todo-tree.regex.regex": "(($TAGS)|^\\s*- \\[ \\])",
-	"rust-analyzer.cargo.allFeatures": true
+	"rust-analyzer.cargo.allFeatures": true,
+	"rust-analyzer.cargo.buildScripts.enable": true
 }
