@@ -10,5 +10,6 @@
 	],
 	"todo-tree.regex.regex": "(($TAGS)|^\\s*- \\[ \\])",
 	"rust-analyzer.cargo.allFeatures": true,
-	"rust-analyzer.cargo.buildScripts.enable": true
+	"rust-analyzer.cargo.buildScripts.enable": true,
+	"rust-analyzer.checkOnSave.command": "clippy"
 }

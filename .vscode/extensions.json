@@ -3,7 +3,7 @@
 		"bungcip.better-toml",
 		"serayuzgur.crates",
 		"editorconfig.editorconfig",
-		"matklad.rust-analyzer",
+		"rust-lang.rust-analyzer",
 		"sidp.strict-whitespace",
 		"gruntfuggly.todo-tree"
 	],
