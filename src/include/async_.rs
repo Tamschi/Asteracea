@@ -259,7 +259,8 @@ impl<Storage: 'static, F: 'static + Send + Future<Output = Result<Storage>>> Asy
 					counter: TipToe::new(),
 					state: Mutex::new(Some(unsafe {
 						Pin::new_unchecked(Dereferenceable(NonNull::new_unchecked(
-							&self.state as *const _ as *mut RwLock<AsyncState<Storage, F>>
+							//TODO:I'm fairly sure this is unsound (mut from ref). The optimisation probably makes sense though, so maybe the lock should be wrapped in a `MaybeUninit<UnsafeCell<_>>`?.
+							std::ptr::addr_of!(self.state) as *mut RwLock<AsyncState<Storage, F>>
 								as *mut _,
 						)))
 					})),
