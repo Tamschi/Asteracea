@@ -269,8 +269,7 @@ It's sound either way, but the former may not compile.</p>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="chapter-0-sneak-peek"><a class="header" href="#chapter-0-sneak-peek">Chapter 0: Sneak Peek</a></h1>
 <p>Before I begin to explain in earnest, here is a relatively complex dynamic component using many of Asteracea's features, along with its resulting HTML representation:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use lignin::web::Event;
 use std::cell::Cell;
@@ -349,8 +348,7 @@ asteracea::component! {
 <div style="break-before: page; page-break-before: always;"></div><h1 id="an-empty-component"><a class="header" href="#an-empty-component">An Empty Component</a></h1>
 <p>As mentioned in the introduction, the simplest Asteracea component is <code>E()()[]</code>.</p>
 <p>In context, and written more like what you'd see in the wild:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Empty()()
@@ -396,8 +394,7 @@ asteracea::component! {
 <div style="break-before: page; page-break-before: always;"></div><h1 id="rust-comments"><a class="header" href="#rust-comments">Rust Comments</a></h1>
 <p>You can use three distinct types of comments in Asteracea macros, all serving different purposes:</p>
 <p>First, standard Rust comments can be placed anywhere in Asteracea components (or any other place in a Rust program), and are not included in the compiled binary:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Commented()()
@@ -414,8 +411,7 @@ asteracea::component! {
 <pre><code class="language-html">
 </code></pre>
 <p>Additionally, Rust documentation is supported in many places:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   /// This is a documented component.  
@@ -432,8 +428,7 @@ asteracea::component! {
 <p>¹ Rare exceptions in combination with other macros apply.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="html-comments"><a class="header" href="#html-comments">HTML comments</a></h1>
 <p>The third kind of comment is specific to Asteracea and does affect program output:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   HtmlCommented()()
@@ -446,8 +441,7 @@ asteracea::component! {
 </code></pre>
 <p>The double quotes are a Rust limitation: Since Rust tokenises macro input, a string literal is required to extract raw text.</p>
 <p>You can use a multiline string to easily write a multiline HTML comment:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   HtmlCommented()()
@@ -468,8 +462,7 @@ asteracea::component! {
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="text"><a class="header" href="#text">Text</a></h1>
 <p>To output a static plain <a href="https://developer.mozilla.org/en-US/docs/Web/API/Text"><code>Text</code></a> element in Asteracea, simply use a text literal in your component's body:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Text()()
@@ -496,8 +489,7 @@ asteracea::component! {
 <p>(Click the eye icon to view the rest of the macro output. Note that this also displays a hidden <code>main</code> method inserted by mdBook which isn't part of <code>component!</code>'s output.)</p>
 <h2 id="multiple-text-elements"><a class="header" href="#multiple-text-elements">Multiple <code>Text</code> elements</a></h2>
 <p>Text nodes can be used as children of other nodes, for example a Multi Node:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   TextMulti()()
@@ -576,8 +568,7 @@ pub fn render&lt;'a, 'bump&gt;(
 <p>Multi Nodes generated by Asteracea macros always place their contents in the bump allocation arena, even if those contents are theoretically immutable.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="elements"><a class="header" href="#elements">Elements</a></h1>
 <p>To define elements and their contents, Asteracea provides a syntax similar to HTML:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Div()()
@@ -589,8 +580,7 @@ pub fn render&lt;'a, 'bump&gt;(
 <pre><code class="language-html">&lt;DIV&gt;&lt;/DIV&gt;
 </code></pre>
 <p><code>&lt;name</code> opens an element and <code>&gt;</code> is enough to close one. However, you can alternatively close elements with <code>/name&gt;</code> too, which the compiler will validate:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Div()()
@@ -604,8 +594,7 @@ pub fn render&lt;'a, 'bump&gt;(
 <pre><code class="language-html">&lt;DIV&gt;&lt;/DIV&gt;
 </code></pre>
 <p>Elements can contain any number of valid Asteracea component bodies, which are rendered as the element's children, as long as the specific element supports it:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Span()()
@@ -620,8 +609,7 @@ pub fn render&lt;'a, 'bump&gt;(
 <pre><code class="language-html">&lt;SPAN&gt;This is text within a &amp;lt;span&gt;.&lt;!--This is a comment within a &lt;span&gt;.--&gt;&lt;/SPAN&gt;
 </code></pre>
 <p>This includes other elements:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   DivSpan()()
@@ -636,8 +624,7 @@ pub fn render&lt;'a, 'bump&gt;(
 </code></pre>
 <p>Elements are statically validated against <a href="static_components/TK"><code>lignin-schema</code></a>.</p>
 <p><a href="https://developer.mozilla.org/en-US/docs/Glossary/empty_element">Empty elements</a> like <code>&lt;br&gt;</code> are written like any other element, but don't accept children and won't render a closing tag to HTML when using <a href="static_components/TK">lignin-html</a>:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Br()()
@@ -649,8 +636,7 @@ pub fn render&lt;'a, 'bump&gt;(
 <pre><code class="language-html">&lt;BR&gt;
 </code></pre>
 <p>To use custom element names without validation, quote them like this:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Custom()()
@@ -663,8 +649,7 @@ pub fn render&lt;'a, 'bump&gt;(
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="child-components"><a class="header" href="#child-components">Child Components</a></h1>
 <p>Asteracea components can be used inside other templates using asterisk syntax:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>//TODO: Hide this initially.
 use std::marker::PhantomData;
@@ -711,8 +696,7 @@ Module body.
 Generic body.
 </code></pre>
 <p>Explicit closing is supported:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>//TODO: Hide repetition.
 use std::marker::PhantomData;
@@ -762,8 +746,7 @@ I nearly put the FISHING POLE AND FISH emoji above, but that fest to cruel.
 The fish is chilling in a bucket now and will be released into a nicer environment before long.
 -->
 <p>Using a component multiple times results in distinct instances:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Inner()()
@@ -788,8 +771,7 @@ asteracea::component! {
 <p>For more information, see <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">The Rustonomicon on Zero Sized Types (ZSTs)</a>.</p>
 </blockquote>
 <p>Instead of instantiating and storing a child component multiple times, you can instance it by giving it a name and referencing it elsewhere through a Rust block:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>//TODO: Hide this initially.
 asteracea::component! {
@@ -819,8 +801,7 @@ asteracea::component! {
 </blockquote>
 </details>
 <p>Consider the following (grasping at <a href="static_components/">constructor parameter</a><a href="static_components/"> captures</a> and <a href="static_components/">value formatting</a> a bit ahead of time):</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::{fmt::Debug, mem::size_of};
 
@@ -849,11 +830,11 @@ asteracea::component! {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55831fbf8810.
-I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x55831fbf8810.
-I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x55831fbf8818.
-I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x55831fbf8810.
-The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x55831fbf8810.
+<pre><code class="language-html">I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x5582d1ca3b70.
+I contain ()! My size is &lt;B&gt;0&lt;/B&gt; bytes. I'm located at address 0x5582d1ca3b70.
+I contain 1! My size is &lt;B&gt;1&lt;/B&gt; bytes. I'm located at address 0x5582d1ca3b78.
+I contain 2! My size is &lt;B&gt;8&lt;/B&gt; bytes. I'm located at address 0x5582d1ca3b70.
+The container instance occupies &lt;B&gt;16&lt;/B&gt; bytes at 0x5582d1ca3b70.
 </code></pre>
 <p>The layout here is somewhat implementation-defined, but generally what you should see is that the <code>MySize::&lt;()&gt;</code> instances take up no space inside the <code>Container</code> instance and don't displace other children in memory.</p>
 <p>This is because Asteracea components contain no hidden instance state, which means they are sized to content (and padding requirements), all the way down to zero. <code>()</code> is Rust's <a href="https://doc.rust-lang.org/stable/std/primitive.unit.html">unit</a> type, the most convenient <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">zero sized type</a>. The same applies to components without instance fields, of course.</p>
@@ -867,8 +848,7 @@ The compiler is in theory allowed to optimise it away, but this isn't guaranteed
 <p>The <code>::new(…)</code> and <code>.render(…)</code> functions of Asteracea-components are fallible, returning a <code>Result&lt;_, Escalation&gt;</code>.</p>
 <p><a href="dynamic_components/"><code>Escalation</code></a>s are panic-like: They are not expected during normal execution of a web frontend, are strictly deprioritised compared to the <a href="dynamic_components/"><code>Ok</code></a> path and components that catch them are encouraged to implement a &quot;fail once and stop&quot; approach where child components are disposed of on first failure.</p>
 <p>You can escalate any error along the GUI tree as long as it is <a href="dynamic_components/"><code>Any</code></a>, <a href="dynamic_components/"><code>Error</code></a> and <a href="dynamic_components/"><code>Send</code></a>.</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use asteracea::error::EscalateResult;
 use std::error::Error;
@@ -924,8 +904,7 @@ asteracea::component! {
 <h2 id="handling-panics"><a class="header" href="#handling-panics">Handling panics</a></h2>
 <p>Asteracea's error handling will automatically try to pick up on plain Rust panics, and can prevent them from crashing your app as long you use an [<code>Escalation::catch…</code>] function to handle errors. However, <strong>this only works with unwinding enabled (i.e. not under Wasm!)</strong>. The currently active panic hook is invoked regardless, too.</p>
 <p>The following example <em>should</em> display a backtrace rather than failing the book build:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Panicking()
@@ -952,8 +931,7 @@ asteracea::component! {
 <div style="break-before: page; page-break-before: always;"></div><h1 id="new-with---"><a class="header" href="#new-with---"><code>new with { …; }</code></a></h1>
 <!-- The reason for not placing this block after the constructor arguments (without keyword) is that this would create a lot of separation between constructor and render arguments, which should both be visible at a glance when peeking at a component's source code. -->
 <p>Arbitrary Rust code can be inserted into a component's constructor using a <code>new with</code>-block:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Constructed()()
@@ -969,8 +947,7 @@ asteracea::component! {
 <pre><code class="language-html">
 </code></pre>
 <p>Code inside the <code>new with</code>-block has access to constructor parameters, and <code>let</code>-bindings from this block are in scope for capture initialisers:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   QuoteHolder(
@@ -1014,8 +991,7 @@ asteracea::component! {
 <p>TODO: More details, especially regarding event handlers. Remove <code>Self: 'static</code> constraint.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="conditional-attributes"><a class="header" href="#conditional-attributes">Conditional Attributes</a></h1>
 <p>Asteracea supports conditionally setting optional attributes with the following syntax:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Classic()(
@@ -1045,8 +1021,7 @@ asteracea::component! {
 <p>This can be used to conditionally render a <a href="https://www.w3.org/TR/html52/infrastructure.html#sec-boolean-attributes">boolean attribute</a> like <code>checked</code>, providing <a href="dynamic_components/"><code>Some(&quot;&quot;)</code></a> to enable the attribute. However, it is usually more convenient to use a <a href="dynamic_components/"><code>bool</code></a> directly:</p>
 <h2 id="boolean-attributes"><a class="header" href="#boolean-attributes">Boolean Attributes</a></h2>
 <p>To make dynamic boolean attributes like <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/hidden"><code>hidden</code></a> more convenient to use, conditional attributes also accept <a href="dynamic_components/"><code>bool</code></a> values directly:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Vis()(
@@ -1080,8 +1055,7 @@ asteracea::component! {
 <div style="break-before: page; page-break-before: always;"></div><h1 id="argument-defaults"><a class="header" href="#argument-defaults">Argument Defaults</a></h1>
 <p>Asteracea provides multiple ways to make working with optional arguments easier.</p>
 <p>Like in for example TypeScript, you can specify default parameters for constructor and render arguments:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Classic()(
@@ -1110,8 +1084,7 @@ asteracea::component! {
 <p>Default parameter expressions are normal Rust expressions, and are evaluated as needed if the parameter was not specified.</p>
 <!-- TODO: Figure out if default parameter expressions can see other parameters, if yes which, and then clarify that here. --><div style="break-before: page; page-break-before: always;"></div><h1 id="optional-arguments"><a class="header" href="#optional-arguments">Optional Arguments</a></h1>
 <p>When working with values that may or may not be provided, where the default is outside the range of possible provided values, you can improve your component's interface towards consumers by using optional arguments:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Classic()(
@@ -1139,8 +1112,7 @@ asteracea::component! {
 <p><code>class</code> is an <code>Option&lt;&amp;'bump str&gt;</code> within <code>Classic</code>s <code>.render(…)</code> method, but the parameter is provided from outside as <code>&amp;'bump str</code>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="conditional-child-component-parameters"><a class="header" href="#conditional-child-component-parameters">Conditional Child Component Parameters</a></h1>
 <p>Note that providing optional argument values without <a href="dynamic_components/"><code>Some</code></a> means that <a href="dynamic_components/"><code>None</code></a> can only be specfied by not setting the parameter at all! Fortunately, it's easy to do this conditionally in the same way as for optional attributes on HTML elements:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Inner()(
@@ -1188,8 +1160,7 @@ asteracea::component! {
 <div style="break-before: page; page-break-before: always;"></div><h1 id="with----"><a class="header" href="#with----"><code>with { …; } &lt;…&gt;</code></a></h1>
 <p>While you can in theory place nearly any Rust code inside <code>{}</code>-braces as part of Asteracea's grammar, this can be disorderly for more complex calculations or cumbersome where you want to reuse parts of a calculation.</p>
 <p>Instead, you can use a <code>with { …; } &lt;…&gt;</code>-expression to run a number of Rust statements procedurally:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   pub WithExample()() -&gt; Sync
@@ -1210,8 +1181,7 @@ The oak's leaves are fallen.&lt;/DIV&gt;
 </code></pre>
 <p><code>with</code>-expressions can be used anywhere an <a href="dynamic_components/*">element expression</a> is expected.</p>
 <p>Bindings declared in the <code>with</code>-expression's are only in scope for the embedded <a href="dynamic_components/*">element expression</a>, but with a multi node, you can use them for multiple elements:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   pub WithExample()() -&gt; Sync
@@ -1233,8 +1203,7 @@ The oak's leaves are fallen.&lt;/DIV&gt;
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="spread-if--"><a class="header" href="#spread-if--"><code>spread if {…} &lt;…&gt;</code></a></h1>
 <p>To conditionally render a node, you can use <code>spread if</code>-expressions whenever a <a href="conditional_content/"><code>Node&lt;'bump&gt;</code></a> is expected:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Conditional()(
@@ -1259,8 +1228,7 @@ asteracea::component! {
 </code></pre>
 <p>Note the required curly braces (<code>{}</code>) around the condition and their absence on the body! This is reversed from plain Rust to show that the condition is a Rust expression while the body is not.</p>
 <p>To render multiple elements conditionally, use a multi node:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Conditional()(
@@ -1291,8 +1259,7 @@ I am here&lt;SPAN&gt; and &lt;/SPAN&gt;I like this place.
 </code></pre>
 <h2 id="pattern-matching-with-let"><a class="header" href="#pattern-matching-with-let">Pattern-matching with <code>let</code></a></h2>
 <p>is also available, though this means that Asteracea's <code>if</code>-<code>{condition}</code> is <em>not</em> automatically a Rust block. Use <code>{{ statements }}</code> if you really need one, though wrapping the <code>spread if</code> in a <code>with { … } &lt;…&gt;</code>-expression is likely a better idea in terms of code organisation.</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Conditional()(
@@ -1333,8 +1300,7 @@ asteracea::component! {
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="spread-if--else-"><a class="header" href="#spread-if--else-"><code>spread if …… else &lt;…&gt;</code></a></h1>
 <p>You can explicitly specify alternative content with an <code>else</code> branch:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Alternates()(
@@ -1362,8 +1328,7 @@ Default
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="for-loops"><a class="header" href="#for-loops"><code>for</code>-loops</a></h1>
 <p><code>for</code> loops in Asteracea components resemble those in plain Rust, but do produce output on each iteration:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   pub Looping()() -&gt; Sync
@@ -1397,8 +1362,7 @@ Each such group's state &quot;list&quot; is auto-edited only at the end.</p>
 <p>Such glitches are guaranteed to never happen while the sequence is stable, however.</p>
 </blockquote>
 <p>The full explicit syntax for <code>for</code>-loops is as follows:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   pub Looping()() -&gt; Sync
@@ -1422,8 +1386,7 @@ Each such group's state &quot;list&quot; is auto-edited only at the end.</p>
 <p>Each of these parts is optional, but currently it may be occasionally necessary to specify a type. <strong>Specifying neither <code>T</code> nor <code>K</code> also means a loop will use somewhat less efficient dynamically typed stored keys that always incur a heap allocation when an item is added to the list.</strong> Both most annotation requirements and relative inefficiency of unannotated loops is expected to disappear with <a href="https://github.com/rust-lang/rust/issues/63063">future Rust language improvements</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="spread-match------"><a class="header" href="#spread-match------"><code>spread match { … } [ … ]</code></a></h1>
 <p>Rust's <code>match</code> statements are available in Asteracea contexts, with slightly changed syntax:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>enum Enum&lt;'a&gt; {
   Text(&amp;'a str),
@@ -1501,8 +1464,7 @@ If you have a better example to demonstrate recursion with, please <a href="cond
 <p>The container component size reduction isn't very useful in most cases, since Asteracea initialises child components eagerly, but can be used to great effect with <strong><code>dyn</code> branching if certain arms require especially large storage</strong>.</p>
 <!-- TODO: Check if it's possible to let Clippy warn about that. -->
 <p>Consider the following:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::mem::size_of;
 
@@ -1532,8 +1494,7 @@ asteracea::component! {
 </code></pre>
 <p>As you can see, <code>Holder</code> requires 1KB of space even though <code>Heavy</code> is never used.</p>
 <p>You can avoid this as follows:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::mem::size_of;
 
@@ -1566,8 +1527,7 @@ asteracea::component! {
 <div style="break-before: page; page-break-before: always;"></div><h1 id="defer-storage-"><a class="header" href="#defer-storage-"><code>defer ⦃storage⦄ &lt;…&gt;</code></a></h1>
 <p>An alternative method of breaking up recursive component initialisation is to defer it for the recursive part of the template until it is rendered.</p>
 <p>As such, the recursive example from the <a href="conditional_content/./box.html"><code>box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ &lt;…&gt;</code> chapter</a> can be written as:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Countdown()(
@@ -1602,8 +1562,7 @@ asteracea::component! {
 <p><code>spread if</code> doesn't drop branches that aren't active, and <code>defer</code> only ever runs initialisers once. This means that <strong>state persists</strong> and <strong>heap allocations are cached</strong>. Useful for (very) frequently updated content!</p>
 <h2 id="naming-the-field"><a class="header" href="#naming-the-field">Naming the field</a></h2>
 <p>As usual, the backing field can be named and then referred to:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Introspective()()
@@ -1633,8 +1592,7 @@ Was I rendered before? true
 <p>Much like <code>defer</code> expressions, <code>bind</code> expressions evaluate a sub-expression constructor once when first rendered.</p>
 <p>However, they also <em>shift the constructor scope of a sub-expression into its parent's render scope</em>.</p>
 <p>This lets you use render parameters as constructor parameters:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Early(
@@ -1671,8 +1629,7 @@ Constructor parameter: &quot;first&quot;
 <h2 id="element-expression"><a class="header" href="#element-expression">element expression</a></h2>
 <p>Asteracea's most generic template building block. Placeholder: <code>&lt;…&gt;</code></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="chapter-1-hello-asteracea"><a class="header" href="#chapter-1-hello-asteracea">Chapter 1: Hello Asteracea</a></h1>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   HelloAsteracea()()
@@ -1682,8 +1639,7 @@ Constructor parameter: &quot;first&quot;
 </span></code></pre></pre>
 <pre><code class="language-html">&lt;SPAN&gt;Hello Asteracea!&lt;/SPAN&gt;
 </code></pre>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use asteracea::component;
 use std::cell::Cell;

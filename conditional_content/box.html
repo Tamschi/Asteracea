@@ -194,8 +194,7 @@ If you have a better example to demonstrate recursion with, please <a href="">le
 <p>The container component size reduction isn't very useful in most cases, since Asteracea initialises child components eagerly, but can be used to great effect with <strong><code>dyn</code> branching if certain arms require especially large storage</strong>.</p>
 <!-- TODO: Check if it's possible to let Clippy warn about that. -->
 <p>Consider the following:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::mem::size_of;
 
@@ -225,8 +224,7 @@ asteracea::component! {
 </code></pre>
 <p>As you can see, <code>Holder</code> requires 1KB of space even though <code>Heavy</code> is never used.</p>
 <p>You can avoid this as follows:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use std::mem::size_of;
 

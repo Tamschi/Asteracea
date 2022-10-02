@@ -149,8 +149,7 @@
                     <main>
                         <h1 id="child-components"><a class="header" href="#child-components">Child Components</a></h1>
 <p>Asteracea components can be used inside other templates using asterisk syntax:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>//TODO: Hide this initially.
 use std::marker::PhantomData;
@@ -197,8 +196,7 @@ Module body.
 Generic body.
 </code></pre>
 <p>Explicit closing is supported:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>//TODO: Hide repetition.
 use std::marker::PhantomData;
@@ -248,8 +246,7 @@ I nearly put the FISHING POLE AND FISH emoji above, but that fest to cruel.
 The fish is chilling in a bucket now and will be released into a nicer environment before long.
 -->
 <p>Using a component multiple times results in distinct instances:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Inner()()
@@ -274,8 +271,7 @@ asteracea::component! {
 <p>For more information, see <a href="https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts">The Rustonomicon on Zero Sized Types (ZSTs)</a>.</p>
 </blockquote>
 <p>Instead of instantiating and storing a child component multiple times, you can instance it by giving it a name and referencing it elsewhere through a Rust block:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>//TODO: Hide this initially.
 asteracea::component! {

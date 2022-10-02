@@ -150,8 +150,7 @@
                         <h1 id="new-with---"><a class="header" href="#new-with---"><code>new with { …; }</code></a></h1>
 <!-- The reason for not placing this block after the constructor arguments (without keyword) is that this would create a lot of separation between constructor and render arguments, which should both be visible at a glance when peeking at a component's source code. -->
 <p>Arbitrary Rust code can be inserted into a component's constructor using a <code>new with</code>-block:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Constructed()()
@@ -167,8 +166,7 @@
 <pre><code class="language-html">
 </code></pre>
 <p>Code inside the <code>new with</code>-block has access to constructor parameters, and <code>let</code>-bindings from this block are in scope for capture initialisers:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   QuoteHolder(

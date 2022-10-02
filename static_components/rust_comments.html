@@ -150,8 +150,7 @@
                         <h1 id="rust-comments"><a class="header" href="#rust-comments">Rust Comments</a></h1>
 <p>You can use three distinct types of comments in Asteracea macros, all serving different purposes:</p>
 <p>First, standard Rust comments can be placed anywhere in Asteracea components (or any other place in a Rust program), and are not included in the compiled binary:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Commented()()
@@ -168,8 +167,7 @@
 <pre><code class="language-html">
 </code></pre>
 <p>Additionally, Rust documentation is supported in many places:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   /// This is a documented component.  

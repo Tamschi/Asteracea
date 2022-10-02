@@ -150,8 +150,7 @@
                         <h1 id="defer-storage-"><a class="header" href="#defer-storage-"><code>defer ⦃storage⦄ &lt;…&gt;</code></a></h1>
 <p>An alternative method of breaking up recursive component initialisation is to defer it for the recursive part of the template until it is rendered.</p>
 <p>As such, the recursive example from the <a href="./box.html"><code>box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ &lt;…&gt;</code> chapter</a> can be written as:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Countdown()(
@@ -186,8 +185,7 @@ asteracea::component! {
 <p><code>spread if</code> doesn't drop branches that aren't active, and <code>defer</code> only ever runs initialisers once. This means that <strong>state persists</strong> and <strong>heap allocations are cached</strong>. Useful for (very) frequently updated content!</p>
 <h2 id="naming-the-field"><a class="header" href="#naming-the-field">Naming the field</a></h2>
 <p>As usual, the backing field can be named and then referred to:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Introspective()()

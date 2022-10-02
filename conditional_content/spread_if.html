@@ -149,8 +149,7 @@
                     <main>
                         <h1 id="spread-if--"><a class="header" href="#spread-if--"><code>spread if {…} &lt;…&gt;</code></a></h1>
 <p>To conditionally render a node, you can use <code>spread if</code>-expressions whenever a <a href=""><code>Node&lt;'bump&gt;</code></a> is expected:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Conditional()(
@@ -175,8 +174,7 @@ asteracea::component! {
 </code></pre>
 <p>Note the required curly braces (<code>{}</code>) around the condition and their absence on the body! This is reversed from plain Rust to show that the condition is a Rust expression while the body is not.</p>
 <p>To render multiple elements conditionally, use a multi node:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Conditional()(
@@ -207,8 +205,7 @@ I am here&lt;SPAN&gt; and &lt;/SPAN&gt;I like this place.
 </code></pre>
 <h2 id="pattern-matching-with-let"><a class="header" href="#pattern-matching-with-let">Pattern-matching with <code>let</code></a></h2>
 <p>is also available, though this means that Asteracea's <code>if</code>-<code>{condition}</code> is <em>not</em> automatically a Rust block. Use <code>{{ statements }}</code> if you really need one, though wrapping the <code>spread if</code> in a <code>with { … } &lt;…&gt;</code>-expression is likely a better idea in terms of code organisation.</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Conditional()(

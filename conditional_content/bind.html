@@ -151,8 +151,7 @@
 <p>Much like <code>defer</code> expressions, <code>bind</code> expressions evaluate a sub-expression constructor once when first rendered.</p>
 <p>However, they also <em>shift the constructor scope of a sub-expression into its parent's render scope</em>.</p>
 <p>This lets you use render parameters as constructor parameters:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Early(

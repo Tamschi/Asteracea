@@ -149,8 +149,7 @@
                     <main>
                         <h1 id="elements"><a class="header" href="#elements">Elements</a></h1>
 <p>To define elements and their contents, Asteracea provides a syntax similar to HTML:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Div()()
@@ -162,8 +161,7 @@
 <pre><code class="language-html">&lt;DIV&gt;&lt;/DIV&gt;
 </code></pre>
 <p><code>&lt;name</code> opens an element and <code>&gt;</code> is enough to close one. However, you can alternatively close elements with <code>/name&gt;</code> too, which the compiler will validate:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Div()()
@@ -177,8 +175,7 @@
 <pre><code class="language-html">&lt;DIV&gt;&lt;/DIV&gt;
 </code></pre>
 <p>Elements can contain any number of valid Asteracea component bodies, which are rendered as the element's children, as long as the specific element supports it:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Span()()
@@ -193,8 +190,7 @@
 <pre><code class="language-html">&lt;SPAN&gt;This is text within a &amp;lt;span&gt;.&lt;!--This is a comment within a &lt;span&gt;.--&gt;&lt;/SPAN&gt;
 </code></pre>
 <p>This includes other elements:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   DivSpan()()
@@ -209,8 +205,7 @@
 </code></pre>
 <p>Elements are statically validated against <a href="TK"><code>lignin-schema</code></a>.</p>
 <p><a href="https://developer.mozilla.org/en-US/docs/Glossary/empty_element">Empty elements</a> like <code>&lt;br&gt;</code> are written like any other element, but don't accept children and won't render a closing tag to HTML when using <a href="TK">lignin-html</a>:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Br()()
@@ -222,8 +217,7 @@
 <pre><code class="language-html">&lt;BR&gt;
 </code></pre>
 <p>To use custom element names without validation, quote them like this:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Custom()()

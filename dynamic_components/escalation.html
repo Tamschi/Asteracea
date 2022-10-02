@@ -151,8 +151,7 @@
 <p>The <code>::new(…)</code> and <code>.render(…)</code> functions of Asteracea-components are fallible, returning a <code>Result&lt;_, Escalation&gt;</code>.</p>
 <p><a href=""><code>Escalation</code></a>s are panic-like: They are not expected during normal execution of a web frontend, are strictly deprioritised compared to the <a href=""><code>Ok</code></a> path and components that catch them are encouraged to implement a &quot;fail once and stop&quot; approach where child components are disposed of on first failure.</p>
 <p>You can escalate any error along the GUI tree as long as it is <a href=""><code>Any</code></a>, <a href=""><code>Error</code></a> and <a href=""><code>Send</code></a>.</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use asteracea::error::EscalateResult;
 use std::error::Error;
@@ -208,8 +207,7 @@ asteracea::component! {
 <h2 id="handling-panics"><a class="header" href="#handling-panics">Handling panics</a></h2>
 <p>Asteracea's error handling will automatically try to pick up on plain Rust panics, and can prevent them from crashing your app as long you use an [<code>Escalation::catch…</code>] function to handle errors. However, <strong>this only works with unwinding enabled (i.e. not under Wasm!)</strong>. The currently active panic hook is invoked regardless, too.</p>
 <p>The following example <em>should</em> display a backtrace rather than failing the book build:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Panicking()

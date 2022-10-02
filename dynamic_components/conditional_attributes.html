@@ -149,8 +149,7 @@
                     <main>
                         <h1 id="conditional-attributes"><a class="header" href="#conditional-attributes">Conditional Attributes</a></h1>
 <p>Asteracea supports conditionally setting optional attributes with the following syntax:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Classic()(
@@ -180,8 +179,7 @@ asteracea::component! {
 <p>This can be used to conditionally render a <a href="https://www.w3.org/TR/html52/infrastructure.html#sec-boolean-attributes">boolean attribute</a> like <code>checked</code>, providing <a href=""><code>Some(&quot;&quot;)</code></a> to enable the attribute. However, it is usually more convenient to use a <a href=""><code>bool</code></a> directly:</p>
 <h2 id="boolean-attributes"><a class="header" href="#boolean-attributes">Boolean Attributes</a></h2>
 <p>To make dynamic boolean attributes like <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/hidden"><code>hidden</code></a> more convenient to use, conditional attributes also accept <a href=""><code>bool</code></a> values directly:</p>
-<pre><pre class="playground"><code class="language-rust no_run ro_playground">
-<span class="boring">#![allow(unused)]
+<pre><pre class="playground"><code class="language-rust no_run ro_playground"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>asteracea::component! {
   Vis()(
