@@ -7,7 +7,7 @@ permissions:
 on:
   pull_request:
   push:
-  schedule: [cron: "0 8 * * 5"] # 8:00 on Fridays
+  # This used to also be scheduled, but apparently GitHub also turns it off otherwise when deactivating that due to repository inactivity.
 
 jobs:
   test:
@@ -41,6 +41,21 @@ jobs:
     - run: cargo +stable test --locked --target wasm32-unknown-unknown
     - run: cargo +stable test --locked --target wasm32-unknown-unknown --all-features
 
+  miri:
+    name: Miri
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1.0.7
+      with:
+        toolchain: nightly
+        profile: minimal
+        components: miri, rust-src
+    - run: cat CI.toml >> Cargo.toml
+    - run: cargo +nightly miri test --workspace --locked --no-default-features
+    - run: cargo +nightly miri test --workspace --locked
+    - run: cargo +nightly miri test --workspace --locked --all-features
+
   check:
     name: Check on Rust ${{matrix.rust}}${{format(' ({0})', matrix.target || matrix.os)}}
     runs-on: ${{matrix.os}}-latest
@@ -71,11 +86,11 @@ jobs:
     - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: nightly
+        override: true
+    - uses: taiki-e/install-action@cargo-hack
+    - uses: taiki-e/install-action@cargo-minimal-versions
     - run: cat CI.toml >> Cargo.toml
-    - run: cargo +nightly update -Z minimal-versions
-    - run: cargo +nightly check --lib --locked --no-default-features
-    - run: cargo +nightly check --lib --locked
-    - run: cargo +nightly check --lib --locked --all-features
+    - run: cargo minimal-versions check --workspace
 
   book:
     name: Book
