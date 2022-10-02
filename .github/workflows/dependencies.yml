@@ -20,8 +20,7 @@ on:
       - '.github/workflows/dependencies.yml'
     branches-ignore:
       - 'dependabot/**'
-  schedule:
-    - cron: "0 0 * * 0"
+  # This used to also be scheduled, but apparently GitHub also turns it off otherwise when deactivating that due to repository inactivity.
 
 env:
   CARGO_TERM_COLOR: always
@@ -30,7 +29,7 @@ jobs:
   check-advisories:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -45,7 +44,7 @@ jobs:
   check-bans:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -60,7 +59,7 @@ jobs:
   check-licenses:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -75,7 +74,7 @@ jobs:
   check-sources:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
