@@ -242,7 +242,7 @@ impl Parse for ComponentDeclaration {
 						}
 					}
 
-					quote!(#pat#colon_token #ty)
+					quote!(#pat #colon_token #ty)
 				};
 
 				let attrs = attrs
@@ -677,25 +677,25 @@ impl ComponentDeclaration {
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
 			#[builder(doc)]
-			#visibility struct #new_args_name#new_args_generics #new_args_body
+			#visibility struct #new_args_name #new_args_generics #new_args_body
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
 			#[builder(doc)]
-			#visibility struct #render_args_name#render_args_generics #render_args_body
+			#visibility struct #render_args_name #render_args_generics #render_args_body
 
 			#(#struct_definition)*
 
-			impl#component_impl_generics #component_name#component_type_generics #component_where_clause {
+			impl #component_impl_generics #component_name #component_type_generics #component_where_clause {
 				/// <!-- (suppress `missing_docs`) -->
 				#(#constructor_attributes)*
-				pub #async_ fn #new#new_generics(
+				pub #async_ fn #new #new_generics(
 					parent_node: ::core::pin::Pin<&::#asteracea::__::rhizome::sync::Node<
 						::core::any::TypeId,
 						::core::any::TypeId,
 						::#asteracea::__::rhizome::sync::DynValue,
 					>>,
-					args: #new_args_name#new_args_generic_args,
+					args: #new_args_name #new_args_generic_args,
 				) -> ::std::result::Result<Self, ::#asteracea::error::Escalation> where Self: 'a + 'static { // TODO: Self: 'static is necessary because of `derive_for::<Self>`, but that's not really a good approach... Using derived IDs would be better.
 					#constructor_tracing_span
 
@@ -715,17 +715,17 @@ impl ComponentDeclaration {
 				}
 
 				/// <!-- (suppress `missing_docs`) -->
-				pub fn new_args_builder#new_args_builder_generics()
-				-> #new_args_builder_name#new_args_builder_generic_args {
+				pub fn new_args_builder #new_args_builder_generics()
+				-> #new_args_builder_name #new_args_builder_generic_args {
 					#new_args_name::builder()
 				}
 
 				/// <!-- (suppress `missing_docs`) -->
 				#(#render_attributes)*
-				pub fn #render#render_generics(
+				pub fn #render #render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
 					#bump: &'bump #asteracea::bumpalo::Bump,
-					args: #render_args_name#render_args_generic_args,
+					args: #render_args_name #render_args_generic_args,
 				) #render_type {
 					// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.
 					// The following should be equivalent to skipping all fields and setting them one by one:
@@ -741,15 +741,15 @@ impl ComponentDeclaration {
 				}
 
 				/// <!-- (suppress `missing_docs`) -->
-				pub fn render_args_builder#render_args_builder_generics()
-				-> #render_args_builder_name#render_args_builder_generic_args {
+				pub fn render_args_builder #render_args_builder_generics()
+				-> #render_args_builder_name #render_args_builder_generic_args {
 					#render_args_name::builder()
 				}
 
 				//TODO: Is it possible to call render_args_builder on the reference instead, somehow?
 				#[doc(hidden)] // This
-				pub fn __Asteracea__ref_render_args_builder#render_args_builder_generics(&self)
-				-> #render_args_builder_name#render_args_builder_generic_args {
+				pub fn __Asteracea__ref_render_args_builder #render_args_builder_generics(&self)
+				-> #render_args_builder_name #render_args_builder_generic_args {
 					let _ = self;
 					#render_args_name::builder()
 				}
@@ -758,7 +758,7 @@ impl ComponentDeclaration {
 			#(#random_items)*
 
 			/// Asteracea components do not currently support custom [`Drop`](`::std::ops::Drop`) implementations.
-			impl#component_impl_generics ::std::ops::Drop for #component_name#component_type_generics #component_where_clause {
+			impl #component_impl_generics ::std::ops::Drop for #component_name #component_type_generics #component_where_clause {
 				fn drop(&mut self) {
 					unsafe {
 						#unsafe_drop_early

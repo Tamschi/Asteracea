@@ -297,7 +297,7 @@ impl ParameterHelperDefinitions {
 								.bounds
 								.iter()
 								.filter(|type_param_bounds| match type_param_bounds {
-									TypeParamBound::Trait(_) => (true),
+									TypeParamBound::Trait(_) => true,
 									TypeParamBound::Lifetime(lifetime) => lifetime.ident != "_",
 								})
 								.cloned()
@@ -422,7 +422,7 @@ impl ParameterHelperDefinitions {
 						vis: Visibility::Inherited,
 						ident: parse_quote!(__Asteracea__phantom),
 						colon_token: Some(<Token![:]>::default()),
-						ty: parse_quote!(::std::marker::PhantomData#phantom_args),
+						ty: parse_quote!(::std::marker::PhantomData #phantom_args),
 					}))
 					.collect(),
 			},

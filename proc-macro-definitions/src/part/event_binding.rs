@@ -245,7 +245,7 @@ impl EventBindingDefinition {
 				};
 				quote_spanned!(fn_.span.resolved_at(Span::mixed_site())=> {
 					impl #component_name {
-						fn #handler_name#args #body
+						fn #handler_name #args #body
 					}
 
 					unsafe {
@@ -365,7 +365,7 @@ impl EventBindingDefinition {
 
 			::#asteracea::lignin::EventBinding {
 				name: #name,
-				options: ::#asteracea::lignin::EventBindingOptions::new()#active#once#mode,
+				options: ::#asteracea::lignin::EventBindingOptions::new()#active #once #mode,
 				callback: {
 					use ::#asteracea::lignin::{
 						auto_safety::Align as _,

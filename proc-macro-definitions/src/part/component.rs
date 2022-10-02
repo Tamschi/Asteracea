@@ -89,7 +89,7 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 				});
 			let dot_await = dot_await.map(|(dot, await_)| {
 				quote_spanned! {await_.span=>
-					#dot#await_
+					#dot #await_
 				}
 			});
 
@@ -215,7 +215,7 @@ let render_call= {
 
 				let asteracea = asteracea_ident(Span::mixed_site());
 				let mut expr = parse2(quote!({
-					let rendered = #capture#render_call;
+					let rendered = #capture #render_call;
 
 					{
 						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
@@ -311,7 +311,7 @@ impl<P: Spanned> ToTokens for Parameter<P> {
 			None => {
 				let dot = quote_spanned!(self.punct.span()=> .);
 				let ident = &self.ident;
-				quote_spanned! (self.eq.span=> #dot#ident(#value)).to_tokens(tokens)
+				quote_spanned! (self.eq.span=> #dot #ident(#value)).to_tokens(tokens)
 			}
 		}
 	}
@@ -491,7 +491,7 @@ fn parameter_struct_expression<C: Configuration, P: Spanned>(
 					.map(|builder_call| (builder_call.builder_method, builder_call.deferred))
 					.unzip::<_, _, Vec<_>, Vec<_>>();
 				quote_spanned! {fallback_span.resolved_at(Span::mixed_site())=>
-					(#(#pats#commata )*) => builder#(.#method_names(#values))*.build(),
+					(#(#pats #commata )*) => builder #(.#method_names(#values))*.build(),
 				}
 			},
 		);

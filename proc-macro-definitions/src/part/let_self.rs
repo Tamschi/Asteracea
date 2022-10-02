@@ -76,7 +76,7 @@ impl<C> ParseWithContext for LetSelf<C> {
 		let access = if let Some(pin) = pin {
 			let pinned_name = Ident::new(&format!("{}_pinned", name), name.span());
 			let pin_parens = quote_spanned!(pin.span=> ());
-			quote_spanned!(pinned_name.span().resolved_at(Span::mixed_site())=> this.#pinned_name#pin_parens)
+			quote_spanned!(pinned_name.span().resolved_at(Span::mixed_site())=> this.#pinned_name #pin_parens)
 		} else {
 			quote_spanned!(name.span().resolved_at(Span::mixed_site())=> this.#name)
 		};
