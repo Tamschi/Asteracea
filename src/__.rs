@@ -45,8 +45,7 @@ pub type DroppableLazyCallbackRegistration<Component, ParameterFn> =
 
 /// Automatically instantiates a [`Built::Builder`] for a type [`B: Built`](`Built`)
 /// that can be inferred from a phantom array.
-pub fn infer_builder<B: Built>(phantom: [B; 0]) -> B::Builder {
-	drop(phantom);
+pub fn infer_builder<B: Built>(_phantom: [B; 0]) -> B::Builder {
 	B::builder()
 }
 

@@ -321,7 +321,6 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 			Some(Part::Match(init_mode, match_, Box::new(on), bracket, arms))
 		} else if lookahead.peek(Brace) {
 			let expression;
-			#[allow(clippy::eval_order_dependence)]
 			Some(Part::RustBlock(
 				braced!(expression in input),
 				expression.parse()?,
