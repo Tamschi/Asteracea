@@ -22,8 +22,8 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned,
 	token::Paren,
-	AttrStyle, Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent,
-	PatType, ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
+	AttrStyle, Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Local, Member, Pat,
+	PatIdent, PatType, ReturnType, Stmt, Token, Type, Visibility, WhereClause, WherePredicate,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -54,6 +54,7 @@ pub struct ComponentDeclaration {
 	render_args: Punctuated<Argument, Token![,]>,
 	render_type: RenderType,
 	constructor_block: Option<(kw::new, kw::with, Block)>,
+	pre_render_lets: Vec<Local>,
 	body: Part<ComponentRenderConfiguration>,
 	assorted_items: Vec<Item>,
 	callback_registrations: Vec<(Ident, Type)>,
@@ -195,6 +196,26 @@ impl Parse for ComponentDeclaration {
 			None
 		};
 
+		let pre_render_lets = {
+			let mut lets = vec![];
+			while input.peek(Token![let])
+				&& !input.peek2(Token![self])
+				&& !input.peek2(Token![pub])
+				&& !input.peek2(Token![priv])
+			{
+				lets.push(match input.parse::<Stmt>()? {
+					Stmt::Local(local) => local,
+					stmt => {
+						return Err(Error::new_spanned(
+							stmt,
+							"Unexpected statement. (Expected `let`-binding.)",
+						));
+					}
+				});
+			}
+			lets
+		};
+
 		let body = loop {
 			match Part::parse_with_context(input, &mut cx)? {
 				None => (),
@@ -297,6 +318,7 @@ impl Parse for ComponentDeclaration {
 			render_args,
 			render_type,
 			constructor_block,
+			pre_render_lets,
 			body,
 			callback_registrations: Rc::try_unwrap(callback_registrations)
 				.expect(
@@ -346,6 +368,7 @@ impl ComponentDeclaration {
 			render_args,
 			render_type,
 			constructor_block,
+			pre_render_lets,
 			body,
 			assorted_items: mut random_items,
 			callback_registrations,
@@ -737,6 +760,7 @@ impl ComponentDeclaration {
 					} = args;
 
 					let this = #render_self;
+					#(#pre_render_lets)*
 					::std::result::Result::Ok(#body)
 				}
 

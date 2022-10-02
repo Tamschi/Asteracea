@@ -5,12 +5,12 @@ use std::any::TypeId;
 asteracea::component! {
 	Let()()
 
-	// let a = 1;
+	let a = 1;
 	[
-		// !(a)
-		// // let a = 2;
-		// !(a)
-		// !(a)
+		!(a)
+		// let a = 2; //TODO
+		!(a)
+		!(a)
 	]
 }
 
