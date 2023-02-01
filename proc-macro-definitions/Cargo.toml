@@ -28,7 +28,7 @@ proc-macro = true
 [dependencies]
 call2-for-syn = "2.0.3"
 debugless-unwrap = "0.0.4"
-heck = "0.3.1"
+heck = "0.4.1"
 lazy_static = "1.4.0"
 quote = "1.0.10"
 proc-macro-crate = "1.0.0"
