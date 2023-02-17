@@ -155,7 +155,7 @@ fn transform_type(
 
 			let mut bounds = impl_trait.bounds;
 
-			let applied_lifetime = transform_type_param_bounds(
+			transform_type_param_bounds(
 				bounds.iter_mut(),
 				lifetime,
 				impl_generics,
@@ -170,14 +170,12 @@ fn transform_type(
 				eq_token: None,
 				default: None,
 			});
-
-			applied_lifetime
 		}
 		Type::Infer(_) => todo!("Type::Infer"),
 		Type::Never(_) => todo!("Type::Never"),
 		Type::Path(TypePath { qself, path }) => {
 			if let Some(qself) = qself.as_mut() {
-				transform_type(&mut *qself.ty, lifetime, impl_generics, adjust_lifetimes)
+				transform_type(&mut qself.ty, lifetime, impl_generics, adjust_lifetimes)
 			};
 			transform_path_segments(
 				path.segments.iter_mut(),

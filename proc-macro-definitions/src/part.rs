@@ -30,7 +30,7 @@ use core::result::Result as coreResult;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapErr as _};
 use event_binding::EventBindingDefinition;
 use proc_macro2::{Span, TokenStream, TokenTree};
-use quote::{quote_spanned, ToTokens};
+use quote::quote_spanned;
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
@@ -371,7 +371,7 @@ pub struct GenerateContext<'a> {
 impl<C: Configuration> Part<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
 		let substrate = cx.substrate;
-		let mut part_tokens = match self {
+		let part_tokens = match self {
 			Part::AsteriskFor(asterisk_for) => asterisk_for.part_tokens(cx)?,
 			Part::Async(async_) => async_.part_tokens(cx)?,
 			Part::Bind(bind) => bind.part_tokens(cx)?,
@@ -387,7 +387,6 @@ impl<C: Configuration> Part<C> {
 			Part::Defer(defer) => defer.part_tokens(cx)?,
 			Part::For(for_) => for_.part_tokens(cx)?,
 			Part::Text(lit_str) => {
-				let asteracea = asteracea_ident(lit_str.span());
 				quote_spanned! {lit_str.span().resolved_at(Span::mixed_site())=>
 					#substrate::text(#lit_str)
 				}
@@ -397,7 +396,6 @@ impl<C: Configuration> Part<C> {
 				todo!("`dyn if`")
 			}
 			Part::If(InitMode::Spread(_spread), if_, condition, then_part, else_, else_part) => {
-				let asteracea = asteracea_ident(if_.span);
 				let then_tokens = then_part.part_tokens(cx)?;
 				let else_tokens = {
 					let else_part = else_part.part_tokens(cx)?;

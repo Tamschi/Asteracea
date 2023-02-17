@@ -23,10 +23,9 @@ use syn::{
 	spanned::Spanned,
 	token::Paren,
 	AttrStyle, Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent,
-	PatType, Path, ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
+	PatType, Path, Token, Type, Visibility, WhereClause, WherePredicate,
 };
 use syn_mid::Block;
-use tap::Pipe as _;
 use unquote::unquote;
 
 mod arguments;
@@ -336,7 +335,7 @@ impl ComponentDeclaration {
 			render_args,
 			constructor_block,
 			body,
-			assorted_items: mut random_items,
+			assorted_items,
 			callback_registrations,
 		} = self;
 
@@ -455,7 +454,7 @@ impl ComponentDeclaration {
 					other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
 				optional: arg.argument.question,
-				ty: &*arg.argument.fn_arg.ty,
+				ty: &arg.argument.fn_arg.ty,
 				default: &arg.argument.default,
 			}))
 			.collect::<Result<Vec<_>>>()?;
@@ -469,7 +468,7 @@ impl ComponentDeclaration {
 					other => {return Err(Error::new_spanned(other, "Component parameters must be named. Bind this pattern to an identifier by prefixing it with `identifier @`."))}
 				},
 				optional: arg.question,
-				ty: &*arg.fn_arg.ty,
+				ty: &arg.fn_arg.ty,
 				default: &arg.default,
 			}))
 			.collect::<Result<Vec<_>>>()?;
@@ -679,7 +678,7 @@ impl ComponentDeclaration {
 				}
 			}
 
-			#(#random_items)*
+			#(#assorted_items)*
 
 			/// Asteracea components do not currently support custom [`Drop`](`::std::ops::Drop`) implementations.
 			impl #component_impl_generics ::std::ops::Drop for #component_name #component_type_generics #component_where_clause {

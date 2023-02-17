@@ -113,7 +113,7 @@ lazy_static! {
 		.unwrap_or_else(|_| "asteracea".to_owned());
 }
 fn asteracea_ident(span: Span) -> Ident {
-	Ident::new(&*ASTERACEA_NAME, span)
+	Ident::new(&ASTERACEA_NAME, span)
 }
 
 /// SEE: <https://github.com/rust-lang/rust/issues/34537#issuecomment-554590043>
