@@ -1,4 +1,4 @@
-use asteracea::components::Router;
+use asteracea::{components::Router, substrates::web as substrate};
 use bumpalo::Bump;
 use core::cell::Cell;
 use lignin_html::render_fragment;
@@ -8,7 +8,7 @@ use std::{any::TypeId, pin::Pin};
 asteracea::component! { substrate =>
 	pub RouterTester()(
 		path: &'bump str,
-	) -> Sync
+	)
 
 	with {
 		let rest = Cell::default();

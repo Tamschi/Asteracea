@@ -3,8 +3,10 @@
 `for` loops in Asteracea components resemble those in plain Rust, but do produce output on each iteration:
 
 ```rust asteracea=Looping
-asteracea::component! { substrate =>
-  pub Looping()() -> Sync
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
+  pub Looping()()
 
   for word in "This is a test.".split(' ') {[
       <li
@@ -34,8 +36,10 @@ Each such group's state "list" is auto-edited only at the end.
 The full explicit syntax for `for`-loops is as follows:
 
 ```rust asteracea=Looping
-asteracea::component! { substrate =>
-  pub Looping()() -> Sync
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
+  pub Looping()()
 
   for i: u8 keyed &*i => u8 in 0..255 {
     "."

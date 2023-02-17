@@ -38,6 +38,7 @@ mod kw {
 }
 
 pub struct ComponentDeclaration {
+	substrate: Path,
 	attributes: Vec<Attribute>,
 	visibility: Visibility,
 	async_: Option<Token![async]>,
@@ -52,19 +53,10 @@ pub struct ComponentDeclaration {
 	render_generics: Generics,
 	render_paren: Paren,
 	render_args: Punctuated<Argument, Token![,]>,
-	render_type: RenderType,
 	constructor_block: Option<(kw::new, kw::with, Block)>,
 	body: Part<ComponentRenderConfiguration>,
 	assorted_items: Vec<Item>,
 	callback_registrations: Vec<(Ident, Type)>,
-}
-
-pub enum RenderType {
-	AutoSafe,
-	Explicit(Token![->], Box<Type>),
-	ExplicitAutoSync(Token![->], kw::Sync, Token![?]),
-	Sync(Token![->], kw::Sync),
-	UnSync(Token![->], Token![!], kw::Sync),
 }
 
 pub struct FieldDefinition {
@@ -180,18 +172,25 @@ impl Parse for ComponentDeclaration {
 			Generics::default()
 		};
 
-		let render_args;
-		let render_paren = parenthesized!(render_args in input); //TODO: Specify error message.
-		let render_args = Punctuated::parse_terminated(&render_args)?;
-
-		let render_type = input.parse()?;
-
 		let mut cx = ParseContext::new_root(
 			&substrate,
 			&visibility,
 			&component_name,
 			&component_generics,
 		);
+
+		let render_args;
+		let render_paren = parenthesized!(render_args in input); //TODO: Specify error message.
+		let render_args = {
+			let mut parsed = Punctuated::new();
+			while !render_args.is_empty() {
+				parsed.push_value(Argument::parse_with_context(&render_args, &mut cx)?);
+				if !render_args.is_empty() {
+					parsed.push_punct(render_args.parse()?);
+				}
+			}
+			parsed
+		};
 
 		let constructor_block = if input.peek(kw::new) {
 			unquote! {input,
@@ -289,6 +288,7 @@ impl Parse for ComponentDeclaration {
 		} = cx;
 
 		Ok(Self {
+			substrate,
 			assorted_items,
 			attributes,
 			storage_context,
@@ -304,7 +304,6 @@ impl Parse for ComponentDeclaration {
 			render_generics,
 			render_paren,
 			render_args,
-			render_type,
 			constructor_block,
 			body,
 			callback_registrations: Rc::try_unwrap(callback_registrations)
@@ -316,29 +315,11 @@ impl Parse for ComponentDeclaration {
 	}
 }
 
-impl Parse for RenderType {
-	fn parse(input: ParseStream) -> Result<Self> {
-		match input.parse().unwrap() {
-			None => Self::AutoSafe,
-			Some(r_arrow) => match input.parse().unwrap() {
-				Some(bang) => Self::UnSync(r_arrow, bang, input.parse()?),
-				None => match input.parse().unwrap() {
-					Some(sync) => match input.parse().unwrap() {
-						Some(question) => Self::ExplicitAutoSync(r_arrow, sync, question),
-						None => Self::Sync(r_arrow, sync),
-					},
-					None => Self::Explicit(r_arrow, input.parse()?),
-				},
-			},
-		}
-		.pipe(Ok)
-	}
-}
-
 impl ComponentDeclaration {
 	#[allow(clippy::cognitive_complexity)]
 	pub fn into_tokens(self) -> Result<TokenStream> {
 		let Self {
+			substrate,
 			attributes,
 			visibility,
 			async_,
@@ -353,7 +334,6 @@ impl ComponentDeclaration {
 			render_generics,
 			render_paren,
 			render_args,
-			render_type,
 			constructor_block,
 			body,
 			assorted_items: mut random_items,
@@ -415,27 +395,8 @@ impl ComponentDeclaration {
 			bump
 		);
 
-		let cx = match render_type {
-			RenderType::AutoSafe => GenerateContext {
-				thread_safety: quote!(_),
-				prefer_thread_safe: Some(quote!(.prefer_thread_safe())),
-			},
-			RenderType::Explicit(r_arrow, _) => GenerateContext {
-				thread_safety: quote_spanned!(r_arrow.span()=> _),
-				prefer_thread_safe: None,
-			},
-			RenderType::ExplicitAutoSync(r_arrow, _, sync) => GenerateContext {
-				thread_safety: quote_spanned!(sync.span.resolved_at(Span::mixed_site())=> _),
-				prefer_thread_safe: Some(quote_spanned!(r_arrow.span()=> .prefer_thread_safe())),
-			},
-			RenderType::Sync(_, sync) => GenerateContext {
-				thread_safety: quote_spanned!(sync.span.resolved_at(Span::mixed_site())=> ::#asteracea::lignin::ThreadSafe),
-				prefer_thread_safe: None,
-			},
-			RenderType::UnSync(_, _, sync) => GenerateContext {
-				thread_safety: quote_spanned!(sync.span.resolved_at(Span::mixed_site())=> ::#asteracea::lignin::ThreadBound),
-				prefer_thread_safe: None,
-			},
+		let cx = GenerateContext {
+			substrate: &substrate,
 		};
 
 		let body = body.part_tokens(&cx)?;
@@ -606,52 +567,6 @@ impl ComponentDeclaration {
 
 		let render_self: Token![self] = parse2(quote_spanned!(render_paren.span=> self)).unwrap();
 
-		let render_type: ReturnType = match render_type {
-			RenderType::AutoSafe => {
-				let auto_safe = Ident::new(
-					(component_name.to_string() + "__Asteracea__AutoSafe")
-						.trim_start_matches("r#"),
-					Span::mixed_site(),
-				);
-				random_items.push(
-					parse2(quote! {
-						::#asteracea::lignin::auto_safety::AutoSafe_alias!(pub(crate) #auto_safe);
-					})
-					.expect("RenderType::AutoSafe __Asteracea__AutoSafe"),
-				);
-				parse2(quote! {
-					-> ::std::result::Result<
-						impl #auto_safe<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>>,
-						::#asteracea::error::Escalation,
-					>
-				})
-				.expect("render_type AutoSafe")
-			}
-			RenderType::Explicit(r_arrow, type_) => ReturnType::Type(
-				r_arrow,
-				parse2(quote_spanned! {r_arrow.span()=>
-					::std::result::Result<#type_, ::#asteracea::error::Escalation>
-				})
-				.expect("RenderType::Explicit"),
-			),
-			RenderType::ExplicitAutoSync(_, _, question) => {
-				parse2(quote_spanned! {question.span=>
-					-> ::std::result::Result<
-						impl ::#asteracea::lignin::auto_safety::AutoSafe::<::#asteracea::lignin::Node<'bump, ::#asteracea::lignin::ThreadBound>>,
-						::#asteracea::error::Escalation,
-					>
-				})
-				.expect("render_type AutoSafe")
-			}
-			RenderType::Sync(r_arrow, _) | RenderType::UnSync(r_arrow, _, _) => {
-				let thread_safety = &cx.thread_safety;
-				parse2(quote_spanned! {r_arrow.span()=>
-					-> ::std::result::Result<::#asteracea::lignin::Node<'bump, #thread_safety>, ::#asteracea::error::Escalation>
-				})
-				.expect("render_type explicit thread safety")
-			}
-		};
-
 		let constructor_block_statements =
 			constructor_block.map(|(_new, _with, block)| block.stmts);
 
@@ -735,7 +650,7 @@ impl ComponentDeclaration {
 					#render_self: ::std::pin::Pin<&'a Self>,
 					#bump: &'bump #asteracea::bumpalo::Bump,
 					args: #render_args_name #render_args_generic_args,
-				) #render_type {
+				) -> ::core::result::Result<#substrate::VdomNode<'bump>, ::#asteracea::error::Escalation> {
 					// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.
 					// The following should be equivalent to skipping all fields and setting them one by one:
 					let _tracing_span = ::#asteracea::__::tracing::debug_span!(#render_span_name, #(#render_args_tracing_fields,)*).entered();

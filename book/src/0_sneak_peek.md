@@ -3,19 +3,20 @@
 Before I begin to explain in earnest, here is a relatively complex dynamic component using many of Asteracea's features, along with its resulting HTML representation:
 
 ```rust asteracea=CounterUser
+use asteracea::substrates::web;
 use lignin::web::Event;
 use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Counter(
     initial: i32,
     priv step: i32,
     pub enabled: bool = true,
   )(
     class?: &'bump str,
-  ) -> !Sync
+  )
 
   let self.value = Cell::<i32>::new(initial);
 
@@ -50,8 +51,8 @@ impl Counter {
   }
 }
 
-asteracea::component! { substrate =>
-  CounterUser()() -> !Sync
+asteracea::component! { web =>
+  CounterUser()()
 
   <"counter-user" "\n\t"
     <*Counter

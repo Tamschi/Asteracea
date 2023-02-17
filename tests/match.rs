@@ -1,3 +1,5 @@
+use asteracea::substrates::web as substrate;
+
 pub enum Enum<'a> {
 	Text(&'a str),
 	Other,
@@ -6,7 +8,7 @@ pub enum Enum<'a> {
 asteracea::component! { substrate =>
 	pub MatchEnum()(
 		enum_value: Enum<'_>,
-	) -> Sync
+	)
 
 	spread match {enum_value} [
 		Enum::Text(text) => <span !(text)>

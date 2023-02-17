@@ -2,6 +2,7 @@ use asteracea::{
 	components::Suspense,
 	include::async_::ContentFuture,
 	services::{ContentRuntime, Invalidator, ServiceHandle},
+	substrates::web as substrate,
 };
 use bumpalo::Bump;
 use futures_core::Future;
@@ -35,7 +36,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	Instant()() -> Sync
+	Instant()()
 
 	<*Suspense
 		'spinner: <*Spinner>

@@ -8,6 +8,7 @@ You can escalate any error along the GUI tree as long as it is [`Any`](), [`Erro
 
 ```rust asteracea=Outer
 use asteracea::error::EscalateResult;
+use asteracea::substrates::web;
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result};
 
@@ -20,9 +21,9 @@ impl Display for AnError {
 }
 impl Error for AnError {}
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Failing()
-  #[allow(unreachable_code)] () -> Sync
+  #[allow(unreachable_code)] ()
 
   {
     // Raising an `Escalation` means crashing at least part of the app,
@@ -33,14 +34,14 @@ asteracea::component! { substrate =>
   }
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Containing()()
 
   <*Failing>
 }
 
-asteracea::component! { substrate =>
-  pub Outer()() -> Sync
+asteracea::component! { web =>
+  pub Outer()()
 
   <*Containing>
 }
@@ -61,9 +62,11 @@ Asteracea's error handling will automatically try to pick up on plain Rust panic
 The following example *should* display a backtrace rather than failing the book build:
 
 ```rust asteracea=Outer
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   Panicking()
-  #[allow(unreachable_code)] () -> Sync
+  #[allow(unreachable_code)] ()
 
   {
     //TODO: Make this conditional on unwinding.
@@ -71,8 +74,8 @@ asteracea::component! { substrate =>
   }
 }
 
-asteracea::component! { substrate =>
-  pub Outer()() -> Sync
+asteracea::component! { web =>
+  pub Outer()()
 
   <*Panicking>
 }

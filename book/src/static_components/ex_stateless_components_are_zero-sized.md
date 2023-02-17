@@ -12,9 +12,10 @@
 Consider the following (grasping at [constructor parameter]()[ captures]() and [value formatting]() a bit ahead of time):
 
 ```rust asteracea=Container
+use asteracea::substrates::web;
 use std::{fmt::Debug, mem::size_of};
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   MySize<T: Debug>(
     priv value: T,
   )()
@@ -26,7 +27,7 @@ asteracea::component! { substrate =>
   ]
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Container()()
 
   [

@@ -1,3 +1,5 @@
+use asteracea::substrates::web as substrate;
+
 struct S;
 impl S {
 	fn new() -> Self {
@@ -13,7 +15,7 @@ asteracea::component! { substrate =>
 	pub LetSelf(
 		a: u32,
 		b: u32,
-	)() -> Sync
+	)()
 
 	let self.a: u32 = a;
 	let self.b: u32 = pin b;
@@ -23,7 +25,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-  pub Attributed()() -> Sync
+  pub Attributed()()
 
   // TODO: Also support outer attributes again.
   let self.a: u8 = #![allow(dead_code)] 0;

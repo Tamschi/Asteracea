@@ -33,9 +33,6 @@ Welcome to the Asteracea guide book!
 >
 > ### What isn't finished
 >
-> - Thread safety inference is sometimes wonky.
->    > Write `ComponentName()() -> Sync` or `ComponentName()() -> !Sync` to determine it manually.
->   > It's sound either way, but the former may not compile.
 > - [Repeat arguments](https://github.com/Tamschi/Asteracea/pull/42) for child components. This will lead towards content transclusion. I think.
 > - Attached properties, to configure transclusion.
 > - The grammar. I'll most likely change something in a breaking way before `v0.1`.

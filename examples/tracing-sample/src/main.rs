@@ -1,6 +1,6 @@
 #![allow(clippy::needless_question_mark)] //FIXME
 
-use asteracea::{bumpalo::Bump, __::AnonymousContentParentParameters};
+use asteracea::{bumpalo::Bump, substrates::web, __::AnonymousContentParentParameters};
 use core::pin::Pin;
 use rhizome::sync::Node;
 use std::any::TypeId;
@@ -19,7 +19,7 @@ struct D;
 #[derive(Debug)]
 struct E;
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
 	ContainerComponent(
 		// Constructor parameters:
 		_plain: A,
@@ -31,7 +31,7 @@ asteracea::component! { substrate =>
 		_optional?: u64 = 0,
 		destructured @ E { .. }: E,
 		..,
-	) -> Sync
+	)
 
 	..
 }

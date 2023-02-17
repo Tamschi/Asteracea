@@ -27,7 +27,9 @@ Infinite recursive (storage) inlining isn't possible (except *theoretically* for
 This means the following requires boxing:
 
 ```TODOrust TODOasteracea=Countdown asteracea::render=.i(6)
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   Countdown()(
     i: usize,
   )
@@ -60,9 +62,10 @@ The container component size reduction isn't very useful in most cases, since As
 Consider the following:
 
 ```rust asteracea=Holder
+use asteracea::substrates::web;
 use std::mem::size_of;
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Heavy()()
 
   let self.large: [u8; 1_000] = #![allow(dead_code)]
@@ -71,7 +74,7 @@ asteracea::component! { substrate =>
   "Hello!"
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Holder()(
     show: bool = false,
   )
@@ -89,9 +92,10 @@ As you can see, `Holder` requires 1KB of space even though `Heavy` is never used
 You can avoid this as follows:
 
 ```rust asteracea=Holder
+use asteracea::substrates::web;
 use std::mem::size_of;
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Heavy()()
 
   let self.large: [u8; 1_000] = #![allow(dead_code)]
@@ -100,7 +104,7 @@ asteracea::component! { substrate =>
   "Hello!"
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Holder()(
     show: bool = false,
   )

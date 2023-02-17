@@ -1,7 +1,7 @@
-use std::any::TypeId;
-
+use asteracea::substrates::web as substrate;
 use bumpalo::Bump;
 use rhizome::sync::Node;
+use std::any::TypeId;
 use tap::Pipe;
 
 asteracea::component! { substrate =>
@@ -26,7 +26,7 @@ asteracea::component! { substrate =>
 asteracea::component! { substrate =>
 	Binder()(
 		late: usize = 1,
-	) -> Sync
+	)
 
 	[
 		bind <*Bound *_early = {late}>
@@ -38,7 +38,7 @@ asteracea::component! { substrate =>
 asteracea::component! { substrate =>
 	BinderMover()(
 		late: usize = 1,
-	) -> Sync
+	)
 
 	[
 		bind move <*Bound *_early = {late}>
@@ -50,7 +50,7 @@ asteracea::component! { substrate =>
 asteracea::component! { substrate =>
 	Named()(
 		late: usize = 1,
-	) -> Sync
+	)
 
 	bind priv bound: struct NamedBound <*Bound *_early = {late}>
 }
@@ -58,7 +58,7 @@ asteracea::component! { substrate =>
 asteracea::component! { substrate =>
 	NamedMoved()(
 		late: usize = 1,
-	) -> Sync
+	)
 
 	bind priv bound: struct NamedMovedBound move <*Bound *_early = {late}>
 }

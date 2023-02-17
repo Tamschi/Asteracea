@@ -1,3 +1,4 @@
+use asteracea::substrates::web as substrate;
 use std::{fmt::Display, marker::PhantomData};
 
 asteracea::component! { substrate =>
@@ -11,7 +12,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub User()() -> Sync
+	pub User()()
 
 	[
 		<*Generic::<i32> .displayed = {0}>

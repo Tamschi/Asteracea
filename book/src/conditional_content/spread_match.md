@@ -3,12 +3,14 @@
 Rust's `match` statements are available in Asteracea contexts, with slightly changed syntax:
 
 ```rust asteracea=Matched
+use asteracea::substrates::web;
+
 enum Enum<'a> {
   Text(&'a str),
   Other,
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   MatchEnum()(
     enum_value: Enum<'_>,
   )
@@ -19,8 +21,8 @@ asteracea::component! { substrate =>
   ]
 }
 
-asteracea::component! { substrate =>
-  pub Matched()() -> Sync
+asteracea::component! { web =>
+  pub Matched()()
 
   [
     <*MatchEnum .enum_value = { Enum::Text("Hello!") }> "\n"

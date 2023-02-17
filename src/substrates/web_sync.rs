@@ -1,11 +1,9 @@
-//! DOM target. (TODO: Expand docs.)
-
 use bumpalo::Bump;
-use lignin::{Attribute, Element, ElementCreationOptions, EventBinding, ThreadBound};
+use lignin::{Attribute, Element, ElementCreationOptions, EventBinding, ThreadSafe};
 
 pub use lignin_schema::html as schema;
 
-pub type VdomNode<'a> = lignin::Node<'a, ThreadBound>;
+pub type VdomNode<'a> = lignin::Node<'a, ThreadSafe>;
 
 pub fn text<'a>(text: &'a str) -> VdomNode<'a> {
 	VdomNode::Text {
@@ -23,7 +21,7 @@ pub fn schema_element<'a>(
 	name: &'a str,
 	attributes: &'a [Attribute],
 	content: VdomNode<'a>,
-	event_bindings: &'a [EventBinding<ThreadBound>],
+	event_bindings: &'a [EventBinding<ThreadSafe>],
 ) -> VdomNode<'a> {
 	//TODO: Add MathML and SVG support.
 	VdomNode::HtmlElement {
@@ -43,7 +41,7 @@ pub fn element_by_name<'a>(
 	name: &'a str,
 	attributes: &'a [Attribute],
 	content: VdomNode<'a>,
-	event_bindings: &'a [EventBinding<ThreadBound>],
+	event_bindings: &'a [EventBinding<ThreadSafe>],
 ) -> VdomNode<'a> {
 	//TODO: Add MathML and SVG support.
 	VdomNode::HtmlElement {

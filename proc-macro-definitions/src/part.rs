@@ -36,7 +36,7 @@ use syn::{
 	parse::{Parse, ParseStream, Result},
 	spanned::Spanned as _,
 	token::{Brace, Bracket},
-	Attribute, Error, Expr, Ident, Label, LitStr, Pat, Token,
+	Attribute, Error, Expr, Ident, Label, LitStr, Pat, Path, Token,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -364,15 +364,13 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 	}
 }
 
-pub struct GenerateContext {
-	pub thread_safety: TokenStream,
-	pub prefer_thread_safe: Option<TokenStream>,
+pub struct GenerateContext<'a> {
+	pub substrate: &'a Path,
 }
 
 impl<C: Configuration> Part<C> {
 	pub fn part_tokens(&self, cx: &GenerateContext) -> Result<TokenStream> {
-		let thread_safety = &cx.thread_safety;
-		let prefer_thread_safe = &cx.prefer_thread_safe;
+		let substrate = cx.substrate;
 		let mut part_tokens = match self {
 			Part::AsteriskFor(asterisk_for) => asterisk_for.part_tokens(cx)?,
 			Part::Async(async_) => async_.part_tokens(cx)?,
@@ -390,11 +388,8 @@ impl<C: Configuration> Part<C> {
 			Part::For(for_) => for_.part_tokens(cx)?,
 			Part::Text(lit_str) => {
 				let asteracea = asteracea_ident(lit_str.span());
-				quote_spanned! {lit_str.span()=>
-					::#asteracea::lignin::Node::Text::<'bump, #thread_safety> {
-						text: #lit_str,
-						dom_binding: None, //TODO: Add text dom binding support.
-					}
+				quote_spanned! {lit_str.span().resolved_at(Span::mixed_site())=>
+					#substrate::text(#lit_str)
 				}
 			}
 			Part::Html(html_definition) => html_definition.part_tokens(cx)?,
@@ -409,12 +404,11 @@ impl<C: Configuration> Part<C> {
 					quote_spanned!(else_.span().resolved_at(Span::mixed_site())=> ::core::convert::identity( #else_part ))
 				};
 				quote_spanned!(if_.span.resolved_at(Span::mixed_site())=> {
-					let if_: ::#asteracea::lignin::Node::<'bump, #thread_safety> = if #condition {
-						::#asteracea::lignin::auto_safety::Align::align(#then_tokens)
+					if #condition {
+						::core::convert::Into::<#substrate::VdomNode>::into(#then_tokens)
 					} else {
-						::#asteracea::lignin::auto_safety::Align::align(#else_tokens)
-					};
-					if_
+						::core::convert::Into::<#substrate::VdomNode>::into(#else_tokens)
+					}
 				})
 			}
 			Part::Match(InitMode::Dyn(_dyn_), _match_, _on, _bracket, _arms) => {
@@ -424,22 +418,24 @@ impl<C: Configuration> Part<C> {
 				let arms = arms
 					.iter()
 					.map(|(attrs, pats, guard, fat_arrow, part)| {
-						let guard = guard
-							.as_ref()
-							.map(|(if_, guard)| quote_spanned!(if_.span=> #if_ #guard));
+						let guard = guard.as_ref().map(
+							|(if_, guard)| quote_spanned!(if_.span.resolved_at(Span::mixed_site())=> #if_ #guard),
+						);
 						let part = part.part_tokens(cx)?;
 						let (pipes, pats) = pats
 							.iter()
 							.map(|(pipe, pat)| (pipe.as_ref(), pat))
 							.unzip::<_, _, Vec<_>, Vec<_>>();
-						Ok(quote_spanned! {fat_arrow.span()=>
-							#(#attrs)*
-							#(#pipes #pats)* #guard #fat_arrow #part,
-						})
+						Ok(
+							quote_spanned! {fat_arrow.span().resolved_at(Span::mixed_site())=>
+								#(#attrs)*
+								#(#pipes #pats)* #guard #fat_arrow ::core::convert::Into::<#substrate::VdomNode>::into(#part),
+							},
+						)
 					})
 					.collect::<Result<Vec<_>>>()?;
 				let body = quote_spanned!(bracket.span => { #(#arms)* });
-				quote_spanned!(match_.span=> #match_ #on #body #prefer_thread_safe)
+				quote_spanned!(match_.span=> #match_ #on #body)
 			}
 			Part::RustBlock(brace, statements) => {
 				// Why not just parentheses? Because those could be turned into a tuple.
@@ -454,10 +450,10 @@ impl<C: Configuration> Part<C> {
 					.collect::<coreResult<Vec<_>, _>>()?;
 				let bump = Ident::new("bump", bracket.span.resolved_at(Span::call_site()));
 				quote_spanned! {bracket.span=>
-					::#asteracea::lignin::Node::Multi::<'bump, #thread_safety>(&*#bump.alloc_try_with(
+					#substrate::multi(&*#bump.alloc_try_with(
 						|| -> ::std::result::Result::<_, ::#asteracea::error::Escalation> { ::std::result::Result::Ok([
 							#(
-								::#asteracea::lignin::auto_safety::Align::align(#m),
+								::core::convert::Into::<#substrate::VdomNode>::into(#m),
 							)*
 						])}
 					)?)
@@ -476,10 +472,6 @@ impl<C: Configuration> Part<C> {
 			}
 		};
 
-		match self {
-			Self::Async(_) => (),
-			_ => cx.prefer_thread_safe.to_tokens(&mut part_tokens),
-		}
 		Ok(part_tokens)
 	}
 }

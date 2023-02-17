@@ -3,7 +3,9 @@
 Asteracea supports conditionally setting optional attributes with the following syntax:
 
 ```rust asteracea=Classical
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   Classic()(
     // This will be improved on in the next chapters.
     class: Option<&'bump str>,
@@ -14,7 +16,7 @@ asteracea::component! { substrate =>
   >
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Classical()()
 
   [
@@ -33,7 +35,9 @@ This can be used to conditionally render a [boolean attribute](https://www.w3.or
 To make dynamic boolean attributes like [`hidden`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/hidden) more convenient to use, conditional attributes also accept [`bool`]() values directly:
 
 ```rust asteracea=Outer
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   Vis()(
     visible: bool,
   )
@@ -44,7 +48,7 @@ asteracea::component! { substrate =>
   >
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Outer()()
 
   [

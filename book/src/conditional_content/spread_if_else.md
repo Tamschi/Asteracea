@@ -3,7 +3,9 @@
 You can explicitly specify alternative content with an `else` branch:
 
 ```rust asteracea=Alternated
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   Alternates()(
     show_alternative: bool = false,
   )
@@ -14,8 +16,8 @@ asteracea::component! { substrate =>
     "Alternative"
 }
 
-asteracea::component! { substrate =>
-  pub Alternated()() -> Sync
+asteracea::component! { web =>
+  pub Alternated()()
 
   [
     <*Alternates> "\n"

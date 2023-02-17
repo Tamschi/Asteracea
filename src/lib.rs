@@ -33,7 +33,7 @@
 //FIXME: This won't be necessary anymore once `$crate` is in use everywhere.
 extern crate self as asteracea;
 
-pub use asteracea_proc_macro_definitions::{bump_format, component};
+pub use asteracea_proc_macro_definitions::component;
 pub use bumpalo;
 pub use lignin;
 pub use try_lazy_init;

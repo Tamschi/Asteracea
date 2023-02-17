@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use proc_macro::TokenStream as TokenStream1;
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use proc_macro_crate::{crate_name, FoundCrate};
-use quote::{quote, quote_spanned};
+use quote::quote_spanned;
 use std::iter;
 use syn::{
 	parse::{Parse, ParseStream},
@@ -70,20 +70,6 @@ struct BumpFormat {
 	input: TokenStream2,
 }
 
-#[proc_macro]
-pub fn bump_format(input: TokenStream1) -> TokenStream1 {
-	let bump_format = parse_macro_input!(input as BumpFormat);
-	let mut tokens = TokenStream2::new();
-	bump_format.to_tokens_with_context(
-		&mut tokens,
-		&GenerateContext {
-			thread_safety: quote!(_),
-			prefer_thread_safe: None,
-		},
-	);
-	tokens.into()
-}
-
 impl Parse for BumpFormat {
 	fn parse(input: ParseStream) -> Result<Self> {
 		//TODO: This is pretty hacky.
@@ -105,15 +91,15 @@ impl BumpFormat {
 			bump_span,
 			input,
 		} = self;
-		let thread_safety = &cx.thread_safety;
+		let substrate = cx.substrate;
 		let bump = Ident::new("bump", bump_span.resolved_at(Span::call_site()));
-		output.extend(quote! {
-			#asteracea::lignin::Node::Text::<#thread_safety> {
-				text: #asteracea::bumpalo::format!(in #bump, #input)
-					.into_bump_str(),
-				dom_binding: None, //TODO?: Add DOM binding support.
-			}
-		});
+		output.extend(
+			quote_spanned! {input.span().resolved_at(Span::mixed_site())=>
+				#substrate::text(
+					#asteracea::bumpalo::format!(in #bump, #input).into_bump_str(),
+				)
+			},
+		);
 	}
 }
 

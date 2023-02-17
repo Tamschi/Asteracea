@@ -1,13 +1,14 @@
+use asteracea::substrates::web as substrate;
 use std::{fmt::Debug, pin::Pin};
 
 asteracea::component! { substrate =>
-	pub Boxed<T>()() -> Sync
+	pub Boxed<T>()()
 
 	box <*Boxed::<T>>
 }
 
 asteracea::component! { substrate =>
-	pub Boxedd<S, T>()() -> Sync
+	pub Boxedd<S, T>()()
 
 	[
 		box <*Boxed::<S>>
@@ -26,7 +27,7 @@ impl<T> Predefined<T> {
 }
 
 asteracea::component! { substrate =>
-	pub Predefinedd<S, T>()() -> Sync
+	pub Predefinedd<S, T>()()
 
 	[
 		box priv a: Predefined::<S> <*Boxed::<S> priv boxed>
@@ -35,13 +36,13 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub Claused<T: Debug>()() -> Sync
+	pub Claused<T: Debug>()()
 
 	box <*Claused::<T>>
 }
 
 asteracea::component! { substrate =>
-	pub Whered<T> where T: Debug, ()() -> Sync
+	pub Whered<T> where T: Debug, ()()
 
 	box <*Whered::<T>>
 }

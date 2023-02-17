@@ -9,7 +9,10 @@ use syn::{
 use tap::Pipe;
 use unquote::unquote;
 
-use crate::asteracea_ident;
+use crate::{
+	asteracea_ident,
+	storage_context::{ParseContext, ParseWithContext},
+};
 
 pub struct ConstructorArgument {
 	pub capture: Capture,
@@ -82,8 +85,10 @@ impl Parse for ConstructorArgument {
 	}
 }
 
-impl Parse for Argument {
-	fn parse(input: ParseStream) -> Result<Self> {
+impl ParseWithContext for Argument {
+	type Output = Self;
+
+	fn parse_with_context(input: ParseStream, cx: &mut ParseContext) -> Result<Self> {
 		let attrs = Attributes::parse_outer(input)?;
 		if let Some(dot2) = input.parse::<Option<Token![..]>>().expect("infallible") {
 			// This is a content argument.
@@ -92,16 +97,14 @@ impl Parse for Argument {
 				'bump
 			);
 			let asteracea = asteracea_ident(dot2.span());
+			let substrate = cx.substrate;
 			Self {
 				fn_arg: match parse_quote_spanned! {dot2.span().resolved_at(Span::mixed_site())=>
 					__Asteracea__anonymous_content: (
 						::#asteracea::__::AnonymousContentParentParameters,
 						::std::boxed::Box::<
 							dyn '_ + ::core::ops::FnOnce(&#bump ::#asteracea::bumpalo::Bump) -> ::std::result::Result::<
-								::#asteracea::lignin::Node::<
-									#bump,
-									::#asteracea::lignin::ThreadSafe,
-								>,
+								#substrate::VdomNode::<#bump>,
 								::#asteracea::error::Escalation,
 							>
 						>,

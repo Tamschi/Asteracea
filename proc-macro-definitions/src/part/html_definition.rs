@@ -225,7 +225,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 		} = self;
 
 		let asteracea = asteracea_ident(lt.span());
-		let thread_safety = &cx.thread_safety;
+		let substrate = cx.substrate;
 
 		let bump = Ident::new("bump", lt.span().resolved_at(Span::call_site()));
 
@@ -337,8 +337,8 @@ impl<C: Configuration> HtmlDefinition<C> {
 					#child,
 				});
 			}
-			quote_spanned! {child_stream.span()=>
-				::#asteracea::lignin::Node::Multi::<'bump, #thread_safety>(&*#bump.alloc_try_with(
+			quote_spanned! {child_stream.span().resolved_at(Span::mixed_site())=>
+				#substrate::multi(&*#bump.alloc_try_with(
 					|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
 						::std::result::Result::Ok([#child_stream])
 					}
@@ -365,20 +365,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 			ElementName::Custom(name) => {
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
 					let children = #children;
-					//TODO: Add MathML and SVG support.
-					::#asteracea::lignin::Node::HtmlElement::<'bump, #thread_safety> {
-						element: #bump.alloc_with(||
-								#asteracea::lignin::Element {
-									name: #name,
-									creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
-									attributes: #attributes,
-									content: children,
-									event_bindings: #event_bindings,
-								}
-							),
-						//TODO: Add DOM binding support.
-						dom_binding: None,
-					}
+					#substrate::element_by_name(#bump, #name, #attributes, children, #event_bindings)
 				}}
 			}
 			ElementName::Known(name, closing_name) => {
@@ -397,26 +384,18 @@ impl<C: Configuration> HtmlDefinition<C> {
 					}
 				});
 				quote_spanned! {lt.span.resolved_at(Span::mixed_site())=> {
-					//TODO: Add MathML and SVG support.
-					::#asteracea::lignin::Node::HtmlElement::<'bump, #thread_safety> {
-						element: #bump.alloc_try_with(|| -> ::core::result::Result::<_, ::#asteracea::error::Escalation> {
-							#validate_has_content
-							#(#validate_attributes)*
-							#document_closing
-							//TODO: Validate attributes.
-							//TODO: Validate events.
+					#validate_has_content
+					#(#validate_attributes)*
+					#document_closing
+					//TODO: Validate events.
 
-							::core::result::Result::Ok(::#asteracea::lignin::Element {
-								name: ::#asteracea::__::lignin_schema::html::elements::#name::TAG_NAME,
-								creation_options: ::#asteracea::lignin::ElementCreationOptions::new(), //TODO: Add `is` support.
-								attributes: #attributes,
-								event_bindings: #event_bindings,
-								content: #children,
-							})
-						})?,
-						//TODO: Add DOM binding support.
-						dom_binding: None,
-					}
+					#substrate::schema_element(
+						#bump,
+						#substrate::schema::elements::#name::TAG_NAME,
+						#attributes,
+						#children,
+						#event_bindings,
+					)
 				}}
 			}
 		})

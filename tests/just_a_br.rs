@@ -1,5 +1,7 @@
+use asteracea::substrates::web as substrate;
+
 asteracea::component! { substrate =>
-	pub Br()() -> Sync
+	pub Br()()
 
 	<br>
 }

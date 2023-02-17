@@ -76,8 +76,10 @@ Additional examples can be found [in the examples directory](examples#list-of-ex
 The most simple (`Node`-rendering) component can be written like this:
 
 ```rust
-asteracea::component! { substrate =>
-  pub Empty()() -> Sync
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
+  pub Empty()()
   [] // Empty node sequence
 }
 
@@ -99,58 +101,18 @@ assert!(matches!(
 
 VDOM [`Sync`-ness](https://doc.rust-lang.org/stable/std/marker/trait.Sync.html) can be inferred (even transitively) at zero runtime cost by omitting `-> Sync` (or `-> !Sync`), except for components visible outside their crate.
 
-### Unit component
-
-A return type other than `Node` can be specified after the render argument list:
-
-```rust
-asteracea::component! { substrate =>
-  Unit(/* ::new arguments */)(/* .render arguments */) -> ()
-  {} // Empty Rust block
-}
-
-asteracea::component! { substrate =>
-  Offset(base: usize)(offset: usize) -> usize
-
-  let pub self.base: usize = base; // ²
-  { self.base + offset }
-}
-
-// This is generally only this explicit at the application root.
-let mut bump = bumpalo::Bump::new();
-let root = {
-  struct Root;
-  rhizome::sync::Node::new(core::any::TypeId::of::<Root>())
-};
-assert_eq!(
-  Box::pin(Unit::new(root.as_ref(), Unit::new_args_builder().build()).unwrap())
-    .as_ref()
-    .render(&mut bump, Unit::render_args_builder().build())
-    .unwrap(),
-  (),
-);
-assert_eq!(
-  Box::pin(Offset::new(root.as_ref(), Offset::new_args_builder().base(2).build()).unwrap())
-    .as_ref()
-    .render(&mut bump, Offset::render_args_builder().offset(3).build())
-    .unwrap(),
-  5,
-);
-```
-
-² <https://github.com/Tamschi/Asteracea/issues/2>
-
 ### Counter component
 
 For a relatively complex example, see this parametrised counter:
 
 ```rust
+use asteracea::substrates::web;
 use lignin::web::Event;
 use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   pub Counter(
     /// The counter's starting value.
     initial: i32,
@@ -160,7 +122,7 @@ asteracea::component! { substrate =>
     // optional argument;
     // `class` is `Option<&'bump str>` only inside this component, not its API.
     class?: &'bump str,
-  ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
+  )
 
   // shorthand capture; Defines a struct field.
   let self.value = Cell::<i32>::new(initial);
@@ -199,7 +161,7 @@ impl Counter {
 }
 
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   CounterUser()()
 
   <*Counter

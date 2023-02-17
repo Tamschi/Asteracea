@@ -7,7 +7,9 @@ However, they also *shift the constructor scope of a sub-expression into its par
 This lets you use render parameters as constructor parameters:
 
 ```rust asteracea=Test
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   Early(
     priv early: &'static str,
   )()
@@ -15,7 +17,7 @@ asteracea::component! { substrate =>
   ["Constructor parameter: " !"{:?}"(self.early)]
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Late()(
     late: &'static str,
   )
@@ -23,8 +25,8 @@ asteracea::component! { substrate =>
   bind <*Early *early = {late}>
 }
 
-asteracea::component! { substrate =>
-  pub Test()() -> Sync?
+asteracea::component! { web =>
+  pub Test()()
 
   [
     <*Late priv tested .late = {"first"}> "\n"

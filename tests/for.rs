@@ -1,5 +1,7 @@
+use asteracea::substrates::web as substrate;
+
 asteracea::component! { substrate =>
-	pub ForImplicit()() -> Sync
+	pub ForImplicit()()
 
 	for i in [1, 2, 3, 4, 5i32] {
 	 !"{}"(i)
@@ -7,7 +9,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub ForImplicitSelector()() -> Sync
+	pub ForImplicitSelector()()
 
 	for i: u8 in 1..=5 {
 		!"{}"(i)
@@ -15,7 +17,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub ForImplicitItemType()() -> Sync
+	pub ForImplicitItemType()()
 
 	for i keyed i => u8 in 1..=5 {
 		!"{}"(i)
@@ -23,7 +25,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub ForKeyTypeOnly()() -> Sync
+	pub ForKeyTypeOnly()()
 
 	for i => u8 in &[1, 2, 3, 4, 5] {
 		!"{}"(i)
@@ -31,7 +33,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub ForExplicit()() -> Sync
+	pub ForExplicit()()
 
 	for i: u8 keyed i => u8 in [1, 2, 3, 4, 5] {
 		!"{}"(i)
@@ -39,7 +41,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub ForUntyped()() -> Sync
+	pub ForUntyped()()
 
 	for i keyed i in [1, 2, 3, 4, 5] {
 		!"{}"(i)
@@ -47,7 +49,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-  pub Split()() -> Sync
+  pub Split()()
 
   for c in "This is a test.".split(' ') {[
 	  <li
@@ -57,7 +59,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-  pub Child()() -> Sync
+  pub Child()()
 
   for _ in 0..5 {
 	  <*ForImplicit>

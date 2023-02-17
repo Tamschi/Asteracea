@@ -3,24 +3,27 @@
 Asteracea components can be used inside other templates using asterisk syntax:
 
 ```rust asteracea=Outer
+use asteracea::substrates::web;
 //TODO: Hide this initially.
 use std::marker::PhantomData;
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Inner()()
 
   "Inner body."
 }
 
 mod module {
-  asteracea::component! { substrate =>
+  use asteracea::substrates::web;
+  
+  asteracea::component! { web =>
     pub(crate) Module()()
 
     "Module body."
   }
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Generic<T>(
     //TODO: Hide this initially and show an ellipsis comment.
     // Generic parameters must be used in an instance field.
@@ -32,7 +35,7 @@ asteracea::component! { substrate =>
   "Generic body."
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Outer()()
 
   [
@@ -46,24 +49,27 @@ asteracea::component! { substrate =>
 Explicit closing is supported:
 
 ```rust asteracea=Outer
+use asteracea::substrates::web;
 //TODO: Hide repetition.
 use std::marker::PhantomData;
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Inner()()
 
   "Inner body."
 }
 
 mod module {
-  asteracea::component! { substrate =>
+  use asteracea::substrates::web;
+
+  asteracea::component! { web =>
     pub(crate) Module()()
 
     "Module body."
   }
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Generic<T>(
     // Generic parameters must be used in an instance field.
     // We can pretend this is the case using a constructor parameter capture.
@@ -74,7 +80,7 @@ asteracea::component! { substrate =>
   "Generic body."
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Outer()()
 
   [
@@ -93,12 +99,14 @@ The fish is chilling in a bucket now and will be released into a nicer environme
 Using a component multiple times results in distinct instances:
 
 ```rust asteracea=Outer
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   Inner()()
   "Inner body."
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Outer()()
   [
     <*Inner>
@@ -118,13 +126,14 @@ asteracea::component! { substrate =>
 Instead of instantiating and storing a child component multiple times, you can instance it by giving it a name and referencing it elsewhere through a Rust block:
 
 ```rust asteracea=Outer
+use asteracea::substrates::web;
 //TODO: Hide this initially.
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Inner()()
   "Inner body."
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Outer()()
   [
     <*Inner priv inner> // Alternatively: `pub` or `pub(…)`

@@ -55,9 +55,7 @@ fn generate_tests() -> Result<(), Box<dyn Error>> {
 			.with_extension("")
 			.display()
 			.to_string()
-			.replace('/', "_")
-			.replace('\\', "_")
-			.replace('-', "_")
+			.replace(['/', '\\', '-'], "_")
 			+ "_L";
 
 		let mut text = String::new();

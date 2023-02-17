@@ -1,3 +1,4 @@
+use asteracea::substrates::web as substrate;
 use std::mem::size_of;
 
 #[test]

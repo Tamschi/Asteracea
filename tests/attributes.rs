@@ -1,7 +1,9 @@
 #![allow(dead_code)] //TODO: Test output.
 
+use asteracea::substrates::web as substrate;
+
 asteracea::component! { substrate =>
-	Attributed()() -> Sync
+	Attributed()()
 	<div
 		.id = "Hello!"
 		.class = {"a-class"}

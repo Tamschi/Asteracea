@@ -1,4 +1,4 @@
-use asteracea::components::Suspense;
+use asteracea::{components::Suspense, substrates::web as substrate};
 
 async fn future_text() -> String {
 	"Hello Future!".to_string()
@@ -18,7 +18,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub Instant()() -> Sync
+	pub Instant()()
 
 	<*Suspense
 		'spinner: <*Spinner>

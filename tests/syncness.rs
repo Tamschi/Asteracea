@@ -1,11 +1,13 @@
+use asteracea::substrates::web as substrate;
+
 asteracea::component! { substrate =>
-	pub Sync()() -> Sync
+	pub Sync()()
 
 	[]
 }
 
 asteracea::component! { substrate =>
-	pub UnSync()() -> !Sync
+	pub UnSync()()
 
 	[]
 }
@@ -18,7 +20,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub ExplicitAutoSync()() -> Sync?
+	pub ExplicitAutoSync()()
 
 	[]
 }

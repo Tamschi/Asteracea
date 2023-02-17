@@ -1,7 +1,9 @@
 #![allow(clippy::type_complexity)] //TODO: The macro should suppress this automatically.
 
+use asteracea::substrates::web as substrate;
+
 asteracea::component! { substrate =>
-	pub Inline()() -> Sync?
+	pub Inline()()
 
 	<button
 		on capture click = once fn (self, _) {}
@@ -10,7 +12,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub Mvc()() -> Sync
+	pub Mvc()()
 
 	<button
 		on bubble click = active Self::on_click
@@ -22,7 +24,7 @@ impl Mvc {
 }
 
 asteracea::component! { substrate =>
-	pub MvcPinned()() -> !Sync
+	pub MvcPinned()()
 
 	<button
 		on bubble click = active Self::on_click
@@ -34,7 +36,7 @@ impl MvcPinned {
 }
 
 asteracea::component! { substrate =>
-	pub Detached()() -> Sync
+	pub Detached()()
 
 	<button
 		on bubble click = active detached1

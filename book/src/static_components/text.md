@@ -5,7 +5,9 @@ To output a static plain [`Text`] element in Asteracea, simply use a text litera
 [`Text`]: https://developer.mozilla.org/en-US/docs/Web/API/Text
 
 ```rust asteracea=Text
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   Text()()
 
   "This is text."
@@ -35,7 +37,9 @@ use lignin::Node;
 Text nodes can be used as children of other nodes, for example a Multi Node:
 
 ```rust asteracea=TextMulti
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   TextMulti()()
 
   [

@@ -1,8 +1,8 @@
-use std::any::TypeId;
-
+use asteracea::substrates::web as substrate;
 use bumpalo::Bump;
 use ergo_pin::ergo_pin;
 use rhizome::sync::Node;
+use std::any::TypeId;
 
 asteracea::component! { substrate =>
 	Container()(..)
@@ -19,7 +19,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	Parent()() -> Sync
+	Parent()()
 
 	<*Container
 		<*Content>

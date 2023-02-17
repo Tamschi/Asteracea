@@ -1,7 +1,7 @@
-use std::any::TypeId;
-
+use asteracea::substrates::web as substrate;
 use bumpalo::Bump;
 use rhizome::sync::Node;
+use std::any::TypeId;
 
 asteracea::component! { substrate =>
 	Deferred()() []
@@ -18,7 +18,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	Deferrer()() -> Sync
+	Deferrer()()
 
 	[
 		defer <*Deferred>
@@ -28,7 +28,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	Named()() -> Sync
+	Named()()
 
 	defer priv deferred: struct NamedDeferred <*Deferred>
 }

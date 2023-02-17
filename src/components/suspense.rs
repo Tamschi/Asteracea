@@ -4,9 +4,10 @@ use crate::{
 		render_callback::RenderOnce,
 	},
 	services::{ContentRuntime, Invalidator},
+	substrates::web,
 	__::Built,
 };
-use lignin::{Node, ThreadSafety};
+use lignin::ThreadBound;
 use std::cell::UnsafeCell;
 use typed_builder::TypedBuilder;
 
@@ -27,10 +28,10 @@ asteracea::component! {web =>
 	pub Suspense(
 		priv dyn runtime: dyn ContentRuntime,
 		priv dyn invalidator?: dyn Invalidator,
-	)<S: 'bump + ThreadSafety>(
-		spinner: (NoParentParameters, Box<RenderOnce<'_, 'bump, S>>),
-		mut ready: (NoParentParameters, AsyncContent<'_, RenderOnce<'_, 'bump, S>>),
-	) -> Node::<'bump, S>
+	) (
+		spinner: (NoParentParameters, Box<RenderOnce<'_, 'bump, ThreadBound>>),
+		mut ready: (NoParentParameters, AsyncContent<'_, RenderOnce<'_, 'bump, ThreadBound>>),
+	)
 
 	let self.subscription = UnsafeCell::<Option<ContentSubscription>>::new(None);
 

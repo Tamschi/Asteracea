@@ -1,8 +1,8 @@
-use std::{any::TypeId, pin::Pin};
-
+use asteracea::substrates::web as substrate;
 use bumpalo::Bump;
 use debugless_unwrap::DebuglessUnwrap;
 use rhizome::sync::Node;
+use std::{any::TypeId, pin::Pin};
 
 asteracea::component! { substrate =>
 	Boxed()() []
@@ -61,12 +61,14 @@ fn named() {
 }
 
 mod a_module {
+	use asteracea::substrates::web as substrate;
+
 	asteracea::component! { substrate =>
-		pub Boxed()() -> Sync []
+		pub Boxed()() []
 	}
 
 	asteracea::component! { substrate =>
-		pub Public()() -> Sync
+		pub Public()()
 
 		box pub public <*Boxed pub boxed>
 	}
@@ -151,7 +153,7 @@ fn reused() {
 }
 
 asteracea::component! { substrate =>
-	pub VisIgnored()() -> Sync
+	pub VisIgnored()()
 
 	box priv b: BoxContainer
 		// There's no good way to check the visibility here (since the declaration isn't emitted),
@@ -180,7 +182,7 @@ fn multi() {
 }
 
 asteracea::component! { substrate =>
-	pub Nested()() -> Sync
+	pub Nested()()
 
 	[
 		box [

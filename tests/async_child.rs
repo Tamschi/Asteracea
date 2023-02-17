@@ -1,3 +1,5 @@
+use asteracea::substrates::web as substrate;
+
 async fn delayed() {}
 
 asteracea::component! { substrate =>
@@ -8,7 +10,7 @@ asteracea::component! { substrate =>
 }
 
 asteracea::component! { substrate =>
-	pub async Parent()() -> Sync
+	pub async Parent()()
 
 	<*Child.await>
 }

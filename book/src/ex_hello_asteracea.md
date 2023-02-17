@@ -1,25 +1,28 @@
 # Chapter 1: Hello Asteracea
 
 ```rust asteracea=HelloAsteracea
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   HelloAsteracea()()
   <span "Hello Asteracea!">
 }
 ```
 
 ```rust asteracea=Counter asteracea::new=.initial(0).step(1) asteracea::render=.class("counter-class")
+use asteracea::substrates::web;
 use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   pub Counter(
     initial: i32,
     priv step: i32,
   )(
     /// This component's class attribute value.
     class?: &'bump str,
-  ) -> !Sync // visible across crate-boundaries, so use explicit `Sync`ness
+  )
 
   let self.value = Cell::<i32>::new(initial); // shorthand capture
 

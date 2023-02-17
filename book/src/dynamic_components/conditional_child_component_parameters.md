@@ -3,7 +3,9 @@
 Note that providing optional argument values without [`Some`]() means that [`None`]() can only be specfied by not setting the parameter at all! Fortunately, it's easy to do this conditionally in the same way as for optional attributes on HTML elements:
 
 ```rust asteracea=Outer
-asteracea::component! { substrate =>
+use asteracea::substrates::web;
+
+asteracea::component! { web =>
   Inner()(
     class?: &'bump str,
   )
@@ -11,7 +13,7 @@ asteracea::component! { substrate =>
   <span .class? = {class}>
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Middle()(
     class?: &'bump str,
   )
@@ -19,7 +21,7 @@ asteracea::component! { substrate =>
   <*Inner .class? = {class}>
 }
 
-asteracea::component! { substrate =>
+asteracea::component! { web =>
   Outer()()
 
   [

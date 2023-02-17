@@ -1,12 +1,12 @@
-use std::any::TypeId;
-
+use asteracea::substrates::web as substrate;
 use bumpalo::Bump;
 use rhizome::sync::Node;
+use std::any::TypeId;
 
 asteracea::component! { substrate =>
 	pub Greeting()(
 		greeting: &str = "Hello!",
-	) -> Sync
+	)
 
 	<span
 		."class" = "greeting"
@@ -17,7 +17,7 @@ asteracea::component! { substrate =>
 asteracea::component! { substrate =>
 	pub Classic()(
 		class?: &'bump str,
-	) -> Sync
+	)
 
 	<div
 		."class"? = {class} // `Option<_>`-typed!
