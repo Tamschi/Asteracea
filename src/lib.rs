@@ -33,7 +33,7 @@
 //FIXME: This won't be necessary anymore once `$crate` is in use everywhere.
 extern crate self as asteracea;
 
-pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
+pub use asteracea_proc_macro_definitions::{bump_format, component};
 pub use bumpalo;
 pub use lignin;
 pub use try_lazy_init;
@@ -46,6 +46,7 @@ pub mod components;
 pub mod error;
 pub mod include;
 pub mod services;
+pub mod substrates;
 
 /// Types implementing this trait can be accepted as value by conditional attributes.
 ///

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Empty()()
 
 	[]

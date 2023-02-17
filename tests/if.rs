@@ -1,7 +1,7 @@
 use bumpalo::Bump;
 use lignin::{Node, ThreadBound};
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Conditional1()(
 		present: bool,
 	) -> Sync
@@ -10,7 +10,7 @@ asteracea::component! {
 		"I am here."
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Conditional2()(
 		present: bool,
 	) -> Sync
@@ -24,7 +24,7 @@ asteracea::component! {
 	]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Conditional3()(
 		content?: impl for<'b> FnOnce(&'b Bump) -> Node<'b, ThreadBound>,
 	) -> !Sync

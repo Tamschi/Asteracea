@@ -3,7 +3,7 @@
 To conditionally render a node, you can use `spread if`-expressions whenever a [`Node<'bump>`]() is expected:
 
 ```rust asteracea=Conditioned
-asteracea::component! {
+asteracea::component! { substrate =>
   Conditional()(
     present: bool,
   )
@@ -12,7 +12,7 @@ asteracea::component! {
     "I am here."
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Conditioned()()
 
   [
@@ -27,7 +27,7 @@ Note the required curly braces (`{}`) around the condition and their absence on 
 To render multiple elements conditionally, use a multi node:
 
 ```rust asteracea=Conditioned
-asteracea::component! {
+asteracea::component! { substrate =>
   Conditional()(
     present: bool,
   )
@@ -41,7 +41,7 @@ asteracea::component! {
   ]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Conditioned()()
 
   [
@@ -56,7 +56,7 @@ asteracea::component! {
 is also available, though this means that Asteracea's `if`-`{condition}` is *not* automatically a Rust block. Use `{{ statements }}` if you really need one, though wrapping the `spread if` in a `with { … } <…>`-expression is likely a better idea in terms of code organisation.
 
 ```rust asteracea=Conditioned
-asteracea::component! {
+asteracea::component! { substrate =>
   Conditional()(
     content?: &'bump str,
   )
@@ -70,7 +70,7 @@ asteracea::component! {
   ]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Conditioned()()
 
   [

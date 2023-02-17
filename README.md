@@ -76,7 +76,7 @@ Additional examples can be found [in the examples directory](examples#list-of-ex
 The most simple (`Node`-rendering) component can be written like this:
 
 ```rust
-asteracea::component! {
+asteracea::component! { substrate =>
   pub Empty()() -> Sync
   [] // Empty node sequence
 }
@@ -104,12 +104,12 @@ VDOM [`Sync`-ness](https://doc.rust-lang.org/stable/std/marker/trait.Sync.html) 
 A return type other than `Node` can be specified after the render argument list:
 
 ```rust
-asteracea::component! {
+asteracea::component! { substrate =>
   Unit(/* ::new arguments */)(/* .render arguments */) -> ()
   {} // Empty Rust block
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Offset(base: usize)(offset: usize) -> usize
 
   let pub self.base: usize = base; // ²
@@ -145,13 +145,12 @@ assert_eq!(
 For a relatively complex example, see this parametrised counter:
 
 ```rust
-use asteracea::component;
 use lignin::web::Event;
 use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
 
-component! {
+asteracea::component! { substrate =>
   pub Counter(
     /// The counter's starting value.
     initial: i32,
@@ -200,7 +199,7 @@ impl Counter {
 }
 
 
-asteracea::component! {
+asteracea::component! { substrate =>
   CounterUser()()
 
   <*Counter

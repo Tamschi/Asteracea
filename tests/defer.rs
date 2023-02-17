@@ -3,11 +3,11 @@ use std::any::TypeId;
 use bumpalo::Bump;
 use rhizome::sync::Node;
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Deferred()() []
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Never
 	#[allow(unreachable_code)]
 	()()
@@ -17,7 +17,7 @@ asteracea::component! {
 	[]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Deferrer()() -> Sync
 
 	[
@@ -27,7 +27,7 @@ asteracea::component! {
 	]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Named()() -> Sync
 
 	defer priv deferred: struct NamedDeferred <*Deferred>

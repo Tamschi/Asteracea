@@ -3,7 +3,7 @@
 To define elements and their contents, Asteracea provides a syntax similar to HTML:
 
 ```rust asteracea=Div
-asteracea::component! {
+asteracea::component! { substrate =>
   Div()()
 
   <div>
@@ -13,7 +13,7 @@ asteracea::component! {
 `<name` opens an element and `>` is enough to close one. However, you can alternatively close elements with `/name>` too, which the compiler will validate:
 
 ```rust asteracea=Div
-asteracea::component! {
+asteracea::component! { substrate =>
   Div()()
 
   <div
@@ -25,7 +25,7 @@ asteracea::component! {
 Elements can contain any number of valid Asteracea component bodies, which are rendered as the element's children, as long as the specific element supports it:
 
 ```rust asteracea=Span
-asteracea::component! {
+asteracea::component! { substrate =>
   Span()()
 
   <span
@@ -38,7 +38,7 @@ asteracea::component! {
 This includes other elements:
 
 ```rust asteracea=DivSpan
-asteracea::component! {
+asteracea::component! { substrate =>
   DivSpan()()
 
   <div
@@ -55,7 +55,7 @@ Elements are statically validated against [`lignin-schema`].
 [lignin-html]: TK
 
 ```rust asteracea=Br
-asteracea::component! {
+asteracea::component! { substrate =>
   Br()()
 
   <br>
@@ -67,7 +67,7 @@ asteracea::component! {
 To use custom element names without validation, quote them like this:
 
 ```rust asteracea=Custom
-asteracea::component! {
+asteracea::component! { substrate =>
   Custom()()
 
   <"custom-element">

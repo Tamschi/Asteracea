@@ -1,12 +1,12 @@
 use std::{fmt::Debug, pin::Pin};
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Boxed<T>()() -> Sync
 
 	box <*Boxed::<T>>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Boxedd<S, T>()() -> Sync
 
 	[
@@ -25,7 +25,7 @@ impl<T> Predefined<T> {
 	}
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Predefinedd<S, T>()() -> Sync
 
 	[
@@ -34,19 +34,19 @@ asteracea::component! {
 	]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Claused<T: Debug>()() -> Sync
 
 	box <*Claused::<T>>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Whered<T> where T: Debug, ()() -> Sync
 
 	box <*Whered::<T>>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	#[allow(dead_code)] // Used below; Waiting on min_specialization.
 	Picky<T: Debug>()()
 
@@ -54,19 +54,19 @@ asteracea::component! {
 }
 
 // Waiting on min_specialization.
-// asteracea::component! {
+// asteracea::component! { substrate =>
 // 	Custom<T>()()
 
 // 	box priv a: struct C::<T> <*Boxed::<T>>
 // }
 
-// asteracea::component! {
+// asteracea::component! { substrate =>
 // 	CustomClaused<T: Debug>()()
 
 // 	box priv a: struct CC::<T: Debug> <*Picky::<T>>
 // }
 
-// asteracea::component! {
+// asteracea::component! { substrate =>
 // 	CustomWhered<T> where T: Debug, ()()
 
 // 	box priv a: struct CW::<T> where T: Debug; <*Picky::<T>>

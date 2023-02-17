@@ -23,7 +23,7 @@ use syn::{
 	spanned::Spanned,
 	token::Paren,
 	AttrStyle, Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent,
-	PatType, ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
+	PatType, Path, ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -84,6 +84,10 @@ impl Configuration for ComponentRenderConfiguration {
 
 impl Parse for ComponentDeclaration {
 	fn parse(input: ParseStream<'_>) -> Result<Self> {
+		let substrate: Path = input.parse()?;
+
+		let _: Token![=>] = input.parse()?;
+
 		let attributes = input.call(Attribute::parse_outer)?;
 		let visibility = input.parse()?;
 		let async_ = input.parse().expect("infallible");
@@ -182,7 +186,12 @@ impl Parse for ComponentDeclaration {
 
 		let render_type = input.parse()?;
 
-		let mut cx = ParseContext::new_root(&visibility, &component_name, &component_generics);
+		let mut cx = ParseContext::new_root(
+			&substrate,
+			&visibility,
+			&component_name,
+			&component_generics,
+		);
 
 		let constructor_block = if input.peek(kw::new) {
 			unquote! {input,

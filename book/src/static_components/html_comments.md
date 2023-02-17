@@ -3,7 +3,7 @@
 The third kind of comment is specific to Asteracea and does affect program output:
 
 ```rust asteracea=HtmlCommented
-asteracea::component! {
+asteracea::component! { substrate =>
   HtmlCommented()()
 
   <!-- "This is an HTML comment." -->
@@ -15,7 +15,7 @@ The double quotes are a Rust limitation: Since Rust tokenises macro input, a str
 You can use a multiline string to easily write a multiline HTML comment:
 
 ```rust asteracea=HtmlCommented
-asteracea::component! {
+asteracea::component! { substrate =>
   HtmlCommented()()
 
   <!-- "

@@ -5,7 +5,7 @@ An alternative method of breaking up recursive component initialisation is to de
 As such, the recursive example from the [`box ⟦priv …⟦: ⟦struct⟧ … ⟦where …;⟧⟧⟧ <…>` chapter](./box.md) can be written as:
 
 ```rust asteracea=HalfADozen
-asteracea::component! {
+asteracea::component! { substrate =>
   Countdown()(
     i: usize,
   ) -> Sync // Syncness hint required due to recursion.
@@ -19,7 +19,7 @@ asteracea::component! {
   ]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   pub HalfADozen()() -> Sync?
 
   <*Countdown .i = {6}>
@@ -35,7 +35,7 @@ This has different runtime characteristics:
 As usual, the backing field can be named and then referred to:
 
 ```rust asteracea=Ruminating
-asteracea::component! {
+asteracea::component! { substrate =>
   Introspective()()
 
   [
@@ -44,7 +44,7 @@ asteracea::component! {
   ]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   pub Ruminating()() -> Sync?
 
   [

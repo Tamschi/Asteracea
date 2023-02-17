@@ -5,7 +5,7 @@ You can use three distinct types of comments in Asteracea macros, all serving di
 First, standard Rust comments can be placed anywhere in Asteracea components (or any other place in a Rust program), and are not included in the compiled binary:
 
 ```rust asteracea=Commented
-asteracea::component! {
+asteracea::component! { substrate =>
   Commented()()
 
   [
@@ -20,7 +20,7 @@ asteracea::component! {
 Additionally, Rust documentation is supported in many places:
 
 ```rust asteracea=Documented
-asteracea::component! {
+asteracea::component! { substrate =>
   /// This is a documented component.  
   /// Running `cargo doc` will pick up on its documentation.
   pub Documented()() -> Sync

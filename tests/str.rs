@@ -1,4 +1,4 @@
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Str()() -> &str
 
 	{ "Testing…" }

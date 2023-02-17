@@ -8,7 +8,7 @@ enum Enum<'a> {
   Other,
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   MatchEnum()(
     enum_value: Enum<'_>,
   )
@@ -19,7 +19,7 @@ asteracea::component! {
   ]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   pub Matched()() -> Sync
 
   [

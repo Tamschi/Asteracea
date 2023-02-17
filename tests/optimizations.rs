@@ -2,7 +2,7 @@ use std::mem::size_of;
 
 #[test]
 fn stateless_components_are_zero_sized() {
-	asteracea::component! {
+	asteracea::component! { substrate =>
 		Empty()()
 		""
 	}

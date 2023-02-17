@@ -4,13 +4,13 @@ use bumpalo::Bump;
 use rhizome::sync::Node;
 use tap::Pipe;
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Bound(
 		priv _early: usize,
 	)() []
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Never
 
 	#[allow(unreachable_code)]
@@ -23,7 +23,7 @@ asteracea::component! {
 	[]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Binder()(
 		late: usize = 1,
 	) -> Sync
@@ -35,7 +35,7 @@ asteracea::component! {
 	]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	BinderMover()(
 		late: usize = 1,
 	) -> Sync
@@ -47,7 +47,7 @@ asteracea::component! {
 	]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Named()(
 		late: usize = 1,
 	) -> Sync
@@ -55,7 +55,7 @@ asteracea::component! {
 	bind priv bound: struct NamedBound <*Bound *_early = {late}>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	NamedMoved()(
 		late: usize = 1,
 	) -> Sync

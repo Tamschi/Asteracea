@@ -9,7 +9,7 @@ impl S {
 	}
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub LetSelf(
 		a: u32,
 		b: u32,
@@ -22,7 +22,7 @@ asteracea::component! {
 	!"{}{}{}"(self.a, self.b_pinned(), self.s.s())
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   pub Attributed()() -> Sync
 
   // TODO: Also support outer attributes again.

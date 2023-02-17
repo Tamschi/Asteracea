@@ -1,4 +1,4 @@
-asteracea::component! {
+asteracea::component! { substrate =>
 	CoinFlip()(
 		// 'heads(),
 		// 'tails(),
@@ -6,7 +6,7 @@ asteracea::component! {
 	) []
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Random()()
 
 	<*CoinFlip

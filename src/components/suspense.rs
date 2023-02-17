@@ -20,7 +20,7 @@ impl Built for NoParentParameters {
 	}
 }
 
-asteracea::component! {
+asteracea::component! {web =>
 	/// Renders `'spinner` unless `'ready` has finished construction.
 	///
 	/// `'ready`'s construction is scheduled automatically.

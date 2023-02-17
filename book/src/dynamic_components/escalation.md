@@ -20,7 +20,7 @@ impl Display for AnError {
 }
 impl Error for AnError {}
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Failing()
   #[allow(unreachable_code)] () -> Sync
 
@@ -33,13 +33,13 @@ asteracea::component! {
   }
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Containing()()
 
   <*Failing>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   pub Outer()() -> Sync
 
   <*Containing>
@@ -61,7 +61,7 @@ Asteracea's error handling will automatically try to pick up on plain Rust panic
 The following example *should* display a backtrace rather than failing the book build:
 
 ```rust asteracea=Outer
-asteracea::component! {
+asteracea::component! { substrate =>
   Panicking()
   #[allow(unreachable_code)] () -> Sync
 
@@ -71,7 +71,7 @@ asteracea::component! {
   }
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   pub Outer()() -> Sync
 
   <*Panicking>

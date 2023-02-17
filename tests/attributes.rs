@@ -1,8 +1,6 @@
 #![allow(dead_code)] //TODO: Test output.
 
-use asteracea::component;
-
-component! {
+asteracea::component! { substrate =>
 	Attributed()() -> Sync
 	<div
 		.id = "Hello!"
@@ -10,7 +8,7 @@ component! {
 	>
 }
 
-component! {
+asteracea::component! { substrate =>
 	SometimesAttributes()(
 		class: Option<&'bump str>,
 	)
@@ -20,7 +18,7 @@ component! {
 	>
 }
 
-component! {
+asteracea::component! { substrate =>
 	MultiOptional()(
 		class: Option<&'bump str>,
 	)
@@ -34,7 +32,7 @@ component! {
 	>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Vis()(
 	visible: bool,
   )

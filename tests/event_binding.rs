@@ -1,6 +1,6 @@
 #![allow(clippy::type_complexity)] //TODO: The macro should suppress this automatically.
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Inline()() -> Sync?
 
 	<button
@@ -9,7 +9,7 @@ asteracea::component! {
 	>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Mvc()() -> Sync
 
 	<button
@@ -21,7 +21,7 @@ impl Mvc {
 	fn on_click(&self, _: lignin::web::Event) {}
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub MvcPinned()() -> !Sync
 
 	<button
@@ -33,7 +33,7 @@ impl MvcPinned {
 	fn on_click(self: std::pin::Pin<&Self>, _: lignin::web::Event) {}
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Detached()() -> Sync
 
 	<button

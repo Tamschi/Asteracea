@@ -117,29 +117,6 @@ impl BumpFormat {
 	}
 }
 
-enum FragmentConfiguration {}
-impl Configuration for FragmentConfiguration {
-	const NAME: &'static str = "fragment!";
-	const CAN_CAPTURE: bool = false;
-}
-
-#[proc_macro]
-pub fn fragment(input: TokenStream1) -> TokenStream1 {
-	let asteracea = asteracea_ident(Span::mixed_site());
-	let body = parse_macro_input!(input as Part<FragmentConfiguration>)
-		.part_tokens(&GenerateContext {
-			thread_safety: quote!(_),
-			prefer_thread_safe: None,
-		})
-		.unwrap_or_else(|error| error.to_compile_error());
-	(quote_spanned! {Span::mixed_site()=>
-		((|| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
-			Ok(#body)
-		})())
-	})
-	.into()
-}
-
 // TODO: Accept reexported asteracea module made available via `use`.
 lazy_static! {
 	static ref ASTERACEA_NAME: String = crate_name("asteracea")

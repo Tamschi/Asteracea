@@ -19,7 +19,7 @@ struct D;
 #[derive(Debug)]
 struct E;
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	ContainerComponent(
 		// Constructor parameters:
 		_plain: A,

@@ -27,7 +27,7 @@ Infinite recursive (storage) inlining isn't possible (except *theoretically* for
 This means the following requires boxing:
 
 ```TODOrust TODOasteracea=Countdown asteracea::render=.i(6)
-asteracea::component! {
+asteracea::component! { substrate =>
   Countdown()(
     i: usize,
   )
@@ -62,7 +62,7 @@ Consider the following:
 ```rust asteracea=Holder
 use std::mem::size_of;
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Heavy()()
 
   let self.large: [u8; 1_000] = #![allow(dead_code)]
@@ -71,7 +71,7 @@ asteracea::component! {
   "Hello!"
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Holder()(
     show: bool = false,
   )
@@ -91,7 +91,7 @@ You can avoid this as follows:
 ```rust asteracea=Holder
 use std::mem::size_of;
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Heavy()()
 
   let self.large: [u8; 1_000] = #![allow(dead_code)]
@@ -100,7 +100,7 @@ asteracea::component! {
   "Hello!"
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Holder()(
     show: bool = false,
   )

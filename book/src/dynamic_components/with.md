@@ -5,7 +5,7 @@ While you can in theory place nearly any Rust code inside `{}`-braces as part of
 Instead, you can use a `with { …; } <…>`-expression to run a number of Rust statements procedurally:
 
 ```rust asteracea=WithExample
-asteracea::component! {
+asteracea::component! { substrate =>
   pub WithExample()() -> Sync
 
   with {
@@ -24,7 +24,7 @@ asteracea::component! {
 Bindings declared in the `with`-expression's are only in scope for the embedded [element expression](*), but with a multi node, you can use them for multiple elements:
 
 ```rust asteracea=WithExample
-asteracea::component! {
+asteracea::component! { substrate =>
   pub WithExample()() -> Sync
 
   <div

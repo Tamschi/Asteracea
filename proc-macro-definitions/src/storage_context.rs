@@ -9,11 +9,12 @@ use syn::{
 	parse::ParseStream,
 	punctuated::{Pair, Punctuated},
 	spanned::Spanned,
-	ExprPath, Field, GenericParam, Generics, Ident, Item, LifetimeDef, Result, Token, Type,
+	ExprPath, Field, GenericParam, Generics, Ident, Item, LifetimeDef, Path, Result, Token, Type,
 	TypeParam, Visibility,
 };
 
 pub struct ParseContext<'a> {
+	pub substrate: &'a Path,
 	pub item_visibility: &'a Visibility,
 	pub component_name: Option<&'a Ident>,
 	pub storage_generics: &'a Generics,
@@ -24,31 +25,18 @@ pub struct ParseContext<'a> {
 
 impl<'a> ParseContext<'a> {
 	pub fn new_root(
+		substrate: &'a Path,
 		component_visibility: &'a Visibility,
 		component_name: &'a Ident,
 		component_generics: &'a Generics,
 	) -> Self {
 		Self {
+			substrate,
 			item_visibility: component_visibility,
 			component_name: Some(component_name),
 			storage_generics: component_generics,
 			storage_context: StorageContext {
 				type_name: component_name.clone(),
-				field_definitions: vec![],
-				generated_names: 0,
-			},
-			assorted_items: vec![],
-			callback_registrations: Rc::default(),
-		}
-	}
-
-	pub fn new_fragment(dummy_visibility: &'a Visibility, dummy_generics: &'a Generics) -> Self {
-		Self {
-			item_visibility: dummy_visibility,
-			component_name: None,
-			storage_generics: dummy_generics,
-			storage_context: StorageContext {
-				type_name: Ident::new("UNUSED", Span::mixed_site()),
 				field_definitions: vec![],
 				generated_names: 0,
 			},
@@ -63,6 +51,7 @@ impl<'a> ParseContext<'a> {
 		nested_generics: &'a Generics,
 	) -> Self {
 		Self {
+			substrate: self.substrate,
 			item_visibility: self.item_visibility,
 			component_name: self.component_name,
 			storage_generics: nested_generics,

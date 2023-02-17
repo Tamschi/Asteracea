@@ -5,7 +5,7 @@ Asteracea provides multiple ways to make working with optional arguments easier.
 Like in for example TypeScript, you can specify default parameters for constructor and render arguments:
 
 ```rust asteracea=Classical
-asteracea::component! {
+asteracea::component! { substrate =>
   Classic()(
     // This will be improved on in the next chapter.
     class: Option<&'bump str> = None,
@@ -16,7 +16,7 @@ asteracea::component! {
   >
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Classical()()
 
   [

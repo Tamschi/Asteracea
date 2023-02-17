@@ -1,13 +1,13 @@
 async fn delayed() {}
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	async Child()()
 
 	let self._nothing: () = delayed().await;
 	[]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub async Parent()() -> Sync
 
 	<*Child.await>

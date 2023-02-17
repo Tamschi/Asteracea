@@ -14,7 +14,7 @@ Consider the following (grasping at [constructor parameter]()[ captures]() and [
 ```rust asteracea=Container
 use std::{fmt::Debug, mem::size_of};
 
-asteracea::component! {
+asteracea::component! { substrate =>
   MySize<T: Debug>(
     priv value: T,
   )()
@@ -26,7 +26,7 @@ asteracea::component! {
   ]
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Container()()
 
   [

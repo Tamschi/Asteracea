@@ -5,7 +5,7 @@
 Arbitrary Rust code can be inserted into a component's constructor using a `new with`-block:
 
 ```rust asteracea=Constructed
-asteracea::component! {
+asteracea::component! { substrate =>
   Constructed()()
 
   new with {
@@ -19,7 +19,7 @@ asteracea::component! {
 Code inside the `new with`-block has access to constructor parameters, and `let`-bindings from this block are in scope for capture initialisers:
 
 ```rust asteracea=Quoter
-asteracea::component! {
+asteracea::component! { substrate =>
   QuoteHolder(
     text: &str,
   )()
@@ -33,7 +33,7 @@ asteracea::component! {
   !(self.quote)
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Quoter()()
 
   <*QuoteHolder *text = { "This text is quoted." }>

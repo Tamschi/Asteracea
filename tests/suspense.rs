@@ -21,20 +21,20 @@ async fn future_text() -> String {
 	"Like a record!".to_string()
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Spinner()()
 
 	"Spinning right 'round…"
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	async Async()()
 
 	let self.text: String = future_text().await;
 	!"{}"(self.text)
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Instant()() -> Sync
 
 	<*Suspense

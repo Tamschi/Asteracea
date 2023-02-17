@@ -3,7 +3,7 @@
 When working with values that may or may not be provided, where the default is outside the range of possible provided values, you can improve your component's interface towards consumers by using optional arguments:
 
 ```rust asteracea=Classical
-asteracea::component! {
+asteracea::component! { substrate =>
   Classic()(
     class?: &'bump str,
   )
@@ -13,7 +13,7 @@ asteracea::component! {
   >
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Classical()()
 
   [

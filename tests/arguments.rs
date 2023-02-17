@@ -1,10 +1,9 @@
 use std::any::TypeId;
 
-use asteracea::component;
 use bumpalo::Bump;
 use rhizome::sync::Node;
 
-component! {
+asteracea::component! { substrate =>
 	pub Greeting()(
 		greeting: &str = "Hello!",
 	) -> Sync
@@ -15,7 +14,7 @@ component! {
 	>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Classic()(
 		class?: &'bump str,
 	) -> Sync
@@ -25,7 +24,7 @@ asteracea::component! {
 	>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Inner()(
 	class?: &'bump str,
   )
@@ -33,7 +32,7 @@ asteracea::component! {
   <span ."class"? = {class}>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Middle()(
 	class?: &'bump str,
   )
@@ -41,7 +40,7 @@ asteracea::component! {
   <*Inner .class? = {class}>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Outer()()
 
   [

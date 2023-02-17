@@ -3,7 +3,7 @@ pub enum Enum<'a> {
 	Other,
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub MatchEnum()(
 		enum_value: Enum<'_>,
 	) -> Sync

@@ -1,7 +1,6 @@
-use asteracea::component;
 use std::{fmt::Display, marker::PhantomData};
 
-component! {
+asteracea::component! { substrate =>
 	Generic<T: Display>(
 		priv _phantom: PhantomData<T> = Default::default(),
 	)(
@@ -11,7 +10,7 @@ component! {
 	!(displayed)
 }
 
-component! {
+asteracea::component! { substrate =>
 	pub User()() -> Sync
 
 	[

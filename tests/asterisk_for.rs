@@ -1,6 +1,6 @@
 #![allow(clippy::reversed_empty_ranges)]
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Empty()()
 
 	*for _ in 0..0 {
@@ -8,7 +8,7 @@ asteracea::component! {
 	}
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	WithinHtml()()
 
 	<div
@@ -18,13 +18,13 @@ asteracea::component! {
 	>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Container()(..)
 
 	..
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	AsContent()()
 
 	<*Container

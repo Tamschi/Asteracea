@@ -4,7 +4,7 @@ use bumpalo::Bump;
 use ergo_pin::ergo_pin;
 use rhizome::sync::Node;
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Container()(..)
 
 	<"custom-container"
@@ -12,13 +12,13 @@ asteracea::component! {
 	>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Content()()
 
 	<"custom-content">
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Parent()() -> Sync
 
 	<*Container

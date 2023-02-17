@@ -4,11 +4,11 @@ use bumpalo::Bump;
 use debugless_unwrap::DebuglessUnwrap;
 use rhizome::sync::Node;
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Boxed()() []
 }
 
-// asteracea::component! {
+// asteracea::component! { substrate =>
 // 	Countdown()(
 // 		i: usize,
 // 	)
@@ -22,7 +22,7 @@ asteracea::component! {
 // 	]
 // }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Simple()()
 
 	box <*Boxed>
@@ -40,7 +40,7 @@ fn simple() {
 		.render(&bump, Simple::render_args_builder().build());
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Named()()
 
 	box priv named <*Boxed priv boxed>
@@ -61,11 +61,11 @@ fn named() {
 }
 
 mod a_module {
-	asteracea::component! {
+	asteracea::component! { substrate =>
 		pub Boxed()() -> Sync []
 	}
 
-	asteracea::component! {
+	asteracea::component! { substrate =>
 		pub Public()() -> Sync
 
 		box pub public <*Boxed pub boxed>
@@ -88,7 +88,7 @@ fn public() {
 	let _: a_module::Boxed = component.public.boxed;
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Typed()()
 
 	box priv named: struct TypedBoxed <*Boxed priv boxed>
@@ -122,7 +122,7 @@ impl BoxContainer {
 	}
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	TypeReused()()
 
 	box priv named: BoxContainer [
@@ -150,7 +150,7 @@ fn reused() {
 	let _: Boxed = typed.boxed;
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub VisIgnored()() -> Sync
 
 	box priv b: BoxContainer
@@ -159,7 +159,7 @@ asteracea::component! {
 		<*Boxed pub boxed>
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	Multi()()
 
 	[
@@ -179,7 +179,7 @@ fn multi() {
 		.render(&bump, Multi::render_args_builder().build());
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub Nested()() -> Sync
 
 	[

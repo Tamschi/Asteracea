@@ -5,7 +5,7 @@ use lignin_html::render_fragment;
 use rhizome::sync::Node;
 use std::{any::TypeId, pin::Pin};
 
-asteracea::component! {
+asteracea::component! { substrate =>
 	pub RouterTester()(
 		path: &'bump str,
 	) -> Sync

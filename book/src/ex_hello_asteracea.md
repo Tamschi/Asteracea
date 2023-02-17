@@ -1,19 +1,18 @@
 # Chapter 1: Hello Asteracea
 
 ```rust asteracea=HelloAsteracea
-asteracea::component! {
+asteracea::component! { substrate =>
   HelloAsteracea()()
   <span "Hello Asteracea!">
 }
 ```
 
 ```rust asteracea=Counter asteracea::new=.initial(0).step(1) asteracea::render=.class("counter-class")
-use asteracea::component;
 use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
 
-component! {
+asteracea::component! { substrate =>
   pub Counter(
     initial: i32,
     priv step: i32,

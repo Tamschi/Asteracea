@@ -1,0 +1,1 @@
+//! DOM target. (TODO: Expand docs.)

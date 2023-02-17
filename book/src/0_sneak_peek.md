@@ -8,7 +8,7 @@ use std::cell::Cell;
 
 fn schedule_render() { /* ... */ }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Counter(
     initial: i32,
     priv step: i32,
@@ -50,7 +50,7 @@ impl Counter {
   }
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   CounterUser()() -> !Sync
 
   <"counter-user" "\n\t"

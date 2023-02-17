@@ -36,7 +36,7 @@ use syn::{
 	parse::{Parse, ParseStream, Result},
 	spanned::Spanned as _,
 	token::{Brace, Bracket},
-	Attribute, Error, Expr, Generics, Ident, Label, LitStr, Pat, Token, Visibility,
+	Attribute, Error, Expr, Ident, Label, LitStr, Pat, Token,
 };
 use syn_mid::Block;
 use tap::Pipe as _;
@@ -135,28 +135,6 @@ impl Parse for InitMode {
 				input.span(),
 				"Expected one of `dyn` or `spread`",
 			));
-		})
-	}
-}
-
-//TODO: Split this off onto a wrapper (FragmentRootPart?) to avoid confusion.
-// Or maybe just parse it differently, if that's not too much of an issue.
-impl<C: Configuration> Parse for Part<C> {
-	fn parse(input: ParseStream<'_>) -> Result<Self> {
-		let span = input.span();
-		Self::parse_with_context(
-			input,
-			&mut ParseContext::new_fragment(&Visibility::Inherited, &Generics::default()),
-		)
-		.and_then(|part| {
-			if let Some(part) = part {
-				Ok(part)
-			} else {
-				Err(Error::new(
-					span,
-					"The top level part must return a value.", //TODO: Better message or better yet program restructuring.
-				))
-			}
 		})
 	}
 }

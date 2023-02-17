@@ -6,21 +6,21 @@ Asteracea components can be used inside other templates using asterisk syntax:
 //TODO: Hide this initially.
 use std::marker::PhantomData;
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Inner()()
 
   "Inner body."
 }
 
 mod module {
-  asteracea::component! {
+  asteracea::component! { substrate =>
     pub(crate) Module()()
 
     "Module body."
   }
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Generic<T>(
     //TODO: Hide this initially and show an ellipsis comment.
     // Generic parameters must be used in an instance field.
@@ -32,7 +32,7 @@ asteracea::component! {
   "Generic body."
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Outer()()
 
   [
@@ -49,21 +49,21 @@ Explicit closing is supported:
 //TODO: Hide repetition.
 use std::marker::PhantomData;
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Inner()()
 
   "Inner body."
 }
 
 mod module {
-  asteracea::component! {
+  asteracea::component! { substrate =>
     pub(crate) Module()()
 
     "Module body."
   }
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Generic<T>(
     // Generic parameters must be used in an instance field.
     // We can pretend this is the case using a constructor parameter capture.
@@ -74,7 +74,7 @@ asteracea::component! {
   "Generic body."
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Outer()()
 
   [
@@ -93,12 +93,12 @@ The fish is chilling in a bucket now and will be released into a nicer environme
 Using a component multiple times results in distinct instances:
 
 ```rust asteracea=Outer
-asteracea::component! {
+asteracea::component! { substrate =>
   Inner()()
   "Inner body."
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Outer()()
   [
     <*Inner>
@@ -119,12 +119,12 @@ Instead of instantiating and storing a child component multiple times, you can i
 
 ```rust asteracea=Outer
 //TODO: Hide this initially.
-asteracea::component! {
+asteracea::component! { substrate =>
   Inner()()
   "Inner body."
 }
 
-asteracea::component! {
+asteracea::component! { substrate =>
   Outer()()
   [
     <*Inner priv inner> // Alternatively: `pub` or `pub(…)`
