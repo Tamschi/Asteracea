@@ -39,17 +39,17 @@ enum AttributeKey {
 	Literal(LitStr),
 }
 
-impl ToTokens for AttributeKey {
-	fn to_tokens(&self, tokens: &mut TokenStream) {
+impl AttributeKey {
+	fn to_token_stream(&self, cx: &GenerateContext) -> TokenStream {
+		let substrate = cx.substrate;
 		match self {
 			AttributeKey::Known(name) => {
 				let asteracea = asteracea_ident(name.span());
-				(quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
-					<dyn ::#asteracea::__::lignin_schema::html::attributes::#name>::NAME
-				})
-				.to_tokens(tokens)
+				quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
+					<dyn #substrate::schema::attributes::#name>::NAME
+				}
 			}
-			AttributeKey::Literal(name) => name.to_tokens(tokens),
+			AttributeKey::Literal(name) => name.to_token_stream(),
 		}
 	}
 }
@@ -247,8 +247,8 @@ impl<C: Configuration> HtmlDefinition<C> {
 								// Already flagged where the attribute name is resolved.
 								// Ignored here so a deprecated element isn't warned about on the attribute.
 								#[allow(deprecated)]
-								::#asteracea::__::lignin_schema::html::attributes::#name::<_>::static_validate_on(
-									::#asteracea::__::lignin_schema::html::elements::#tag_name
+								#substrate::schema::attributes::#name::<_>::static_validate_on(
+									#substrate::schema::elements::#tag_name
 								);
 							},
 						)
@@ -262,6 +262,7 @@ impl<C: Configuration> HtmlDefinition<C> {
 			.map(|a| match a {
 				AttributeDefinition::Assignment(dot, key, question, eq, value) => {
 					let span = dot.span.resolved_at(Span::mixed_site());
+					let key = key.to_token_stream(cx);
 					match (has_optional_attributes, question) {
 						(false, Some(_)) => unreachable!(),
 						(true, Some(Question { .. })) => {
@@ -277,24 +278,24 @@ impl<C: Configuration> HtmlDefinition<C> {
 							quote_spanned! {value.span().resolved_at(Span::mixed_site())=> {
 								let name = #key; // Always evaluate this.
 								if let Some(value) #eq #value {
-									attrs.push(#asteracea::lignin::Attribute {
+									attrs.push(#substrate::attribute(
 										name,
 										value,
-									})
+									))
 								}
 							}}
 						}
 						(true, None) => quote_spanned! {span=>
-							attrs.push(#asteracea::lignin::Attribute {
-								name: #key,
-								value: #value,
-							});
+							attrs.push(#substrate::attribute(
+								#key,
+								#value,
+							));
 						},
 						(false, None) => quote_spanned! {span=>
-							#asteracea::lignin::Attribute {
-								name: #key,
-								value: #value,
-							}
+							#substrate::attribute(
+								#key,
+								#value,
+							)
 						},
 					}
 				}

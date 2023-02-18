@@ -381,7 +381,7 @@ impl<C: Configuration> Part<C> {
 				bump_format.to_tokens_with_context(&mut tokens, cx);
 				tokens
 			}
-			Part::Comment(html_comment) => html_comment.part_tokens(),
+			Part::Comment(html_comment) => html_comment.part_tokens(cx),
 			Part::Component(component) => component.part_tokens(cx)?,
 			Part::Content(content) => content.part_tokens(),
 			Part::Defer(defer) => defer.part_tokens(cx)?,

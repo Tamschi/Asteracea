@@ -57,3 +57,14 @@ pub fn element_by_name<'a>(
 		dom_binding: None, //TODO: Add DOM binding support.
 	}
 }
+
+pub fn attribute<'a>(name: &'a str, value: &'a str) -> Attribute<'a> {
+	Attribute { name, value }
+}
+
+pub fn comment<'a>(_bump: &'a Bump, text: &'a str) -> VdomNode<'a> {
+	VdomNode::Comment {
+		comment: text,
+		dom_binding: None, //TODO: Add DOM binding support.
+	}
+}

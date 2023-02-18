@@ -1,6 +1,6 @@
-ThreadId(1)-main 83460
-ThreadId(1)-main; tracing_sample::ContainerComponent::new:examples/tracing-sample/src/main.rs:22 8230
-ThreadId(1)-main 12270
-ThreadId(1)-main; tracing_sample::print_app:examples/tracing-sample/src/main.rs:77 12530
-ThreadId(1)-main; tracing_sample::print_app:examples/tracing-sample/src/main.rs:77; tracing_sample::ContainerComponent::render:examples/tracing-sample/src/main.rs:22 2050
-ThreadId(1)-main; tracing_sample::print_app:examples/tracing-sample/src/main.rs:77 9120
+ThreadId(1)-main 70250
+ThreadId(1)-main; tracing_sample::ContainerComponent::new:examples/tracing-sample/src/main.rs:22 7510
+ThreadId(1)-main 15050
+ThreadId(1)-main; tracing_sample::print_app:examples/tracing-sample/src/main.rs:77 12620
+ThreadId(1)-main; tracing_sample::print_app:examples/tracing-sample/src/main.rs:77; tracing_sample::ContainerComponent::render:examples/tracing-sample/src/main.rs:22 2210
+ThreadId(1)-main; tracing_sample::print_app:examples/tracing-sample/src/main.rs:77 11000

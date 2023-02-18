@@ -1,8 +1,6 @@
-use crate::{
-	asteracea_ident,
-	storage_context::{ParseContext, ParseWithContext},
-};
-use proc_macro2::{Span, TokenStream};
+use super::GenerateContext;
+use crate::storage_context::{ParseContext, ParseWithContext};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
 use syn::{parse::ParseStream, LitStr};
 use unquote::unquote;
@@ -27,19 +25,17 @@ impl ParseWithContext for HtmlComment {
 }
 
 impl HtmlComment {
-	pub fn part_tokens(&self) -> TokenStream {
+	pub fn part_tokens(&self, cx: &GenerateContext) -> TokenStream {
 		let &Self {
 			open_span,
 			ref text,
 		} = self;
 
-		let asteracea = asteracea_ident(open_span);
+		let bump = Ident::new("bump", open_span);
+		let substrate = cx.substrate;
 
-		quote_spanned! {open_span=>
-			#asteracea::lignin::Node::Comment {
-				comment: #text,
-				dom_binding: None, //TODO: Add DOM binding support.
-			}
+		quote_spanned! {open_span.resolved_at(Span::mixed_site())=>
+			#substrate::comment(#bump, #text)
 		}
 	}
 }
