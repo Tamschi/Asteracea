@@ -1,7 +1,7 @@
 [package]
 name = "asteracea_proc-macro-definitions"
 version = "0.0.2"
-rust-version = "1.57"
+rust-version = "1.58"
 authors = ["Tamme Schichler <tamme@schichler.dev>"]
 description = "Proc macro definitions for Asteracea. They are unlikely to work correctly unless used through the asteracea crate."
 edition = "2021"
