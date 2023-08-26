@@ -116,7 +116,7 @@ dependencies = [
  "syn 2.0.29",
  "take_mut",
  "tap",
- "unquote 0.0.6 (git+https://github.com/Tamschi/unquote.git?branch=develop)",
+ "unquote 0.0.7",
  "unzip-n",
 ]
 
@@ -411,7 +411,7 @@ dependencies = [
  "syn 1.0.101",
  "syn-mid",
  "tap",
- "unquote 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "unquote 0.0.6",
 ]
 
 [[package]]
@@ -1688,13 +1688,13 @@ dependencies = [
 
 [[package]]
 name = "unquote"
-version = "0.0.6"
-source = "git+https://github.com/Tamschi/unquote.git?branch=develop#9cfdc00b445e002f0c71fb58a5f82fcabd59ef18"
+version = "0.0.7"
+source = "git+https://github.com/Tamschi/unquote.git?branch=develop#1bde1df53ac079db879e73a3051176ae119b54a4"
 dependencies = [
- "call2-for-syn 2.0.3",
+ "call2-for-syn 3.0.4",
  "proc-macro2",
  "quote",
- "syn 1.0.101",
+ "syn 2.0.29",
 ]
 
 [[package]]
