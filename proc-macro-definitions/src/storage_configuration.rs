@@ -484,11 +484,9 @@ impl StorageTypeConfiguration {
 }
 
 fn allow_non_camel_case_types() -> Attribute {
-	let span = Span::mixed_site();
 	parse_quote_spanned!(Span::mixed_site()=> #[allow(non_camel_case_types)])
 }
 
 fn allow_non_snake_case() -> Attribute {
-	let span = Span::mixed_site();
 	parse_quote_spanned!(Span::mixed_site()=> #[allow(non_snake_case)])
 }
