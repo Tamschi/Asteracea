@@ -8,7 +8,8 @@ use crate::{
 	storage_configuration::StorageTypeConfiguration,
 	storage_context::{ParseContext, ParseWithContext, StorageContext},
 	syn_ext::{AddOptionExt, *},
-	warn, Configuration, MapMessage, Part, util::Braced,
+	util::Braced,
+	warn, Configuration, MapMessage, Part,
 };
 use call2_for_syn::call2_strict;
 use debugless_unwrap::DebuglessUnwrap as _;
@@ -676,11 +677,13 @@ impl ComponentDeclaration {
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
 			#[builder(doc)]
+			#[allow(non_snake_case)]
 			#visibility struct #new_args_name #new_args_generics #new_args_body
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
 			#[builder(doc)]
+			#[allow(non_snake_case)]
 			#visibility struct #render_args_name #render_args_generics #render_args_body
 
 			#(#struct_definition)*
@@ -746,7 +749,8 @@ impl ComponentDeclaration {
 				}
 
 				//TODO: Is it possible to call render_args_builder on the reference instead, somehow?
-				#[doc(hidden)] // This
+				#[doc(hidden)] // This is used for inference in generated code.
+				#[allow(non_snake_case)]
 				pub fn __Asteracea__ref_render_args_builder #render_args_builder_generics(&self)
 				-> #render_args_builder_name #render_args_builder_generic_args {
 					let _ = self;
