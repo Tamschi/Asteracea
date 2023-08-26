@@ -123,7 +123,6 @@ fn guesstimate_type(value: &Expr) -> Result<Type> {
 								})
 								.collect::<Result<_>>()?,
 						}),
-					    Expr::Type(type_) => break (*type_.ty).clone(),
 					    other => return Err(Error::new_spanned(other, "Could not guesstimate field type. Try a simpler expression or set the field type explicitly."))
 				    }.pipe(|box_| &**box_);
 	};

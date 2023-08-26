@@ -8,7 +8,7 @@ use crate::{
 	storage_configuration::StorageTypeConfiguration,
 	storage_context::{ParseContext, ParseWithContext, StorageContext},
 	syn_ext::{AddOptionExt, *},
-	warn, Configuration, MapMessage, Part,
+	warn, Configuration, MapMessage, Part, util::Braced,
 };
 use call2_for_syn::call2_strict;
 use debugless_unwrap::DebuglessUnwrap as _;
@@ -25,7 +25,6 @@ use syn::{
 	AttrStyle, Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent,
 	PatType, ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
 };
-use syn_mid::Block;
 use tap::Pipe as _;
 use unquote::unquote;
 
@@ -53,7 +52,7 @@ pub struct ComponentDeclaration {
 	render_paren: Paren,
 	render_args: Punctuated<Argument, Token![,]>,
 	render_type: RenderType,
-	constructor_block: Option<(kw::new, kw::with, Block)>,
+	constructor_block: Option<(kw::new, kw::with, Braced)>,
 	body: Part<ComponentRenderConfiguration>,
 	assorted_items: Vec<Item>,
 	callback_registrations: Vec<(Ident, Type)>,
@@ -402,7 +401,7 @@ impl ComponentDeclaration {
 			false,
 		);
 
-		let bump = quote_spanned! (render_paren.span.resolved_at(Span::call_site())=>
+		let bump = quote_spanned! (render_paren.span.join().resolved_at(Span::call_site())=>
 			bump
 		);
 
@@ -644,7 +643,7 @@ impl ComponentDeclaration {
 		};
 
 		let constructor_block_statements =
-			constructor_block.map(|(_new, _with, block)| block.stmts);
+			constructor_block.map(|(_new, _with, block)| block.contents);
 
 		let call_site_node = Ident::new("node", Span::call_site());
 

@@ -1,4 +1,8 @@
-use crate::{asteracea_ident, storage_context::ParseContext};
+use crate::{
+	asteracea_ident,
+	storage_context::ParseContext,
+	util::{Braced, SinglePat},
+};
 use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 use syn::{
@@ -8,7 +12,6 @@ use syn::{
 	token::Paren,
 	Error, ExprPath, Ident, LitStr, Pat, Result, Token,
 };
-use syn_mid::Block;
 use tap::Pipe as _;
 use unquote::unquote;
 
@@ -100,7 +103,7 @@ enum Handler {
 		self_: Token![self],
 		comma: Token![,],
 		event: Pat,
-		body: Block,
+		body: Braced,
 	},
 	Predefined(ExprPath),
 }
@@ -126,10 +129,11 @@ impl EventBindingDefinition {
 				let handler_name = input.parse()?;
 				let args_list;
 				let paren = parenthesized!(args_list in input);
+				let event: SinglePat;
 				unquote! {&args_list,
 					#let self_
 					#let comma
-					#let event
+					#event
 				};
 				if !args_list.is_empty() {
 					return Err(Error::new(args_list.span(), "Unexpected token"));
@@ -141,7 +145,7 @@ impl EventBindingDefinition {
 					paren,
 					self_,
 					comma,
-					event,
+					event: event.pat,
 					body,
 				}
 			} else {
@@ -240,7 +244,7 @@ impl EventBindingDefinition {
 					handler_name
 				});
 
-				let args = quote_spanned! {paren.span.resolved_at(Span::mixed_site())=>
+				let args = quote_spanned! {paren.span.join().resolved_at(Span::mixed_site())=>
 					(#self_: ::std::pin::Pin<&Self>#comma #event: ::#asteracea::lignin::web::Event)
 				};
 				quote_spanned!(fn_.span.resolved_at(Span::mixed_site())=> {

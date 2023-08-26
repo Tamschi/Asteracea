@@ -5,6 +5,7 @@ use crate::{
 	asteracea_ident,
 	part::Part,
 	storage_context::{ParseContext, ParseWithContext},
+	util::Braced,
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
@@ -16,10 +17,8 @@ use syn::{
 	spanned::Spanned,
 	token::{Brace, Eq, Paren, Question},
 	visit_mut::{visit_expr_mut, VisitMut},
-	Error, Expr, ExprPath, Ident, Label, Pat, PatIdent, PatTuple, PatTupleStruct, Result, Token,
-	Visibility,
+	Error, Expr, ExprPath, Ident, Label, Pat, PatIdent, PatTupleStruct, Result, Token, Visibility,
 };
-use syn_mid::Block;
 use tap::Pipe;
 use unquote::unquote;
 
@@ -33,7 +32,7 @@ pub enum Component<C: Configuration> {
 	},
 	Instanced {
 		open_span: Span,
-		reference: Block,
+		reference: Braced,
 		render_params: Vec<Parameter<Token![.]>>,
 		content_children: Vec<ContentChild<C>>,
 	},
@@ -46,11 +45,12 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 		unquote!(input, #'open_span <*);
 
 		if input.peek(Brace) {
-			let mut reference: Block;
+			let mut reference: Braced;
 			unquote!(input, #reference);
 
 			// Suppress warning.
-			reference.brace_token.span = reference.brace_token.span.resolved_at(Span::mixed_site());
+			let dummy: Braced = parse_quote_spanned!(reference.brace_token.span.join().resolved_at(Span::mixed_site())=> {});
+			reference.brace_token.span = dummy.brace_token.span;
 
 			let mut render_params = vec![];
 			while input.peek(Token![.]) && !input.peek(Token![..]) {
@@ -102,9 +102,9 @@ impl<C: Configuration> ParseWithContext for Component<C> {
 					.parse::<Visibility>()
 					.expect("Visibility parsing should always succeed.")
 				{
-					visibility @ Visibility::Public(_)
-					| visibility @ Visibility::Crate(_)
-					| visibility @ Visibility::Restricted(_) => (input.parse()?, visibility),
+					visibility @ Visibility::Public(_) | visibility @ Visibility::Restricted(_) => {
+						(input.parse()?, visibility)
+					}
 					Visibility::Inherited => (
 						cx.storage_context.next_field(open_span),
 						Visibility::Inherited,
@@ -234,7 +234,7 @@ let render_call= {
 				content_children,
 			} => {
 				let asteracea = asteracea_ident(*open_span);
-				let binding = quote_spanned!(reference.brace_token.span.resolved_at(Span::mixed_site())=> let reference: ::std::pin::Pin<&_> = #reference;);
+				let binding = quote_spanned!(reference.brace_token.span.join().resolved_at(Span::mixed_site())=> let reference: ::std::pin::Pin<&_> = #reference;);
 				let bump = quote_spanned!(*open_span=> bump);
 				let render_params = parameter_struct_expression(
 					Some(cx),
@@ -280,7 +280,7 @@ pub struct Parameter<P> {
 	ident: Ident,
 	question: Option<Question>,
 	eq: Eq,
-	value: Block,
+	value: Braced,
 }
 
 impl<P: Parse> Parse for Parameter<P> {
@@ -304,8 +304,8 @@ impl<P: Parse> Parse for Parameter<P> {
 
 impl<P: Spanned> ToTokens for Parameter<P> {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
-		let value_stmts = &self.value.stmts;
-		let value = quote_spanned! (self.value.brace_token.span.resolved_at(Span::mixed_site())=> {#value_stmts});
+		let value_stmts = &self.value.contents;
+		let value = quote_spanned! (self.value.brace_token.span.join().resolved_at(Span::mixed_site())=> {#value_stmts});
 		match self.question {
 			Some(_) => todo!("Conditional component parameters."),
 			None => {
@@ -338,9 +338,9 @@ fn parameter_struct_expression<C: Configuration, P: Spanned>(
 				     eq: _,
 				     value,
 				 }| {
-					let stmts = &value.stmts;
+					let stmts = &value.contents;
 					// Suppress unneeded-braces warning:
-					let value = quote_spanned! {value.brace_token.span.resolved_at(Span::mixed_site())=>
+					let value = quote_spanned! {value.brace_token.span.join().resolved_at(Span::mixed_site())=>
 						{#stmts}
 					};
 					quote_spanned! {punct.span()=>
@@ -373,9 +373,9 @@ fn parameter_struct_expression<C: Configuration, P: Spanned>(
 		};
 
 		for parameter in parameters.iter() {
-			let stmts = &parameter.value.stmts;
+			let stmts = &parameter.value.contents;
 			// Suppress unneeded-braces warning.
-			let value = quote_spanned! {parameter.value.brace_token.span.resolved_at(Span::mixed_site())=> {#stmts}};
+			let value = quote_spanned! {parameter.value.brace_token.span.join().resolved_at(Span::mixed_site())=> {#stmts}};
 			if parameter.question.is_some() {
 				deferred_names.insert(parameter.ident.to_string());
 			}
@@ -438,24 +438,22 @@ fn parameter_struct_expression<C: Configuration, P: Spanned>(
 							previous.pattern_content.clone().chain(iter::once((
 								Pat::TupleStruct(PatTupleStruct {
 									attrs: vec![],
+									qself: None,
 									path: parse2(
 										quote_spanned!(deferred.name.span().resolved_at(Span::mixed_site())=> Some),
 									)
 									.expect("conditional parameter Some"),
-									pat: PatTuple {
+									paren_token: Paren(
+										deferred.name.span().resolved_at(Span::mixed_site()),
+									),
+									elems: iter::once(Pat::Ident(PatIdent {
 										attrs: vec![],
-										paren_token: Paren(
-											deferred.name.span().resolved_at(Span::mixed_site()),
-										),
-										elems: iter::once(Pat::Ident(PatIdent {
-											attrs: vec![],
-											by_ref: None,
-											mutability: None,
-											ident: deferred.deferred.clone(),
-											subpat: None,
-										}))
-										.collect(),
-									},
+										by_ref: None,
+										mutability: None,
+										ident: deferred.deferred.clone(),
+										subpat: None,
+									}))
+									.collect(),
 								}),
 								Token![,](deferred.name.span()),
 							))),

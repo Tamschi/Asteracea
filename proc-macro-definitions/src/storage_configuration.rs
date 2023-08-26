@@ -3,14 +3,14 @@ use quote::{quote_spanned, ToTokens};
 use std::iter;
 use syn::{
 	parse::{Parse, ParseStream},
-	parse2,
+	parse2, parse_quote_spanned,
 	punctuated::{Pair, Punctuated},
 	spanned::Spanned,
-	token::{Brace, Bracket},
-	AngleBracketedGenericArguments, AttrStyle, Attribute, Error, ExprPath, Fields, FieldsNamed,
-	GenericArgument, GenericParam, Generics, Ident, ImplItem, ImplItemMethod, Item, ItemImpl,
-	ItemStruct, LifetimeDef, Path, PathArguments, PathSegment, Result, Token, TypeParam, TypePath,
-	Visibility, WhereClause,
+	token::Brace,
+	AngleBracketedGenericArguments, Attribute, Error, ExprPath, Fields, FieldsNamed,
+	GenericArgument, GenericParam, Generics, Ident, ImplItem, ImplItemFn, Item, ItemImpl,
+	ItemStruct, LifetimeParam, Path, PathArguments, PathSegment, Result, Token, TypeParam,
+	TypePath, Visibility, WhereClause,
 };
 use tap::Pipe as _;
 use unquote::unquote;
@@ -130,13 +130,13 @@ fn generic_arguments_to_generic_params(
 		.map(|pair| {
 			Ok(Pair::new(
 				match pair.value() {
-					syn::GenericArgument::Lifetime(l) => GenericParam::Lifetime(LifetimeDef {
+					GenericArgument::Lifetime(l) => GenericParam::Lifetime(LifetimeParam {
 						attrs: vec![],
 						lifetime: l.clone(),
 						colon_token: None,
 						bounds: Punctuated::default(),
 					}),
-					syn::GenericArgument::Type(t) => GenericParam::Type(TypeParam {
+					GenericArgument::Type(t) => GenericParam::Type(TypeParam {
 						attrs: vec![],
 						ident: parse2(t.to_token_stream())?,
 						colon_token: None,
@@ -144,15 +144,19 @@ fn generic_arguments_to_generic_params(
 						eq_token: None,
 						default: None,
 					}),
-					syn::GenericArgument::Binding(_) => {
-						todo!("storage configuration generic binding")
+					GenericArgument::AssocConst(_) => {
+						todo!("storage configuration generic associated const")
 					}
-					syn::GenericArgument::Constraint(_) => {
+					GenericArgument::AssocType(_) => {
+						todo!("storage configuration generic associated type")
+					}
+					GenericArgument::Constraint(_) => {
 						todo!("storage configuration generic constraint")
 					}
-					syn::GenericArgument::Const(_) => {
+					GenericArgument::Const(_) => {
 						todo!("storage configuration generic const")
 					}
+					_ => unimplemented!("storage configuration generic unaccounted"),
 				},
 				pair.punct().cloned().cloned(),
 			))
@@ -169,7 +173,7 @@ fn generic_arguments(generics: &Generics) -> Result<Punctuated<GenericArgument, 
 		.map(|pair| {
 			Pair::new(
 				match pair.value() {
-					GenericParam::Lifetime(LifetimeDef { attrs, .. })
+					GenericParam::Lifetime(LifetimeParam { attrs, .. })
 					| GenericParam::Const(ConstParam { attrs, .. })
 					| GenericParam::Type(TypeParam { attrs, .. })
 						if !attrs.is_empty() =>
@@ -184,7 +188,7 @@ fn generic_arguments(generics: &Generics) -> Result<Punctuated<GenericArgument, 
 						qself: None,
 						path: ident.clone().into(),
 					})),
-					GenericParam::Lifetime(LifetimeDef { lifetime, .. }) => {
+					GenericParam::Lifetime(LifetimeParam { lifetime, .. }) => {
 						GenericArgument::Lifetime(lifetime.clone())
 					}
 				},
@@ -370,7 +374,7 @@ impl StorageTypeConfiguration {
 				let f_name = &f.name;
 				let f_type = &f.field_type;
 				let fn_name = Ident::new(&format!("{}_pinned", &f_name), span);
-				parse2::<ImplItemMethod>(quote_spanned! {span=>
+				parse2::<ImplItemFn>(quote_spanned! {span=>
 					#[allow(non_snake_case)] // It's fine to allow this generally, since custom names will still generate a warning elsewhere.
 					#[allow(dead_code)] // This is largely an implementation detail. FIXME: It found be much better to get this warning on `.render(…)`.
 					#f_visibility fn #fn_name(self: ::std::pin::Pin<&Self>) -> ::std::pin::Pin<&#f_type> {
@@ -379,7 +383,7 @@ impl StorageTypeConfiguration {
 				})
 				.expect("structural pinning method")
 			})
-			.map(ImplItem::Method)
+			.map(ImplItem::Fn)
 			.collect();
 
 		let assert_not_unpin = !structural_pinning_fns.is_empty();
@@ -481,22 +485,10 @@ impl StorageTypeConfiguration {
 
 fn allow_non_camel_case_types() -> Attribute {
 	let span = Span::mixed_site();
-	Attribute {
-		pound_token: Token![#](span),
-		style: AttrStyle::Outer,
-		bracket_token: Bracket(span),
-		path: Ident::new("allow", span).into(),
-		tokens: quote_spanned! (span=> (non_camel_case_types)),
-	}
+	parse_quote_spanned!(Span::mixed_site()=> #[allow(non_camel_case_types)])
 }
 
 fn allow_non_snake_case() -> Attribute {
 	let span = Span::mixed_site();
-	Attribute {
-		pound_token: Token![#](span),
-		style: AttrStyle::Outer,
-		bracket_token: Bracket(span),
-		path: Ident::new("allow", span).into(),
-		tokens: quote_spanned! (span=> (non_snake_case)),
-	}
+	parse_quote_spanned!(Span::mixed_site()=> #[allow(non_snake_case)])
 }
