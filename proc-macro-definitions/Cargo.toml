@@ -26,7 +26,7 @@ publish = false
 proc-macro = true
 
 [dependencies]
-call2-for-syn = "2.0.3"
+call2-for-syn = "3.0.4"
 debugless-unwrap = "0.0.4"
 heck = "0.3.1"
 lazy_static = "1.4.0"
