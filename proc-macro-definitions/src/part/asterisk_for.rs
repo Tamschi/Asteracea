@@ -4,6 +4,7 @@ use crate::{
 	part::LetSelf,
 	storage_configuration::{StorageConfiguration, StorageTypeConfiguration},
 	storage_context::{ParseContext, ParseWithContext},
+	util::SinglePat,
 	workaround_module::Configuration,
 };
 use call2_for_syn::call2_strict;
@@ -39,14 +40,16 @@ impl<C: Configuration> ParseWithContext for AsteriskFor<C> {
 	fn parse_with_context(input: ParseStream<'_>, cx: &mut ParseContext) -> Result<Self::Output> {
 		let storage_configuration: StorageConfiguration;
 		let for_: Token![for];
+		let single_pat: SinglePat;
 		unquote! {input,
 			#let asterisk
 			#let label
 			#for_
 			#storage_configuration
-			#let pat
+			#single_pat
 			#let in_
 		};
+		let pat = single_pat.pat;
 
 		let iterable = Expr::parse_without_eager_brace(input)?;
 
