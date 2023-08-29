@@ -45,7 +45,6 @@ impl AttributeKey {
 		let substrate = cx.substrate;
 		match self {
 			AttributeKey::Known(name) => {
-				let asteracea = asteracea_ident(name.span());
 				quote_spanned! {name.span().resolved_at(Span::mixed_site())=>
 					<dyn #substrate::schema::attributes::#name>::NAME
 				}

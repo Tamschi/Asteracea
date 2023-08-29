@@ -106,7 +106,7 @@ fn transform_type_param_bounds<'a>(
 				)
 			}
 			TypeParamBound::Lifetime(l) => transform_lifetime(l, lifetime, adjust_lifetimes),
-			b @ TypeParamBound::Verbatim(_) => {
+			_b @ TypeParamBound::Verbatim(_) => {
 				todo!("transform_type_param_bounds: TypeParamBound::Verbatim")
 			}
 			_ => unimplemented!("transform_type_param_bounds: _"),

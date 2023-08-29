@@ -1,4 +1,5 @@
 #![allow(dead_code)] //TODO: Test output.
+#![allow(unused_braces)]
 
 use asteracea::substrates::web as substrate;
 
