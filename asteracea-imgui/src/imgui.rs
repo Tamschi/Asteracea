@@ -17,8 +17,7 @@ impl<'a> Target<'a> {
 		self,
 		f: impl FnOnce() -> Result<T, Escalation>,
 	) -> Result<&'a T, Escalation> {
-		assert_eq!(size_of::<T>(), 0);
-		Ok(&*Box::leak(Box::new(f()?)))
+		self.bump.alloc_try_with(f).map(|v| &*v)
 	}
 }
 
