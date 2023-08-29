@@ -24,13 +24,14 @@ use self::{
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
+	util::{Braced, SinglePat},
 	BumpFormat, Configuration,
 };
 use core::result::Result as coreResult;
 use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapErr as _};
 use event_binding::EventBindingDefinition;
 use proc_macro2::{Span, TokenStream, TokenTree};
-use quote::quote_spanned;
+use quote::{quote_spanned, ToTokens};
 use syn::{
 	braced, bracketed,
 	parse::{Parse, ParseStream, Result},
@@ -38,7 +39,6 @@ use syn::{
 	token::{Brace, Bracket},
 	Attribute, Error, Expr, Ident, Label, LitStr, Pat, Path, Token,
 };
-use syn_mid::Block;
 use tap::Pipe as _;
 use unquote::unquote;
 
@@ -68,7 +68,7 @@ pub(crate) enum Part<C: Configuration> {
 	Match(
 		InitMode,
 		Token![match],
-		Box<Block>,
+		Box<Braced>,
 		Bracket,
 		Vec<(
 			Vec<Attribute>,
@@ -80,7 +80,7 @@ pub(crate) enum Part<C: Configuration> {
 	),
 	Multi(Bracket, Vec<Part<C>>),
 	Text(LitStr),
-	With(kw::with, Block, Option<Box<Part<C>>>),
+	With(kw::with, Braced, Option<Box<Part<C>>>),
 }
 
 #[derive(PartialEq, Eq)]
@@ -274,8 +274,9 @@ impl<C: Configuration> ParseWithContext for Part<C> {
 						let mut pats = vec![];
 						#[allow(clippy::blocks_in_if_conditions)]
 						while {
-							unquote!(input, #let maybe_pipe #let pat);
-							pats.push((maybe_pipe, pat));
+							let single_pat: SinglePat;
+							unquote!(input, #let maybe_pipe #single_pat);
+							pats.push((maybe_pipe, single_pat.pat));
 							input.peek(Token![|])
 						} {}
 						pats
@@ -438,15 +439,17 @@ impl<C: Configuration> Part<C> {
 			Part::RustBlock(brace, statements) => {
 				// Why not just parentheses? Because those could be turned into a tuple.
 				// Making each of these a full Rust block is a bit strange too, but likely the lesser issue.
-				quote_spanned!(brace.span.resolved_at(Span::mixed_site())=> { #statements })
+				let mut tokens = TokenStream::new();
+				brace.surround(&mut tokens, |tokens| statements.to_tokens(tokens));
+				tokens
 			}
 			Part::Multi(bracket, m) => {
-				let asteracea = asteracea_ident(bracket.span);
+				let asteracea = asteracea_ident(bracket.span.join());
 				let m = m
 					.iter()
 					.map(|part| part.part_tokens(cx))
 					.collect::<coreResult<Vec<_>, _>>()?;
-				let bump = Ident::new("bump", bracket.span.resolved_at(Span::call_site()));
+				let bump = Ident::new("bump", bracket.span.join().resolved_at(Span::call_site()));
 				quote_spanned! {bracket.span=>
 					#substrate::multi(&*#bump.alloc_try_with(
 						|| -> ::std::result::Result::<_, ::#asteracea::error::Escalation> { ::std::result::Result::Ok([
@@ -460,7 +463,7 @@ impl<C: Configuration> Part<C> {
 			Part::EventBinding(definition) => definition.part_tokens(),
 			Part::With(with, block, part) => {
 				let isolate = quote_spanned!(with.span=> {});
-				let statements = &block.stmts;
+				let statements = &block.contents;
 				let part_tokens = part.as_ref().map(|part| part.part_tokens(cx)).transpose()?;
 				quote_spanned!(block.brace_token.span=> {
 					#statements

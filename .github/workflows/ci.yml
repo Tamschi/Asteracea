@@ -62,7 +62,7 @@ jobs:
     strategy:
       matrix:
         os: [macos, ubuntu, windows]
-        rust: ['1.57', stable, beta, nightly]
+        rust: ['1.58', stable, beta, nightly]
     env:
       target: ${{matrix.target && format('--target={0}', matrix.target)}}
       workspace: ${{matrix.no-workspace || '--workspace'}}

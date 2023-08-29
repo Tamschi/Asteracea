@@ -116,11 +116,14 @@ impl<P: Default + Clone> AddExt for Punctuated<GenericArgument, P> {
 						(_, GenericArgument::Lifetime(_)) => false,
 						(GenericArgument::Type(_), _) => true,
 						(_, GenericArgument::Type(_)) => false,
-						(GenericArgument::Binding(_), _) => true,
-						(_, GenericArgument::Binding(_)) => false,
+						(GenericArgument::AssocType(_), _) => true,
+						(_, GenericArgument::AssocType(_)) => false,
+						(GenericArgument::AssocConst(_), _) => true,
+						(_, GenericArgument::AssocConst(_)) => false,
 						(GenericArgument::Constraint(_), _) => true,
 						(_, GenericArgument::Constraint(_)) => false,
 						(GenericArgument::Const(_), GenericArgument::Const(_)) => true,
+						_ => unimplemented!("AddExt for Punctuated: unknown GenericArgument"),
 					}
 				})
 				.cloned()

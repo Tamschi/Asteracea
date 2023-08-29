@@ -23,7 +23,7 @@ mod part;
 mod storage_configuration;
 mod storage_context;
 mod syn_ext;
-mod try_parse;
+mod util;
 
 use self::{
 	component_declaration::ComponentDeclaration,

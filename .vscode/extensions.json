@@ -1,6 +1,6 @@
 {
 	"recommendations": [
-		"bungcip.better-toml",
+		"tamasfe.even-better-toml",
 		"serayuzgur.crates",
 		"editorconfig.editorconfig",
 		"rust-lang.rust-analyzer",

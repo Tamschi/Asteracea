@@ -2,6 +2,7 @@ use super::{GenerateContext, Part, PartKind};
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
+	util::Braced,
 	Configuration,
 };
 use either::Either;
@@ -9,11 +10,11 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 use syn::{
 	parse::{Parse, ParseStream, Result},
+	parse_quote_spanned,
 	spanned::Spanned,
 	token::{Brace, Question},
 	Error, Ident, LitStr, Token,
 };
-use syn_mid::Block;
 use unquote::unquote;
 
 mod kw {
@@ -31,7 +32,7 @@ enum AttributeDefinition {
 		Token![=],
 		AttributeValue,
 	),
-	RustBlock(Token![.], Block),
+	RustBlock(Token![.], Braced),
 }
 
 enum AttributeKey {
@@ -71,7 +72,7 @@ impl Parse for AttributeKey {
 
 enum AttributeValue {
 	Literal(LitStr),
-	Blocked(Block),
+	Blocked(Braced),
 }
 
 impl ToTokens for AttributeValue {
@@ -98,7 +99,7 @@ impl Parse for AttributeValue {
 	}
 }
 
-//TODO: Add a Dynamic(Block) variant.
+//TODO: Add a Dynamic(Braced) variant.
 enum ElementName {
 	Custom(LitStr),
 	Known(Ident, Option<Ident>),
@@ -153,8 +154,9 @@ impl<C: Configuration> ParseWithContext for HtmlDefinition<C> {
 					}
 					AttributeDefinition::Assignment(dot, key, question, eq, value)
 				} else if input.peek(Brace) {
-					let mut block: Block = input.parse()?;
-					block.brace_token.span = block.brace_token.span.resolved_at(Span::mixed_site());
+					let mut block: Braced = input.parse()?;
+					let dummy: Braced = parse_quote_spanned!(block.brace_token.span.join().resolved_at(Span::mixed_site())=> {});
+					block.brace_token.span = dummy.brace_token.span;
 					AttributeDefinition::RustBlock(dot, block)
 				} else {
 					return Err(Error::new(
@@ -269,8 +271,8 @@ impl<C: Configuration> HtmlDefinition<C> {
 							let value = match value {
 								AttributeValue::Literal(l) => quote_spanned! (l.span()=> l),
 								AttributeValue::Blocked(b) => {
-									let stmts = &b.stmts;
-									quote_spanned! {b.brace_token.span.resolved_at(Span::mixed_site())=>
+									let stmts = &b.contents;
+									quote_spanned! {b.brace_token.span.join().resolved_at(Span::mixed_site())=>
 										#asteracea::ConditionalAttributeValue::into_str_option({ #stmts })
 									}
 								}

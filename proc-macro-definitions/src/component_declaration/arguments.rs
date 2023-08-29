@@ -12,6 +12,7 @@ use unquote::unquote;
 use crate::{
 	asteracea_ident,
 	storage_context::{ParseContext, ParseWithContext},
+	util::SinglePat,
 };
 
 pub struct ConstructorArgument {
@@ -58,11 +59,12 @@ pub struct Argument {
 
 impl Parse for ConstructorArgument {
 	fn parse(input: ParseStream) -> Result<Self> {
+		let single_pat: SinglePat;
 		unquote!(input,
 			#do let Attributes::parse_outer => attrs
 			#let capture
 			#let injection_dyn
-			#let pat
+			#single_pat
 			#let question
 			#let colon_token
 			#let ty
@@ -74,7 +76,7 @@ impl Parse for ConstructorArgument {
 			argument: Argument {
 				fn_arg: PatType {
 					attrs: attrs.into_inner(),
-					pat,
+					pat: single_pat.pat.into(),
 					colon_token,
 					ty,
 				},
@@ -117,8 +119,9 @@ impl ParseWithContext for Argument {
 				default: None,
 			}
 		} else {
+			let single_pat: SinglePat;
 			unquote!(input,
-				#let pat
+				#single_pat
 				#let question
 				#let colon_token
 				#let ty
@@ -127,7 +130,7 @@ impl ParseWithContext for Argument {
 			Self {
 				fn_arg: PatType {
 					attrs: attrs.into_inner(),
-					pat,
+					pat: single_pat.pat.into(),
 					colon_token,
 					ty,
 				},

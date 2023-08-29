@@ -8,8 +8,8 @@ use syn::{
 	punctuated::Punctuated,
 	spanned::Spanned as _,
 	token::{Brace, Paren},
-	AngleBracketedGenericArguments, Attribute, Binding, Constraint, Expr, Field, FieldsNamed,
-	GenericArgument, GenericParam, Generics, Ident, Lifetime, LifetimeDef,
+	AngleBracketedGenericArguments, AssocType, Attribute, Constraint, Expr, Field, FieldMutability,
+	FieldsNamed, GenericArgument, GenericParam, Generics, Ident, Lifetime, LifetimeParam,
 	ParenthesizedGenericArguments, Path, PathArguments, PathSegment, ReturnType, Token, TraitBound,
 	Type, TypeArray, TypeGroup, TypeParam, TypeParamBound, TypeParen, TypePath, TypeReference,
 	TypeSlice, TypeTraitObject, TypeTuple, Visibility,
@@ -44,7 +44,7 @@ fn transform_path_segments<'a>(
 							}
 						}
 						GenericArgument::Type(ty)
-						| GenericArgument::Binding(Binding { ty, .. }) => {
+						| GenericArgument::AssocType(AssocType { ty, .. }) => {
 							transform_type(ty, lifetime, impl_generics, adjust_lifetimes)
 						}
 						GenericArgument::Constraint(Constraint { bounds, .. }) => {
@@ -55,9 +55,10 @@ fn transform_path_segments<'a>(
 								adjust_lifetimes,
 							)
 						}
-						GenericArgument::Const(_) => (
+						GenericArgument::Const(_) | GenericArgument::AssocConst(_) => (
 							// Do nothing and hope for the best.
 						),
+						_ => unimplemented!("transform_path_segments: other GenericArgument"),
 					}
 				}
 			}
@@ -92,8 +93,8 @@ fn transform_type_param_bounds<'a>(
 			}) => {
 				if let Some(l) = lifetimes.as_mut() {
 					for l in l.lifetimes.iter_mut() {
-						for l in l.bounds.iter_mut() {
-							transform_lifetime(l, lifetime, adjust_lifetimes)
+						if let GenericParam::Lifetime(l) = l {
+							transform_lifetime(&mut l.lifetime, lifetime, adjust_lifetimes)
 						}
 					}
 				};
@@ -105,6 +106,10 @@ fn transform_type_param_bounds<'a>(
 				)
 			}
 			TypeParamBound::Lifetime(l) => transform_lifetime(l, lifetime, adjust_lifetimes),
+			b @ TypeParamBound::Verbatim(_) => {
+				todo!("transform_type_param_bounds: TypeParamBound::Verbatim")
+			}
+			_ => unimplemented!("transform_type_param_bounds: _"),
 		}
 	}
 }
@@ -245,7 +250,7 @@ pub struct ParameterHelperDefinitions {
 	pub for_builder_function_return: AngleBracketedGenericArguments,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct CustomArgument<'a> {
 	pub attrs: &'a [Attribute],
 	pub ident: &'a Ident,
@@ -297,6 +302,8 @@ impl ParameterHelperDefinitions {
 								.filter(|type_param_bounds| match type_param_bounds {
 									TypeParamBound::Trait(_) => true,
 									TypeParamBound::Lifetime(lifetime) => lifetime.ident != "_",
+									TypeParamBound::Verbatim(_) => true,
+									_ => true, // Hopefully correct.
 								})
 								.cloned()
 								.collect()
@@ -343,7 +350,7 @@ impl ParameterHelperDefinitions {
 					.chain(basic_function_generics.params.iter())
 					.filter_map(|param| match param {
 						GenericParam::Type(ty_param) => Some(ty_param.ident.to_type()),
-						GenericParam::Lifetime(LifetimeDef { lifetime, .. }) => {
+						GenericParam::Lifetime(LifetimeParam { lifetime, .. }) => {
 							Some(parse_quote!(&#lifetime()))
 						}
 						GenericParam::Const(_) => None, // Hopefully fine?
@@ -409,6 +416,7 @@ impl ParameterHelperDefinitions {
 								.chain(attrs.iter().cloned())
 								.collect(),
 								vis: Visibility::Inherited,
+								mutability: FieldMutability::None,
 								ident: Some(ident.clone()),
 								colon_token: Some(<Token![:]>::default()),
 								ty,
@@ -418,6 +426,7 @@ impl ParameterHelperDefinitions {
 					.chain(iter::once(Field {
 						attrs: vec![parse_quote!(#[builder(default, setter(skip))])],
 						vis: Visibility::Inherited,
+						mutability: FieldMutability::None,
 						ident: parse_quote!(__Asteracea__phantom),
 						colon_token: Some(<Token![:]>::default()),
 						ty: parse_quote!(::std::marker::PhantomData #phantom_args),

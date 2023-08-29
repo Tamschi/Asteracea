@@ -8,6 +8,7 @@ use crate::{
 	storage_configuration::StorageTypeConfiguration,
 	storage_context::{ParseContext, ParseWithContext, StorageContext},
 	syn_ext::{AddOptionExt, *},
+	util::Braced,
 	warn, Configuration, MapMessage, Part,
 };
 use call2_for_syn::call2_strict;
@@ -25,7 +26,6 @@ use syn::{
 	AttrStyle, Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent,
 	PatType, Path, Token, Type, Visibility, WhereClause, WherePredicate,
 };
-use syn_mid::Block;
 use unquote::unquote;
 
 mod arguments;
@@ -52,7 +52,7 @@ pub struct ComponentDeclaration {
 	render_generics: Generics,
 	render_paren: Paren,
 	render_args: Punctuated<Argument, Token![,]>,
-	constructor_block: Option<(kw::new, kw::with, Block)>,
+	constructor_block: Option<(kw::new, kw::with, Braced)>,
 	body: Part<ComponentRenderConfiguration>,
 	assorted_items: Vec<Item>,
 	callback_registrations: Vec<(Ident, Type)>,
@@ -390,7 +390,7 @@ impl ComponentDeclaration {
 			false,
 		);
 
-		let bump = quote_spanned! (render_paren.span.resolved_at(Span::call_site())=>
+		let bump = quote_spanned! (render_paren.span.join().resolved_at(Span::call_site())=>
 			bump
 		);
 
@@ -567,7 +567,7 @@ impl ComponentDeclaration {
 		let render_self: Token![self] = parse2(quote_spanned!(render_paren.span=> self)).unwrap();
 
 		let constructor_block_statements =
-			constructor_block.map(|(_new, _with, block)| block.stmts);
+			constructor_block.map(|(_new, _with, block)| block.contents);
 
 		let call_site_node = Ident::new("node", Span::call_site());
 
@@ -600,11 +600,13 @@ impl ComponentDeclaration {
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
 			#[builder(doc)]
+			#[allow(non_snake_case)]
 			#visibility struct #new_args_name #new_args_generics #new_args_body
 
 			//TODO: Doc comment referring to associated type.
 			#[derive(#asteracea::__::typed_builder::TypedBuilder)]
 			#[builder(doc)]
+			#[allow(non_snake_case)]
 			#visibility struct #render_args_name #render_args_generics #render_args_body
 
 			#(#struct_definition)*
@@ -670,7 +672,8 @@ impl ComponentDeclaration {
 				}
 
 				//TODO: Is it possible to call render_args_builder on the reference instead, somehow?
-				#[doc(hidden)] // This
+				#[doc(hidden)] // This is used for inference in generated code.
+				#[allow(non_snake_case)]
 				pub fn __Asteracea__ref_render_args_builder #render_args_builder_generics(&self)
 				-> #render_args_builder_name #render_args_builder_generic_args {
 					let _ = self;

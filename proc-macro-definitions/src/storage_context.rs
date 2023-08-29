@@ -9,8 +9,8 @@ use syn::{
 	parse::ParseStream,
 	punctuated::{Pair, Punctuated},
 	spanned::Spanned,
-	ExprPath, Field, GenericParam, Generics, Ident, Item, LifetimeDef, Path, Result, Token, Type,
-	TypeParam, Visibility,
+	ExprPath, Field, FieldMutability, GenericParam, Generics, Ident, Item, LifetimeParam, Path,
+	Result, Token, Type, TypeParam, Visibility,
 };
 
 pub struct ParseContext<'a> {
@@ -153,6 +153,7 @@ impl StorageContext {
 			.map(|f| Field {
 				attrs: f.attributes.clone(),
 				vis: f.visibility.clone(),
+				mutability: FieldMutability::None,
 				ident: Some(f.name.clone()),
 				colon_token: Some(Token![:](f.name.span())),
 				ty: f.field_type.clone(),
@@ -166,6 +167,7 @@ impl StorageContext {
 			fields.push(Field {
 				attrs: vec![],
 				vis: Visibility::Inherited,
+				mutability: FieldMutability::None,
 				ident: Some(Ident::new("__Asteracea__phantom", phantom_span)),
 				colon_token: Some(Token![:](phantom_span)),
 				ty: Type::Verbatim(
@@ -177,6 +179,7 @@ impl StorageContext {
 			fields.push(Field {
 				attrs: vec![],
 				vis: Visibility::Inherited,
+				mutability: FieldMutability::None,
 				ident: Some(Ident::new("__Asteracea__pinned", phantom_span)),
 				colon_token: Some(Token![:](phantom_span)),
 				ty: Type::Verbatim(quote_spanned!(phantom_span=> ::std::marker::PhantomPinned)),
@@ -210,7 +213,7 @@ fn strip_params(
 						eq_token: None,
 						default: None,
 					}),
-					GenericParam::Lifetime(l) => GenericParam::Lifetime(LifetimeDef {
+					GenericParam::Lifetime(l) => GenericParam::Lifetime(LifetimeParam {
 						attrs: vec![],
 						lifetime: l.lifetime.clone(),
 						colon_token: None,
