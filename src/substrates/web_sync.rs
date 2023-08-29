@@ -3,9 +3,10 @@ use lignin::{Attribute, Element, ElementCreationOptions, EventBinding, ThreadSaf
 
 pub use lignin_schema::html as schema;
 
+pub type Target<'a> = &'a Bump;
 pub type VdomNode<'a> = lignin::Node<'a, ThreadSafe>;
 
-pub fn text<'a>(text: &'a str) -> VdomNode<'a> {
+pub fn text<'a>(target: Target<'a>, text: &'a str) -> VdomNode<'a> {
 	VdomNode::Text {
 		text,
 		dom_binding: None, //TODO: Add text dom binding support.

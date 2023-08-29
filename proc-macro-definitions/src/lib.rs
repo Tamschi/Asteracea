@@ -95,8 +95,9 @@ impl BumpFormat {
 		let bump = Ident::new("bump", bump_span.resolved_at(Span::call_site()));
 		output.extend(
 			quote_spanned! {input.span().resolved_at(Span::mixed_site())=>
-				#substrate::text(
-					#asteracea::bumpalo::format!(in #bump, #input).into_bump_str(),
+				#substrate::format_text!(
+					#bump,
+					#input,
 				)
 			},
 		);

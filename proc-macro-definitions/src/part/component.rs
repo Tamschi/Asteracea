@@ -212,16 +212,8 @@ let render_call= {
 	)?;
 	quote_spanned!(*open_span=> .render(bump, #render_params)?)
 };
-
-				let asteracea = asteracea_ident(Span::mixed_site());
 				let mut expr = parse2(quote!({
-					let rendered = #capture #render_call;
-
-					{
-						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
-						#[allow(deprecated)]
-						rendered.deanonymize()
-					}
+					#capture #render_call
 				}))
 				.expect("Component::Instantiated");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
@@ -247,13 +239,7 @@ let render_call= {
 				)?;
 				let mut expr = parse2(quote_spanned!(open_span.resolved_at(Span::mixed_site())=> {
 					#binding
-					let rendered = reference.render(#bump, #render_params)?;
-
-					{
-						use ::#asteracea::lignin::auto_safety::{AutoSafe as _, Deanonymize as _};
-						#[allow(deprecated)]
-						rendered.deanonymize()
-					}
+					reference.render(#bump, #render_params)?
 				}))
 				.expect("Component::part_tokens Instanced expr");
 				visit_expr_mut(&mut SelfMassager, &mut expr);
@@ -549,12 +535,13 @@ impl<C: Configuration> ContentChild<C> {
 		let part = self.part.part_tokens(cx)?;
 
 		let bump = Ident::new("bump", span.resolved_at(Span::call_site()));
+		let substrate = cx.substrate;
 		let bump_time = quote_spanned!(bump.span()=> 'bump);
 		let part = match &self.part {
 			Part::Async(_) => part,
 			_ => quote_spanned! {span=>
 				::std::boxed::Box::new(
-					|#bump: &#bump_time ::#asteracea::bumpalo::Bump| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
+					|#bump: #substrate::Target::<#bump_time>| -> ::std::result::Result<_, ::#asteracea::error::Escalation> {
 						::core::result::Result::Ok(#part)
 					}
 				)

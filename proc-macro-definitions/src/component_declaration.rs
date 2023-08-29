@@ -649,7 +649,7 @@ impl ComponentDeclaration {
 				#(#render_attributes)*
 				pub fn #render #render_generics(
 					#render_self: ::std::pin::Pin<&'a Self>,
-					#bump: &'bump #asteracea::bumpalo::Bump,
+					#bump: #substrate::Target<'bump>,
 					args: #render_args_name #render_args_generic_args,
 				) -> ::core::result::Result<#substrate::VdomNode<'bump>, ::#asteracea::error::Escalation> {
 					// Tracing's `#[instrument]` macro is slightly unwieldy in terms of compilation.

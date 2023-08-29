@@ -1,6 +1,7 @@
 //! GTK4 substrate, using the [`gtk4`] crate.
 #![allow(missing_docs)] //TODO
 
+pub type Target<'a> = &'a Bump;
 use bumpalo::Bump;
 
 use self::__::{Attribute, AttributeName, AttributeValue, Element, ElementName};

@@ -388,8 +388,9 @@ impl<C: Configuration> Part<C> {
 			Part::Defer(defer) => defer.part_tokens(cx)?,
 			Part::For(for_) => for_.part_tokens(cx)?,
 			Part::Text(lit_str) => {
+				let bump = Ident::new("bump", lit_str.span().resolved_at(Span::call_site()));
 				quote_spanned! {lit_str.span().resolved_at(Span::mixed_site())=>
-					#substrate::text(#lit_str)
+					#substrate::text(#bump, #lit_str)
 				}
 			}
 			Part::Html(html_definition) => html_definition.part_tokens(cx)?,
