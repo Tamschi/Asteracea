@@ -11,7 +11,7 @@ use asteracea_imgui::{
 static CHOICES: [&str; 2] = ["test test this is 1", "test test this is 2"];
 
 asteracea::component! { imgui =>
-	pub HellowWorld(
+	pub HelloWorld(
 		value: usize = 0,
 	)()
 
