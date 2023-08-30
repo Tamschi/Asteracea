@@ -30,7 +30,14 @@ asteracea::component! { imgui =>
 	)
 
 	{
-		bump.ui.window(title).size(size.0, size.1).build(|| {});
+		bump.ui.window(title).size(size.0, size.1).build(|| {
+			//TODO: Allow declaring this as mutable in parameters.
+			let mut children = children;
+			for child in children.drain(..) {
+				child.1(bump)?
+			}
+			Ok::<_, Escalation>(())
+		}).unwrap_or_else(|| Ok(()))?
 	}
 }
 
