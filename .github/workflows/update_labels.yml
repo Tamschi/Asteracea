@@ -16,7 +16,7 @@ jobs:
     name: Update Labels
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: actions/cache@v3
       with:
         path: ~/.npm # I'm not entirely sure this is correct.
