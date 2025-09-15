@@ -62,7 +62,6 @@ tiptoe = { version = "0.0.2", features = ["sync"] }
 pinned-init = { version = "0.0.10", default-features = false } # public, migrating to pin-init
 
 [dev-dependencies]
-cargo-husky = "1.5.0"
 debugless-unwrap = "0.0.4"
 ergo-pin = "0.1.0"
 git_info = "0.1.2"
