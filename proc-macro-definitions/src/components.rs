@@ -1,7 +1,8 @@
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
 use component::Component;
-use loess::{Error, ErrorPriority, Errors, HandledPanic, Input, IntoTokens, PopFrom};
+use loess::{parse_once, Error, ErrorPriority, Errors, HandledPanic, Input, IntoTokens, PopFrom};
+use loess_rust::SquareBrackets;
 use proc_macro2::{Span, TokenStream};
 
 pub fn components(input: TokenStream) -> TokenStream {
@@ -11,6 +12,10 @@ pub fn components(input: TokenStream) -> TokenStream {
 	};
 
 	let mut errors = Errors::new();
+
+	let Ok(SquareBrackets { contents: root, .. }) = parse_once(&mut input, &mut errors) else {
+		return errors.collect_tokens(&TokenStream::new());
+	};
 
 	let mut components = vec![];
 	'panic_to_error: {
@@ -44,7 +49,6 @@ pub fn components(input: TokenStream) -> TokenStream {
 		}
 	}
 
-	let root = TokenStream::new();
 	let mut output = errors.collect_tokens(&root);
 	components.into_tokens(&root, &mut output);
 	output

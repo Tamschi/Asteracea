@@ -2,10 +2,9 @@
 members = [
 	".",
 	# "book",
-	"loess",
 	"proc-macro-definitions",
-	"examples/*"
-, "loess"]
+	"examples/*",
+]
 resolver = "2"
 
 [patch.crates-io]
@@ -14,7 +13,7 @@ asteracea = { path = "." }
 [package]
 name = "asteracea"
 version = "0.0.2"
-rust-version = "1.58"
+rust-version = "1.86"
 authors = ["Tamme Schichler <tamme@schichler.dev>"]
 edition = "2021"
 description = "A web application framework for Rust. Asteracea can be used for client-side and server-side rendering and for statically rendered and deployed sites (and combinations thereof) without specific changes to an app's code."
@@ -60,6 +59,7 @@ typed-builder = "0.10.0" # semi-public
 tracing = { version = "0.1.29", optional = true, default-features = false }
 futures-core = "0.3.19"
 tiptoe = { version = "0.0.2", features = ["sync"] }
+pinned-init = { version = "0.0.10", default-features = false } # public, migrating to pin-init
 
 [dev-dependencies]
 cargo-husky = "1.5.0"

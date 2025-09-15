@@ -33,10 +33,21 @@
 //FIXME: This won't be necessary anymore once `$crate` is in use everywhere.
 extern crate self as asteracea;
 
-pub use asteracea_proc_macro_definitions::{bump_format, component, components, fragment};
+#[macro_export]
+macro_rules! components {
+	// Pass `$crate` to the procedural macro in a way that doesn't require parsing it.
+	($($tt:tt)*) => {
+		$crate::__::components!([$crate::__] $($tt)*);
+	};
+}
+
+pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
 pub use bumpalo;
 pub use lignin;
 pub use try_lazy_init;
+
+mod traits;
+pub use traits::{Component, Substrate};
 
 #[cfg(doctest)]
 #[doc = include_str!("../README.md")]

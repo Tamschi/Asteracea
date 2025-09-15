@@ -1,8 +1,5 @@
-use loess::{
-	grammar,
-	rust_grammar::{Await, CurlyBraces, Dot, Identifier, Parentheses, Semi, SquareBrackets},
-	Error, ErrorPriority, Errors, Input, PeekFrom, PopFrom, SimpleSpanned,
-};
+use loess::{grammar, Error, ErrorPriority, Errors, Input, PeekFrom, PopFrom, SimpleSpanned};
+use loess_rust::{Await, CurlyBraces, Dot, Identifier, Parentheses, Semi, SquareBrackets};
 use proc_macro2::TokenStream;
 
 use super::{Statement, Storage};

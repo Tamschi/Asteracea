@@ -1,11 +1,8 @@
-use loess::{
-	grammar, quote_into_with_exact_span,
-	rust_grammar::{
-		Async, Const, CurlyBraces, Identifier, Parentheses, RArrow, SquareBrackets, Visibility,
-	},
-	IntoTokens, SimpleSpanned,
+use loess::{grammar, quote_into_with_exact_span, IntoTokens, SimpleSpanned};
+use loess_rust::{
+	Async, Const, CurlyBraces, Identifier, Parentheses, RArrow, SquareBrackets, Visibility,
 };
-use proc_macro2::{TokenStream, TokenTree};
+use proc_macro2::{Ident, TokenStream, TokenTree};
 use statements::Statement;
 
 pub mod statements;
@@ -38,8 +35,26 @@ impl IntoTokens for Component {
 			body,
 		} = self;
 
-		quote_into_with_exact_span!(name.span(), root, tokens, [
-			{#paste visibility } struct {#paste name } {}
-		]);
+		// This (hopefully) enables unused function warnings.
+		let new = Ident::new("new", name.span());
+		let render = Ident::new("render", name.span());
+
+		quote_into_with_exact_span!(name.span(), root, tokens, {
+			{#(&visibility)} struct {#(&name)} {}
+
+			{#mixed_site {
+				impl {#root}::Component<{#(&substrate)}> for {#(name)} {
+					//TODO: Fallible initialisation.
+					fn {#(new)}(
+						parent_node: {#(&substrate)}::ParentNode,
+						args: <Self as {#root}::Component<{#(&substrate)}>>::NewArgs,
+					) -> impl {#root}::pinned_init::PinInit<Self> {
+						let init = |_pointer| todo!();
+
+						unsafe { {#root}::pinned_init::init_from_closure(init) }
+					}
+				}
+			}}
+		});
 	}
 }

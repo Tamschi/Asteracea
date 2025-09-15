@@ -1,20 +1,50 @@
 use std::boxed;
 
-use loess::{
-	grammar,
-	rust_grammar::{
-		AnyStringLiteral, As, Box, Colon, CurlyBraces, Dot, DotDot, Expression,
-		ExpressionExceptStructExpression, For, Identifier, In, Parentheses, Pattern, SelfLowercase,
-		Semi, SquareBrackets, Statement as RustStatement, Struct, Visibility,
-	},
-	Error, ErrorPriority, Errors, Input, PeekFrom, PopFrom,
+use loess::{grammar, Error, ErrorPriority, Errors, Input, IntoTokens, PeekFrom, PopFrom};
+use loess_rust::{
+	AnyStringLiteral, As, Box, Colon, CurlyBraces, Dot, DotDot, For, Identifier, In, Parentheses,
+	SelfLowercase, Semi, SquareBrackets, Struct, Visibility,
+};
+use loess_rust_opaque::{
+	Expression, ExpressionExceptStructExpression, Pattern, Statement as RustStatement,
 };
 use proc_macro2::TokenStream;
 
+struct SkipPeek<T: ?Sized>(pub T);
+impl<T> PeekFrom for SkipPeek<T> {
+	fn peek_from(_input: &Input) -> bool {
+		true
+	}
+}
+impl<T: IntoTokens> IntoTokens for SkipPeek<T> {
+	fn into_tokens(self, root: &TokenStream, tokens: &mut impl Extend<proc_macro2::TokenTree>) {
+		self.0.into_tokens(root, tokens)
+	}
+
+	fn collect_tokens<TS: Default + Extend<proc_macro2::TokenTree>>(
+		self,
+		root: &TokenStream,
+	) -> TS {
+		self.0.collect_tokens(root)
+	}
+}
+impl<T: PopFrom> PopFrom for SkipPeek<T> {
+	fn pop_from(input: &mut Input, errors: &mut Errors) -> Result<Self, ()> {
+		Ok(Self(T::pop_from(input, errors)?))
+	}
+
+	fn peek_pop_from(input: &mut Input, errors: &mut Errors) -> Result<Option<Self>, ()>
+	where
+		Self: PeekFrom + Sized,
+	{
+		Ok(Some(Self::pop_from(input, errors)?))
+	}
+}
+
 grammar! {
 	pub enum Statement: PeekFrom, PopFrom, IntoTokens {
-		ParenBrace(Parentheses<CurlyBraces<Vec<RustStatement>>>),
-		BracketBrace(SquareBrackets<CurlyBraces<Vec<RustStatement>>>),
+		ParenBrace(Parentheses<CurlyBraces<Vec<SkipPeek<RustStatement>>>>),
+		BracketBrace(SquareBrackets<CurlyBraces<Vec<SkipPeek<RustStatement>>>>),
 		For(ForLoop),
 		ParenFor(ParenForLoop),
 		Block(CurlyBraces<Vec<Statement>>),
