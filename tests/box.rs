@@ -5,7 +5,7 @@ mod old {
 
 	use bumpalo::Bump;
 
-	use debugless_unwrap::DebuglessUnwrap;
+	use debugless_unwrap::DebuglessUnwrapExt;
 
 	use rhizome::sync::Node;
 
@@ -192,7 +192,7 @@ use std::{any::TypeId, pin::Pin};
 
 use bumpalo::Bump;
 
-use debugless_unwrap::DebuglessUnwrap;
+use debugless_unwrap::DebuglessUnwrapExt;
 
 use rhizome::sync::Node;
 

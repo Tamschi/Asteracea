@@ -28,7 +28,7 @@ use crate::component::{
 	BumpFormat, Configuration,
 };
 use core::result::Result as coreResult;
-use debugless_unwrap::{DebuglessUnwrap as _, DebuglessUnwrapErr as _};
+use debugless_unwrap::{DebuglessUnwrapExt, DebuglessUnwrapErrExt};
 use event_binding::EventBindingDefinition;
 use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::{quote_spanned, ToTokens};

@@ -23,7 +23,7 @@ version = "0.0.2"
 dependencies = [
  "asteracea_proc-macro-definitions",
  "bumpalo",
- "debugless-unwrap",
+ "debugless-unwrap 1.0.0",
  "ergo-pin",
  "futures-core",
  "git_info",
@@ -49,7 +49,7 @@ name = "asteracea_proc-macro-definitions"
 version = "0.0.2"
 dependencies = [
  "call2-for-syn 3.0.4",
- "debugless-unwrap",
+ "debugless-unwrap 1.0.0",
  "easy-ext",
  "either",
  "heck",
@@ -142,6 +142,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f400d0750c0c069e8493f2256cb4da6f604b6d2eeb69a0ca8863acde352f8400"
 
 [[package]]
+name = "debugless-unwrap"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b93fdcfc175d53094fca1d23d171685621bb67f1658413514f2053d575b3b38c"
+
+[[package]]
 name = "displaydoc"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -227,7 +233,7 @@ version = "0.0.2"
 source = "git+https://github.com/Tamschi/fruit-salad.git?branch=develop#e8ddafb728e3fe36994d448d340b82fcf9dcf78c"
 dependencies = [
  "call2-for-syn 2.0.3",
- "debugless-unwrap",
+ "debugless-unwrap 0.0.4",
  "proc-macro2",
  "quote",
  "syn 1.0.109",

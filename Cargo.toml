@@ -62,7 +62,7 @@ tiptoe = { version = "0.0.2", features = ["sync"] }
 pinned-init = { version = "0.0.10", default-features = false } # public, migrating to pin-init
 
 [dev-dependencies]
-debugless-unwrap = "0.0.4"
+debugless-unwrap = "1.0.0"
 ergo-pin = "0.1.0"
 git_info = "0.1.2"
 lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
