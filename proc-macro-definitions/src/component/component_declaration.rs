@@ -12,7 +12,7 @@ use crate::component::{
 	warn, Configuration, MapMessage, Part,
 };
 use call2_for_syn::call2_strict;
-use debugless_unwrap::DebuglessUnwrap as _;
+use debugless_unwrap::DebuglessUnwrapExt;
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use std::rc::Rc;
@@ -26,7 +26,7 @@ use syn::{
 	AttrStyle, Attribute, Error, FieldPat, Generics, Ident, Item, Lifetime, Member, Pat, PatIdent,
 	PatType, ReturnType, Token, Type, Visibility, WhereClause, WherePredicate,
 };
-use tap::Pipe as _;
+use tap::Pipe;
 use unquote::unquote;
 
 mod arguments;
