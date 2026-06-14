@@ -529,7 +529,7 @@ dependencies = [
 [[package]]
 name = "loess"
 version = "0.2.5"
-source = "git+https://github.com/Tamschi/loess.git#6223cb32c717054fdbda23b48374cc62162fed86"
+source = "git+https://github.com/Tamschi/loess.git#12b5e968660d75740c061aac9380c4d6f7abe0cf"
 dependencies = [
  "proc-macro2",
 ]
@@ -537,7 +537,7 @@ dependencies = [
 [[package]]
 name = "loess-rust"
 version = "0.1.0+0.2"
-source = "git+https://github.com/Tamschi/loess.git#6223cb32c717054fdbda23b48374cc62162fed86"
+source = "git+https://github.com/Tamschi/loess.git#12b5e968660d75740c061aac9380c4d6f7abe0cf"
 dependencies = [
  "loess",
  "loess-rust-lex",
@@ -547,7 +547,7 @@ dependencies = [
 [[package]]
 name = "loess-rust-lex"
 version = "0.1.0"
-source = "git+https://github.com/Tamschi/loess.git#6223cb32c717054fdbda23b48374cc62162fed86"
+source = "git+https://github.com/Tamschi/loess.git#12b5e968660d75740c061aac9380c4d6f7abe0cf"
 dependencies = [
  "loess",
  "proc-macro2",
@@ -556,7 +556,7 @@ dependencies = [
 [[package]]
 name = "loess-rust-opaque"
 version = "0.1.0+0.2"
-source = "git+https://github.com/Tamschi/loess.git#6223cb32c717054fdbda23b48374cc62162fed86"
+source = "git+https://github.com/Tamschi/loess.git#12b5e968660d75740c061aac9380c4d6f7abe0cf"
 dependencies = [
  "loess",
  "proc-macro2",
