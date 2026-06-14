@@ -1,9 +1,20 @@
 use std::boxed;
 
-use loess::{grammar, Error, ErrorPriority, Errors, Input, IntoTokens, PeekFrom, PopFrom};
+use loess::{
+	grammar,
+	scaffold::{CurlyBraces, Parentheses, SquareBrackets},
+	Error, ErrorPriority, Errors, Input, IntoTokens, PeekFrom, PopFrom, PopParsedFrom,
+};
 use loess_rust::{
-	AnyStringLiteral, As, Box, Colon, CurlyBraces, Dot, DotDot, For, Identifier, In, Parentheses,
-	SelfLowercase, Semi, SquareBrackets, Struct, Visibility,
+	ident::Identifier,
+	lex::{
+		keywords::{As, Box, For, In, SelfLowercase, Struct},
+		token::{
+			literal::AnyStringLiteral,
+			punct::{Colon, Dot, DotDot, Semi},
+		},
+	},
+	vis::Visibility,
 };
 use loess_rust_opaque::{
 	Expression, ExpressionExceptStructExpression, Pattern, Statement as RustStatement,
@@ -28,14 +39,22 @@ impl<T: IntoTokens> IntoTokens for SkipPeek<T> {
 		self.0.collect_tokens(root)
 	}
 }
-impl<T: PopFrom> PopFrom for SkipPeek<T> {
-	fn pop_from(input: &mut Input, errors: &mut Errors) -> Result<Self, ()> {
-		Ok(Self(T::pop_from(input, errors)?))
+impl<T: PopFrom> PopParsedFrom for SkipPeek<T> {
+	type Parsed = Self;
+
+	fn pop_parsed_from(
+		input: &mut Input,
+		errors: &mut Errors,
+	) -> Result<Self::Parsed, Option<Self::Parsed>> {
+		Ok(Self(T::pop_from(input, errors).map_err(|_| None)?))
 	}
 
-	fn peek_pop_from(input: &mut Input, errors: &mut Errors) -> Result<Option<Self>, ()>
+	fn peek_pop_parsed_from(
+		input: &mut Input,
+		errors: &mut Errors,
+	) -> Result<Option<Self::Parsed>, Option<Self::Parsed>>
 	where
-		Self: PeekFrom + Sized,
+		Self: PeekFrom,
 	{
 		Ok(Some(Self::pop_from(input, errors)?))
 	}
@@ -113,15 +132,20 @@ grammar! {
 	}
 }
 
-impl PopFrom for Storage {
-	fn pop_from(input: &mut Input, errors: &mut Errors) -> Result<Self, ()> {
+impl PopParsedFrom for Storage {
+	type Parsed = Self;
+
+	fn pop_parsed_from(
+		input: &mut Input,
+		errors: &mut Errors,
+	) -> Result<Self::Parsed, Option<Self::Parsed>> {
 		let storage = Self {
-			r#as: As::pop_from(input, errors)?,
-			visibility: Option::<Visibility>::pop_from(input, errors)?,
-			self_: SelfLowercase::pop_from(input, errors)?,
-			dot: Dot::pop_from(input, errors)?,
-			identifier: Identifier::pop_from(input, errors)?,
-			storage_type: Option::<StorageType>::pop_from(input, errors)?,
+			r#as: As::pop_from(input, errors).map_err(|_| None)?,
+			visibility: Option::<Visibility>::pop_from(input, errors).map_err(|_| None)?,
+			self_: SelfLowercase::pop_from(input, errors).map_err(|_| None)?,
+			dot: Dot::pop_from(input, errors).map_err(|_| None)?,
+			identifier: Identifier::pop_from(input, errors).map_err(|_| None)?,
+			storage_type: Option::<StorageType>::pop_from(input, errors).map_err(|_| None)?,
 		};
 
 		if !CurlyBraces::<TokenStream>::peek_from(input) && !Semi::peek_from(input) {

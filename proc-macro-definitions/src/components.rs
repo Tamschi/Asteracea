@@ -1,8 +1,10 @@
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
 use component::Component;
-use loess::{parse_once, Error, ErrorPriority, Errors, HandledPanic, Input, IntoTokens, PopFrom};
-use loess_rust::SquareBrackets;
+use loess::{
+	parse_once, scaffold::SquareBrackets, Error, ErrorPriority, Errors, HandledPanic, Input,
+	IntoTokens, PopFrom,
+};
 use proc_macro2::{Span, TokenStream};
 
 pub fn components(input: TokenStream) -> TokenStream {

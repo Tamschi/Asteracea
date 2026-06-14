@@ -1,5 +1,15 @@
-use loess::{grammar, Error, ErrorPriority, Errors, Input, PeekFrom, PopFrom, SimpleSpanned};
-use loess_rust::{Await, CurlyBraces, Dot, Identifier, Parentheses, Semi, SquareBrackets};
+use loess::{
+	grammar,
+	scaffold::{CurlyBraces, Parentheses, SquareBrackets},
+	Error, ErrorPriority, Errors, Input, PeekFrom, PopFrom, PopParsedFrom, SimpleSpanned,
+};
+use loess_rust::{
+	ident::Identifier,
+	lex::{
+		keywords::Await,
+		token::punct::{Dot, Semi},
+	},
+};
 use proc_macro2::TokenStream;
 
 use super::{Statement, Storage};
@@ -38,34 +48,39 @@ impl PeekFrom for ChildIdentifier {
 	}
 }
 
-impl PopFrom for ChildIdentifier {
-	fn pop_from(input: &mut Input, errors: &mut Errors) -> Result<Self, ()> {
-		Ok(
-			if let Some(identifier) = Identifier::peek_pop_from(input, errors)? {
-				let c = identifier
-					.0
-					.to_string()
-					.chars()
-					.next()
-					.expect("No zero-length identifiers, hopefully!");
-				if c.is_uppercase() {
-					Self::Local(identifier)
-				} else if c.is_lowercase() {
-					Self::Substrate(identifier)
-				} else {
-					return Err(errors.push(Error::new(
-						ErrorPriority::GRAMMAR,
-						"Expected identifier to be either upper- or lowercase.",
-						[identifier.span()],
-					)));
-				}
+impl PopParsedFrom for ChildIdentifier {
+	type Parsed = Self;
+
+	fn pop_parsed_from(
+		input: &mut Input,
+		errors: &mut Errors,
+	) -> Result<Self::Parsed, Option<Self::Parsed>> {
+		if let Some(identifier) = Identifier::peek_pop_from(input, errors).map_err(|_| None)? {
+			let c = identifier
+				.0
+				.to_string()
+				.chars()
+				.next()
+				.expect("No zero-length identifiers, hopefully!");
+			if c.is_uppercase() {
+				Ok(Self::Local(identifier))
+			} else if c.is_lowercase() {
+				Ok(Self::Substrate(identifier))
 			} else {
-				return Err(errors.push(Error::new(
+				errors.push(Error::new(
 					ErrorPriority::GRAMMAR,
-					"Expected child type identifier or path statement.",
-					[input.front_span()],
-				)));
-			},
-		)
+					"Expected identifier to be either upper- or lowercase.",
+					[identifier.span()],
+				));
+				Err(None)
+			}
+		} else {
+			errors.push(Error::new(
+				ErrorPriority::GRAMMAR,
+				"Expected child type identifier or path statement.",
+				[input.front_span()],
+			));
+			Err(None)
+		}
 	}
 }

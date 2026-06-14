@@ -1,6 +1,15 @@
-use loess::{grammar, quote_into_with_exact_span, IntoTokens, SimpleSpanned};
+use loess::{
+	grammar, quote_into_with_exact_span,
+	scaffold::{CurlyBraces, Parentheses, SquareBrackets},
+	IntoTokens, SimpleSpanned,
+};
 use loess_rust::{
-	Async, Const, CurlyBraces, Identifier, Parentheses, RArrow, SquareBrackets, Visibility,
+	ident::Identifier,
+	lex::{
+		keywords::{Async, Const},
+		token::punct::RArrow,
+	},
+	vis::Visibility,
 };
 use proc_macro2::{Ident, TokenStream, TokenTree};
 use statements::Statement;

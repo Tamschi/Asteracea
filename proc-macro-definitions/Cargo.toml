@@ -40,9 +40,9 @@ merging-iterator = "1.3.0"
 easy-ext = "1.0.0"
 either = "1.6.1"
 tap = "1.0.1"
-loess = "0.2.2"
-loess-rust-opaque = "0.1.0"
-loess-rust = "0.1.0"
+loess = { git = "https://github.com/Tamschi/loess.git" }
+loess-rust-opaque = { git = "https://github.com/Tamschi/loess.git" }
+loess-rust = { git = "https://github.com/Tamschi/loess.git" }
 
 
 [dependencies.syn]

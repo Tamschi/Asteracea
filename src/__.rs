@@ -9,6 +9,7 @@ use std::{
 };
 use try_lazy_init::Lazy;
 
+pub use core;
 pub use lignin_schema;
 pub use pinned_init;
 pub use rhizome;
