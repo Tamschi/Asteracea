@@ -19,11 +19,18 @@ pub fn components(input: TokenStream) -> TokenStream {
 		return errors.collect_tokens(&TokenStream::new());
 	};
 
-	let mut components = vec![];
+	let mut components: Vec<Component> = vec![];
 	'panic_to_error: {
 		match catch_unwind(AssertUnwindSafe(|| {
 			while !input.is_empty() {
-				components = Vec::<Component>::pop_from(&mut input, &mut errors).unwrap_or_default()
+				let len = input.len();
+				match Component::pop_from(&mut input, &mut errors) {
+					Ok(component) | Err(Some(component)) => components.push(component),
+					Err(None) => (),
+				}
+				if input.len() == len {
+					input.tokens.pop_front().expect("unreachable");
+				}
 			}
 		})) {
 			Ok(()) => (),
