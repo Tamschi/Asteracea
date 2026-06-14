@@ -9,7 +9,6 @@
 		"todo!"
 	],
 	"todo-tree.regex.regex": "(($TAGS)|^\\s*- \\[ \\])",
-	"rust-analyzer.cargo.allFeatures": true,
 	"rust-analyzer.cargo.buildScripts.enable": true,
 	"cSpell.words": [
 		"ascii",
@@ -19,5 +18,6 @@
 		"Punct",
 		"Schichler",
 		"Tamme"
-	]
+	],
+	"git.enabled": false
 }
