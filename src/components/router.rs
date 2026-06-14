@@ -6,6 +6,7 @@ use crate::{
 	__::{tracing::debug_span, Built},
 };
 use ::std::pin::Pin;
+use bon::builder;
 use bumpalo::Bump;
 use lignin::{Node, ThreadSafe, ThreadSafety};
 use rhizome::sync::DynValue;
@@ -15,7 +16,6 @@ use std::{
 	marker::PhantomData,
 	sync::Arc,
 };
-use typed_builder::TypedBuilder;
 
 // A simple page router.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -68,7 +68,7 @@ const _: () = {
 			todo!("Router default (explicit named child?).")
 		}
 
-		pub fn new_args_builder() -> RouterNewArgsBuilder<()> {
+		pub fn new_args_builder() -> RouterNewArgsBuilder<router_new_args_builder::Empty> {
 			RouterNewArgs::builder()
 		}
 
@@ -81,7 +81,7 @@ const _: () = {
 		}
 	}
 
-	#[derive(TypedBuilder)]
+	#[derive(bon::Builder)]
 	pub struct RouterNewArgs {}
 
 	pub struct RouterRenderArgsBuilder<'RENDER, 'bump: 'RENDER, S: ThreadSafety> {

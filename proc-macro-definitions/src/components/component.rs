@@ -1,9 +1,10 @@
 use loess::{
 	grammar, quote_into_with_exact_span,
-	scaffold::{CurlyBraces, Parentheses, SquareBrackets},
+	scaffold::{CurlyBraces, Greedy, Optimistic, Parentheses, SquareBrackets},
 	IntoTokens, SimpleSpanned,
 };
 use loess_rust::{
+	attributes::OuterAttribute,
 	ident::Identifier,
 	lex::{
 		keywords::{Async, Const},
@@ -14,16 +15,21 @@ use loess_rust::{
 use proc_macro2::{Ident, TokenStream, TokenTree};
 use statements::Statement;
 
+use crate::components::component::args::{ConstructorArgs, RenderArgs, SlotArgs};
+
+pub mod args;
 pub mod statements;
 
 grammar! {
 	pub struct Component: PopFrom {
+		pub attributes: Greedy<Vec<OuterAttribute>>,
 		pub visibility: Option<Visibility>,
 		pub r#const: Option<Const>,
 		pub r#async: Option<Async>,
 		pub name: Identifier,
-		pub constructor_args: Option<Parentheses>,
-		pub render_args: Option<SquareBrackets>,
+		pub constructor_args: Option<Parentheses<Optimistic<ConstructorArgs>>>,
+		pub render_args: Option<SquareBrackets<Optimistic<RenderArgs>>>,
+		pub slot_args: Option<CurlyBraces<Optimistic<SlotArgs>>>,
 		pub r_arrow: RArrow,
 		pub substrate: Identifier,
 		pub body: CurlyBraces<Vec<Statement>>,
@@ -33,12 +39,14 @@ grammar! {
 impl IntoTokens for Component {
 	fn into_tokens(self, root: &TokenStream, tokens: &mut impl Extend<TokenTree>) {
 		let Self {
+			attributes,
 			visibility,
 			r#const,
 			r#async,
 			name,
 			constructor_args,
 			render_args,
+			slot_args,
 			r_arrow,
 			substrate,
 			body,
@@ -49,6 +57,7 @@ impl IntoTokens for Component {
 		let render = Ident::new("render", name.span());
 
 		quote_into_with_exact_span!(name.span(), root, tokens, {
+			{#(attributes)}
 			{#(&visibility)} struct {#(&name)} {}
 
 			{#mixed_site {

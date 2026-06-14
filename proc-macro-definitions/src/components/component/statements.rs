@@ -1,11 +1,12 @@
-use std::boxed;
+use std::{boxed, ops::ControlFlow::{self, Continue}};
 
 use loess::{
 	grammar,
-	scaffold::{CurlyBraces, Parentheses, SquareBrackets},
-	Error, ErrorPriority, Errors, Input, IntoTokens, PeekFrom, PopFrom, PopParsedFrom,
+	scaffold::{CurlyBraces, Greedy, Optimistic, Parentheses, SquareBrackets},
+	Error, ErrorPriority, Errors, Input, PeekFrom, PopFrom, PopParsedFrom,
 };
 use loess_rust::{
+	attributes::OuterAttribute,
 	ident::Identifier,
 	lex::{
 		keywords::{As, Box, For, In, SelfLowercase, Struct},
@@ -16,66 +17,32 @@ use loess_rust::{
 	},
 	vis::Visibility,
 };
-use loess_rust_opaque::{
-	Expression, ExpressionExceptStructExpression, Pattern, Statement as RustStatement,
-};
+use loess_rust_opaque::{Expression, ExpressionExceptStructExpression, Pattern};
 use proc_macro2::TokenStream;
 
-struct SkipPeek<T: ?Sized>(pub T);
-impl<T> PeekFrom for SkipPeek<T> {
-	fn peek_from(_input: &Input) -> bool {
-		true
-	}
-}
-impl<T: IntoTokens> IntoTokens for SkipPeek<T> {
-	fn into_tokens(self, root: &TokenStream, tokens: &mut impl Extend<proc_macro2::TokenTree>) {
-		self.0.into_tokens(root, tokens)
-	}
-
-	fn collect_tokens<TS: Default + Extend<proc_macro2::TokenTree>>(
-		self,
-		root: &TokenStream,
-	) -> TS {
-		self.0.collect_tokens(root)
-	}
-}
-impl<T: PopFrom> PopParsedFrom for SkipPeek<T> {
-	type Parsed = Self;
-
-	fn pop_parsed_from(
-		input: &mut Input,
-		errors: &mut Errors,
-	) -> Result<Self::Parsed, Option<Self::Parsed>> {
-		Ok(Self(T::pop_from(input, errors).map_err(|_| None)?))
-	}
-
-	fn peek_pop_parsed_from(
-		input: &mut Input,
-		errors: &mut Errors,
-	) -> Result<Option<Self::Parsed>, Option<Self::Parsed>>
-	where
-		Self: PeekFrom,
-	{
-		Ok(Some(Self::pop_from(input, errors)?))
-	}
-}
+mod child;
+mod let_field;
 
 grammar! {
-	pub enum Statement: PeekFrom, PopFrom, IntoTokens {
-		ParenBrace(Parentheses<CurlyBraces<Vec<SkipPeek<RustStatement>>>>),
-		BracketBrace(SquareBrackets<CurlyBraces<Vec<SkipPeek<RustStatement>>>>),
+	pub struct Statement: PopFrom, IntoTokens {
+		attrs: Greedy<Vec<OuterAttribute>>,
+		stmt: Statement_,
+	}
+
+	pub enum Statement_: PopFrom, IntoTokens {
+		ParenBrace(Parentheses<CurlyBraces>),
+		BracketBrace(SquareBrackets<CurlyBraces>),
 		For(ForLoop),
 		ParenFor(ParenForLoop),
-		Block(CurlyBraces<Vec<Statement>>),
+		Block(CurlyBraces<Optimistic<Vec<Statement>>>),
 		Box(BoxStatement),
 		Semi(Semi),
 		Str(FormattedStr),
 		Transclusion(Transclusion),
 		Child(child::Child),
+		LetField(let_field::LetField),
 	} else "Expected Asteracea statement.";
 }
-
-mod child;
 
 grammar! {
 	pub struct ForLoop: PeekFrom, PopFrom, IntoTokens {
@@ -138,15 +105,24 @@ impl PopParsedFrom for Storage {
 	fn pop_parsed_from(
 		input: &mut Input,
 		errors: &mut Errors,
-	) -> Result<Self::Parsed, Option<Self::Parsed>> {
-		let storage = Self {
-			r#as: As::pop_from(input, errors).map_err(|_| None)?,
-			visibility: Option::<Visibility>::pop_from(input, errors).map_err(|_| None)?,
-			self_: SelfLowercase::pop_from(input, errors).map_err(|_| None)?,
-			dot: Dot::pop_from(input, errors).map_err(|_| None)?,
-			identifier: Identifier::pop_from(input, errors).map_err(|_| None)?,
-			storage_type: Option::<StorageType>::pop_from(input, errors).map_err(|_| None)?,
-		};
+	) -> ControlFlow<Option<Self::Parsed>, Option<Self::Parsed>> {
+		let storage = As::pop_from(input, errors)
+			.map_break(|_| None)?
+			.zip(Option::<Visibility>::pop_from(input, errors).map_break(|_| None)?)
+			.zip(SelfLowercase::pop_from(input, errors).map_break(|_| None)?)
+			.zip(Dot::pop_from(input, errors).map_break(|_| None)?)
+			.zip(Identifier::pop_from(input, errors).map_break(|_| None)?)
+			.zip(Option::<StorageType>::pop_from(input, errors).map_break(|_| None)?)
+			.map(
+				|(((((r#as, visibility), self_), dot), identifier), storage_type)| Self {
+					r#as,
+					visibility,
+					self_,
+					dot,
+					identifier,
+					storage_type,
+				},
+			);
 
 		if !CurlyBraces::<TokenStream>::peek_from(input) && !Semi::peek_from(input) {
 			errors.push(Error::new(
@@ -156,6 +132,6 @@ impl PopParsedFrom for Storage {
 			))
 		}
 
-		Ok(storage)
+		Continue(storage)
 	}
 }

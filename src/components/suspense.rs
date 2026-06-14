@@ -6,40 +6,40 @@ use crate::{
 	services::{ContentRuntime, Invalidator},
 	__::Built,
 };
+use bon::Builder;
 use lignin::{Node, ThreadSafety};
 use std::cell::UnsafeCell;
-use typed_builder::TypedBuilder;
 
-#[derive(TypedBuilder)]
+#[derive(Builder)]
 pub struct NoParentParameters {}
 impl Built for NoParentParameters {
-	type Builder = NoParentParametersBuilder<()>;
+	type Builder = NoParentParametersBuilder<no_parent_parameters_builder::Empty>;
 
 	fn builder() -> Self::Builder {
 		Self::builder()
 	}
 }
 
-asteracea::component! {
+asteracea::components! {
 	/// Renders `'spinner` unless `'ready` has finished construction.
 	///
 	/// `'ready`'s construction is scheduled automatically.
 	pub Suspense(
-		priv dyn runtime: dyn ContentRuntime,
-		priv dyn invalidator?: dyn Invalidator,
-	)<S: 'bump + ThreadSafety>(
-		spinner: (NoParentParameters, Box<RenderOnce<'_, 'bump, S>>),
-		mut ready: (NoParentParameters, AsyncContent<'_, RenderOnce<'_, 'bump, S>>),
-	) -> Node::<'bump, S>
+		pub(self) dyn runtime: dyn ContentRuntime,
+	){
+		'spinner,
+		async 'ready,
+	} -> web {
+		#[attribute]
+		let self.subscription = UnsafeCell::<Option<ContentSubscription>>::new(None);
 
-	let self.subscription = UnsafeCell::<Option<ContentSubscription>>::new(None);
+		[{
+			match ready.1.synchronize(unsafe{&mut *self.subscription.get()}) {
+				Synchronized::Unchanged => (),
+				Synchronized::Reset(future) => self.runtime.start_content_future(future, self.invalidator.clone()),
+			}
 
-	{
-		match ready.1.synchronize(unsafe{&mut *self.subscription.get()}) {
-			Synchronized::Unchanged => (),
-			Synchronized::Reset(future) => self.runtime.start_content_future(future, self.invalidator.clone()),
-		}
-
-		ready.1.render(bump).unwrap_or_else(|| (spinner.1)(bump))?
+			ready.1.render(bump).unwrap_or_else(|| (spinner.1)(bump))?;
+		}]
 	}
 }

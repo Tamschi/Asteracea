@@ -1,4 +1,7 @@
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::{
+	ops::ControlFlow::{Break, Continue},
+	panic::{catch_unwind, AssertUnwindSafe},
+};
 
 use component::Component;
 use loess::{
@@ -15,7 +18,8 @@ pub fn components(input: TokenStream) -> TokenStream {
 
 	let mut errors = Errors::new();
 
-	let Ok(SquareBrackets { contents: root, .. }) = parse_once(&mut input, &mut errors) else {
+	let Continue(Some(SquareBrackets { contents: root, .. })) = parse_once(&mut input, &mut errors)
+	else {
 		return errors.collect_tokens(&TokenStream::new());
 	};
 
@@ -25,8 +29,11 @@ pub fn components(input: TokenStream) -> TokenStream {
 			while !input.is_empty() {
 				let len = input.len();
 				match Component::pop_from(&mut input, &mut errors) {
-					Ok(component) | Err(Some(component)) => components.push(component),
-					Err(None) => (),
+					//TODO: Revise! Stop if misaligned?
+					Continue(Some(component)) | Break(Some(component)) => {
+						components.push(component)
+					}
+					Continue(None) | Break(None) => (),
 				}
 				if input.len() == len {
 					input.tokens.pop_front().expect("unreachable");

@@ -41,7 +41,6 @@ macro_rules! components {
 	};
 }
 
-pub use asteracea_proc_macro_definitions::{bump_format, component, fragment};
 pub use bumpalo;
 pub use lignin;
 pub use try_lazy_init;
