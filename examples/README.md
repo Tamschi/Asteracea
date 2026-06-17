@@ -16,4 +16,6 @@ Create a `README.md` in the example's directory with (if applicable) screenshots
 
 ### [Tracing Sample](tracing-sample#readme)
 
+(TODO)
+
 Shows how to log GUI calls to the console or a file, and how to render flamegraphs and flamecharts.
