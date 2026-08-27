@@ -46,6 +46,6 @@ loess-rust = { git = "https://github.com/Tamschi/loess.git" }
 
 
 [dependencies.syn]
-version = "2.0.29"
+version = "3.0.4"
 default-features = false
 features = ["clone-impls", "derive", "extra-traits", "full", "parsing", "printing", "proc-macro", "visit-mut"]
