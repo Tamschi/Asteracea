@@ -3,6 +3,7 @@ members = [
 	".",
 	# "book",
 	"proc-macro-definitions",
+	"asteracea-egui",
 	"examples/*",
 ]
 resolver = "2"
@@ -40,26 +41,29 @@ publish = false
 [badges]
 is-it-maintained-issue-resolution = { repository = "Tamschi/Asteracea" }
 is-it-maintained-open-issues = { repository = "Tamschi/Asteracea" }
-maintenance = { status = "experimental" } # This may differ between branches.
+maintenance = { status = "experimental" }                                # This may differ between branches.
 
 [features]
-error-abort = [] # Reserved. Will be used to abort the process on GUI error escalation.
-force-unwind = [] # Force the use of panics for `Escalation` propagation. This may improve code size and app performance.
+error-abort = [
+] # Reserved. Will be used to abort the process on GUI error escalation.
+force-unwind = [
+] # Force the use of panics for `Escalation` propagation. This may improve code size and app performance.
 
 [dependencies]
-asteracea_proc-macro-definitions = { path = "./proc-macro-definitions", version = "0.0.2" } # public
-bumpalo = { version = "3.6.1", features = ["collections"] } # public
+asteracea_proc-macro-definitions = { path = "./proc-macro-definitions", version = "0.0.2" }  # public
+bumpalo = { version = "3.6.1", features = ["collections"] }                                  # public
 try-lazy-init = "0.0.2"
-lignin = "0.1.0" # public
+lignin = "0.1.0"                                                                             # public
 lignin-schema = { git = "https://github.com/Tamschi/lignin-schema.git", branch = "develop" } # semi-public
 linotype = { version = "0.0.1" }
-rhizome = { git = "https://github.com/Tamschi/rhizome.git", branch = "develop" } # semi-public
+rhizome = { git = "https://github.com/Tamschi/rhizome.git", branch = "develop" }             # semi-public
 static_assertions = "1.1.0"
 tracing = { version = "0.1.29", optional = true, default-features = false }
 futures-core = "0.3.19"
 tiptoe = { version = "0.0.2", features = ["sync"] }
-pinned-init = { version = "0.0.10", default-features = false } # public, migrating to pin-init
-bon = "3.9.2" # semi-public
+pinned-init = { version = "0.0.10", default-features = false }                               # public, migrating to pin-init
+bon = "3.9.2"                                                                                # semi-public
+eros = "0.8.1"
 
 [dev-dependencies]
 debugless-unwrap = "1.0.0"

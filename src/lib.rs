@@ -46,16 +46,15 @@ pub use lignin;
 pub use try_lazy_init;
 
 mod traits;
-pub use traits::{Component, Substrate};
+pub use traits::{AsyncInit, Init, Render, Substrate};
 
 #[cfg(doctest)]
 #[doc = include_str!("../README.md")]
 mod readme {}
 
-pub mod components;
-pub mod error;
+//pub mod components; //TODO
 pub mod include;
-pub mod services;
+// pub mod services; //TODO
 
 /// Types implementing this trait can be accepted as value by conditional attributes.
 ///

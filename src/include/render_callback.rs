@@ -1,6 +1,6 @@
 //! (Mostly) type-erased render delegate types.
 
-use crate::error::Result;
+// use crate::error::Result;
 use bumpalo::Bump;
 use lignin::{Node, ThreadSafety};
 

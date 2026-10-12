@@ -1,0 +1,13 @@
+[package]
+name = "asteracea-egui"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+asteracea = { version = "0.0.2", path = ".." }
+bon = "3.10.2"
+egui = "0.36.2"
+eros = "0.8.1"
+never-say-never = "6.6.666"
+pinned-init = { version = "0.0.10", default-features = false, features = ["std"] }
+rhizome = { git = "https://github.com/Tamschi/rhizome.git", branch = "develop" }             # semi-public

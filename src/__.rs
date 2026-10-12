@@ -19,7 +19,7 @@ pub use try_lazy_init;
 
 pub use asteracea_proc_macro_definitions::components;
 
-pub use super::{Component, Substrate};
+pub use super::{AsyncInit, Init, Render, Substrate};
 
 /// Only implemented for functions that have a signature ABI-compatible with `fn(*const R, T)`!
 /// See `event_binding.rs` is the asteracea_proc-macro-definition crate for more information.
