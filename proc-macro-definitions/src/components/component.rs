@@ -6,12 +6,10 @@ use loess::{
 use loess_rust::{
 	attributes::OuterAttribute,
 	ident::Identifier,
-	lex::{
-		keywords::{Async, Const},
-		token::punct::RArrow,
-	},
+	lex::keywords::{Async, Const},
 	vis::Visibility,
 };
+use proc_macro2::Group;
 use proc_macro2::{Ident, TokenStream, TokenTree};
 use statements::Statement;
 
@@ -29,15 +27,12 @@ grammar! {
 		pub name: Identifier,
 		pub constructor_args: Option<Parentheses<Optimistic<ConstructorArgs>>>,
 		pub render_args: Option<SquareBrackets<Optimistic<RenderArgs>>>,
-		pub slot_args: Option<CurlyBraces<Optimistic<SlotArgs>>>,
-		pub r_arrow: RArrow,
-		pub substrate: Identifier,
 		pub body: CurlyBraces<Vec<Statement>>,
 	}
 }
 
-impl IntoTokens for Component {
-	fn into_tokens(self, root: &TokenStream, tokens: &mut impl Extend<TokenTree>) {
+impl Component {
+	pub fn emit(self, root: &TokenStream, tokens: &mut impl Extend<TokenTree>, substrate: &Group) {
 		let Self {
 			attributes,
 			visibility,
@@ -46,14 +41,11 @@ impl IntoTokens for Component {
 			name,
 			constructor_args,
 			render_args,
-			slot_args,
-			r_arrow,
-			substrate,
 			body,
 		} = self;
 
 		// This (hopefully) enables unused function warnings.
-		let new = Ident::new("new", name.span());
+		let init = Ident::new("init", name.span());
 		let render = Ident::new("render", name.span());
 
 		quote_into_with_exact_span!(name.span(), root, tokens, {
@@ -61,15 +53,50 @@ impl IntoTokens for Component {
 			{#(&visibility)} struct {#(&name)} {}
 
 			{#mixed_site {
-				impl {#root}::Component<{#(&substrate)}> for {#(name)} {
-					//TODO: Fallible initialisation.
-					fn {#(new)}(
-						parent_node: {#(&substrate)}::ParentNode,
-						args: <Self as {#root}::Component<{#(&substrate)}>>::NewArgs,
-					) -> impl {#root}::pinned_init::PinInit<Self> {
-						let init = |_pointer| todo!();
+				{#if let Some(r#async) = r#async {
+					{#located_at(r#async.span()) {
+						#error("TODO: async components")
+					}}
+				} else {
+					impl<'i, 'r> {#root}::Init<'i, 'r, {#(substrate)}> for {#(&name)} {
+						type InitArgsBuilder = ();
+						type InitArgs = ();
+						type InitT = Self;
+						type InitE = ();
 
-						unsafe { {#root}::pinned_init::init_from_closure(init) }
+						fn {#(init)}(
+							deps: {#root}::DepsNode,
+							ctx: <{#(substrate)} as {#root}::Substrate>::InitContext<'i>,
+							args: <Self as {#root}::Init<{#(substrate)}>>::InitArgs,
+						) -> impl 'i + {#root}::PinInit<
+							<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitT,
+							<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitE,
+						> {
+							let init = |_pointer| todo!();
+
+							unsafe { {#root}::pinned_init::init_from_closure(init) }
+						}
+					}
+				}}
+
+				impl<'r> {#root}::Render<'r, {#(substrate)}> for {#(name)} {
+					type RenderArgsBuilder = ();
+					type RenderArgs = ();
+					type RenderContentBuilder = ();
+					type RenderContent = ();
+					type RenderT = ();
+					type RenderESet = ();
+					
+					fn render(
+						self: {#root}::Pin<&'r mut Self>,
+						ctx: <{#(substrate)} as {#root}::Substrate>::RenderContext<'r>,
+						args: <Self as {#root}::Render<'r, {#(substrate)}>>::RenderArgs,
+						content: <Self as {#root}::Render<'r, {#(substrate)}>>::RenderContent,
+					) -> {#root}::Result<
+						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderT,
+						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderESet,
+					> {
+						todo!()
 					}
 				}
 			}}

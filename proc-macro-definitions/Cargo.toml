@@ -43,6 +43,7 @@ tap = "1.0.1"
 loess = { git = "https://github.com/Tamschi/loess.git" }
 loess-rust-opaque = { git = "https://github.com/Tamschi/loess.git" }
 loess-rust = { git = "https://github.com/Tamschi/loess.git" }
+loess-rust-lex = { git = "https://github.com/Tamschi/loess.git" }
 
 
 [dependencies.syn]

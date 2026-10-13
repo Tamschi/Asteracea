@@ -1,4 +1,5 @@
 use std::{
+	cell::{Cell, RefCell},
 	ops::ControlFlow::{Break, Continue},
 	panic::{catch_unwind, AssertUnwindSafe},
 };
@@ -8,7 +9,10 @@ use loess::{
 	parse_once, scaffold::SquareBrackets, Error, ErrorPriority, Errors, HandledPanic, Input,
 	IntoTokens, PopFrom,
 };
-use proc_macro2::{Span, TokenStream};
+use loess_rust::lex::token::punct::{Eq, Not, Pound};
+use proc_macro2::{Group, Span, TokenStream};
+
+use crate::lex::Substrate;
 
 pub fn components(input: TokenStream) -> TokenStream {
 	let mut input = Input {
@@ -20,6 +24,23 @@ pub fn components(input: TokenStream) -> TokenStream {
 
 	let Continue(Some(SquareBrackets { contents: root, .. })) = parse_once(&mut input, &mut errors)
 	else {
+		return errors.collect_tokens(&TokenStream::new());
+	};
+
+	let substrate = if let Continue(Some((
+		Pound { .. },
+		Not { .. },
+		SquareBrackets {
+			contents: (Substrate(kw), Eq { .. }, substrate),
+			..
+		},
+	))) = parse_once(&mut input, &mut errors)
+	{
+		// Wrapping this here *might* result in better errors somewhere.
+		let mut group = Group::new(proc_macro2::Delimiter::None, substrate);
+		group.set_span(kw.span());
+		group
+	} else {
 		return errors.collect_tokens(&TokenStream::new());
 	};
 
@@ -66,7 +87,9 @@ pub fn components(input: TokenStream) -> TokenStream {
 	}
 
 	let mut output = errors.collect_tokens(&root);
-	components.into_tokens(&root, &mut output);
+	for component in components {
+		component.emit(&root, &mut output, &substrate);
+	}
 	output
 }
 

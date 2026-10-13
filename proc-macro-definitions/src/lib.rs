@@ -10,3 +10,5 @@ mod components;
 pub fn components(input: TokenStream1) -> TokenStream1 {
 	components::components(input.into()).into()
 }
+
+mod lex;

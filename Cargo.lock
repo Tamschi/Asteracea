@@ -9,15 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "addde1f7d1104254aa8cd4293f8478b1783462b7cb33815c19cb1bbbb51277ba"
 
 [[package]]
-name = "accesskit"
-version = "0.24.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3b7f7f85a7e5f68090000ed7622545829afd484d210358702ae4cb97dd0c320"
-dependencies = [
- "uuid",
-]
-
-[[package]]
 name = "ahash"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -73,12 +64,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "asteracea-egui"
+name = "asteracea-epaint"
 version = "0.1.0"
 dependencies = [
  "asteracea",
  "bon",
- "egui",
+ "epaint",
  "eros",
  "never-say-never",
  "pinned-init",
@@ -97,6 +88,7 @@ dependencies = [
  "lazy_static",
  "loess",
  "loess-rust",
+ "loess-rust-lex",
  "loess-rust-opaque",
  "merging-iterator",
  "proc-macro-crate",
@@ -315,26 +307,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0656a7530b9e2841ee7a5f983965bdd9840c32f4012f759cfd44b912cced6b34"
 dependencies = [
  "emath",
-]
-
-[[package]]
-name = "egui"
-version = "0.36.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc938cc27cd911415e1e4d151bc56ff9df063d8db081374e87aeb805ea74b2ba"
-dependencies = [
- "accesskit",
- "ahash",
- "bitflags 2.13.0",
- "emath",
- "epaint",
- "itertools",
- "log",
- "nohash-hasher",
- "profiling",
- "smallvec",
- "unicode-segmentation",
- "web-sys",
 ]
 
 [[package]]
@@ -730,15 +702,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itertools"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -844,7 +807,7 @@ dependencies = [
 [[package]]
 name = "loess"
 version = "0.2.5"
-source = "git+https://github.com/Tamschi/loess.git#129815f5f085bc09b59a54ca4a3648dcdd899257"
+source = "git+https://github.com/Tamschi/loess.git#3255c416687e23ddcbb7609a1f80061da6dba5a9"
 dependencies = [
  "proc-macro2",
 ]
@@ -852,7 +815,7 @@ dependencies = [
 [[package]]
 name = "loess-rust"
 version = "0.1.0+0.2"
-source = "git+https://github.com/Tamschi/loess.git#129815f5f085bc09b59a54ca4a3648dcdd899257"
+source = "git+https://github.com/Tamschi/loess.git#3255c416687e23ddcbb7609a1f80061da6dba5a9"
 dependencies = [
  "loess",
  "loess-rust-lex",
@@ -862,7 +825,7 @@ dependencies = [
 [[package]]
 name = "loess-rust-lex"
 version = "0.1.0"
-source = "git+https://github.com/Tamschi/loess.git#129815f5f085bc09b59a54ca4a3648dcdd899257"
+source = "git+https://github.com/Tamschi/loess.git#3255c416687e23ddcbb7609a1f80061da6dba5a9"
 dependencies = [
  "loess",
  "proc-macro2",
@@ -871,12 +834,12 @@ dependencies = [
 [[package]]
 name = "loess-rust-opaque"
 version = "0.1.0+0.2"
-source = "git+https://github.com/Tamschi/loess.git#129815f5f085bc09b59a54ca4a3648dcdd899257"
+source = "git+https://github.com/Tamschi/loess.git#3255c416687e23ddcbb7609a1f80061da6dba5a9"
 dependencies = [
  "loess",
  "proc-macro2",
  "quote",
- "syn 2.0.117",
+ "syn 3.0.9",
 ]
 
 [[package]]
@@ -1683,12 +1646,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 
 [[package]]
-name = "uuid"
-version = "1.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cc1186384beb7dd8eedea376413fd654937285ea6c9cfbb928dc3043ea4b606"
-
-[[package]]
 name = "vello_common"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1840,16 +1797,6 @@ name = "wasm-bindgen-test-shared"
 version = "0.2.129"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f692aa943ccd88363733b77063f32cfed5bc6cbea8e6e8b251b302f881606fe"
-
-[[package]]
-name = "web-sys"
-version = "0.3.106"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88261b9deccee56594c11a3460c462c41f58d148598fe70ad77070126a68aba4"
-dependencies = [
- "js-sys",
- "wasm-bindgen",
-]
 
 [[package]]
 name = "winapi"

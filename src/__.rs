@@ -1,13 +1,19 @@
 use core::fmt::Debug;
 use lignin::CallbackRegistration;
+use rhizome::sync::{DynValue, Node};
 use std::{
+	any::TypeId,
 	fmt::{self, Formatter},
 	mem::ManuallyDrop,
-	pin::Pin,
 	rc::Rc,
 	sync::Arc,
 };
 use try_lazy_init::Lazy;
+
+pub type DepsNode = Node<TypeId, TypeId, DynValue>;
+pub use eros::Result;
+pub use pinned_init::PinInit;
+pub use std::pin::Pin;
 
 pub use bon;
 pub use core;
