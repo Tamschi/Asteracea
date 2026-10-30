@@ -67,7 +67,7 @@ impl Component {
 						fn {#(init)}(
 							deps: {#root}::DepsNode,
 							ctx: <{#(substrate)} as {#root}::Substrate>::InitContext<'i>,
-							args: <Self as {#root}::Init<{#(substrate)}>>::InitArgs,
+							args: <Self as {#root}::Init<'r, 'r, {#(substrate)}>>::InitArgs,
 						) -> impl 'i + {#root}::PinInit<
 							<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitT,
 							<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitE,
