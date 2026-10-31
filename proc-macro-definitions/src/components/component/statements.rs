@@ -53,12 +53,28 @@ impl Statement {
 		root: &TokenStream,
 		substrate: &Group,
 		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
 		fields: &mut TokenStream,
 		init_proc: &mut TokenStream,
 		render_proc: &mut TokenStream,
 	) {
 		match self.stmt {
-			Statement_::ParenBrace(stmt) => todo!("Emit ParenBrace."),
+			Statement_::ParenBrace(Parentheses {
+				span: paren_span,
+				contents: CurlyBraces {
+					span: braces_span,
+					contents: rust,
+				},
+			}) => {
+				// No fields.
+				quote_into_mixed_site!(paren_span.join(), root, init_proc, {
+					{#(self.attrs)}
+					{#located_at(braces_span.join()) {
+						{ {#(rust)} }
+					}}
+				})
+				// Not rendered.
+			}
 			Statement_::BracketBrace(SquareBrackets {
 				span: brackets_span,
 				contents: CurlyBraces {
@@ -81,9 +97,47 @@ impl Statement {
 			}
 			Statement_::For(stmt) => todo!("Emit For."),
 			Statement_::ParenFor(stmt) => todo!("Emit ParenFor."),
-			Statement_::Block(stmt) => todo!("Emit Block."),
+			Statement_::Block(CurlyBraces {
+				span: block_span,
+				contents,
+			}) => {
+				let additional_field_attrs: Vec<_> = additional_field_attrs
+					.into_iter()
+					.copied()
+					.chain(self.attrs.iter())
+					.collect();
+
+				let mut inner_init_proc = TokenStream::new();
+				let mut inner_render_proc = TokenStream::new();
+				for statement in contents {
+					statement.emit(
+						root,
+						substrate,
+						content_parent,
+						&additional_field_attrs,
+						fields,
+						&mut inner_init_proc,
+						&mut inner_render_proc,
+					);
+				}
+
+				quote_into_mixed_site!(block_span.join(), root, init_proc, {
+					{
+						{#(inner_init_proc)}
+					}
+				});
+				quote_into_mixed_site!(block_span.join(), root, render_proc, {
+					{
+						{#(inner_render_proc)}
+					}
+				});
+			}
 			Statement_::Box(stmt) => todo!("Emit Box."),
-			Statement_::Semi(stmt) => todo!("Emit Semi."),
+			Statement_::Semi(_) => {
+				// No fields.
+				// No init.
+				// Not rendered.
+			}
 			Statement_::Str(stmt) => todo!("Emit Str."),
 			Statement_::Transclusion(stmt) => todo!("Emit Transclusion."),
 			Statement_::Child(stmt) => todo!("Emit Child."),

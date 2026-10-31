@@ -63,6 +63,7 @@ impl Component {
 			root,
 			substrate,
 			&content_parent,
+			&[],
 			&mut fields,
 			&mut init_proc,
 			&mut render_proc,

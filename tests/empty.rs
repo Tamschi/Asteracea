@@ -17,23 +17,30 @@ asteracea::components! {
 	pub(crate) Empty3 => ;
 	Empty4() => ;
 	Empty5[] => ;
-	Empty6()[] => ;
-	const Empty7 => ;
-	async Empty8 => ;
-	const async Empty9 => ;
-	const async Empty10()[] => ;
+	Empty6{} => ;
+	Empty7()[] => ;
+	Empty8(){} => ;
+	Empty9[]{} => ;
+	Empty10()[]{} => ;
+	async Empty11() => ;
+	async Empty12[] => ;
+	async Empty13{} => ;
+	async Empty14()[] => ;
+	async Empty15(){} => ;
+	async Empty16[]{} => ;
+	async Empty17()[]{} => ;
 
-	Empty11 => {
+	Empty18 => {
 		{}
 	}
-	Empty12 => {
+	Empty19 => {
 		{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}
 	}
 
-	Empty13 => {
+	Empty20 => {
 		;
 	}
-	Empty14 => {
+	Empty21 => {
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	}
 }
