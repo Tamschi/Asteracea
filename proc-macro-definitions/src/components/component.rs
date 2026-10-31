@@ -80,24 +80,24 @@ impl Component {
 						#error("TODO: async components")
 					}}
 				} else {
+					/// Synchronously initialised.
 					impl<'i, 'r> {#root}::Init<'i, 'r, {#(substrate)}> for {#(&name)} {
 						type InitArgsBuilder = ();
 						type InitArgs = ();
-						type InitT = Self;
-						type InitE = ();
+						type InitESet = <{#(substrate)} as {#root}::Substrate>::InitESetDefault<'r>;
 
 						fn {#(init)}(
 							deps: {#root}::DepsNode,
 							ctx: <{#(substrate)} as {#root}::Substrate>::InitContext<'i>,
 							args: <Self as {#root}::Init<'r, 'r, {#(substrate)}>>::InitArgs,
 						) -> impl 'i + {#root}::PinInit<
-							<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitT,
-							<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitE,
+							Self,
+							{#root}::ErrorUnion<<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitESet>,
 						> {#located_at(body_span.join()){
 							{
 								let init = move |_this: *mut Self| -> {#root}::core::result::Result<
 									(),
-									<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitE,
+									{#root}::ErrorUnion<<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitESet>,
 								> {
 									{#(init_proc)}
 									todo!("init")
@@ -124,7 +124,7 @@ impl Component {
 						content: <Self as {#root}::Render<'r, {#(substrate)}>>::RenderContent,
 					) -> {#root}::Result<
 						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderT,
-						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderESet,
+						{#root}::ErrorUnion<<Self as {#root}::Render<'r, {#(substrate)}>>::RenderESet>,
 					> {
 						let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
 						{#(render_proc)}
@@ -132,20 +132,39 @@ impl Component {
 					}
 				}
 
-				//TODO: Only for default return type.
-				impl<'r> {#root}::ContentParent<'r, {#(substrate)}> for {#(name)} {
+				#[doc(hidden)]
+				impl<'r> {#root}::ContentParent<'r, {#(substrate)}> for {#(&name)} {
 					type RenderAccumulator = <{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault;
+
+					#[inline(always)]
 					fn start_accumulation() -> Self::RenderAccumulator {
 						<{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::default_start_accumulation()
 					}
+
+					#[inline(always)]
 					fn finalize_accumulation(
 						acc: Self::RenderAccumulator,
 						ctx: <{#(substrate)} as {#root}::Substrate>::RenderContext<'r>,
 					) -> {#root}::Result<
 						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderT,
-						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderESet,
+						{#root}::ErrorUnion<<Self as {#root}::Render<'r, {#(substrate)}>>::RenderESet>,
 					> {
 						<{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::default_finalize_accumulation(acc, ctx)
+					}
+				}
+
+				#[doc = {#root}::concat!("[`", {#root}::stringify!({#(&name)}), "`] inherits accepted content from [`", {#root}::stringify!({#(substrate)}), "`].")]
+				impl<'r, T> {#root}::ContentParentOf<'r, {#(substrate)}, T> for {#(name)}
+				where
+					{#(substrate)}: {#root}::ContentParentSubstrate<'r, <Self as {#root}::ContentParent<'r, {#(substrate)}>>::RenderAccumulator, T>,
+				{
+					#[inline(always)]
+					fn on_rendered(
+						acc: &'_ mut <Self as {#root}::ContentParent<'r, {#(substrate)}>>::RenderAccumulator,
+						ctx: <{#(substrate)} as {#root}::Substrate>::RenderContext<'r>,
+						rendered: T,
+					) {
+						<{#(substrate)} as {#root}::ContentParentSubstrate<'r, <Self as {#root}::ContentParent<'r, {#(substrate)}>>::RenderAccumulator, T>>::on_rendered(acc, ctx, rendered)
 					}
 				}
 			}}

@@ -11,10 +11,11 @@ use std::{
 use try_lazy_init::Lazy;
 
 pub type DepsNode = Node<TypeId, TypeId, DynValue>;
-pub use eros::Result;
+pub use core::{concat, stringify};
+pub use eros::ErrorUnion;
 pub use pinned_init::PinInit;
 pub use std::pin::Pin;
-pub use std::result::Result::{Err, Ok};
+pub use std::result::Result::{self, Err, Ok};
 
 pub use bon;
 pub use core;

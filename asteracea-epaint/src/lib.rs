@@ -12,7 +12,7 @@ pub enum EpaintSubstrate {}
 
 impl Substrate for EpaintSubstrate {
 	type InitContext<'i> = ();
-	type InitEDefault<'i> = AnyError;
+	type InitESetDefault<'i> = AnyError;
 	type RenderContext<'r> = &'r Style<'r>;
 	type RenderTDefault<'r> = Shape;
 	type RenderESetDefault<'r> = AnyError;

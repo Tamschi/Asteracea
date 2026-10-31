@@ -1,12 +1,12 @@
 use std::{any::TypeId, future::Future, pin::Pin};
 
-use eros::TypeSet;
+use eros::{ErrorUnion, TypeSet};
 use pinned_init::PinInit;
 use rhizome::sync::{DynValue, Node};
 
 pub trait Substrate {
 	type InitContext<'i>;
-	type InitEDefault<'i>;
+	type InitESetDefault<'i>: TypeSet;
 
 	type RenderContext<'r>;
 	type RenderTDefault<'r>;
@@ -22,30 +22,28 @@ pub trait DefaultAccumulationSubstrate<'r>: Substrate {
 	) -> eros::Result<Self::RenderTDefault<'r>, Self::RenderESetDefault<'r>>;
 }
 
-pub trait Init<'i, 'r, S: Substrate> {
+pub trait Init<'i, 'r, S: Substrate>: Render<'r, S> {
 	type InitArgsBuilder: Default;
 	type InitArgs;
-	type InitT: Render<'r, S>;
-	type InitE;
+	type InitESet: TypeSet;
 
 	fn init(
 		deps: Node<TypeId, TypeId, DynValue>,
 		ctx: S::InitContext<'i>,
 		args: Self::InitArgs,
-	) -> impl 'i + PinInit<Self::InitT, Self::InitE>;
+	) -> impl 'i + PinInit<Self, ErrorUnion<Self::InitESet>>;
 }
 
-pub trait AsyncInit<'i, 'r, S: Substrate> {
+pub trait AsyncInit<'i, 'r, S: Substrate>: Render<'r, S> {
 	type InitArgsBuilder: Default;
 	type InitArgs;
-	type InitT: Render<'r, S>;
-	type InitE;
+	type InitESet: TypeSet;
 
 	fn init(
 		deps: Node<TypeId, TypeId, DynValue>,
 		ctx: S::InitContext<'i>,
 		args: Self::InitArgs,
-	) -> impl Future<Output = impl 'i + PinInit<Self::InitT, Self::InitE>>;
+	) -> impl Future<Output = impl 'i + PinInit<Self, ErrorUnion<Self::InitESet>>>;
 }
 
 pub trait Render<'r, S: Substrate> {
@@ -68,13 +66,6 @@ pub trait ContentParentSubstrate<'r, RenderAccumulator, T>: Substrate {
 	fn on_rendered(acc: &'_ mut RenderAccumulator, ctx: Self::RenderContext<'r>, rendered: T);
 }
 
-impl<'r, Acc, S: Substrate> ContentParentSubstrate<'_, Acc, ()> for S {
-	#[inline(always)]
-	fn on_rendered(_: &'_ mut Acc, _: Self::RenderContext<'_>, _: ()) {
-		// Do nothing.
-	}
-}
-
 //TODO: Hide this somewhere.
 pub trait ContentParent<'r, S: Substrate>: Render<'r, S> {
 	type RenderAccumulator;
@@ -89,17 +80,17 @@ pub trait ContentParentOf<'r, S: Substrate, T>: ContentParent<'r, S> {
 	fn on_rendered(acc: &'_ mut Self::RenderAccumulator, ctx: S::RenderContext<'r>, rendered: T);
 }
 
-impl<'r, P: Render<'r, S>, S: Substrate, T> ContentParentOf<'r, S, T> for P
+/// Units are always supported, strictly via no-op accumulation.
+impl<'r, P: Render<'r, S>, S: Substrate> ContentParentOf<'r, S, ()> for P
 where
 	P: ContentParent<'r, S>,
-	S: ContentParentSubstrate<'r, Self::RenderAccumulator, T>,
 {
 	#[inline(always)]
 	fn on_rendered(
-		acc: &'_ mut Self::RenderAccumulator,
-		ctx: <S as Substrate>::RenderContext<'r>,
-		rendered: T,
+		_acc: &'_ mut Self::RenderAccumulator,
+		_ctx: <S as Substrate>::RenderContext<'r>,
+		_rendered: (),
 	) {
-		S::on_rendered(acc, ctx, rendered)
+		// Do nothing.
 	}
 }
