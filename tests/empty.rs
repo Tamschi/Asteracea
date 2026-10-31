@@ -10,28 +10,30 @@ mod old {
 }
 
 asteracea::components! {
-	Empty -> web {}
-	pub Empty2 -> web {}
-	pub(crate) Empty3 -> web {}
-	Empty4() -> web {}
-	Empty5[] -> web {}
-	Empty6()[] -> web {}
-	const Empty7 -> web {}
-	async Empty8 -> web {}
-	const async Empty9 -> web {}
-	const async Empty10()[] -> web {}
+	#![substrate = web]
 
-	Empty11 -> web {
+	Empty => ;
+	pub Empty2 => ;
+	pub(crate) Empty3 => ;
+	Empty4() => ;
+	Empty5[] => ;
+	Empty6()[] => ;
+	const Empty7 => ;
+	async Empty8 => ;
+	const async Empty9 => ;
+	const async Empty10()[] => ;
+
+	Empty11 => {
 		{}
 	}
-	Empty12 -> web {
+	Empty12 => {
 		{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}
 	}
 
-	Empty13 -> web {
+	Empty13 => {
 		;
 	}
-	Empty14 -> web {
+	Empty14 => {
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	}
 }

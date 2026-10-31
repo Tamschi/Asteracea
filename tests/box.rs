@@ -241,11 +241,11 @@ pub(crate) fn named() {
 
 pub(crate) mod a_module {
 	asteracea::components! {
-		pub Boxed -> web {}
+		#![substrate = web]
 
-		pub Public -> web {
-			box as pub self.public { Boxed as pub self.boxed; }
-		}
+		pub Boxed => ;
+
+		pub Public => box as pub self.public { Boxed as pub self.boxed; }
 	}
 }
 
