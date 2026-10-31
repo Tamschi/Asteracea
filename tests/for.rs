@@ -68,54 +68,58 @@ mod old {
 }
 
 asteracea::components! {
-	pub ForImplicit -> web {
-		for i in [1, 2, 3, 4, 5i32] {
-			"{}"(i);
-		}
-	}
+	#![substrate = web]
 
-	pub ForImplicitSelector -> web {
-		for i: u8 in 1..=5 {
-			"{}"(i);
-		}
-	}
+	pub RenderFor => [for] _ in 0..2 { }
 
-	pub ForImplicitItemType -> web {
-		for i keyed i => u8 in 1..=5 {
-			"{}"(i);
-		}
-	}
+	// pub ForImplicit => {
+	// 	for i in [1, 2, 3, 4, 5i32] {
+	// 		"{}"(i);
+	// 	}
+	// }
 
-	pub ForKeyTypeOnly -> web {
-		for i => u8 in &[1, 2, 3, 4, 5] {
-			"{}"(i);
-		}
-	}
+	// pub ForImplicitSelector => {
+	// 	for i: u8 in 1..=5 {
+	// 		"{}"(i);
+	// 	}
+	// }
 
-	pub ForExplicit -> web {
-		for i: u8 keyed i => u8 in [1, 2, 3, 4, 5] {
-			"{}"(i);
-		}
-	}
+	// pub ForImplicitItemType => {
+	// 	for i keyed i => u8 in 1..=5 {
+	// 		"{}"(i);
+	// 	}
+	// }
 
-	pub ForUntyped -> web {
-		for i keyed i in [1, 2, 3, 4, 5] {
-			"{}"(i);
-		}
-	}
+	// pub ForKeyTypeOnly => {
+	// 	for i => u8 in &[1, 2, 3, 4, 5] {
+	// 		"{}"(i);
+	// 	}
+	// }
 
-	pub Split -> web {
-		for c in "This is a test.".split(' ') {
-			li {
-				"{:?}"(c);
-			}
-			"\n";
-		}
-	}
+	// pub ForExplicit => {
+	// 	for i: u8 keyed i => u8 in [1, 2, 3, 4, 5] {
+	// 		"{}"(i);
+	// 	}
+	// }
 
-	pub Child -> web {
-		for _ in 0..5 {
-			ForImplicit;
-		}
-	}
+	// pub ForUntyped => {
+	// 	for i keyed i in [1, 2, 3, 4, 5] {
+	// 		"{}"(i);
+	// 	}
+	// }
+
+	// pub Split => {
+	// 	for c in "This is a test.".split(' ') {
+	// 		li {
+	// 			"{:?}"(c);
+	// 		}
+	// 		"\n";
+	// 	}
+	// }
+
+	// pub Child => {
+	// 	for _ in 0..5 {
+	// 		ForImplicit;
+	// 	}
+	// }
 }

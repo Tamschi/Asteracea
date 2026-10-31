@@ -17,7 +17,7 @@ use proc_macro2::TokenStream;
 use super::{Statement, Storage};
 
 grammar! {
-	pub struct Child: PeekFrom, PopFrom, IntoTokens {
+	pub struct Child: PeekFrom, PopFrom {
 		pub identifier: ChildIdentifier,
 		pub new_args: Option<Parentheses>,
 		pub dot_await: Option<(Dot, Await)>,

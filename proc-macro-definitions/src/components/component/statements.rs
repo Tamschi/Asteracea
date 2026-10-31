@@ -27,17 +27,18 @@ mod child;
 mod let_field;
 
 grammar! {
-	pub struct Statement: PopFrom, IntoTokens {
+	pub struct Statement: PopFrom {
 		attrs: Greedy<Vec<OuterAttribute>>,
 		stmt: Statement_,
 	}
 
-	pub enum Statement_: PopFrom, IntoTokens {
+	pub enum Statement_: PopFrom {
 		ParenBrace(Parentheses<CurlyBraces>),
 		BracketBrace(SquareBrackets<CurlyBraces>),
 		For(ForLoop),
 		ParenFor(ParenForLoop),
-		Block(CurlyBraces<Optimistic<Vec<Statement>>>),
+		BracketFor(BracketForLoop),
+		Block(Block),
 		Box(BoxStatement),
 		Semi(Semi),
 		Str(FormattedStr),
@@ -58,6 +59,12 @@ impl Statement {
 		init_proc: &mut TokenStream,
 		render_proc: &mut TokenStream,
 	) {
+		let additional_field_attrs = additional_field_attrs
+			.into_iter()
+			.copied()
+			.chain(&self.attrs)
+			.collect::<Vec<_>>();
+
 		match self.stmt {
 			Statement_::ParenBrace(Parentheses {
 				span: paren_span,
@@ -97,41 +104,24 @@ impl Statement {
 			}
 			Statement_::For(stmt) => todo!("Emit For."),
 			Statement_::ParenFor(stmt) => todo!("Emit ParenFor."),
-			Statement_::Block(CurlyBraces {
-				span: block_span,
-				contents,
-			}) => {
-				let additional_field_attrs: Vec<_> = additional_field_attrs
-					.into_iter()
-					.copied()
-					.chain(self.attrs.iter())
-					.collect();
-
-				let mut inner_init_proc = TokenStream::new();
-				let mut inner_render_proc = TokenStream::new();
-				for statement in contents {
-					statement.emit(
-						root,
-						substrate,
-						content_parent,
-						&additional_field_attrs,
-						fields,
-						&mut inner_init_proc,
-						&mut inner_render_proc,
-					);
-				}
-
-				quote_into_mixed_site!(block_span.join(), root, init_proc, {
-					{
-						{#(inner_init_proc)}
-					}
-				});
-				quote_into_mixed_site!(block_span.join(), root, render_proc, {
-					{
-						{#(inner_render_proc)}
-					}
-				});
-			}
+			Statement_::BracketFor(stmt) => stmt.emit(
+				root,
+				substrate,
+				content_parent,
+				&additional_field_attrs,
+				fields,
+				init_proc,
+				render_proc,
+			),
+			Statement_::Block(stmt) => stmt.emit(
+				root,
+				substrate,
+				content_parent,
+				&additional_field_attrs,
+				fields,
+				init_proc,
+				render_proc,
+			),
 			Statement_::Box(stmt) => todo!("Emit Box."),
 			Statement_::Semi(_) => {
 				// No fields.
@@ -147,7 +137,7 @@ impl Statement {
 }
 
 grammar! {
-	pub struct ForLoop: PeekFrom, PopFrom, IntoTokens {
+	pub struct ForLoop: PeekFrom, PopFrom {
 		// pub outer_attributes: Greedy<OuterAttribute>,
 		pub r#for: For,
 		pub pattern: Pattern,
@@ -156,7 +146,7 @@ grammar! {
 		pub block: CurlyBraces<Vec<Statement>>,
 	}
 
-	pub struct ParenForLoop: PeekFrom, PopFrom, IntoTokens {
+	pub struct ParenForLoop: PeekFrom, PopFrom {
 		// pub outer_attributes: Greedy<OuterAttribute>,
 		pub paren_for: Parentheses<For>,
 		pub pattern: Pattern,
@@ -165,13 +155,26 @@ grammar! {
 		pub block: CurlyBraces<Vec<Statement>>,
 	}
 
-	pub struct BoxStatement: PeekFrom, PopFrom, IntoTokens {
+	pub struct BracketForLoop: PeekFrom, PopFrom {
+		// pub outer_attributes: Greedy<OuterAttribute>,
+		pub bracket_for: SquareBrackets<For>,
+		pub pattern: Pattern,
+		pub r#in: In,
+		pub expression: ExpressionExceptStructExpression,
+		pub block: Block,
+	}
+
+	pub struct Block: PeekFrom, PopFrom {
+		pub block: CurlyBraces<Optimistic<Vec<Statement>>>,
+	}
+
+	pub struct BoxStatement: PeekFrom, PopFrom {
 		pub r#box: Box,
 		pub storage: Option<Storage>,
 		pub statement: boxed::Box<Statement>,
 	}
 
-	pub struct Storage: PeekFrom, IntoTokens {
+	pub struct Storage: PeekFrom {
 		pub r#as: As,
 		pub visibility: Option<Visibility>,
 		pub self_: SelfLowercase,
@@ -180,7 +183,7 @@ grammar! {
 		pub storage_type: Option<StorageType>,
 	}
 
-	pub struct StorageType: PeekFrom, PopFrom, IntoTokens {
+	pub struct StorageType: PeekFrom, PopFrom {
 		pub colon: Colon,
 		pub r#struct: Option<Struct>,
 		pub identifier: Identifier,
@@ -188,16 +191,101 @@ grammar! {
 
 	/// Note: `format!` is not emitted if literal doesn't contain curly braces
 	///        and `format_args` is [`None`].
-	pub struct FormattedStr: PeekFrom, PopFrom, IntoTokens {
+	pub struct FormattedStr: PeekFrom, PopFrom {
 		pub literal: AnyStringLiteral,
 		pub format_args: Option<Parentheses>,
 		pub semi: Semi,
 	}
 
-	pub struct Transclusion: PeekFrom, PopFrom, IntoTokens {
+	pub struct Transclusion: PeekFrom, PopFrom {
 		pub dot_dot: DotDot,
 		pub expression: Expression,
 		pub semi: Semi,
+	}
+}
+
+impl Block {
+	pub fn emit(
+		self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut TokenStream,
+		init_proc: &mut TokenStream,
+		render_proc: &mut TokenStream,
+	) {
+		let Block {
+			block: CurlyBraces {
+				span: block_span,
+				contents,
+			},
+		} = self;
+		let mut inner_init_proc = TokenStream::new();
+		let mut inner_render_proc = TokenStream::new();
+		for statement in contents {
+			statement.emit(
+				root,
+				substrate,
+				content_parent,
+				&additional_field_attrs,
+				fields,
+				&mut inner_init_proc,
+				&mut inner_render_proc,
+			);
+		}
+
+		quote_into_mixed_site!(block_span.join(), root, init_proc, {
+			{
+				{#(inner_init_proc)}
+			}
+		});
+		quote_into_mixed_site!(block_span.join(), root, render_proc, {
+			{
+				{#(inner_render_proc)}
+			}
+		});
+	}
+}
+
+impl BracketForLoop {
+	pub fn emit(
+		self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut TokenStream,
+		init_proc: &mut TokenStream,
+		render_proc: &mut TokenStream,
+	) {
+		let BracketForLoop {
+			bracket_for: SquareBrackets {
+				span,
+				contents: r#for,
+			},
+			pattern,
+			r#in,
+			expression,
+			block,
+		} = self;
+		let mut inner_render_proc = TokenStream::new();
+
+		quote_into_mixed_site!(span.join(), root, render_proc, {
+			{#(r#for, pattern, r#in, expression, {
+				let mut render_proc = TokenStream::new();
+				block.emit(
+					root,
+					substrate,
+					content_parent,
+					&additional_field_attrs,
+					fields,
+					init_proc,
+					&mut render_proc,
+				);
+				render_proc
+			})}
+		});
 	}
 }
 
