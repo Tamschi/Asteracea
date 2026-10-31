@@ -19,76 +19,76 @@
 		"scope": "rust",
 		"prefix": "quote_into_mixed_site! (recommended)",
 		"body": [
-			"quote_into_mixed_site!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, [",
+			"quote_into_mixed_site!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, {",
 			"\t$0",
-			"]);"
+			"});"
 		],
 	},
 	"quote_into_with_exact_span!": {
 		"scope": "rust",
 		"prefix": "quote_into_with_exact_span!",
 		"body": [
-			"quote_into_with_exact_span!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, [",
+			"quote_into_with_exact_span!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, {",
 			"\t$0",
-			"]);"
+			"});"
 		],
 	},
 	"quote_into_call_site!": {
 		"scope": "rust",
 		"prefix": "quote_into_call_site!",
 		"body": [
-			"quote_into_call_site!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, [",
+			"quote_into_call_site!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, {",
 			"\t$0",
-			"]);"
+			"});"
 		],
 	},
 	"raw_quote_into_mixed_site!": {
 		"scope": "rust",
 		"prefix": "raw_quote_into_mixed_site! (recommended)",
 		"body": [
-			"raw_quote_into_mixed_site!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, [",
+			"raw_quote_into_mixed_site!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, {",
 			"\t$0",
-			"]);"
+			"});"
 		],
 	},
 	"raw_quote_into_with_exact_span!": {
 		"scope": "rust",
 		"prefix": "raw_quote_into_with_exact_span!",
 		"body": [
-			"raw_quote_into_with_exact_span!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, [",
+			"raw_quote_into_with_exact_span!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, {",
 			"\t$0",
-			"]);"
+			"});"
 		],
 	},
 	"raw_quote_into_call_site!": {
 		"scope": "rust",
 		"prefix": "raw_quote_into_call_site!",
 		"body": [
-			"raw_quote_into_call_site!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, [",
+			"raw_quote_into_call_site!(${1:span}, ${2|root,&root|}, ${3|tokens,&mut output|}, {",
 			"\t$0",
-			"]);"
+			"});"
 		],
 	},
 	"Loess quote #paste": {
 		"scope": "rust",
 		"prefix": "#paste",
 		"body": [
-			"{#paste ${1:..impl IntoTokens expressions,} } $0"
+			"{#(${1:..impl IntoTokens expressions,})} $0"
 		],
-		"description": "In Loess quotes, emits comma-separated `IntoTokes` values."
+		"description": "In Loess quotes, emits `IntoTokes` values."
 	},
 	"Loess quote #raw": {
 		"scope": "rust",
 		"prefix": "#raw",
 		"body": [
-			"{#raw ${1:verbatim tokens} } $0"
+			"{#raw { ${1:verbatim tokens} }} $0"
 		],
 		"description": "In Loess quotes, emits all tokens inside verbatim."
 	},
 	"Loess quote #error": {
 		"scope": "rust",
 		"prefix": "#error",
-		"body": "{#error ${1:emit literal string} } $0",
+		"body": "{#error { ${1:emit literal string} }} $0",
 		"description": "In Loess quotes, emits a call to `compile_error!`. You can use built-ins like `stringify!` and `concat!` and other directives inside."
 	},
 	"Loess quote #root": {
@@ -102,22 +102,22 @@
 	"Loess quote #mixed_site": {
 		"scope": "rust",
 		"prefix": "#mixed_site",
-		"body": "{#mixed_site ${1:tokens} } $0",
+		"body": "{#mixed_site { ${1:tokens} }} $0",
 		"description": "In Loess quotes, emits tokens inside with mixed_site resolution."
 	},
 	"Loess quote #call_site": {
 		"scope": "rust",
 		"prefix": "#call_site",
-		"body": "{#call_site ${1:tokens} } $0",
+		"body": "{#call_site { ${1:tokens} }} $0",
 		"description": "In Loess quotes, emits tokens inside with call_site resolution."
 	},
 	"Loess quote #located_at": {
 		"scope": "rust",
 		"prefix": "#located_at",
 		"body": [
-			"{#located_at ${1:Span expression},",
+			"{#located_at(${1:Span expression}) {",
 			"\t${2:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, emits tokens inside with the same resolution scope as surrounding tokens, but with the given `Span`'s location."
@@ -125,13 +125,13 @@
 	"Loess quote #resolved_at": {
 		"scope": "rust",
 		"prefix": "#resolved_at",
-		"body": "{#resolved_at ${1:Span expression}, ${2:tokens} } $0",
+		"body": "{#resolved_at(${1:Span expression}) { ${2:tokens} }} $0",
 		"description": "In Loess quotes, emits tokens inside with the same location as surrounding tokens, but with the given `Span`'s resolution scope."
 	},
 	"Loess quote #with_exact_span": {
 		"scope": "rust",
 		"prefix": "#with_exact_span",
-		"body": "{#with_exact_span ${1:Span expression}, ${2:tokens} } $0",
+		"body": "{#with_exact_span(${1:Span expression}) { ${2:tokens} }} $0",
 		"description": "In Loess quotes, emits tokens inside with the given `Span`."
 	},
 	"Loess quote #let": {
@@ -145,23 +145,23 @@
 	},
 	"Loess quote #let else": {
 		"scope": "rust",
-		"prefix": "#let, else",
+		"prefix": "#let else",
 		"body": [
-			"{#let ${1:pattern} = ${2:expression}, else { ${3:!diverging statement} };}",
+			"{#let ${1:pattern} = ${2:expression} else { ${3:diverging statement} };}",
 			"$0"
 		],
-		"description": "In Loess quotes, expands to a `let` statement."
+		"description": "In Loess quotes, expands to a `let … else` statement."
 	},
 	"Loess quote #let else (block formatting)": {
 		"scope": "rust",
-		"prefix": "#let, else block",
+		"prefix": "#let else block",
 		"body": [
-			"{#let ${1:pattern} = ${2:expression}, else {",
+			"{#let ${1:pattern} = ${2:expression} else {",
 			"\t${3:!diverging statements}",
 			"};}",
 			"$0"
 		],
-		"description": "In Loess quotes, expands to a `let` statement."
+		"description": "In Loess quotes, expands to a `let … else` statement."
 	},
 	"Loess quote #break": {
 		"scope": "rust",
@@ -192,91 +192,60 @@
 	},
 	"Loess quote #if": {
 		"scope": "rust",
-		"prefix": "#if,",
+		"prefix": "#if",
 		"body": [
-			"{#if ${1:bool expression},",
+			"{#if ${1:bool expression} {",
 			"\t${2:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to an `if`-statement."
 	},
 	"Loess quote #if let": {
 		"scope": "rust",
-		"prefix": "#if let,",
+		"prefix": "#if let",
 		"body": [
-			"{#if let ${1:pattern} = ${2:expression},",
+			"{#if let ${1:pattern} = ${2:expression} {",
 			"\t${3:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to an `if let`-statement."
 	},
-	"Loess quote #else": {
+	"Loess quote #if else": {
 		"scope": "rust",
-		"prefix": "#else,",
+		"prefix": "#if else",
 		"body": [
-			"{#else,",
-			"\t${1:tokens}",
-			"}",
-			"$0"
-		],
-		"description": "In Loess quotes, expands to a fallback branch."
-	},
-	"Loess quote #if, #else,": {
-		"scope": "rust",
-		"prefix": "#if, #else,",
-		"body": [
-			"{#if ${1:bool expression},",
+			"{#if ${1:bool expression} {",
 			"\t${2:tokens}",
-			"}$3 {#else,",
+			"} else$3 {",
 			"\t${4:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to an `if`-statement and fallback branch."
 	},
-	"Loess quote #if let, #else,": {
+	"Loess quote #if let else": {
 		"scope": "rust",
-		"prefix": "#if let, #else,",
+		"prefix": "#if let else",
 		"body": [
-			"{#if ${1:pattern} = ${2:expression},",
+			"{#if ${1:pattern} = ${2:expression} {",
 			"\t${3:tokens}",
-			"}$4 {#else,",
+			"} else$4 {",
 			"\t${5:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to an `if let`-statement and fallback branch."
 	},
-	"Loess quote #else if": {
-		"scope": "rust",
-		"prefix": "#else if,",
-		"body": [
-			"{#else if ${1:bool expression},",
-			"\t${2:tokens}",
-			"}"
-		],
-		"description": "In Loess quotes, expands to a conditional fallback branch."
-	},
-	"Loess quote #else if let": {
-		"scope": "rust",
-		"prefix": "#else if let,",
-		"body": [
-			"{#else if let ${1:pattern} = ${2:expression},",
-			"\t${3:tokens}",
-			"}"
-		],
-		"description": "In Loess quotes, expands to a pattern-conditional fallback branch."
-	},
 	"Loess quote #match": {
 		"scope": "rust",
-		"prefix": "#match,",
+		"prefix": "#match",
 		"body": [
-			"{#match ${1:expression},",
+			"{#match ${1:expression} {",
 			"\t${2:pattern} => { ${3:tokens} }",
 			"\t$4",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to a `match` statement."
@@ -290,101 +259,101 @@
 		],
 		"description": "A Loess quote `#match` branch."
 	},
-	"Loess quote #'label:,": {
+	"Loess quote #'label:": {
 		"scope": "rust",
-		"prefix": "#'label:,",
+		"prefix": "#'label:",
 		"body": [
-			"{#${1:'label}:,",
+			"{#${1:'label}: {",
 			"\t${2:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to a block with a label."
 	},
-	"Loess quote #loop,": {
+	"Loess quote #loop": {
 		"scope": "rust",
-		"prefix": "#loop,",
+		"prefix": "#loop",
 		"body": [
-			"{#loop,",
+			"{#loop {",
 			"\t${1:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to a `loop`-statement."
 	},
-	"Loess quote #'label: loop,": {
+	"Loess quote #'label: loop": {
 		"scope": "rust",
-		"prefix": "#'label: loop,",
+		"prefix": "#'label: loop",
 		"body": [
-			"{#${1:'label}: loop,",
+			"{#${1:'label}: loop {",
 			"\t${2:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to a `loop`-statement with a label."
 	},
-	"Loess quote #for,": {
+	"Loess quote #for": {
 		"scope": "rust",
-		"prefix": "#for,",
+		"prefix": "#for",
 		"body": [
-			"{#for ${1:pattern} in ${2:expression},",
+			"{#for ${1:pattern} in ${2:expression} {",
 			"\t${3:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to a `for`-loop."
 	},
-	"Loess quote #'label: for,": {
+	"Loess quote #'label: for": {
 		"scope": "rust",
-		"prefix": "#'label: for,",
+		"prefix": "#'label: for",
 		"body": [
-			"{#${1:'label}: for ${2:pattern} in ${3:expression},",
+			"{#${1:'label}: for ${2:pattern} in ${3:expression} {",
 			"\t${4:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to a `for`-loop with a label."
 	},
-	"Loess quote #while,": {
+	"Loess quote #while": {
 		"scope": "rust",
-		"prefix": "#while,",
+		"prefix": "#while",
 		"body": [
-			"{#while ${1:expression},",
+			"{#while ${1:expression} {",
 			"\t${2:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to a `while`-loop."
 	},
-	"Loess quote #'label: while,": {
+	"Loess quote #'label: while": {
 		"scope": "rust",
-		"prefix": "#'label: while,",
+		"prefix": "#'label: while",
 		"body": [
-			"{#${1:'label}: while ${2:expression},",
+			"{#${1:'label}: while ${2:expression} {",
 			"\t${3:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to a `while`-loop with a label."
 	},
-	"Loess quote #while let,": {
+	"Loess quote #while let": {
 		"scope": "rust",
-		"prefix": "#while let,",
+		"prefix": "#while let",
 		"body": [
-			"{#while let ${1:pattern} = ${2:expression},",
+			"{#while let ${1:pattern} = ${2:expression} {",
 			"\t${3:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to a `while let`-loop."
 	},
-	"Loess quote #'label: while let,": {
+	"Loess quote #'label: while let": {
 		"scope": "rust",
-		"prefix": "#'label: while let,",
+		"prefix": "#'label: while let",
 		"body": [
-			"{#${1:'label}: while let ${2:pattern} = ${3:expression},",
+			"{#${1:'label}: while let ${2:pattern} = ${3:expression} {",
 			"\t${4:tokens}",
-			"}",
+			"}}",
 			"$0"
 		],
 		"description": "In Loess quotes, expands to a `while let`-loop with a label."

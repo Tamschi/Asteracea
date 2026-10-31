@@ -1,6 +1,8 @@
 use std::{convert::Infallible, pin::Pin, sync::Arc};
 
-use asteracea::{Init, Render, Substrate, components};
+use asteracea::{
+	ContentParentSubstrate, DefaultAccumulationSubstrate, Init, Render, Substrate, components,
+};
 use bon::Builder;
 use epaint::{Brush, Color32, CornerRadius, Rect, Shape, Stroke, StrokeKind};
 use eros::AnyError;
@@ -13,7 +15,39 @@ impl Substrate for EpaintSubstrate {
 	type InitEDefault<'i> = AnyError;
 	type RenderContext<'r> = &'r Style<'r>;
 	type RenderTDefault<'r> = Shape;
-	type RenderEDefault<'r> = AnyError;
+	type RenderESetDefault<'r> = AnyError;
+}
+
+impl<'r> DefaultAccumulationSubstrate<'r> for EpaintSubstrate {
+	type RenderAccumulatorDefault = Vec<Shape>;
+
+	fn default_start_accumulation() -> Self::RenderAccumulatorDefault {
+		vec![]
+	}
+
+	fn default_finalize_accumulation(
+		acc: Self::RenderAccumulatorDefault,
+		_ctx: Self::RenderContext<'r>,
+	) -> eros::Result<Self::RenderTDefault<'r>, Self::RenderESetDefault<'r>> {
+		Ok(Shape::Vec(acc))
+	}
+}
+
+impl<'r>
+	ContentParentSubstrate<
+		'r,
+		<Self as DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault,
+		<Self as Substrate>::RenderTDefault<'r>,
+	> for EpaintSubstrate
+{
+	#[inline(always)]
+	fn on_rendered(
+		acc: &mut <Self as DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault,
+		_ctx: Self::RenderContext<'_>,
+		rendered: <Self as Substrate>::RenderTDefault<'r>,
+	) {
+		acc.push(rendered)
+	}
 }
 
 impl EpaintSubstrate {

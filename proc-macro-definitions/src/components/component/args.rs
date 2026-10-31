@@ -9,12 +9,12 @@ use loess_rust::{
 		keywords::{Async, Dyn},
 		token::{
 			life::Lifetime,
-			punct::{Colon, Comma, Question},
+			punct::{Colon, Comma, Eq, Question},
 		},
 	},
 	vis::Visibility,
 };
-use loess_rust_opaque::Type;
+use loess_rust_opaque::{Expression, Type};
 use proc_macro2::TokenTree;
 
 pub type ConstructorArgs = Separated<ConstructorArg, Comma>;
@@ -35,6 +35,7 @@ grammar! {
 		question: Option<Question>,
 		colon: Colon,
 		r#type: Type, //TODO: Type,
+		default: Option<(Eq, Expression)>,
 	}
 	pub struct SlotArg: PopFrom {
 		r#async: Option<Async>,

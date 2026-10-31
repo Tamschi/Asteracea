@@ -46,7 +46,11 @@ pub use lignin;
 pub use try_lazy_init;
 
 mod traits;
-pub use traits::{AsyncInit, Init, Render, Substrate};
+//TODO: Reorganise some of these into a module.
+pub use traits::{
+	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,
+	DefaultAccumulationSubstrate, Init, Render, Substrate,
+};
 
 #[cfg(doctest)]
 #[doc = include_str!("../README.md")]

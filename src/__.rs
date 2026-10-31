@@ -14,6 +14,7 @@ pub type DepsNode = Node<TypeId, TypeId, DynValue>;
 pub use eros::Result;
 pub use pinned_init::PinInit;
 pub use std::pin::Pin;
+pub use std::result::Result::{Err, Ok};
 
 pub use bon;
 pub use core;
@@ -25,7 +26,10 @@ pub use try_lazy_init;
 
 pub use asteracea_proc_macro_definitions::components;
 
-pub use super::{AsyncInit, Init, Render, Substrate};
+pub use super::{
+	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,
+	DefaultAccumulationSubstrate, Init, Render, Substrate,
+};
 
 /// Only implemented for functions that have a signature ABI-compatible with `fn(*const R, T)`!
 /// See `event_binding.rs` is the asteracea_proc-macro-definition crate for more information.

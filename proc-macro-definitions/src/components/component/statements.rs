@@ -1,7 +1,10 @@
-use std::{boxed, ops::ControlFlow::{self, Continue}};
+use std::{
+	boxed,
+	ops::ControlFlow::{self, Continue},
+};
 
 use loess::{
-	grammar,
+	grammar, quote_into_mixed_site,
 	scaffold::{CurlyBraces, Greedy, Optimistic, Parentheses, SquareBrackets},
 	Error, ErrorPriority, Errors, Input, PeekFrom, PopFrom, PopParsedFrom,
 };
@@ -18,7 +21,7 @@ use loess_rust::{
 	vis::Visibility,
 };
 use loess_rust_opaque::{Expression, ExpressionExceptStructExpression, Pattern};
-use proc_macro2::TokenStream;
+use proc_macro2::{Group, TokenStream};
 
 mod child;
 mod let_field;
@@ -42,6 +45,51 @@ grammar! {
 		Child(child::Child),
 		LetField(let_field::LetField),
 	} else "Expected Asteracea statement.";
+}
+
+impl Statement {
+	pub fn emit(
+		self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		fields: &mut TokenStream,
+		init_proc: &mut TokenStream,
+		render_proc: &mut TokenStream,
+	) {
+		match self.stmt {
+			Statement_::ParenBrace(stmt) => todo!("Emit ParenBrace."),
+			Statement_::BracketBrace(SquareBrackets {
+				span: brackets_span,
+				contents: CurlyBraces {
+					span: braces_span,
+					contents: rust,
+				},
+			}) => {
+				// No fields.
+				// No init.
+				quote_into_mixed_site!(brackets_span.join(), root, render_proc, {
+					{#(self.attrs)}
+					<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
+						&mut acc,
+						ctx,
+						{#located_at(braces_span.join()) {
+							{ {#(rust)} }
+						}}
+					);
+				})
+			}
+			Statement_::For(stmt) => todo!("Emit For."),
+			Statement_::ParenFor(stmt) => todo!("Emit ParenFor."),
+			Statement_::Block(stmt) => todo!("Emit Block."),
+			Statement_::Box(stmt) => todo!("Emit Box."),
+			Statement_::Semi(stmt) => todo!("Emit Semi."),
+			Statement_::Str(stmt) => todo!("Emit Str."),
+			Statement_::Transclusion(stmt) => todo!("Emit Transclusion."),
+			Statement_::Child(stmt) => todo!("Emit Child."),
+			Statement_::LetField(stmt) => todo!("Emit LetField."),
+		}
+	}
 }
 
 grammar! {
