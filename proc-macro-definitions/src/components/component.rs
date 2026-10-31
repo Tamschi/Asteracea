@@ -7,6 +7,7 @@ use loess_rust::{
 	attributes::OuterAttribute,
 	ident::Identifier,
 	lex::keywords::{Async, Const},
+	lex::token::punct::FatArrow,
 	vis::Visibility,
 };
 use proc_macro2::Group;
@@ -28,7 +29,9 @@ grammar! {
 		pub name: Identifier,
 		pub constructor_args: Option<Parentheses<Optimistic<ConstructorArgs>>>,
 		pub render_args: Option<SquareBrackets<Optimistic<RenderArgs>>>,
-		pub body: CurlyBraces<Vec<Statement>>,
+		pub slot_args: Option<CurlyBraces<Optimistic<SlotArgs>>>,
+		pub fat_arrow: FatArrow,
+		pub body: Statement,
 	}
 }
 
@@ -42,10 +45,9 @@ impl Component {
 			name,
 			constructor_args,
 			render_args,
-			body: CurlyBraces {
-				span: body_span,
-				contents: statements,
-			},
+			slot_args,
+			fat_arrow,
+			body,
 		} = self;
 
 		// This (hopefully) enables unused function warnings.
@@ -57,21 +59,19 @@ impl Component {
 		let mut render_proc = TokenStream::new();
 
 		let content_parent = Ident::new("Self", name.span()).into_token_stream();
-		for statement in statements {
-			statement.emit(
-				root,
-				substrate,
-				&content_parent,
-				&mut fields,
-				&mut init_proc,
-				&mut render_proc,
-			);
-		}
+		body.emit(
+			root,
+			substrate,
+			&content_parent,
+			&mut fields,
+			&mut init_proc,
+			&mut render_proc,
+		);
 
 		quote_into_with_exact_span!(name.span(), root, tokens, {
 			{#(attributes)}
 			{#(&visibility)} struct {#(&name)} {
-
+				{#(fields)}
 			}
 
 			{#mixed_site {
@@ -93,7 +93,7 @@ impl Component {
 						) -> impl 'i + {#root}::PinInit<
 							Self,
 							{#root}::ErrorUnion<<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitESet>,
-						> {#located_at(body_span.join()){
+						> {#located_at(fat_arrow.eq.span().join(fat_arrow.gt.span()).unwrap_or_else(|| fat_arrow.eq.span())){
 							{
 								let init = move |_this: *mut Self| -> {#root}::core::result::Result<
 									(),
@@ -132,6 +132,7 @@ impl Component {
 					}
 				}
 
+				//TODO: Only if this can have content.
 				#[doc(hidden)]
 				impl<'r> {#root}::ContentParent<'r, {#(substrate)}> for {#(&name)} {
 					type RenderAccumulator = <{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault;
@@ -153,6 +154,7 @@ impl Component {
 					}
 				}
 
+				//TODO: Only if this can have content.
 				#[doc = {#root}::concat!("[`", {#root}::stringify!({#(&name)}), "`] inherits accepted content from [`", {#root}::stringify!({#(substrate)}), "`].")]
 				impl<'r, T> {#root}::ContentParentOf<'r, {#(substrate)}, T> for {#(name)}
 				where

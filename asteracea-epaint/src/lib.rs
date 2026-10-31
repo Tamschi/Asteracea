@@ -50,13 +50,14 @@ impl<'r>
 	}
 }
 
+/// Built-in components:
 impl EpaintSubstrate {
-	pub fn circle(never: Never) -> CircleShape {
-		never
+	pub fn circle(ǃ: Never) -> CircleShape {
+		ǃ
 	}
 
-	pub fn rect(never: Never) -> RectShape {
-		never
+	pub fn rect(ǃ: Never) -> RectShape {
+		ǃ
 	}
 }
 
@@ -99,14 +100,12 @@ components! {
 		radius: f32,
 		fill?: Color32,
 		stroke?: Stroke,
-	] {
-		[{Shape::Circle(epaint::CircleShape {
-			center,
-			radius,
-			fill,
-			stroke,
-		})}]
-	}
+	] => [{Shape::Circle(epaint::CircleShape {
+		center,
+		radius,
+		fill,
+		stroke,
+	})}]
 
 	pub RectShape[
 		rect: Rect,
@@ -118,18 +117,15 @@ components! {
 		blur_width?: f32,
 		brush?: Arc<Brush>,
 		angle?: f32,
-	] {
-		[{epaint::RectShape {
-			rect,
-			corner_radius,
-			fill,
-			stroke,
-			stroke_kind,
-			round_to_pixels,
-			blur_width,
-			brush,
-			angle,
-		}
-		.into()}]
-	}
+	] => [{Shape::Rect(epaint::RectShape {
+		rect,
+		corner_radius,
+		fill,
+		stroke,
+		stroke_kind,
+		round_to_pixels,
+		blur_width,
+		brush,
+		angle,
+	})}]
 }
