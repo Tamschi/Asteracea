@@ -284,30 +284,28 @@ impl BracketForLoop {
 			{#for attr in attrs {
 				{#(attr)}
 			}}
-			{
-				let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
-				{#(r#for, pattern, r#in, expression)} {
-					<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
-						&mut acc,
-						ctx,
-						{#({
-							let mut render_proc = TokenStream::new();
-							block.emit(
-								root,
-								substrate,
-								content_parent,
-								&additional_field_attrs,
-								fields,
-								&[],
-								init_proc,
-								&mut render_proc,
-							);
-							render_proc
-						})},
-					);
+			<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
+				&mut acc,
+				ctx,
+				{
+					let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
+					{#(r#for, pattern, r#in, expression, {
+						let mut render_proc = TokenStream::new();
+						block.emit(
+							root,
+							substrate,
+							content_parent,
+							&additional_field_attrs,
+							fields,
+							&[],
+							init_proc,
+							&mut render_proc,
+						);
+						render_proc
+					})}
+					<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)?
 				}
-				<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)?
-			}
+			);
 		});
 	}
 }
