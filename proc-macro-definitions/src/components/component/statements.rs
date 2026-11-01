@@ -110,6 +110,7 @@ impl Statement {
 				content_parent,
 				&additional_field_attrs,
 				fields,
+				&self.attrs,
 				init_proc,
 				render_proc,
 			),
@@ -119,6 +120,7 @@ impl Statement {
 				content_parent,
 				&additional_field_attrs,
 				fields,
+				&self.attrs,
 				init_proc,
 				render_proc,
 			),
@@ -212,6 +214,7 @@ impl Block {
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
 		fields: &mut TokenStream,
+		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		render_proc: &mut TokenStream,
 	) {
@@ -236,11 +239,17 @@ impl Block {
 		}
 
 		quote_into_mixed_site!(block_span.join(), root, init_proc, {
+			{#for attr in attrs {
+				{#(attr)}
+			}}
 			{
 				{#(inner_init_proc)}
 			}
 		});
 		quote_into_mixed_site!(block_span.join(), root, render_proc, {
+			{#for attr in attrs {
+				{#(attr)}
+			}}
 			{
 				{#(inner_render_proc)}
 			}
@@ -256,6 +265,7 @@ impl BracketForLoop {
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
 		fields: &mut TokenStream,
+		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		render_proc: &mut TokenStream,
 	) {
@@ -271,25 +281,31 @@ impl BracketForLoop {
 		} = self;
 
 		quote_into_mixed_site!(span.join(), root, render_proc, {
-			{#(r#for, pattern, r#in, expression)} {
+			{#for attr in attrs {
+				{#(attr)}
+			}}
+			{
 				let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
-				<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
-					&mut acc,
-					ctx,
-					{#({
-						let mut render_proc = TokenStream::new();
-						block.emit(
-							root,
-							substrate,
-							content_parent,
-							&additional_field_attrs,
-							fields,
-							init_proc,
-							&mut render_proc,
-						);
-						render_proc
-					})},
-				);
+				{#(r#for, pattern, r#in, expression)} {
+					<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
+						&mut acc,
+						ctx,
+						{#({
+							let mut render_proc = TokenStream::new();
+							block.emit(
+								root,
+								substrate,
+								content_parent,
+								&additional_field_attrs,
+								fields,
+								&[],
+								init_proc,
+								&mut render_proc,
+							);
+							render_proc
+						})},
+					);
+				}
 				<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)?
 			}
 		});
