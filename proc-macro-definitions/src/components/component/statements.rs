@@ -269,22 +269,29 @@ impl BracketForLoop {
 			expression,
 			block,
 		} = self;
-		let mut inner_render_proc = TokenStream::new();
 
 		quote_into_mixed_site!(span.join(), root, render_proc, {
-			{#(r#for, pattern, r#in, expression, {
-				let mut render_proc = TokenStream::new();
-				block.emit(
-					root,
-					substrate,
-					content_parent,
-					&additional_field_attrs,
-					fields,
-					init_proc,
-					&mut render_proc,
+			{#(r#for, pattern, r#in, expression)} {
+				let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
+				<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
+					&mut acc,
+					ctx,
+					{#({
+						let mut render_proc = TokenStream::new();
+						block.emit(
+							root,
+							substrate,
+							content_parent,
+							&additional_field_attrs,
+							fields,
+							init_proc,
+							&mut render_proc,
+						);
+						render_proc
+					})},
 				);
-				render_proc
-			})}
+				<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)?
+			}
 		});
 	}
 }

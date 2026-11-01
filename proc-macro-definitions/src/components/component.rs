@@ -133,7 +133,6 @@ impl Component {
 					}
 				}
 
-				//TODO: Only if this can have content.
 				#[doc(hidden)]
 				impl<'r> {#root}::ContentParent<'r, {#(substrate)}> for {#(&name)} {
 					type RenderAccumulator = <{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault;
@@ -155,7 +154,6 @@ impl Component {
 					}
 				}
 
-				//TODO: Only if this can have content.
 				#[doc = {#root}::concat!("[`", {#root}::stringify!({#(&name)}), "`] inherits accepted content from [`", {#root}::stringify!({#(substrate)}), "`].")]
 				impl<'r, T> {#root}::ContentParentOf<'r, {#(substrate)}, T> for {#(name)}
 				where

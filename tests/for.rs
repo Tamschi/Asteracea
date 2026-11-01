@@ -1,3 +1,5 @@
+use asteracea::{DefaultAccumulationSubstrate, Substrate};
+
 mod old {
 	#![allow(deprecated)]
 	asteracea::component! {
@@ -67,8 +69,31 @@ mod old {
 	}
 }
 
+enum Web {}
+
+impl Substrate for Web {
+	type InitContext<'i> = ();
+	type InitESetDefault<'i> = ();
+	type RenderContext<'r> = ();
+	type RenderTDefault<'r> = ();
+	type RenderESetDefault<'r> = ();
+}
+
+impl<'r> DefaultAccumulationSubstrate<'r> for Web {
+	type RenderAccumulatorDefault = ();
+
+	fn default_start_accumulation() -> Self::RenderAccumulatorDefault {}
+
+	fn default_finalize_accumulation(
+		_acc: Self::RenderAccumulatorDefault,
+		_ctx: Self::RenderContext<'r>,
+	) -> eros::Result<Self::RenderTDefault<'r>, Self::RenderESetDefault<'r>> {
+		Ok(())
+	}
+}
+
 asteracea::components! {
-	#![substrate = web]
+	#![substrate = Web]
 
 	pub RenderFor => [for] _ in 0..2 { }
 
