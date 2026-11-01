@@ -14,7 +14,7 @@ asteracea = { path = "." }
 [package]
 name = "asteracea"
 version = "0.0.2"
-rust-version = "1.86"
+rust-version = "1.88"
 authors = ["Tamme Schichler <tamme@schichler.dev>"]
 edition = "2021"
 description = "A web application framework for Rust. Asteracea can be used for client-side and server-side rendering and for statically rendered and deployed sites (and combinations thereof) without specific changes to an app's code."
@@ -64,6 +64,8 @@ tiptoe = { version = "0.0.2", features = ["sync"] }
 pinned-init = { version = "0.0.10", default-features = false }                               # public, migrating to pin-init
 bon = "3.9.2"                                                                                # semi-public
 eros = "0.8.1"
+never-say-never = "6.6.666"
+inherent-associated-types = "0.1.0"
 
 [dev-dependencies]
 debugless-unwrap = "1.0.0"

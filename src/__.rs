@@ -1,19 +1,26 @@
 use core::fmt::Debug;
 use lignin::CallbackRegistration;
-use rhizome::sync::{DynValue, Node};
+use rhizome::sync::{DynValue, NodeHandle};
 use std::{
 	any::TypeId,
 	fmt::{self, Formatter},
 	mem::ManuallyDrop,
+	ptr::drop_in_place,
 	rc::Rc,
 	sync::Arc,
 };
 use try_lazy_init::Lazy;
 
-pub type DepsNode = Node<TypeId, TypeId, DynValue>;
+pub type DepsNodeHandle = NodeHandle<TypeId, TypeId, DynValue>;
 pub use core::{concat, stringify};
 pub use eros::ErrorUnion;
+pub use inherent_associated_types::Associated;
 pub use pinned_init::PinInit;
+pub use std::clone::Clone;
+pub use std::default::Default;
+pub use std::derive;
+pub use std::mem::forget;
+pub use std::ops::Drop;
 pub use std::pin::Pin;
 pub use std::result::Result::{self, Err, Ok};
 
@@ -64,7 +71,6 @@ pub struct AnonymousContentParentParametersBuilder;
 impl Built for AnonymousContentParentParameters {
 	type Builder = AnonymousContentParentParametersBuilder;
 
-	#[must_use]
 	fn builder() -> Self::Builder {
 		AnonymousContentParentParametersBuilder
 	}
@@ -150,3 +156,34 @@ impl<T: ?Sized> UnBorrow for Arc<T> {
 		self
 	}
 }
+
+struct InitGuard<T: ?Sized> {
+	place: *mut T,
+}
+
+impl<T: ?Sized> Drop for InitGuard<T> {
+	fn drop(&mut self) {
+		unsafe { drop_in_place(self.place) };
+	}
+}
+
+pub fn pinned_init_and_guard<'a, 'i, T: 'a, E>(
+	init: impl 'i + PinInit<T, E>,
+	place: *mut T,
+) -> Result<impl 'a + Drop, E> {
+	Ok(unsafe {
+		init.__pinned_init(place)?;
+		InitGuard { place }
+	})
+}
+
+#[derive(Default)]
+pub struct NoArgsBuilder;
+
+impl NoArgsBuilder {
+	pub fn build(self) -> NoArgs {
+		NoArgs {}
+	}
+}
+
+pub struct NoArgs {}

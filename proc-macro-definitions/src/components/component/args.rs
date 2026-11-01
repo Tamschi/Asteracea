@@ -17,30 +17,30 @@ use loess_rust::{
 use loess_rust_opaque::{Expression, Type};
 use proc_macro2::TokenTree;
 
-pub type ConstructorArgs = Separated<ConstructorArg, Comma>;
+pub type InitArgs = Separated<InitArg, Comma>;
 pub type RenderArgs = Separated<RenderArg, Comma>;
 pub type SlotArgs = Separated<SlotArg, Comma>;
 
 grammar! {
-	pub struct ConstructorArg: PopFrom {
-		attrs: Greedy<Vec<OuterAttribute>>,
-		vis: Option<Visibility>,
-		r#dyn: Option<Dyn>,
-		pattern: Identifier, //TODO: PatParam,
-		colon: Colon,
-		r#type: Type,
+	pub struct InitArg: PopFrom {
+		pub attrs: Greedy<Vec<OuterAttribute>>,
+		pub vis: Option<Visibility>,
+		pub r#dyn: Option<Dyn>,
+		pub identifier: Identifier,
+		pub colon: Colon,
+		pub r#type: Type,
 	}
 	pub struct RenderArg: PopFrom {
-		pattern: Identifier, //TODO: PatParam,
-		question: Option<Question>,
-		colon: Colon,
-		r#type: Type, //TODO: Type,
-		default: Option<(Eq, Expression)>,
+		pub identifier: Identifier,
+		pub question: Option<Question>,
+		pub colon: Colon,
+		pub r#type: Type, //TODO: Type,
+		pub default: Option<(Eq, Expression)>,
 	}
 	pub struct SlotArg: PopFrom {
-		r#async: Option<Async>,
-		label: Lifetime,
-		args: Option<SquareBrackets<Optimistic<Separated<RenderArg, Comma>>>>,
+		pub r#async: Option<Async>,
+		pub label: Lifetime,
+		pub args: Option<SquareBrackets<Optimistic<Separated<RenderArg, Comma>>>>,
 	}
 
 	pub struct NotComma: PeekFrom, PopFrom {

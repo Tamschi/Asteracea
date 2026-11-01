@@ -5,5 +5,8 @@ use asteracea_epaint::EpaintSubstrate;
 components!(
 	#![substrate = EpaintSubstrate]
 
-	pub RectShapeParent => rect[size?, color?];
+	pub RectShapeParent => {
+		rect[size?, color?];
+		rect[size?, color?];
+	}
 );

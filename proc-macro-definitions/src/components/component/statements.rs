@@ -4,9 +4,9 @@ use std::{
 };
 
 use loess::{
-	grammar, quote_into_mixed_site,
+	Error, ErrorPriority, Errors, Input, PeekFrom, PopFrom, PopParsedFrom, grammar,
+	quote_into_mixed_site,
 	scaffold::{CurlyBraces, Greedy, Optimistic, Parentheses, SquareBrackets},
-	Error, ErrorPriority, Errors, Input, PeekFrom, PopFrom, PopParsedFrom,
 };
 use loess_rust::{
 	attributes::OuterAttribute,
@@ -21,7 +21,7 @@ use loess_rust::{
 	vis::Visibility,
 };
 use loess_rust_opaque::{Expression, ExpressionExceptStructExpression, Pattern};
-use proc_macro2::{Group, TokenStream};
+use proc_macro2::{Group, Ident, Span, TokenStream};
 
 mod child;
 mod let_field;
@@ -43,8 +43,8 @@ grammar! {
 		Semi(Semi),
 		Str(FormattedStr),
 		Transclusion(Transclusion),
-		Child(child::Child),
 		LetField(let_field::LetField),
+		Child(Optimistic<child::Child>),
 	} else "Expected Asteracea statement.";
 }
 
@@ -55,8 +55,9 @@ impl Statement {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut TokenStream,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
 		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
 		render_proc: &mut TokenStream,
 	) {
 		let additional_field_attrs = additional_field_attrs
@@ -112,6 +113,7 @@ impl Statement {
 				fields,
 				&self.attrs,
 				init_proc,
+				init_guards,
 				render_proc,
 			),
 			Statement_::Block(stmt) => stmt.emit(
@@ -122,6 +124,7 @@ impl Statement {
 				fields,
 				&self.attrs,
 				init_proc,
+				init_guards,
 				render_proc,
 			),
 			Statement_::Box(stmt) => todo!("Emit Box."),
@@ -132,7 +135,17 @@ impl Statement {
 			}
 			Statement_::Str(stmt) => todo!("Emit Str."),
 			Statement_::Transclusion(stmt) => todo!("Emit Transclusion."),
-			Statement_::Child(stmt) => todo!("Emit Child."),
+			Statement_::Child(stmt) => stmt.emit(
+				root,
+				substrate,
+				content_parent,
+				&additional_field_attrs,
+				fields,
+				&self.attrs,
+				init_proc,
+				init_guards,
+				render_proc,
+			),
 			Statement_::LetField(stmt) => todo!("Emit LetField."),
 		}
 	}
@@ -213,9 +226,10 @@ impl Block {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut TokenStream,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
 		render_proc: &mut TokenStream,
 	) {
 		let Block {
@@ -225,6 +239,7 @@ impl Block {
 			},
 		} = self;
 		let mut inner_init_proc = TokenStream::new();
+		let mut inner_init_guards = vec![];
 		let mut inner_render_proc = TokenStream::new();
 		for statement in contents {
 			statement.emit(
@@ -234,6 +249,7 @@ impl Block {
 				&additional_field_attrs,
 				fields,
 				&mut inner_init_proc,
+				&mut inner_init_guards,
 				&mut inner_render_proc,
 			);
 		}
@@ -242,9 +258,18 @@ impl Block {
 			{#for attr in attrs {
 				{#(attr)}
 			}}
-			{
+			let {#({
+				let guard = Identifier(Ident::new( &format!("init_guard_{}", init_guards.len()),block_span.join().resolved_at(Span::mixed_site())));
+				init_guards.push(guard.clone());
+				guard
+			})} = {
 				{#(inner_init_proc)}
-			}
+				(
+					{#for guard in inner_init_guards.into_iter().rev() {
+						{#(guard)},
+					}}
+				)
+			};
 		});
 		quote_into_mixed_site!(block_span.join(), root, render_proc, {
 			{#for attr in attrs {
@@ -264,9 +289,10 @@ impl BracketForLoop {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut TokenStream,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
 		render_proc: &mut TokenStream,
 	) {
 		let BracketForLoop {
@@ -299,6 +325,7 @@ impl BracketForLoop {
 							fields,
 							&[],
 							init_proc,
+							init_guards,
 							&mut render_proc,
 						);
 						render_proc

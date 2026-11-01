@@ -1,12 +1,9 @@
-use std::{convert::Infallible, pin::Pin, sync::Arc};
-
 use asteracea::{
 	ContentParentSubstrate, DefaultAccumulationSubstrate, Init, Render, Substrate, components,
 };
-use bon::Builder;
 use epaint::{Brush, Color32, CornerRadius, Rect, Shape, Stroke, StrokeKind};
 use eros::AnyError;
-use never_say_never::Never;
+use inherent_associated_types::associate;
 
 pub enum EpaintSubstrate {}
 
@@ -51,14 +48,10 @@ impl<'r>
 }
 
 /// Built-in components:
+#[associate]
 impl EpaintSubstrate {
-	pub fn circle(ǃ: Never) -> CircleShape {
-		ǃ
-	}
-
-	pub fn rect(ǃ: Never) -> RectShape {
-		ǃ
-	}
+	pub type circle = CircleShape;
+	pub type rect = RectShape;
 }
 
 pub struct Style<'a> {
@@ -100,12 +93,14 @@ components! {
 		radius: f32,
 		fill?: Color32,
 		stroke?: Stroke,
-	] => [{Shape::Circle(epaint::CircleShape {
-		center,
-		radius,
-		fill,
-		stroke,
-	})}]
+	] => [{
+		Shape::Circle(epaint::CircleShape {
+			center: todo!(),
+			radius: todo!(),
+			fill: todo!(),
+			stroke: todo!(),
+		})
+	}]
 
 	pub RectShape[
 		rect: Rect,
@@ -118,14 +113,14 @@ components! {
 		brush?: Arc<Brush>,
 		angle?: f32,
 	] => [{Shape::Rect(epaint::RectShape {
-		rect,
-		corner_radius,
-		fill,
-		stroke,
-		stroke_kind,
-		round_to_pixels,
-		blur_width,
-		brush,
-		angle,
+		rect: todo!(),
+		corner_radius: todo!(),
+		fill: todo!(),
+		stroke: todo!(),
+		stroke_kind: todo!(),
+		round_to_pixels: todo!(),
+		blur_width: todo!(),
+		brush: todo!(),
+		angle: todo!(),
 	})}]
 }

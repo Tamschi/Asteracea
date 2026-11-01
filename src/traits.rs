@@ -2,7 +2,7 @@ use std::{any::TypeId, future::Future, pin::Pin};
 
 use eros::{ErrorUnion, TypeSet};
 use pinned_init::PinInit;
-use rhizome::sync::{DynValue, Node};
+use rhizome::sync::{DynValue, Node, NodeHandle};
 
 pub trait Substrate {
 	type InitContext<'i>;
@@ -28,7 +28,7 @@ pub trait Init<'i, 'r, S: Substrate>: Render<'r, S> {
 	type InitESet: TypeSet;
 
 	fn init(
-		deps: Node<TypeId, TypeId, DynValue>,
+		deps: &'i mut NodeHandle<TypeId, TypeId, DynValue>,
 		ctx: S::InitContext<'i>,
 		args: Self::InitArgs,
 	) -> impl 'i + PinInit<Self, ErrorUnion<Self::InitESet>>;
@@ -40,7 +40,7 @@ pub trait AsyncInit<'i, 'r, S: Substrate>: Render<'r, S> {
 	type InitESet: TypeSet;
 
 	fn init(
-		deps: Node<TypeId, TypeId, DynValue>,
+		deps: &'i mut NodeHandle<TypeId, TypeId, DynValue>,
 		ctx: S::InitContext<'i>,
 		args: Self::InitArgs,
 	) -> impl Future<Output = impl 'i + PinInit<Self, ErrorUnion<Self::InitESet>>>;
@@ -69,6 +69,7 @@ pub trait ContentParentSubstrate<'r, RenderAccumulator, T>: Substrate {
 //TODO: Hide this somewhere.
 pub trait ContentParent<'r, S: Substrate>: Render<'r, S> {
 	type RenderAccumulator;
+
 	fn start_accumulation() -> Self::RenderAccumulator;
 	fn finalize_accumulation(
 		acc: Self::RenderAccumulator,
@@ -80,17 +81,17 @@ pub trait ContentParentOf<'r, S: Substrate, T>: ContentParent<'r, S> {
 	fn on_rendered(acc: &'_ mut Self::RenderAccumulator, ctx: S::RenderContext<'r>, rendered: T);
 }
 
-/// Units are always supported, strictly via no-op accumulation.
-impl<'r, P: Render<'r, S>, S: Substrate> ContentParentOf<'r, S, ()> for P
-where
-	P: ContentParent<'r, S>,
-{
-	#[inline(always)]
-	fn on_rendered(
-		_acc: &'_ mut Self::RenderAccumulator,
-		_ctx: <S as Substrate>::RenderContext<'r>,
-		_rendered: (),
-	) {
-		// Do nothing.
-	}
-}
+// /// Units are always supported, strictly via no-op accumulation.
+// impl<'r, P: Render<'r, S>, S: Substrate> ContentParentOf<'r, S, ()> for P
+// where
+// 	P: ContentParent<'r, S>,
+// {
+// 	#[inline(always)]
+// 	fn on_rendered(
+// 		_acc: &'_ mut Self::RenderAccumulator,
+// 		_ctx: <S as Substrate>::RenderContext<'r>,
+// 		_rendered: (),
+// 	) {
+// 		// Do nothing.
+// 	}
+// }

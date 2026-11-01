@@ -47,10 +47,12 @@ dependencies = [
  "eros",
  "futures-core",
  "git_info",
+ "inherent-associated-types",
  "lignin",
  "lignin-html",
  "lignin-schema",
  "linotype",
+ "never-say-never",
  "pinned-init",
  "rhizome",
  "static_assertions",
@@ -71,6 +73,7 @@ dependencies = [
  "bon",
  "epaint",
  "eros",
+ "inherent-associated-types",
  "never-say-never",
  "pinned-init",
  "rhizome",
@@ -693,6 +696,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "inherent-associated-types"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ad00a3a6ee339948c7a45ccb55a0fb0ec51c7d492bf8ed2db347bb609841e3d"
+dependencies = [
+ "inherent-associated-types_proc-macro-definitions",
+]
+
+[[package]]
+name = "inherent-associated-types_proc-macro-definitions"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b8f97d12b8ac98b04d11ac4d34ae19d8b914752f2321cd16bd6bdcb0bda89c9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.9",
+]
+
+[[package]]
 name = "instant"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -807,7 +830,7 @@ dependencies = [
 [[package]]
 name = "loess"
 version = "0.2.5"
-source = "git+https://github.com/Tamschi/loess.git#3255c416687e23ddcbb7609a1f80061da6dba5a9"
+source = "git+https://github.com/Tamschi/loess.git#2529740ad0d33f3e0255cefc5a08acef5add94b3"
 dependencies = [
  "proc-macro2",
 ]
@@ -815,7 +838,7 @@ dependencies = [
 [[package]]
 name = "loess-rust"
 version = "0.1.0+0.2"
-source = "git+https://github.com/Tamschi/loess.git#3255c416687e23ddcbb7609a1f80061da6dba5a9"
+source = "git+https://github.com/Tamschi/loess.git#2529740ad0d33f3e0255cefc5a08acef5add94b3"
 dependencies = [
  "loess",
  "loess-rust-lex",
@@ -825,7 +848,7 @@ dependencies = [
 [[package]]
 name = "loess-rust-lex"
 version = "0.1.0"
-source = "git+https://github.com/Tamschi/loess.git#3255c416687e23ddcbb7609a1f80061da6dba5a9"
+source = "git+https://github.com/Tamschi/loess.git#2529740ad0d33f3e0255cefc5a08acef5add94b3"
 dependencies = [
  "loess",
  "proc-macro2",
@@ -834,9 +857,10 @@ dependencies = [
 [[package]]
 name = "loess-rust-opaque"
 version = "0.1.0+0.2"
-source = "git+https://github.com/Tamschi/loess.git#3255c416687e23ddcbb7609a1f80061da6dba5a9"
+source = "git+https://github.com/Tamschi/loess.git#2529740ad0d33f3e0255cefc5a08acef5add94b3"
 dependencies = [
  "loess",
+ "loess-rust",
  "proc-macro2",
  "quote",
  "syn 3.0.9",
@@ -1118,9 +1142,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.106"
+version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
+checksum = "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
 dependencies = [
  "unicode-ident",
 ]
@@ -1144,9 +1168,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.45"
+version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
+checksum = "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001"
 dependencies = [
  "proc-macro2",
 ]
