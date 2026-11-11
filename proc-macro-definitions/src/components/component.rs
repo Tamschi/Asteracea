@@ -1,5 +1,5 @@
 use loess::{
-	IntoTokens, SimpleSpanned, grammar, quote_into_mixed_site, quote_into_with_exact_span,
+	SimpleSpanned, grammar, quote_into_mixed_site, quote_into_with_exact_span,
 	scaffold::{CurlyBraces, Greedy, Optimistic, Parentheses, SquareBrackets},
 };
 use loess_rust::{
@@ -108,6 +108,83 @@ impl Component {
 			)
 		};
 
+		let (name_render_args_type, name_render_args_builder_type) = if init_args.is_some() {
+			(
+				[TokenTree::Ident(Ident::new(
+					&format!("{}RenderArgs", name.0.to_string().trim_start_matches("r#")),
+					name.span(),
+				))]
+				.into_iter()
+				.collect(),
+				[TokenTree::Ident(Ident::new(
+					&format!(
+						"{}RenderArgsBuilder",
+						name.0.to_string().trim_start_matches("r#")
+					),
+					name.span(),
+				))]
+				.into_iter()
+				.collect(),
+			)
+		} else {
+			(
+				{
+					let mut tokens = TokenStream::new();
+					quote_into_mixed_site!(name.span(), root, &mut tokens, {
+						{#root}::NoArgs
+					});
+					tokens
+				},
+				{
+					let mut tokens = TokenStream::new();
+					quote_into_mixed_site!(name.span(), root, &mut tokens, {
+						{#root}::NoArgsBuilder
+					});
+					tokens
+				},
+			)
+		};
+
+		let (name_render_content_type, name_render_content_builder_type) = if init_args.is_some() {
+			(
+				[TokenTree::Ident(Ident::new(
+					&format!(
+						"{}RenderContent",
+						name.0.to_string().trim_start_matches("r#")
+					),
+					name.span(),
+				))]
+				.into_iter()
+				.collect(),
+				[TokenTree::Ident(Ident::new(
+					&format!(
+						"{}RenderContentBuilder",
+						name.0.to_string().trim_start_matches("r#")
+					),
+					name.span(),
+				))]
+				.into_iter()
+				.collect(),
+			)
+		} else {
+			(
+				{
+					let mut tokens = TokenStream::new();
+					quote_into_mixed_site!(name.span(), root, &mut tokens, {
+						{#root}::NoContent
+					});
+					tokens
+				},
+				{
+					let mut tokens = TokenStream::new();
+					quote_into_mixed_site!(name.span(), root, &mut tokens, {
+						{#root}::NoContentBuilder
+					});
+					tokens
+				},
+			)
+		};
+
 		quote_into_with_exact_span!(name.span(), root, tokens, {
 			{#(attributes)}
 			{#(&visibility)} struct {#(&name)} {
@@ -181,15 +258,15 @@ impl Component {
 				}}
 
 				impl<'r> {#root}::Render<'r, {#(substrate)}> for {#(&name)} {
-					type RenderArgsBuilder = ();
-					type RenderArgs = ();
-					type RenderContentBuilder = ();
-					type RenderContent = ();
+					type RenderArgsBuilder = {#(name_render_args_builder_type)};
+					type RenderArgs = {#(name_render_args_type)};
+					type RenderContentBuilder = {#(name_render_content_builder_type)};
+					type RenderContent = {#(name_render_content_type)};
 					type RenderT = <{#(substrate)} as {#root}::Substrate>::RenderTDefault<'r>;
 					type RenderESet = <{#(substrate)} as {#root}::Substrate>::RenderESetDefault<'r>;
 
 					fn {#(render)}(
-						self: {#root}::Pin<&'r mut Self>,
+						mut self: {#root}::Pin<&'r mut Self>,
 						ctx: <{#(substrate)} as {#root}::Substrate>::RenderContext<'r>,
 						args: <Self as {#root}::Render<'r, {#(substrate)}>>::RenderArgs,
 						content: <Self as {#root}::Render<'r, {#(substrate)}>>::RenderContent,

@@ -94,13 +94,18 @@ impl Child {
 
 		let mut as_init = TokenStream::new();
 		quote_into_mixed_site!(span, root, &mut as_init, {
-			<{#(r#type)} as {#root}::{#if dot_await.is_some() {
+			<{#(&r#type)} as {#root}::{#if dot_await.is_some() {
 				AsyncInit
 			} else {
 				Init
 			}}<'_, 'r, {#(substrate)}>>
 		});
 		let as_init = as_init;
+		let mut as_render = TokenStream::new();
+		quote_into_mixed_site!(span, root, &mut as_render, {
+			<{#(r#type)} as {#root}::Render<'_, {#(substrate)}>>
+		});
+		let as_render = as_render;
 		quote_into_mixed_site!(span, root, init_proc, {
 			let {#({
 				let guard = Identifier(Ident::new( &format!("init_guard_{}", init_guards.len()), span.resolved_at(Span::mixed_site())));
@@ -118,7 +123,7 @@ impl Child {
 					)
 				};
 				let child_guard = unsafe {
-					{#root}::pinned_init_and_guard(child_init, &raw mut (*this).{#(field_name)})?
+					{#root}::pinned_init_and_guard(child_init, &raw mut (*this).{#(&field_name)})?
 				};
 
 				//TODO: Init content children.
@@ -133,6 +138,20 @@ impl Child {
 		});
 
 		quote_into_mixed_site!(span, root, render_proc, {
+			<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
+				&mut acc,
+				ctx,
+				{#(&as_render)}::render(
+					unsafe { {#root}::Pin::new_unchecked(&mut self.{#(field_name)}) },
+					ctx,
+					<{#(&as_render)}::RenderArgsBuilder as {#root}::Default>::default()
+						//TODO
+						.build(),
+					<{#(as_render)}::RenderContentBuilder as {#root}::Default>::default()
+						//TODO
+						.build(),
+				)?
+			);
 			//TODO
 		});
 	}

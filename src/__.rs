@@ -1,3 +1,4 @@
+use bon::Builder;
 use core::fmt::Debug;
 use lignin::CallbackRegistration;
 use rhizome::sync::{DynValue, NodeHandle};
@@ -179,13 +180,20 @@ pub fn pinned_init_and_guard<'a, 'i, T: 'a, E>(
 	})
 }
 
-#[derive(Default)]
-pub struct NoArgsBuilder;
+#[derive(Builder)]
+pub struct NoArgs {}
 
-impl NoArgsBuilder {
-	pub fn build(self) -> NoArgs {
-		NoArgs {}
+impl Default for NoArgsBuilder {
+	fn default() -> Self {
+		NoArgs::builder()
 	}
 }
 
-pub struct NoArgs {}
+#[derive(Builder)]
+pub struct NoContent {}
+
+impl Default for NoContentBuilder {
+	fn default() -> Self {
+		NoContent::builder()
+	}
+}
