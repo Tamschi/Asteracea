@@ -64,7 +64,6 @@ tiptoe = { version = "0.0.2", features = ["sync"] }
 pinned-init = { version = "0.0.10", default-features = false }                               # public, migrating to pin-init
 bon = "3.9.2"                                                                                # semi-public
 eros = "0.8.1"
-never-say-never = "6.6.666"
 inherent-associated-types = "0.1.0"
 
 [dev-dependencies]
