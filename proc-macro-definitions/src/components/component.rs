@@ -5,12 +5,13 @@ use loess::{
 use loess_rust::{
 	attributes::OuterAttribute,
 	ident::Identifier,
-	lex::keywords::{Async, Const},
-	lex::token::punct::FatArrow,
+	lex::{
+		keywords::{Async, Const},
+		token::punct::FatArrow,
+	},
 	vis::Visibility,
 };
-use proc_macro2::Group;
-use proc_macro2::{Ident, TokenStream, TokenTree};
+use proc_macro2::{Group, Ident, TokenStream, TokenTree};
 use quote::ToTokens;
 use statements::Statement;
 

@@ -1,12 +1,12 @@
 use std::{
 	ops::ControlFlow::{Break, Continue},
-	panic::{catch_unwind, AssertUnwindSafe},
+	panic::{AssertUnwindSafe, catch_unwind},
 };
 
 use component::Component;
 use loess::{
-	parse_once, scaffold::SquareBrackets, Error, ErrorPriority, Errors, HandledPanic, Input,
-	IntoTokens, PopFrom,
+	Error, ErrorPriority, Errors, HandledPanic, Input, IntoTokens, PopFrom, parse_once,
+	scaffold::SquareBrackets,
 };
 use loess_rust::lex::token::punct::{Eq, Not, Pound};
 use proc_macro2::{Group, Span, TokenStream};

@@ -16,13 +16,15 @@ pub use core::{concat, stringify};
 pub use eros::ErrorUnion;
 pub use inherent_associated_types::Associated;
 pub use pinned_init::PinInit;
-pub use std::clone::Clone;
-pub use std::default::Default;
-pub use std::derive;
-pub use std::mem::forget;
-pub use std::ops::Drop;
-pub use std::pin::Pin;
-pub use std::result::Result::{self, Err, Ok};
+pub use std::{
+	clone::Clone,
+	default::Default,
+	derive,
+	mem::forget,
+	ops::Drop,
+	pin::Pin,
+	result::Result::{self, Err, Ok},
+};
 
 pub use bon;
 pub use core;
