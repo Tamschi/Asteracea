@@ -5,7 +5,7 @@ use rhizome::sync::{DynValue, NodeHandle};
 use std::{
 	any::TypeId,
 	fmt::{self, Formatter},
-	mem::ManuallyDrop,
+	mem::{DropGuard, ManuallyDrop},
 	ptr::drop_in_place,
 	rc::Rc,
 	sync::Arc,
@@ -160,23 +160,13 @@ impl<T: ?Sized> UnBorrow for Arc<T> {
 	}
 }
 
-struct InitGuard<T: ?Sized> {
-	place: *mut T,
-}
-
-impl<T: ?Sized> Drop for InitGuard<T> {
-	fn drop(&mut self) {
-		unsafe { drop_in_place(self.place) };
-	}
-}
-
 pub fn pinned_init_and_guard<'a, 'i, T: 'a, E>(
 	init: impl 'i + PinInit<T, E>,
 	place: *mut T,
 ) -> Result<impl 'a + Drop, E> {
 	Ok(unsafe {
 		init.__pinned_init(place)?;
-		InitGuard { place }
+		DropGuard::new(place, |place| drop_in_place(place))
 	})
 }
 
