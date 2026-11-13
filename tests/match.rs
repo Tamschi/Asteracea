@@ -1,15 +1,17 @@
+mod _sub;
+
 pub enum Enum<'a> {
 	Text(&'a str),
 	Other,
 }
 
-asteracea::component! {
-	pub MatchEnum()(
-		enum_value: Enum<'_>,
-	) -> Sync
+asteracea::components! {
+	#![substrate = _sub::Sub]
 
-	spread match {enum_value} [
+	pub MatchEnum[
+		enum_value: Enum<'_>,
+	] => [match] enum_value {
 		Enum::Text(text) => <span !(text)>
 		Enum::Other => <div .class = "placeholder">
-	]
+	}
 }
