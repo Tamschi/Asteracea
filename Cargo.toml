@@ -8,6 +8,9 @@ members = [
 ]
 resolver = "2"
 
+package.license = "EUPL-v1.2"
+package.license-file = "LICENSE.txt"
+
 [patch.crates-io]
 asteracea = { path = "." }
 
@@ -18,7 +21,8 @@ rust-version = "1.100"
 authors = ["Tamme Schichler <tamme@schichler.dev>"]
 edition = "2021"
 description = "A web application framework for Rust. Asteracea can be used for client-side and server-side rendering and for statically rendered and deployed sites (and combinations thereof) without specific changes to an app's code."
-license = "MIT OR Apache-2.0"
+license.workspace = true
+license-file.workspace = true
 repository = "https://github.com/Tamschi/Asteracea"
 homepage = "https://github.com/Tamschi/Asteracea/tree/v0.0.2"
 documentation = "https://docs.rs/asteracea/0.0.2"
@@ -32,7 +36,7 @@ include = [
 	"CHANGELOG.md",
 	"CODE_OF_CONDUCT.md",
 	"COPYRIGHT.md",
-	"LICENSE-*",
+	"LICENSE.txt",
 	"README.md",
 	"SECURITY.md",
 ]
