@@ -8,7 +8,7 @@ asteracea::components! {
 		'tails,
 		'_?,
 	} => ;
-	
+
 	Random => CoinFlip{
 		div{ "Edge!"; }
 		'heads: div{ "Heads!"; }

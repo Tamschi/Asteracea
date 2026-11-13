@@ -11,7 +11,7 @@ asteracea::components! {
 	pub MatchEnum[
 		enum_value: Enum<'_>,
 	] => [match] enum_value {
-		Enum::Text(text) => <span !(text)>
-		Enum::Other => <div .class = "placeholder">
+		Enum::Text(text) if true => span{ "{}"[text]; },
+		Enum::Other => div[class = "placeholder"];,
 	}
 }

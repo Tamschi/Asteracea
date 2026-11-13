@@ -24,7 +24,9 @@ use loess_rust_opaque::{Expression, ExpressionExceptStructExpression, Pattern};
 use proc_macro2::{Group, Ident, Span, TokenStream};
 
 mod child;
+mod r#for;
 mod let_field;
+mod r#match;
 mod text;
 
 grammar! {
@@ -38,7 +40,8 @@ grammar! {
 		BracketBrace(SquareBrackets<CurlyBraces>),
 		For(ForLoop),
 		ParenFor(ParenForLoop),
-		BracketFor(BracketForLoop),
+		BracketFor(r#for::BracketFor),
+		BracketMatch(r#match::BracketMatch),
 		Block(Block),
 		Box(BoxStatement),
 		Semi(Semi),
@@ -117,6 +120,17 @@ impl Statement {
 				init_guards,
 				render_proc,
 			),
+			Statement_::BracketMatch(stmt) => stmt.emit(
+				root,
+				substrate,
+				content_parent,
+				&additional_field_attrs,
+				fields,
+				&self.attrs,
+				init_proc,
+				init_guards,
+				render_proc,
+			),
 			Statement_::Block(stmt) => stmt.emit(
 				root,
 				substrate,
@@ -180,16 +194,9 @@ grammar! {
 		pub expression: ExpressionExceptStructExpression,
 		pub block: CurlyBraces<Vec<Statement>>,
 	}
+}
 
-	pub struct BracketForLoop: PeekFrom, PopFrom {
-		// pub outer_attributes: Greedy<OuterAttribute>,
-		pub bracket_for: SquareBrackets<For>,
-		pub pattern: Pattern,
-		pub r#in: In,
-		pub expression: ExpressionExceptStructExpression,
-		pub block: Block,
-	}
-
+grammar! {
 	pub struct Block: PeekFrom, PopFrom {
 		pub block: CurlyBraces<Optimistic<Vec<Statement>>>,
 	}
@@ -283,61 +290,6 @@ impl Block {
 			{
 				{#(inner_render_proc)}
 			}
-		});
-	}
-}
-
-impl BracketForLoop {
-	pub fn emit(
-		self,
-		root: &TokenStream,
-		substrate: &Group,
-		content_parent: &TokenStream,
-		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
-		attrs: &[OuterAttribute],
-		init_proc: &mut TokenStream,
-		init_guards: &mut Vec<Identifier>,
-		render_proc: &mut TokenStream,
-	) {
-		let BracketForLoop {
-			bracket_for: SquareBrackets {
-				span,
-				contents: r#for,
-			},
-			pattern,
-			r#in,
-			expression,
-			block,
-		} = self;
-
-		quote_into_mixed_site!(span.join(), root, render_proc, {
-			{#for attr in attrs {
-				{#(attr)}
-			}}
-			<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
-				&mut acc,
-				ctx,
-				{
-					let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
-					{#(r#for, pattern, r#in, expression, {
-						let mut render_proc = TokenStream::new();
-						block.emit(
-							root,
-							substrate,
-							content_parent,
-							&additional_field_attrs,
-							fields,
-							&[],
-							init_proc,
-							init_guards,
-							&mut render_proc,
-						);
-						render_proc
-					})}
-					<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)?
-				}
-			);
 		});
 	}
 }

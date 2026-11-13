@@ -1,7 +1,8 @@
 use std::fmt;
 
-use asteracea::{ContentParentSubstrate, DefaultAccumulationSubstrate, Substrate};
+use asteracea::{components, ContentParentSubstrate, DefaultAccumulationSubstrate, Substrate};
 use eros::AnyError;
+use inherent_associated_types::associate;
 
 pub struct Sub;
 
@@ -26,6 +27,22 @@ impl<'r> DefaultAccumulationSubstrate<'r> for Sub {
 	) -> eros::Result<Self::RenderTDefault<'r>, Self::RenderESetDefault<'r>> {
 		// Do nothing.
 		Ok(())
+	}
+}
+
+impl<'r>
+	ContentParentSubstrate<
+		'r,
+		<Self as DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault,
+		(),
+	> for Sub
+{
+	fn on_rendered(
+		_acc: &'_ mut <Self as DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault,
+		_ctx: Self::RenderContext<'r>,
+		_rendered: (),
+	) {
+		// Do nothing.
 	}
 }
 
@@ -59,4 +76,17 @@ impl<'r>
 	) {
 		// Do nothing.
 	}
+}
+
+#[associate]
+impl Sub {
+	pub type div = Div;
+	pub type span = Span;
+}
+
+components! {
+	#![substrate = Sub]
+
+	pub Div => ;
+	pub Span => ;
 }
