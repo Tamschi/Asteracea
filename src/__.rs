@@ -20,7 +20,7 @@ pub use pinned_init::PinInit;
 pub use std::{
 	clone::Clone,
 	default::Default,
-	derive,
+	derive, format_args,
 	mem::forget,
 	ops::Drop,
 	pin::Pin,

@@ -25,6 +25,7 @@ use proc_macro2::{Group, Ident, Span, TokenStream};
 
 mod child;
 mod let_field;
+mod text;
 
 grammar! {
 	pub struct Statement: PopFrom {
@@ -41,7 +42,7 @@ grammar! {
 		Block(Block),
 		Box(BoxStatement),
 		Semi(Semi),
-		Str(FormattedStr),
+		Text(text::Text),
 		Transclusion(Transclusion),
 		LetField(let_field::LetField),
 		Child(Optimistic<child::Child>),
@@ -133,7 +134,17 @@ impl Statement {
 				// No init.
 				// Not rendered.
 			}
-			Statement_::Str(stmt) => todo!("Emit Str."),
+			Statement_::Text(stmt) => stmt.emit(
+				root,
+				substrate,
+				content_parent,
+				&additional_field_attrs,
+				fields,
+				&self.attrs,
+				init_proc,
+				init_guards,
+				render_proc,
+			),
 			Statement_::Transclusion(stmt) => todo!("Emit Transclusion."),
 			Statement_::Child(stmt) => stmt.emit(
 				root,
@@ -203,15 +214,9 @@ grammar! {
 		pub r#struct: Option<Struct>,
 		pub identifier: Identifier,
 	}
+}
 
-	/// Note: `format!` is not emitted if literal doesn't contain curly braces
-	///        and `format_args` is [`None`].
-	pub struct FormattedStr: PeekFrom, PopFrom {
-		pub literal: AnyStringLiteral,
-		pub format_args: Option<Parentheses>,
-		pub semi: Semi,
-	}
-
+grammar! {
 	pub struct Transclusion: PeekFrom, PopFrom {
 		pub dot_dot: DotDot,
 		pub expression: Expression,

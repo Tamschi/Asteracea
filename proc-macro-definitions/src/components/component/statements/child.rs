@@ -27,7 +27,7 @@ grammar! {
 		pub children: ChildChildren,
 	}
 
-	pub enum ChildChildren: PopFrom, IntoTokens {
+	pub enum ChildChildren: PopFrom {
 		Void(Semi),
 		Braces(CurlyBraces<Optimistic<Vec<Statement>>>), //TODO: Named slots.
 	} else "Expected `;` or `{`.";
