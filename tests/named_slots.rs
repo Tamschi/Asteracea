@@ -1,17 +1,17 @@
-asteracea::component! {
-	CoinFlip()(
-		// 'heads(),
-		// 'tails(),
-		// '_()?,
-	) []
-}
+mod _sub;
 
-asteracea::component! {
-	Random()()
+asteracea::components! {
+	#![substrate = _sub::Sub]
 
-	<*CoinFlip
-		// 'heads: <div "Heads!">
-		// 'tails: <div "Tails!">
-		// <div "Edge!">
-	>
+	CoinFlip{
+		'heads,
+		'tails,
+		'_?,
+	} => ;
+	
+	Random => CoinFlip{
+		div{ "Edge!"; }
+		'heads: div{ "Heads!"; }
+		'tails: div{ "Tails!"; }
+	>}
 }
