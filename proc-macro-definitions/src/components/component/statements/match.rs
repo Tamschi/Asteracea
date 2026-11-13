@@ -57,6 +57,12 @@ impl BracketMatch {
 			},
 		} = self;
 
+		let additional_field_attrs = additional_field_attrs
+			.iter()
+			.copied()
+			.chain(attrs.iter())
+			.collect::<Vec<_>>();
+
 		quote_into_mixed_site!(span.join(), root, render_proc, {
 			{#for attr in attrs { {#(attr)} }}
 			<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(

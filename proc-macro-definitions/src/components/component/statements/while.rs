@@ -1,6 +1,6 @@
 use loess::{grammar, quote_into_mixed_site, scaffold::SquareBrackets};
 use loess_rust::{attributes::OuterAttribute, ident::Identifier, lex::keywords::While};
-use loess_rust_opaque::{ExpressionExceptStructExpression, Pattern};
+use loess_rust_opaque::ExpressionExceptStructExpression;
 use proc_macro2::{Group, TokenStream};
 
 use crate::components::component::statements::Block;

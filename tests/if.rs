@@ -1,38 +1,31 @@
-use bumpalo::Bump;
-use lignin::{Node, ThreadBound};
+mod _sub;
 
-asteracea::component! {
-	pub Conditional1()(
+asteracea::components! {
+	#![substrate = _sub::Sub]
+
+	pub Conditional1[
 		present: bool,
-	) -> Sync
+	] => [if] present {
+		"I am here.";
+	}
 
-	spread if {present}
-		"I am here."
-}
-
-asteracea::component! {
-	pub Conditional2()(
+	pub Conditional2[
 		present: bool,
-	) -> Sync
+	] => {
+		[if] present {
+			"I am here";
+			span{ " and "; }
+		}
+		"I like this place.";
+	}
 
-	[
-		spread if {present} [ // <-- I recommend formatting this `[]` as you would format `{}` in Rust.
-			"I am here"
-			<span " and ">
-		]
-		"I like this place."
-	]
-}
-
-asteracea::component! {
-	pub Conditional3()(
+	pub Conditional3[
 		content?: impl for<'b> FnOnce(&'b Bump) -> Node<'b, ThreadBound>,
-	) -> !Sync
-
-	[
-		"["
-		spread if {let Some(content) = content}
-			{ content(bump) }
-		"]"
-	]
+	] => {
+		"[";
+		[if] let Some(content) = content {
+			[{ content(bump) }]
+		}
+		"]";
+	}
 }

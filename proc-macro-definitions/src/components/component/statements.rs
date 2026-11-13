@@ -22,6 +22,7 @@ use proc_macro2::{Group, Ident, Span, TokenStream};
 
 mod child;
 mod r#for;
+mod r#if;
 mod let_field;
 mod r#match;
 mod text;
@@ -39,6 +40,7 @@ grammar! {
 		For(r#for::CachedFor),
 		ParenFor(r#for::ParenFor),
 		BracketFor(r#for::BracketFor),
+		BracketIf(r#if::BracketIf),
 		BracketMatch(r#match::BracketMatch),
 		BracketWhile(r#while::BracketWhile),
 		Block(Block),
@@ -108,6 +110,17 @@ impl Statement {
 			}
 			Statement_::For(stmt) => todo!("Emit For."),
 			Statement_::ParenFor(stmt) => todo!("Emit ParenFor."),
+			Statement_::BracketIf(stmt) => stmt.emit(
+				root,
+				substrate,
+				content_parent,
+				&additional_field_attrs,
+				fields,
+				&self.attrs,
+				init_proc,
+				init_guards,
+				render_proc,
+			),
 			Statement_::BracketFor(stmt) => stmt.emit(
 				root,
 				substrate,
