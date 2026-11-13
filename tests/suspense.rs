@@ -1,3 +1,6 @@
+#[path = "./_sub.rs"]
+mod sub;
+
 use asteracea::{
 	components::Suspense,
 	include::async_::ContentFuture,
@@ -21,26 +24,20 @@ async fn future_text() -> String {
 	"Like a record!".to_string()
 }
 
-asteracea::component! {
-	Spinner()()
+asteracea::components! {
+	#![substrate = sub::Sub]
 
-	"Spinning right 'round…"
-}
+	Spinner => "Spinning right 'round…";
 
-asteracea::component! {
-	async Async()()
+	async Async => {
+		let self.text: String = future_text().await;
+		!"{}"(self.text)
+	}
 
-	let self.text: String = future_text().await;
-	!"{}"(self.text)
-}
-
-asteracea::component! {
-	Instant()() -> Sync
-
-	<*Suspense
-		'spinner: <*Spinner>
-		'ready: async <*Async.await>
-	>
+	Instant => Suspense {
+		'spinner: Spinner;
+		'ready: async Async.await;
+	}
 }
 
 #[test]
