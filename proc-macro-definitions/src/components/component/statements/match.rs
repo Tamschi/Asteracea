@@ -74,7 +74,8 @@ impl BracketMatch {
 							comma,
 						} in contents {
 							{#for attr in attrs { {#(attr)} }}
-							{#(pattern, guard, &fat_arrow)} {#located_at(fat_arrow.eq.span().join(fat_arrow.gt.span()).unwrap_or_else(|| fat_arrow.gt.span())) {{
+							{#(pattern, guard, &fat_arrow)}
+							{#located_at(fat_arrow.eq.span().join(fat_arrow.gt.span()).unwrap_or_else(|| fat_arrow.gt.span())) {{
 								{#({
 									let mut render_proc = TokenStream::new();
 									statement.emit(
@@ -89,7 +90,8 @@ impl BracketMatch {
 									);
 									render_proc
 								})}
-							}}}{#(comma)}
+							}}}
+							{#(comma)}
 						}}
 					}}}
 					<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)?

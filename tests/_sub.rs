@@ -50,6 +50,22 @@ impl<'r>
 	ContentParentSubstrate<
 		'r,
 		<Self as DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault,
+		!,
+	> for Sub
+{
+	fn on_rendered(
+		_acc: &'_ mut <Self as DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault,
+		_ctx: Self::RenderContext<'r>,
+		_rendered: !,
+	) {
+		// Do nothing.
+	}
+}
+
+impl<'r>
+	ContentParentSubstrate<
+		'r,
+		<Self as DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault,
 		&'static str,
 	> for Sub
 {
