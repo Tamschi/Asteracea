@@ -23,6 +23,7 @@ pub use std::{
 	derive, format_args,
 	mem::forget,
 	ops::Drop,
+	option::Option,
 	pin::Pin,
 	result::Result::{self, Err, Ok},
 };

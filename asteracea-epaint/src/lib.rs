@@ -1,7 +1,7 @@
-use asteracea::{
-	ContentParentSubstrate, DefaultAccumulationSubstrate, Init, Render, Substrate, components,
-};
-use epaint::{Brush, Color32, CornerRadius, Rect, Shape, Stroke, StrokeKind};
+use std::sync::Arc;
+
+use asteracea::{ContentParentSubstrate, DefaultAccumulationSubstrate, Substrate, components};
+use epaint::{Brush, Color32, CornerRadius, Pos2, Rect, Shape, Stroke, StrokeKind};
 use eros::AnyError;
 use inherent_associated_types::associate;
 
@@ -91,36 +91,36 @@ components! {
 	pub CircleShape[
 		center: Pos2,
 		radius: f32,
-		fill?: Color32,
-		stroke?: Stroke,
+		fill: Color32 = Color32::TRANSPARENT,
+		stroke: Stroke = Stroke::NONE,
 	] => [{
 		Shape::Circle(epaint::CircleShape {
-			center: todo!(),
-			radius: todo!(),
-			fill: todo!(),
-			stroke: todo!(),
+			center,
+			radius,
+			fill,
+			stroke,
 		})
 	}]
 
 	pub RectShape[
 		rect: Rect,
-		corner_radius: CornerRadius,
-		fill?: Color32,
-		stroke?: Stroke,
-		stroke_kind?: StrokeKind,
+		corner_radius: CornerRadius = CornerRadius::ZERO,
+		fill: Color32 = Color32::TRANSPARENT,
+		stroke: Stroke = Stroke::NONE,
+		stroke_kind: StrokeKind = StrokeKind::Inside,
 		round_to_pixels?: bool,
-		blur_width?: f32,
+		blur_width: f32 = 0.,
 		brush?: Arc<Brush>,
-		angle?: f32,
+		angle: f32 = 0.,
 	] => [{Shape::Rect(epaint::RectShape {
-		rect: todo!(),
-		corner_radius: todo!(),
-		fill: todo!(),
-		stroke: todo!(),
-		stroke_kind: todo!(),
-		round_to_pixels: todo!(),
-		blur_width: todo!(),
-		brush: todo!(),
-		angle: todo!(),
+		rect,
+		corner_radius,
+		fill,
+		stroke,
+		stroke_kind,
+		round_to_pixels,
+		blur_width,
+		brush,
+		angle,
 	})}]
 }

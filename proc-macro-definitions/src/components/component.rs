@@ -15,7 +15,7 @@ use proc_macro2::{Group, Ident, TokenStream, TokenTree};
 use quote::ToTokens;
 use statements::Statement;
 
-use crate::components::component::args::{InitArg, InitArgs, RenderArgs, SlotArgs};
+use crate::components::component::args::{InitArg, InitArgs, RenderArg, RenderArgs, SlotArgs};
 
 pub mod args;
 pub mod statements;
@@ -108,7 +108,7 @@ impl Component {
 			)
 		};
 
-		let (name_render_args_type, name_render_args_builder_type) = if init_args.is_some() {
+		let (name_render_args_type, name_render_args_builder_type) = if render_args.is_some() {
 			(
 				[TokenTree::Ident(Ident::new(
 					&format!("{}RenderArgs", name.0.to_string().trim_start_matches("r#")),
@@ -204,21 +204,36 @@ impl Component {
 				}
 			}
 
-			{#if let Some(init_args) = init_args {
-				#[{#root}::derive({#root}::bon::Builder)]
-				#[builder(crate = {#root}::bon)]
-				pub struct {#(&name_init_args_type)} {
-					{#for (InitArg{ attrs, vis: _, r#dyn, identifier, colon, r#type }, comma) in init_args.contents.pairs() {
-						{#if r#dyn.is_some() { {#continue;} }}
-						{#for attr in attrs {
-							{#(attr)}
-							{#(identifier)}{#(colon)} {#(r#type)}{#(comma)}
-						}}
-					}}
-				}
-			}}
-
 			{#mixed_site {
+				{#if let Some(Parentheses { span, contents }) = init_args {
+					{#located_at(span.join()) {
+						#[{#root}::derive({#root}::bon::Builder)]
+						#[builder(crate = {#root}::bon)]
+						{#(&visibility)} struct {#(&name_init_args_type)} {
+							{#for (InitArg{ attrs, vis: _, r#dyn, identifier, question, colon, r#type, default }, comma) in contents.pairs() {
+								{#if r#dyn.is_some() { {#continue;} }}
+								{#for attr in attrs { {#(attr)} }}
+								{#if let Some((eq, default)) = default {
+									#[builder(default {#(eq, default)})]
+								}}
+								{#(identifier)}{#(colon)} {#if let Some(question) = question {
+									{#located_at(question.question.span()) {
+										{#root}::Option<{#(r#type)}>
+									}}
+								} else {
+									{#(r#type)}
+								}}{#(comma)}
+							}}
+						}
+
+						impl {#root}::Default for {#(&name_init_args_builder_type)} {
+							fn default() -> Self {
+								{#(&name_init_args_type)}::builder()
+							}
+						}
+					}}
+				}}
+
 				{#if let Some(r#async) = r#async {
 					{#located_at(r#async.span()) {
 						#error("TODO: async components")
@@ -257,9 +272,37 @@ impl Component {
 					}
 				}}
 
+				{#if let Some(SquareBrackets { span, ref contents }) = render_args {
+					{#located_at(span.join()) {
+						#[{#root}::derive({#root}::bon::Builder)]
+						#[builder(crate = {#root}::bon)]
+						{#(&visibility)} struct {#(&name_render_args_type)} {
+							{#for (RenderArg{ attrs, identifier, question, colon, r#type, default }, comma) in contents.pairs() {
+								{#for attr in attrs { {#(attr)} }}
+								{#if let Some((eq, default)) = default {
+									#[builder(default {#(eq, default)})]
+								}}
+								{#(identifier)}{#(colon)} {#if let Some(question) = question {
+									{#located_at(question.question.span()) {
+										{#root}::Option<{#(r#type)}>
+									}}
+								} else {
+									{#(r#type)}
+								}}{#(comma)}
+							}}
+						}
+
+						impl {#root}::Default for {#(&name_render_args_builder_type)} {
+							fn default() -> Self {
+								{#(&name_render_args_type)}::builder()
+							}
+						}
+					}}
+				}}
+
 				impl<'r> {#root}::Render<'r, {#(substrate)}> for {#(&name)} {
 					type RenderArgsBuilder = {#(name_render_args_builder_type)};
-					type RenderArgs = {#(name_render_args_type)};
+					type RenderArgs = {#(&name_render_args_type)};
 					type RenderContentBuilder = {#(name_render_content_builder_type)};
 					type RenderContent = {#(name_render_content_type)};
 					type RenderT = <{#(substrate)} as {#root}::Substrate>::RenderTDefault<'r>;
@@ -274,6 +317,16 @@ impl Component {
 						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderT,
 						{#root}::ErrorUnion<<Self as {#root}::Render<'r, {#(substrate)}>>::RenderESet>,
 					> {
+						{#if let Some(SquareBrackets { span, contents }) = render_args {
+							{#located_at(span.join()) {
+								let {#(name_render_args_type)} {
+									{#for (RenderArg { identifier, .. }, comma) in contents.pairs() {
+										{#(identifier, comma)}
+									}}
+								} = args;
+							}}
+						}}
+
 						let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
 						{#(render_proc)}
 						<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)

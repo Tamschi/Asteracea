@@ -1,5 +1,7 @@
 mod _sub;
 
+use asteracea::Substrate;
+
 asteracea::components! {
 	#![substrate = _sub::Sub]
 
@@ -20,11 +22,13 @@ asteracea::components! {
 	}
 
 	pub Conditional3[
-		content?: impl for<'b> FnOnce(&'b Bump) -> Node<'b, ThreadBound>,
+		//TODO: Allow `impl …` types here, efficiently via generic args.
+		//TODO: Allow 'i and 'r to be used by the user.
+		content?: Box<dyn for<'b> FnOnce() -> <_sub::Sub as Substrate>::RenderTDefault<'static>>,
 	] => {
 		"[";
 		[if] let Some(content) = content {
-			[{ content(bump) }]
+			[{ content() }]
 		}
 		"]";
 	}

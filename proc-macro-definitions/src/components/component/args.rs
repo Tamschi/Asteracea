@@ -27,10 +27,13 @@ grammar! {
 		pub vis: Option<Visibility>,
 		pub r#dyn: Option<Dyn>,
 		pub identifier: Identifier,
+		pub question: Option<Question>,
 		pub colon: Colon,
 		pub r#type: Type,
+		pub default: Option<(Eq, Expression)>,
 	}
 	pub struct RenderArg: PopFrom {
+		pub attrs: Greedy<Vec<OuterAttribute>>,
 		pub identifier: Identifier,
 		pub question: Option<Question>,
 		pub colon: Colon,
