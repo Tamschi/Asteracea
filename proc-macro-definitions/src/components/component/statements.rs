@@ -13,10 +13,7 @@ use loess_rust::{
 	ident::Identifier,
 	lex::{
 		keywords::{As, Box, For, In, SelfLowercase, Struct},
-		token::{
-			literal::AnyStringLiteral,
-			punct::{Colon, Dot, DotDot, Semi},
-		},
+		token::punct::{Colon, Dot, DotDot, Semi},
 	},
 	vis::Visibility,
 };
@@ -28,6 +25,7 @@ mod r#for;
 mod let_field;
 mod r#match;
 mod text;
+mod r#while;
 
 grammar! {
 	pub struct Statement: PopFrom {
@@ -38,10 +36,11 @@ grammar! {
 	pub enum Statement_: PopFrom {
 		ParenBrace(Parentheses<CurlyBraces>),
 		BracketBrace(SquareBrackets<CurlyBraces>),
-		For(ForLoop),
-		ParenFor(ParenForLoop),
+		For(r#for::CachedFor),
+		ParenFor(r#for::ParenFor),
 		BracketFor(r#for::BracketFor),
 		BracketMatch(r#match::BracketMatch),
+		BracketWhile(r#while::BracketWhile),
 		Block(Block),
 		Box(BoxStatement),
 		Semi(Semi),
@@ -131,6 +130,17 @@ impl Statement {
 				init_guards,
 				render_proc,
 			),
+			Statement_::BracketWhile(stmt) => stmt.emit(
+				root,
+				substrate,
+				content_parent,
+				&additional_field_attrs,
+				fields,
+				&self.attrs,
+				init_proc,
+				init_guards,
+				render_proc,
+			),
 			Statement_::Block(stmt) => stmt.emit(
 				root,
 				substrate,
@@ -173,26 +183,6 @@ impl Statement {
 			),
 			Statement_::LetField(stmt) => todo!("Emit LetField."),
 		}
-	}
-}
-
-grammar! {
-	pub struct ForLoop: PeekFrom, PopFrom {
-		// pub outer_attributes: Greedy<OuterAttribute>,
-		pub r#for: For,
-		pub pattern: Pattern,
-		pub r#in: In,
-		pub expression: ExpressionExceptStructExpression,
-		pub block: CurlyBraces<Vec<Statement>>,
-	}
-
-	pub struct ParenForLoop: PeekFrom, PopFrom {
-		// pub outer_attributes: Greedy<OuterAttribute>,
-		pub paren_for: Parentheses<For>,
-		pub pattern: Pattern,
-		pub r#in: In,
-		pub expression: ExpressionExceptStructExpression,
-		pub block: CurlyBraces<Vec<Statement>>,
 	}
 }
 

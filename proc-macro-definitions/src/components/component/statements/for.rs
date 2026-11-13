@@ -1,4 +1,7 @@
-use loess::{grammar, quote_into_mixed_site, scaffold::SquareBrackets};
+use loess::{
+	grammar, quote_into_mixed_site,
+	scaffold::{Parentheses, SquareBrackets},
+};
 use loess_rust::{
 	attributes::OuterAttribute,
 	ident::Identifier,
@@ -11,8 +14,23 @@ use crate::components::component::statements::Block;
 
 grammar! {
 	pub struct BracketFor: PeekFrom, PopFrom {
-		// pub outer_attributes: Greedy<OuterAttribute>,
 		pub bracket_for: SquareBrackets<For>,
+		pub pattern: Pattern,
+		pub r#in: In,
+		pub expression: ExpressionExceptStructExpression,
+		pub block: Block,
+	}
+
+	pub struct ParenFor: PeekFrom, PopFrom {
+		pub paren_for: Parentheses<For>,
+		pub pattern: Pattern,
+		pub r#in: In,
+		pub expression: ExpressionExceptStructExpression,
+		pub block: Block,
+	}
+
+	pub struct CachedFor: PeekFrom, PopFrom {
+		pub r#for: For,
 		pub pattern: Pattern,
 		pub r#in: In,
 		pub expression: ExpressionExceptStructExpression,
@@ -44,10 +62,14 @@ impl BracketFor {
 			block,
 		} = self;
 
+		let additional_field_attrs = additional_field_attrs
+			.iter()
+			.copied()
+			.chain(attrs.iter())
+			.collect::<Vec<_>>();
+
 		quote_into_mixed_site!(span.join(), root, render_proc, {
-			{#for attr in attrs {
-				{#(attr)}
-			}}
+			{#for attr in attrs { {#(attr)} }}
 			<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
 				&mut acc,
 				ctx,
