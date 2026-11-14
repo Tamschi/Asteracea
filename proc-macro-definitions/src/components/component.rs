@@ -210,19 +210,32 @@ impl Component {
 						#[{#root}::derive({#root}::bon::Builder)]
 						#[builder(crate = {#root}::bon)]
 						{#(&visibility)} struct {#(&name_init_args_type)} {
-							{#for (InitArg{ attrs, vis: _, r#dyn, identifier, expansion: _, question, colon, r#type, default }, comma) in contents.pairs() {
+							{#for (InitArg{ attrs, vis: _, r#dyn, identifier, expansion, question, r#type, default }, comma) in contents.pairs() {
 								{#if r#dyn.is_some() { {#continue;} }}
 								{#for attr in attrs { {#(attr)} }}
 								{#if let Some((eq, default)) = default {
 									#[builder(default {#(eq, default)})]
 								}}
-								{#(identifier)}{#(colon)} {#if let Some(question) = question {
-									{#located_at(question.question.span()) {
-										{#root}::Option<{#(r#type)}>
-									}}
+								{#(identifier)}
+								{#if let Some((colon, _)) = &r#type {
+									{#(colon)}
 								} else {
+									{#located_at(identifier.span()) {
+										:
+									}}
+								}}
+								{#if let Some(question) = question { {#located_at(question.question.span()) { {#root}::Option< }}}}
+								{#if let Some((_, r#type)) = r#type {
 									{#(r#type)}
-								}}{#(comma)}
+								} else {
+									{#if let Some(r#type) = expansion.as_ref().and_then(|(_, pattern)| args::infer_pattern_type(&pattern)).or_else(|| default.as_ref().and_then(|(_, expr)| args::infer_expression_type(&expr))) {
+										{#(r#type)}
+									} else {
+										{#error{ {#root}::concat!("Could not infer type of `", {#root}::stringify!({#(&name)}), "`'s init parameter `", {#root}::stringify!({#(identifier)}), "` from expansion (`as …`) or default (`= …`).") }}
+									}}
+								}}
+								{#if let Some(question) = question { {#located_at(question.question.span()) { > }}}}
+								{#(comma)}
 							}}
 						}
 
@@ -277,18 +290,31 @@ impl Component {
 						#[{#root}::derive({#root}::bon::Builder)]
 						#[builder(crate = {#root}::bon)]
 						{#(&visibility)} struct {#(&name_render_args_type)} {
-							{#for (RenderArg{ attrs, identifier, question, expansion: _, colon, r#type, default }, comma) in contents.pairs() {
+							{#for (RenderArg{ attrs, identifier, expansion, question, r#type, default }, comma) in contents.pairs() {
 								{#for attr in attrs { {#(attr)} }}
 								{#if let Some((eq, default)) = default {
 									#[builder(default {#(eq, default)})]
 								}}
-								{#(identifier)}{#(colon)} {#if let Some(question) = question {
-									{#located_at(question.question.span()) {
-										{#root}::Option<{#(r#type)}>
-									}}
+								{#(identifier)}
+								{#if let Some((colon, _)) = &r#type {
+									{#(colon)}
 								} else {
+									{#located_at(identifier.span()) {
+										:
+									}}
+								}}
+								{#if let Some(question) = question { {#located_at(question.question.span()) { {#root}::Option< }}}}
+								{#if let Some((_, r#type)) = r#type {
 									{#(r#type)}
-								}}{#(comma)}
+								} else {
+									{#if let Some(r#type) = expansion.as_ref().and_then(|(_, pattern)| args::infer_pattern_type(&pattern)).or_else(|| default.as_ref().and_then(|(_, expr)| args::infer_expression_type(&expr))) {
+										{#(r#type)}
+									} else {
+										{#error{ {#root}::concat!("Could not infer type of `", {#root}::stringify!({#(&name)}), "`'s render parameter `", {#root}::stringify!({#(identifier)}), "` from expansion (`as …`) or default (`= …`).") }}
+									}}
+								}}
+								{#if let Some(question) = question { {#located_at(question.question.span()) { > }}}}
+								{#(comma)}
 							}}
 						}
 

@@ -15,7 +15,7 @@ use loess_rust::{
 	vis::Visibility,
 };
 use loess_rust_opaque::{Expression, Pattern, Type};
-use proc_macro2::TokenTree;
+use proc_macro2::{TokenStream, TokenTree};
 
 pub type InitArgs = Separated<InitArg, Comma>;
 pub type RenderArgs = Separated<RenderArg, Comma>;
@@ -29,8 +29,7 @@ grammar! {
 		pub identifier: Identifier,
 		pub question: Option<Question>,
 		pub expansion: Option<(As, Pattern)>,
-		pub colon: Colon,
-		pub r#type: Type,
+		pub r#type: Option<(Colon, Type)>,
 		pub default: Option<(Eq, Expression)>,
 	}
 	pub struct RenderArg: PopFrom {
@@ -38,8 +37,7 @@ grammar! {
 		pub identifier: Identifier,
 		pub question: Option<Question>,
 		pub expansion: Option<(As, Pattern)>,
-		pub colon: Colon,
-		pub r#type: Type, //TODO: Type,
+		pub r#type: Option<(Colon, Type)>,
 		pub default: Option<(Eq, Expression)>,
 	}
 	pub struct SlotArg: PopFrom {
@@ -51,4 +49,12 @@ grammar! {
 	pub struct NotComma: PeekFrom, PopFrom {
 		tt: TokenTree,
 	}
+}
+
+pub fn infer_pattern_type(_pattern: &Pattern) -> Option<TokenStream> {
+	None //TODO
+}
+
+pub fn infer_expression_type(_expr: &Expression) -> Option<TokenStream> {
+	None //TODO
 }

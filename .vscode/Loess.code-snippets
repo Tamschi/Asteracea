@@ -229,7 +229,7 @@
 		"scope": "rust",
 		"prefix": "#if let else",
 		"body": [
-			"{#if ${1:pattern} = ${2:expression} {",
+			"{#if let ${1:pattern} = ${2:expression} {",
 			"\t${3:tokens}",
 			"} else$4 {",
 			"\t${5:tokens}",
