@@ -94,38 +94,16 @@ impl StatementImpl for BracketIf {
 				ctx,
 				{
 					//TODO?: Move the start of the accumulation into the branches to provide better size hints?
-					let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation(
-						{#({
-							let mut tokens = TokenStream::new();
-							then.hint_size(root, substrate, content_parent, attrs, &mut tokens);
-							tokens
-						})}
-						{#if let Some((_, r#else)) = (r#else).as_ref() {
-							| {#({
+					let mut acc;
+					{#(r#if, conditions)} {
+						acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation({#({
 								let mut tokens = TokenStream::new();
-								r#else.hint_size(root, substrate, content_parent, attrs, &mut tokens);
+								then.hint_size(root, substrate, content_parent, attrs, &mut tokens);
 								tokens
-							})}
-						}}
-					);
-					{#(r#if, conditions, {
-						let mut render_proc = TokenStream::new();
-						then.emit(
-							root,
-							substrate,
-							content_parent,
-							&additional_field_attrs,
-							fields,
-							&[],
-							init_proc,
-							init_guards,
-							&mut render_proc,
-						);
-						render_proc
-					})} {#if let Some((r#else, r#else_block)) = (r#else) {
-						{#(r#else, {
+							})});
+						{#({
 							let mut render_proc = TokenStream::new();
-							else_block.emit(
+							then.emit(
 								root,
 								substrate,
 								content_parent,
@@ -138,6 +116,33 @@ impl StatementImpl for BracketIf {
 							);
 							render_proc
 						})}
+					} {#if let Some((r#else, else_block)) = (r#else) {
+						{#(r#else)} {
+							acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation({#({
+								let mut tokens = TokenStream::new();
+								else_block.hint_size(root, substrate, content_parent, attrs, &mut tokens);
+								tokens
+							})});
+							{#({
+								let mut render_proc = TokenStream::new();
+								else_block.emit(
+									root,
+									substrate,
+									content_parent,
+									&additional_field_attrs,
+									fields,
+									&[],
+									init_proc,
+									init_guards,
+									&mut render_proc,
+								);
+								render_proc
+							})}
+						}
+					} else {
+						else {
+							acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation({#root}::SizeHint::ZERO);
+						}
 					}}
 					<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)?
 				}

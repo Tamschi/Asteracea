@@ -17,12 +17,32 @@ impl StatementImpl for Block {
 	fn hint_size(
 		&self,
 		root: &TokenStream,
-		_substrate: &Group,
-		_content_parent: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
 		_attrs: &[OuterAttribute], //TODO: Account for `cfg`s.
 		tokens: &mut TokenStream,
 	) {
-		<dyn StatementImpl>::hint_size_one(self.block.span.join(), root, tokens);
+		let mut statements = self.block.contents.iter();
+		quote_into_mixed_site!(self.block.span.join(), root, &mut*tokens, {
+			{#if let Some(first) = statements.next() {
+				(
+					{#({
+						let mut tokens = TokenStream::new();
+						first.hint_size(root, substrate, content_parent, &mut tokens);
+						tokens
+					})}
+					{#for stmt in statements {
+						+ {#({
+							let mut tokens = TokenStream::new();
+							stmt.hint_size(root, substrate, content_parent, &mut tokens);
+							tokens
+						})}
+					}}
+				)
+			} else {
+				{#root}::SizeHint::ZERO
+			}}
+		});
 	}
 
 	fn boxed_emit(

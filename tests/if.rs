@@ -32,4 +32,11 @@ asteracea::components! {
 		}
 		"]";
 	}
+
+	pub Conditional4 =>
+		[if] false {
+			"true";
+		} else {
+			"false";
+		}
 }

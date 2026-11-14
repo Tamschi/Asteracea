@@ -96,19 +96,19 @@ trait StatementImpl {
 impl dyn StatementImpl {
 	fn hint_size_unknown(span: Span, root: &TokenStream, tokens: &mut TokenStream) {
 		quote_into_mixed_site!(span, root, tokens, {
-			{#root}::SizeHint::UNKNOWN,
+			{#root}::SizeHint::UNKNOWN
 		});
 	}
 
 	fn hint_size_zero(span: Span, root: &TokenStream, tokens: &mut TokenStream) {
 		quote_into_mixed_site!(span, root, tokens, {
-			{#root}::SizeHint::ZERO,
+			{#root}::SizeHint::ZERO
 		});
 	}
 
 	fn hint_size_one(span: Span, root: &TokenStream, tokens: &mut TokenStream) {
 		quote_into_mixed_site!(span, root, tokens, {
-			{#root}::SizeHint::ONE,
+			{#root}::SizeHint::ONE
 		});
 	}
 }
