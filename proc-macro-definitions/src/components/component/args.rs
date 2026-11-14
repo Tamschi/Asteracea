@@ -3,16 +3,12 @@ use loess::{
 	scaffold::{Greedy, Optimistic, Separated, SquareBrackets},
 };
 use loess_rust::{
-	attributes::OuterAttribute,
-	ident::Identifier,
-	lex::{
-		keywords::{As, Async, Dyn},
-		token::{
+	attributes::OuterAttribute, ident::Identifier, lex::{
+		keywords::{As, Async, Dyn, Mut}, token::{
 			life::Lifetime,
 			punct::{Colon, Comma, Eq, Question},
 		},
-	},
-	vis::Visibility,
+	}, vis::Visibility,
 };
 use loess_rust_opaque::{Expression, Pattern, Type};
 use proc_macro2::{TokenStream, TokenTree};
@@ -26,6 +22,7 @@ grammar! {
 		pub attrs: Greedy<Vec<OuterAttribute>>,
 		pub vis: Option<Visibility>,
 		pub r#dyn: Option<Dyn>,
+		pub r#mut: Option<Mut>,
 		pub identifier: Identifier,
 		pub question: Option<Question>,
 		pub expansion: Option<(As, Pattern)>,
@@ -34,6 +31,7 @@ grammar! {
 	}
 	pub struct RenderArg: PopFrom {
 		pub attrs: Greedy<Vec<OuterAttribute>>,
+		pub r#mut: Option<Mut>,
 		pub identifier: Identifier,
 		pub question: Option<Question>,
 		pub expansion: Option<(As, Pattern)>,

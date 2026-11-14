@@ -145,7 +145,7 @@ impl Component {
 			)
 		};
 
-		let (name_render_content_type, name_render_content_builder_type) = if init_args.is_some() {
+		let (name_render_content_type, name_render_content_builder_type) = if slot_args.is_some() {
 			(
 				[TokenTree::Ident(Ident::new(
 					&format!(
@@ -210,7 +210,7 @@ impl Component {
 						#[{#root}::derive({#root}::bon::Builder)]
 						#[builder(crate = {#root}::bon)]
 						{#(&visibility)} struct {#(&name_init_args_type)} {
-							{#for (InitArg{ attrs, vis: _, r#dyn, identifier, expansion, question, r#type, default }, comma) in contents.pairs() {
+							{#for (InitArg{ attrs, vis: _, r#dyn, r#mut: _, identifier, expansion, question, r#type, default }, comma) in contents.pairs() {
 								{#if r#dyn.is_some() { {#continue;} }}
 								{#for attr in attrs { {#(attr)} }}
 								{#if let Some((eq, default)) = default {
@@ -290,7 +290,7 @@ impl Component {
 						#[{#root}::derive({#root}::bon::Builder)]
 						#[builder(crate = {#root}::bon)]
 						{#(&visibility)} struct {#(&name_render_args_type)} {
-							{#for (RenderArg{ attrs, identifier, expansion, question, r#type, default }, comma) in contents.pairs() {
+							{#for (RenderArg{ attrs, r#mut: _, identifier, expansion, question, r#type, default }, comma) in contents.pairs() {
 								{#for attr in attrs { {#(attr)} }}
 								{#if let Some((eq, default)) = default {
 									#[builder(default {#(eq, default)})]
@@ -346,8 +346,8 @@ impl Component {
 						{#if let Some(SquareBrackets { span, contents }) = render_args {
 							{#located_at(span.join()) {
 								let {#(name_render_args_type)} {
-									{#for (RenderArg { identifier, expansion, .. }, comma) in contents.pairs() {
-										{#(identifier)}
+									{#for (RenderArg { r#mut, identifier, expansion, .. }, comma) in contents.pairs() {
+										{#(r#mut, identifier)}
 										{#if let Some((r#as, pattern)) = expansion {
 											{#located_at(r#as.span()) {
 												:
