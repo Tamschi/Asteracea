@@ -41,6 +41,8 @@ macro_rules! components {
 	};
 }
 
+use std::ops::{Add, BitOr};
+
 pub use bumpalo;
 pub use lignin;
 pub use try_lazy_init;
@@ -88,3 +90,40 @@ impl<'a> ConditionalAttributeValue<'a> for Option<&'a str> {
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub mod __;
+
+/// Provided to [`ContentParent::start_accumulation`] (and [`DefaultAccumulationSubstrate::default_start_accumulation`])
+/// with the semantics of [`Iterator::size_hint`].
+///
+/// This struct implements operators to make macro code more manageable.
+pub struct SizeHint(pub usize, pub Option<usize>);
+
+impl SizeHint {
+	/// Use this only when a more precise determination isn't feasible.
+	pub const UNKNOWN: Self = Self(0, None);
+
+	pub const ZERO: Self = Self(0, Some(0));
+	pub const ONE: Self = Self(1, Some(1));
+}
+
+/// Bounds-wise [`usize::saturating_add`].
+impl Add for SizeHint {
+	type Output = Self;
+
+	#[inline(always)] //FIXME: `const`
+	fn add(self, rhs: Self) -> Self::Output {
+		Self(
+			self.0.saturating_add(rhs.0),
+			self.1.zip(rhs.1).map(|(a, b)| a.saturating_add(b)),
+		)
+	}
+}
+
+/// Range union.
+impl BitOr for SizeHint {
+	type Output = Self;
+
+	#[inline(always)] //FIXME: `const`
+	fn bitor(self, rhs: Self) -> Self::Output {
+		Self(self.0.min(rhs.0), self.1.zip(rhs.1).map(|(a, b)| a.max(b)))
+	}
+}

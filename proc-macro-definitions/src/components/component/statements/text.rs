@@ -2,22 +2,70 @@ use loess::{grammar, quote_into_mixed_site, scaffold::SquareBrackets};
 use loess_rust::{
 	attributes::OuterAttribute,
 	ident::Identifier,
-	lex::token::{literal::AnyStringLiteral, punct::Semi},
+	lex::token::{
+		literal::{AnyStringLiteral, RawStringLiteral, StringLiteral},
+		punct::Semi,
+	},
 };
 use proc_macro2::{Group, TokenStream};
 
+use crate::components::component::statements::StatementImpl;
+
 grammar! {
-		/// Note: `format!` is not emitted if literal doesn't contain curly braces
-		///        and `format_args` is [`None`].
-		pub struct Text: PeekFrom, PopFrom {
-			pub literal: AnyStringLiteral,
-			pub format_args: Option<SquareBrackets>,
-			pub semi: Semi,
-		}
+	/// Note: `format!` is not emitted if literal doesn't contain curly braces
+	///        and `format_args` is [`None`].
+	pub struct Text: PeekFrom, PopFrom {
+		pub literal: AnyStringLiteral,
+		pub format_args: Option<SquareBrackets>,
+		pub semi: Semi,
+	}
 }
 
-impl Text {
-	pub fn emit(
+impl StatementImpl for Text {
+	fn hint_size(
+		&self,
+		root: &TokenStream,
+		_substrate: &Group,
+		_content_parent: &TokenStream,
+		_attrs: &[OuterAttribute],
+		tokens: &mut TokenStream,
+	) {
+		<dyn StatementImpl>::hint_size_one(
+			match &self.literal {
+				AnyStringLiteral::Plain(StringLiteral(s))
+				| AnyStringLiteral::Raw(RawStringLiteral(s)) => s.span(),
+			},
+			root,
+			tokens,
+		);
+	}
+
+	fn boxed_emit(
+		self: std::boxed::Box<Self>,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		self.emit(
+			root,
+			substrate,
+			content_parent,
+			additional_field_attrs,
+			fields,
+			attrs,
+			init_proc,
+			init_guards,
+			render_proc,
+		);
+	}
+
+	fn emit(
 		self,
 		root: &TokenStream,
 		substrate: &Group,

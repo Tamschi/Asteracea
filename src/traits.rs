@@ -4,6 +4,8 @@ use eros::{ErrorUnion, TypeSet};
 use pinned_init::PinInit;
 use rhizome::sync::{DynValue, Node, NodeHandle};
 
+use crate::SizeHint;
+
 pub trait Substrate {
 	type InitContext<'i>;
 	type InitESetDefault<'i>: TypeSet;
@@ -15,7 +17,7 @@ pub trait Substrate {
 
 pub trait DefaultAccumulationSubstrate<'r>: Substrate {
 	type RenderAccumulatorDefault;
-	fn default_start_accumulation() -> Self::RenderAccumulatorDefault;
+	fn default_start_accumulation(size_hint: SizeHint) -> Self::RenderAccumulatorDefault;
 	fn default_finalize_accumulation(
 		acc: Self::RenderAccumulatorDefault,
 		ctx: Self::RenderContext<'r>,
@@ -70,7 +72,7 @@ pub trait ContentParentSubstrate<'r, RenderAccumulator, T>: Substrate {
 pub trait ContentParent<'r, S: Substrate>: Render<'r, S> {
 	type RenderAccumulator;
 
-	fn start_accumulation() -> Self::RenderAccumulator;
+	fn start_accumulation(size_hint: SizeHint) -> Self::RenderAccumulator;
 	fn finalize_accumulation(
 		acc: Self::RenderAccumulator,
 		ctx: S::RenderContext<'r>,

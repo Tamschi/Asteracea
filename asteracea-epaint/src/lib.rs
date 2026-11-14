@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use asteracea::{ContentParentSubstrate, DefaultAccumulationSubstrate, Substrate, components};
+use asteracea::{
+	ContentParentSubstrate, DefaultAccumulationSubstrate, SizeHint, Substrate, components,
+};
 use epaint::{Brush, Color32, CornerRadius, Pos2, Rect, Shape, Stroke, StrokeKind};
 use eros::AnyError;
 use inherent_associated_types::associate;
@@ -18,8 +20,8 @@ impl Substrate for EpaintSubstrate {
 impl<'r> DefaultAccumulationSubstrate<'r> for EpaintSubstrate {
 	type RenderAccumulatorDefault = Vec<Shape>;
 
-	fn default_start_accumulation() -> Self::RenderAccumulatorDefault {
-		vec![]
+	fn default_start_accumulation(size_hint: SizeHint) -> Self::RenderAccumulatorDefault {
+		Vec::with_capacity(size_hint.0)
 	}
 
 	fn default_finalize_accumulation(

@@ -12,14 +12,15 @@ use loess_rust::{
 	attributes::OuterAttribute,
 	ident::Identifier,
 	lex::{
-		keywords::{As, Box, For, In, SelfLowercase, Struct},
+		keywords::{As, Box, SelfLowercase, Struct},
 		token::punct::{Colon, Dot, DotDot, Semi},
 	},
 	vis::Visibility,
 };
-use loess_rust_opaque::{Expression, ExpressionExceptStructExpression, Pattern};
-use proc_macro2::{Group, Ident, Span, TokenStream};
+use loess_rust_opaque::Expression;
+use proc_macro2::{Group, Span, TokenStream};
 
+mod block;
 mod child;
 mod r#for;
 mod r#if;
@@ -31,7 +32,7 @@ mod r#while;
 grammar! {
 	pub struct Statement: PopFrom {
 		attrs: Greedy<Vec<OuterAttribute>>,
-		stmt: Statement_,
+		stmt: std::boxed::Box<dyn StatementImpl>,
 	}
 
 	pub enum Statement_: PopFrom {
@@ -43,7 +44,7 @@ grammar! {
 		BracketIf(r#if::BracketIf),
 		BracketMatch(r#match::BracketMatch),
 		BracketWhile(r#while::BracketWhile),
-		Block(Block),
+		Block(block::Block),
 		Box(BoxStatement),
 		Semi(Semi),
 		Text(text::Text),
@@ -53,7 +54,106 @@ grammar! {
 	} else "Expected Asteracea statement.";
 }
 
+trait StatementImpl {
+	fn hint_size(
+		&self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		attrs: &[OuterAttribute],
+		tokens: &mut TokenStream,
+	);
+
+	fn boxed_emit(
+		self: std::boxed::Box<Self>,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	);
+
+	fn emit(
+		self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	);
+}
+
+impl dyn StatementImpl {
+	fn hint_size_unknown(span: Span, root: &TokenStream, tokens: &mut TokenStream) {
+		quote_into_mixed_site!(span, root, tokens, {
+			{#root}::SizeHint::UNKNOWN,
+		});
+	}
+
+	fn hint_size_zero(span: Span, root: &TokenStream, tokens: &mut TokenStream) {
+		quote_into_mixed_site!(span, root, tokens, {
+			{#root}::SizeHint::ZERO,
+		});
+	}
+
+	fn hint_size_one(span: Span, root: &TokenStream, tokens: &mut TokenStream) {
+		quote_into_mixed_site!(span, root, tokens, {
+			{#root}::SizeHint::ONE,
+		});
+	}
+}
+
+impl PopParsedFrom for std::boxed::Box<dyn StatementImpl> {
+	type Parsed = Self;
+
+	fn pop_parsed_from(
+		input: &mut Input,
+		errors: &mut Errors,
+	) -> ControlFlow<Option<Self::Parsed>, Option<Self::Parsed>> {
+		use std::boxed::Box;
+
+		let stmt = Statement_::pop_from(input, errors);
+		(match stmt {
+			ControlFlow::Continue(_) => ControlFlow::Continue,
+			ControlFlow::Break(_) => ControlFlow::Break,
+		})(
+			match stmt {
+				Continue(stmt) | ControlFlow::Break(stmt) => stmt,
+			}
+			.map(|stmt| match stmt {
+				Statement_::ParenBrace(stmt) => Box::new(stmt) as Box<dyn StatementImpl>,
+				Statement_::BracketBrace(stmt) => Box::new(stmt),
+				Statement_::For(stmt) => Box::new(stmt),
+				Statement_::ParenFor(stmt) => Box::new(stmt),
+				Statement_::BracketFor(stmt) => Box::new(stmt),
+				Statement_::BracketIf(stmt) => Box::new(stmt),
+				Statement_::BracketMatch(stmt) => Box::new(stmt),
+				Statement_::BracketWhile(stmt) => Box::new(stmt),
+				Statement_::Block(stmt) => Box::new(stmt),
+				Statement_::Box(stmt) => Box::new(stmt),
+				Statement_::Semi(stmt) => Box::new(stmt),
+				Statement_::Text(stmt) => Box::new(stmt),
+				Statement_::Transclusion(stmt) => Box::new(stmt),
+				Statement_::LetField(stmt) => Box::new(stmt),
+				Statement_::Child(stmt) => Box::new(stmt),
+			}),
+		)
+	}
+}
+
 impl Statement {
+	fn hint_size(&self, root: &TokenStream, tokens: &mut TokenStream) {
+		//TODO
+	}
+
 	pub fn emit(
 		self,
 		root: &TokenStream,
@@ -71,139 +171,21 @@ impl Statement {
 			.chain(&self.attrs)
 			.collect::<Vec<_>>();
 
-		match self.stmt {
-			Statement_::ParenBrace(Parentheses {
-				span: paren_span,
-				contents: CurlyBraces {
-					span: braces_span,
-					contents: rust,
-				},
-			}) => {
-				// No fields.
-				quote_into_mixed_site!(paren_span.join(), root, init_proc, {
-					{#(self.attrs)}
-					{#located_at(braces_span.join()) {
-						{ {#(rust)} }
-					}}
-				})
-				// Not rendered.
-			}
-			Statement_::BracketBrace(SquareBrackets {
-				span: brackets_span,
-				contents: CurlyBraces {
-					span: braces_span,
-					contents: rust,
-				},
-			}) => {
-				// No fields.
-				// No init.
-				quote_into_mixed_site!(brackets_span.join(), root, render_proc, {
-					{#(self.attrs)}
-					<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
-						&mut acc,
-						ctx,
-						{#located_at(braces_span.join()) {
-							{ {#(rust)} }
-						}}
-					);
-				})
-			}
-			Statement_::For(stmt) => todo!("Emit For."),
-			Statement_::ParenFor(stmt) => todo!("Emit ParenFor."),
-			Statement_::BracketIf(stmt) => stmt.emit(
-				root,
-				substrate,
-				content_parent,
-				&additional_field_attrs,
-				fields,
-				&self.attrs,
-				init_proc,
-				init_guards,
-				render_proc,
-			),
-			Statement_::BracketFor(stmt) => stmt.emit(
-				root,
-				substrate,
-				content_parent,
-				&additional_field_attrs,
-				fields,
-				&self.attrs,
-				init_proc,
-				init_guards,
-				render_proc,
-			),
-			Statement_::BracketMatch(stmt) => stmt.emit(
-				root,
-				substrate,
-				content_parent,
-				&additional_field_attrs,
-				fields,
-				&self.attrs,
-				init_proc,
-				init_guards,
-				render_proc,
-			),
-			Statement_::BracketWhile(stmt) => stmt.emit(
-				root,
-				substrate,
-				content_parent,
-				&additional_field_attrs,
-				fields,
-				&self.attrs,
-				init_proc,
-				init_guards,
-				render_proc,
-			),
-			Statement_::Block(stmt) => stmt.emit(
-				root,
-				substrate,
-				content_parent,
-				&additional_field_attrs,
-				fields,
-				&self.attrs,
-				init_proc,
-				init_guards,
-				render_proc,
-			),
-			Statement_::Box(stmt) => todo!("Emit Box."),
-			Statement_::Semi(_) => {
-				// No fields.
-				// No init.
-				// Not rendered.
-			}
-			Statement_::Text(stmt) => stmt.emit(
-				root,
-				substrate,
-				content_parent,
-				&additional_field_attrs,
-				fields,
-				&self.attrs,
-				init_proc,
-				init_guards,
-				render_proc,
-			),
-			Statement_::Transclusion(stmt) => todo!("Emit Transclusion."),
-			Statement_::Child(stmt) => stmt.emit(
-				root,
-				substrate,
-				content_parent,
-				&additional_field_attrs,
-				fields,
-				&self.attrs,
-				init_proc,
-				init_guards,
-				render_proc,
-			),
-			Statement_::LetField(stmt) => todo!("Emit LetField."),
-		}
+		self.stmt.boxed_emit(
+			root,
+			substrate,
+			content_parent,
+			&additional_field_attrs,
+			fields,
+			&self.attrs,
+			init_proc,
+			init_guards,
+			render_proc,
+		);
 	}
 }
 
 grammar! {
-	pub struct Block: PeekFrom, PopFrom {
-		pub block: CurlyBraces<Optimistic<Vec<Statement>>>,
-	}
-
 	pub struct BoxStatement: PeekFrom, PopFrom {
 		pub r#box: Box,
 		pub storage: Option<Storage>,
@@ -231,69 +213,6 @@ grammar! {
 		pub dot_dot: DotDot,
 		pub expression: Expression,
 		pub semi: Semi,
-	}
-}
-
-impl Block {
-	pub fn emit(
-		self,
-		root: &TokenStream,
-		substrate: &Group,
-		content_parent: &TokenStream,
-		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
-		attrs: &[OuterAttribute],
-		init_proc: &mut TokenStream,
-		init_guards: &mut Vec<Identifier>,
-		render_proc: &mut TokenStream,
-	) {
-		let Block {
-			block: CurlyBraces {
-				span: block_span,
-				contents,
-			},
-		} = self;
-		let mut inner_init_proc = TokenStream::new();
-		let mut inner_init_guards = vec![];
-		let mut inner_render_proc = TokenStream::new();
-		for statement in contents {
-			statement.emit(
-				root,
-				substrate,
-				content_parent,
-				&additional_field_attrs,
-				fields,
-				&mut inner_init_proc,
-				&mut inner_init_guards,
-				&mut inner_render_proc,
-			);
-		}
-
-		quote_into_mixed_site!(block_span.join(), root, init_proc, {
-			{#for attr in attrs {
-				{#(attr)}
-			}}
-			let {#({
-				let guard = Identifier(Ident::new( &format!("init_guard_{}", init_guards.len()),block_span.join().resolved_at(Span::mixed_site())));
-				init_guards.push(guard.clone());
-				guard
-			})} = {
-				{#(inner_init_proc)}
-				(
-					{#for guard in inner_init_guards.into_iter().rev() {
-						{#(guard)},
-					}}
-				)
-			};
-		});
-		quote_into_mixed_site!(block_span.join(), root, render_proc, {
-			{#for attr in attrs {
-				{#(attr)}
-			}}
-			{
-				{#(inner_render_proc)}
-			}
-		});
 	}
 }
 

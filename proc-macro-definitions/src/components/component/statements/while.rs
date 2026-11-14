@@ -3,7 +3,7 @@ use loess_rust::{attributes::OuterAttribute, ident::Identifier, lex::keywords::W
 use loess_rust_opaque::ExpressionExceptStructExpression;
 use proc_macro2::{Group, TokenStream};
 
-use crate::components::component::statements::Block;
+use crate::components::component::statements::{StatementImpl, block::Block};
 
 grammar! {
 	pub struct BracketWhile: PeekFrom, PopFrom {
@@ -13,8 +13,44 @@ grammar! {
 	}
 }
 
-impl BracketWhile {
-	pub fn emit(
+impl StatementImpl for BracketWhile {
+	fn hint_size(
+		&self,
+		root: &TokenStream,
+		_substrate: &Group,
+		_content_parent: &TokenStream,
+		_attrs: &[OuterAttribute],
+		tokens: &mut TokenStream,
+	) {
+		<dyn StatementImpl>::hint_size_unknown(self.bracket_while.span.join(), root, tokens);
+	}
+
+	fn boxed_emit(
+		self: std::boxed::Box<Self>,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		self.emit(
+			root,
+			substrate,
+			content_parent,
+			additional_field_attrs,
+			fields,
+			attrs,
+			init_proc,
+			init_guards,
+			render_proc,
+		);
+	}
+
+	fn emit(
 		self,
 		root: &TokenStream,
 		substrate: &Group,

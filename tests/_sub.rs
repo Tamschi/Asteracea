@@ -1,6 +1,8 @@
 use std::fmt;
 
-use asteracea::{components, ContentParentSubstrate, DefaultAccumulationSubstrate, Substrate};
+use asteracea::{
+	components, ContentParentSubstrate, DefaultAccumulationSubstrate, SizeHint, Substrate,
+};
 use eros::AnyError;
 use inherent_associated_types::associate;
 
@@ -17,7 +19,7 @@ impl Substrate for Sub {
 impl<'r> DefaultAccumulationSubstrate<'r> for Sub {
 	type RenderAccumulatorDefault = ();
 
-	fn default_start_accumulation() -> Self::RenderAccumulatorDefault {
+	fn default_start_accumulation(_size_hint: SizeHint) -> Self::RenderAccumulatorDefault {
 		// Do nothing.
 	}
 

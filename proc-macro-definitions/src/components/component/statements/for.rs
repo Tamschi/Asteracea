@@ -10,7 +10,7 @@ use loess_rust::{
 use loess_rust_opaque::{ExpressionExceptStructExpression, Pattern};
 use proc_macro2::{Group, TokenStream};
 
-use crate::components::component::statements::Block;
+use crate::components::component::statements::{StatementImpl, block::Block};
 
 grammar! {
 	pub struct BracketFor: PeekFrom, PopFrom {
@@ -38,8 +38,44 @@ grammar! {
 	}
 }
 
-impl BracketFor {
-	pub fn emit(
+impl StatementImpl for BracketFor {
+	fn hint_size(
+		&self,
+		root: &TokenStream,
+		_substrate: &Group,
+		_content_parent: &TokenStream,
+		_attrs: &[OuterAttribute],
+		tokens: &mut TokenStream,
+	) {
+		<dyn StatementImpl>::hint_size_unknown(self.bracket_for.span.join(), root, tokens);
+	}
+
+	fn boxed_emit(
+		self: std::boxed::Box<Self>,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		self.emit(
+			root,
+			substrate,
+			content_parent,
+			additional_field_attrs,
+			fields,
+			attrs,
+			init_proc,
+			init_guards,
+			render_proc,
+		);
+	}
+
+	fn emit(
 		self,
 		root: &TokenStream,
 		substrate: &Group,
