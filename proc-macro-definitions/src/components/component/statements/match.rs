@@ -105,7 +105,7 @@ impl StatementImpl for BracketMatch {
 				&mut acc,
 				ctx,
 				{
-					let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
+					let mut acc;
 					{#(r#match, scrutinee)} {#located_at(body_span.join()) {{
 						{#for MatchArm {
 							attrs,
@@ -118,20 +118,27 @@ impl StatementImpl for BracketMatch {
 							{#for attr in attrs { {#(attr)} }}
 							{#(pattern, guard, &fat_arrow)}
 							{#located_at(fat_arrow.eq.span().join(fat_arrow.gt.span()).unwrap_or_else(|| fat_arrow.gt.span())) {{
-								{#({
-									let mut render_proc = TokenStream::new();
-									statement.emit(
-										root,
-										substrate,
-										content_parent,
-										&additional_field_attrs,
-										fields,
-										init_proc,
-										init_guards,
-										&mut render_proc,
-									);
-									render_proc
-								})}
+								{
+									acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation({#({
+										let mut tokens = TokenStream::new();
+										statement.hint_size(root, substrate, content_parent, &mut tokens);
+										tokens
+									})});
+									{#({
+										let mut render_proc = TokenStream::new();
+										statement.emit(
+											root,
+											substrate,
+											content_parent,
+											&additional_field_attrs,
+											fields,
+											init_proc,
+											init_guards,
+											&mut render_proc,
+										);
+										render_proc
+									})}
+								}
 							}}}
 							{#(comma)}
 						}}
