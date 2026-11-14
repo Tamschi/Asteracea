@@ -89,14 +89,14 @@ components! {
 	#![substrate = EpaintSubstrate]
 
 	pub CircleShape[
-		center: Pos2,
-		radius: f32,
-		fill: Color32 = Color32::TRANSPARENT,
-		stroke: Stroke = Stroke::NONE,
+		center as Pos2 { x, y }: Pos2, //TODO: Infer type from pattern.
+		radius as r: f32,
+		fill: Color32 = Color32::TRANSPARENT, //TODO: Infer type from default.
+		stroke: Stroke = Stroke::NONE, //TODO: Infer type from default.
 	] => [{
 		Shape::Circle(epaint::CircleShape {
-			center,
-			radius,
+			center: Pos2 { x, y },
+			radius: r,
 			fill,
 			stroke,
 		})

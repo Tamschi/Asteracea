@@ -6,7 +6,7 @@ use loess_rust::{
 	attributes::OuterAttribute,
 	ident::Identifier,
 	lex::{
-		keywords::{Async, Dyn},
+		keywords::{As, Async, Dyn},
 		token::{
 			life::Lifetime,
 			punct::{Colon, Comma, Eq, Question},
@@ -14,7 +14,7 @@ use loess_rust::{
 	},
 	vis::Visibility,
 };
-use loess_rust_opaque::{Expression, Type};
+use loess_rust_opaque::{Expression, Pattern, Type};
 use proc_macro2::TokenTree;
 
 pub type InitArgs = Separated<InitArg, Comma>;
@@ -28,6 +28,7 @@ grammar! {
 		pub r#dyn: Option<Dyn>,
 		pub identifier: Identifier,
 		pub question: Option<Question>,
+		pub expansion: Option<(As, Pattern)>,
 		pub colon: Colon,
 		pub r#type: Type,
 		pub default: Option<(Eq, Expression)>,
@@ -36,6 +37,7 @@ grammar! {
 		pub attrs: Greedy<Vec<OuterAttribute>>,
 		pub identifier: Identifier,
 		pub question: Option<Question>,
+		pub expansion: Option<(As, Pattern)>,
 		pub colon: Colon,
 		pub r#type: Type, //TODO: Type,
 		pub default: Option<(Eq, Expression)>,
