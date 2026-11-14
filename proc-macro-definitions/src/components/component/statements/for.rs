@@ -110,7 +110,7 @@ impl StatementImpl for BracketFor {
 				&mut acc,
 				ctx,
 				{
-					let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
+					let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation({#root}::SizeHint::UNKNOWN);
 					{#(r#for, pattern, r#in, expression, {
 						let mut render_proc = TokenStream::new();
 						block.emit(
@@ -130,5 +130,111 @@ impl StatementImpl for BracketFor {
 				}
 			);
 		});
+	}
+}
+
+impl StatementImpl for ParenFor {
+	fn hint_size(
+		&self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		attrs: &[OuterAttribute],
+		tokens: &mut TokenStream,
+	) {
+		todo!("ParenFor hint_size")
+	}
+
+	fn boxed_emit(
+		self: Box<Self>,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		self.emit(
+			root,
+			substrate,
+			content_parent,
+			additional_field_attrs,
+			fields,
+			attrs,
+			init_proc,
+			init_guards,
+			render_proc,
+		);
+	}
+
+	fn emit(
+		self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		todo!("ParenFor emit")
+	}
+}
+
+impl StatementImpl for CachedFor {
+	fn hint_size(
+		&self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		attrs: &[OuterAttribute],
+		tokens: &mut TokenStream,
+	) {
+		todo!("CachedFor hint_size")
+	}
+
+	fn boxed_emit(
+		self: Box<Self>,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		self.emit(
+			root,
+			substrate,
+			content_parent,
+			additional_field_attrs,
+			fields,
+			attrs,
+			init_proc,
+			init_guards,
+			render_proc,
+		);
+	}
+
+	fn emit(
+		self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		todo!("CachedFor emit")
 	}
 }

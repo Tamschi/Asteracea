@@ -3,12 +3,16 @@ use loess::{
 	scaffold::{Greedy, Optimistic, Separated, SquareBrackets},
 };
 use loess_rust::{
-	attributes::OuterAttribute, ident::Identifier, lex::{
-		keywords::{As, Async, Dyn, Mut}, token::{
+	attributes::OuterAttribute,
+	ident::Identifier,
+	lex::{
+		keywords::{As, Async, Dyn, Mut},
+		token::{
 			life::Lifetime,
 			punct::{Colon, Comma, Eq, Question},
 		},
-	}, vis::Visibility,
+	},
+	vis::Visibility,
 };
 use loess_rust_opaque::{Expression, Pattern, Type};
 use proc_macro2::{TokenStream, TokenTree};

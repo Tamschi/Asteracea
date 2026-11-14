@@ -1,15 +1,11 @@
-use loess::grammar;
-use loess::quote_into_mixed_site;
-use loess::scaffold::CurlyBraces;
-use loess::scaffold::Optimistic;
-use loess_rust::attributes::OuterAttribute;
-use loess_rust::ident::Identifier;
-use proc_macro2::Span;
-use proc_macro2::TokenStream;
-use proc_macro2::{Group, Ident};
+use loess::{
+	grammar, quote_into_mixed_site,
+	scaffold::{CurlyBraces, Optimistic},
+};
+use loess_rust::{attributes::OuterAttribute, ident::Identifier};
+use proc_macro2::{Group, Ident, Span, TokenStream};
 
-use crate::components::component::statements::Statement;
-use crate::components::component::statements::StatementImpl;
+use crate::components::component::statements::{Statement, StatementImpl};
 
 grammar! {
 	pub struct Block: PeekFrom, PopFrom {
@@ -106,9 +102,7 @@ impl StatementImpl for Block {
 			};
 		});
 		quote_into_mixed_site!(block_span.join(), root, render_proc, {
-			{#for attr in attrs {
-				{#(attr)}
-			}}
+			{#for attr in attrs { {#(attr)} }}
 			{
 				{#(inner_render_proc)}
 			}

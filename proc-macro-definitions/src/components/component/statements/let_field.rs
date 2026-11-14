@@ -1,5 +1,6 @@
 use loess::grammar;
 use loess_rust::{
+	attributes::OuterAttribute,
 	ident::Identifier,
 	lex::{
 		keywords::{Let, SelfLowercase},
@@ -7,6 +8,9 @@ use loess_rust::{
 	},
 };
 use loess_rust_opaque::Expression;
+use proc_macro2::{Group, TokenStream};
+
+use crate::components::component::statements::StatementImpl;
 
 grammar! {
 	pub struct LetField: PeekFrom, PopFrom {
@@ -17,5 +21,58 @@ grammar! {
 		eq: Eq,
 		expr: Expression,
 		semi: Semi,
+	}
+}
+
+impl StatementImpl for LetField {
+	fn hint_size(
+		&self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		attrs: &[OuterAttribute],
+		tokens: &mut TokenStream,
+	) {
+		todo!("LetField hint_size")
+	}
+
+	fn boxed_emit(
+		self: Box<Self>,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		self.emit(
+			root,
+			substrate,
+			content_parent,
+			additional_field_attrs,
+			fields,
+			attrs,
+			init_proc,
+			init_guards,
+			render_proc,
+		);
+	}
+
+	fn emit(
+		self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		todo!("LetField emit")
 	}
 }

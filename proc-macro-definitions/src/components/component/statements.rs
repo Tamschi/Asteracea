@@ -1,32 +1,34 @@
-use std::{
-	boxed,
-	ops::ControlFlow::{self, Continue},
-};
+use std::ops::ControlFlow::{self, Continue};
 
 use loess::{
 	Error, ErrorPriority, Errors, Input, PeekFrom, PopFrom, PopParsedFrom, grammar,
 	quote_into_mixed_site,
-	scaffold::{CurlyBraces, Greedy, Optimistic, Parentheses, SquareBrackets},
+	scaffold::{CurlyBraces, Greedy, Optimistic},
 };
 use loess_rust::{
 	attributes::OuterAttribute,
 	ident::Identifier,
 	lex::{
-		keywords::{As, Box, SelfLowercase, Struct},
-		token::punct::{Colon, Dot, DotDot, Semi},
+		keywords::{As, SelfLowercase, Struct},
+		token::punct::{Colon, Dot, Semi},
 	},
 	vis::Visibility,
 };
-use loess_rust_opaque::Expression;
 use proc_macro2::{Group, Span, TokenStream};
 
+use crate::components::component::statements::rust_blocks::{BracketBrace, ParenBrace};
+
 mod block;
+mod boxed;
 mod child;
 mod r#for;
 mod r#if;
 mod let_field;
 mod r#match;
+mod rust_blocks;
+mod semi;
 mod text;
+mod transclusion;
 mod r#while;
 
 grammar! {
@@ -36,8 +38,8 @@ grammar! {
 	}
 
 	pub enum Statement_: PopFrom {
-		ParenBrace(Parentheses<CurlyBraces>),
-		BracketBrace(SquareBrackets<CurlyBraces>),
+		ParenBrace(ParenBrace),
+		BracketBrace(BracketBrace),
 		For(r#for::CachedFor),
 		ParenFor(r#for::ParenFor),
 		BracketFor(r#for::BracketFor),
@@ -45,10 +47,10 @@ grammar! {
 		BracketMatch(r#match::BracketMatch),
 		BracketWhile(r#while::BracketWhile),
 		Block(block::Block),
-		Box(BoxStatement),
-		Semi(Semi),
+		Box(boxed::Box),
+		Semi(semi::Semi),
 		Text(text::Text),
-		Transclusion(Transclusion),
+		Transclusion(transclusion::Transclusion),
 		LetField(let_field::LetField),
 		Child(Optimistic<child::Child>),
 	} else "Expected Asteracea statement.";
@@ -65,7 +67,7 @@ trait StatementImpl {
 	);
 
 	fn boxed_emit(
-		self: std::boxed::Box<Self>,
+		self: Box<Self>,
 		root: &TokenStream,
 		substrate: &Group,
 		content_parent: &TokenStream,
@@ -111,7 +113,7 @@ impl dyn StatementImpl {
 	}
 }
 
-impl PopParsedFrom for std::boxed::Box<dyn StatementImpl> {
+impl PopParsedFrom for Box<dyn StatementImpl> {
 	type Parsed = Self;
 
 	fn pop_parsed_from(
@@ -150,8 +152,15 @@ impl PopParsedFrom for std::boxed::Box<dyn StatementImpl> {
 }
 
 impl Statement {
-	fn hint_size(&self, root: &TokenStream, tokens: &mut TokenStream) {
-		//TODO
+	pub fn hint_size(
+		&self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		tokens: &mut TokenStream,
+	) {
+		self.stmt
+			.hint_size(root, substrate, content_parent, &self.attrs, tokens);
 	}
 
 	pub fn emit(
@@ -186,12 +195,6 @@ impl Statement {
 }
 
 grammar! {
-	pub struct BoxStatement: PeekFrom, PopFrom {
-		pub r#box: Box,
-		pub storage: Option<Storage>,
-		pub statement: boxed::Box<Statement>,
-	}
-
 	pub struct Storage: PeekFrom {
 		pub r#as: As,
 		pub visibility: Option<Visibility>,
@@ -205,14 +208,6 @@ grammar! {
 		pub colon: Colon,
 		pub r#struct: Option<Struct>,
 		pub identifier: Identifier,
-	}
-}
-
-grammar! {
-	pub struct Transclusion: PeekFrom, PopFrom {
-		pub dot_dot: DotDot,
-		pub expression: Expression,
-		pub semi: Semi,
 	}
 }
 

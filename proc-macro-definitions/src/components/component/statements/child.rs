@@ -15,6 +15,8 @@ use loess_rust::{
 use loess_rust_opaque::Type;
 use proc_macro2::{Group, Ident, Span, TokenStream};
 
+use crate::components::component::statements::StatementImpl;
+
 use super::{Statement, Storage};
 
 grammar! {
@@ -33,8 +35,53 @@ grammar! {
 	} else "Expected `;` or `{`.";
 }
 
-impl Child {
-	pub fn emit(
+impl ChildChildren {
+	fn span(&self) -> Span {
+		match self {
+			ChildChildren::Void(semi) => semi.semi.span(),
+			ChildChildren::Braces(braces) => braces.span.join(),
+		}
+	}
+}
+
+impl StatementImpl for Child {
+	fn hint_size(
+		&self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		attrs: &[OuterAttribute],
+		tokens: &mut TokenStream,
+	) {
+		<dyn StatementImpl>::hint_size_one(self.children.span(), root, tokens);
+	}
+
+	fn boxed_emit(
+		self: Box<Self>,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		self.emit(
+			root,
+			substrate,
+			content_parent,
+			additional_field_attrs,
+			fields,
+			attrs,
+			init_proc,
+			init_guards,
+			render_proc,
+		);
+	}
+
+	fn emit(
 		self,
 		root: &TokenStream,
 		substrate: &Group,

@@ -23,9 +23,9 @@ impl StatementImpl for BracketIf {
 	fn hint_size(
 		&self,
 		root: &TokenStream,
-		substrate: &Group,
-		content_parent: &TokenStream,
-		attrs: &[OuterAttribute],
+		_substrate: &Group,
+		_content_parent: &TokenStream,
+		_attrs: &[OuterAttribute],
 		tokens: &mut TokenStream,
 	) {
 		// Always emits an accumulation.
@@ -93,7 +93,21 @@ impl StatementImpl for BracketIf {
 				&mut acc,
 				ctx,
 				{
-					let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
+					//TODO?: Move the start of the accumulation into the branches to provide better size hints?
+					let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation(
+						{#({
+							let mut tokens = TokenStream::new();
+							then.hint_size(root, substrate, content_parent, attrs, &mut tokens);
+							tokens
+						})}
+						{#if let Some((_, r#else)) = (r#else).as_ref() {
+							| {#({
+								let mut tokens = TokenStream::new();
+								r#else.hint_size(root, substrate, content_parent, attrs, &mut tokens);
+								tokens
+							})}
+						}}
+					);
 					{#(r#if, conditions, {
 						let mut render_proc = TokenStream::new();
 						then.emit(

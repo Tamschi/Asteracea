@@ -83,7 +83,7 @@ impl StatementImpl for BracketWhile {
 				&mut acc,
 				ctx,
 				{
-					let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
+					let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation({#root}::SizeHint::UNKNOWN);
 					{#(r#while, expression, {
 						let mut render_proc = TokenStream::new();
 						block.emit(

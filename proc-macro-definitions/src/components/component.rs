@@ -57,9 +57,12 @@ impl Component {
 		let mut fields: Vec<(Vec<OuterAttribute>, Identifier, TokenStream)> = vec![];
 		let mut init_proc = TokenStream::new();
 		let mut init_guards: Vec<Identifier> = vec![];
+		let mut body_size_hint = TokenStream::new();
 		let mut render_proc = TokenStream::new();
 
 		let content_parent = Ident::new("Self", name.span()).into_token_stream();
+
+		body.hint_size(root, substrate, &content_parent, &mut body_size_hint);
 		body.emit(
 			root,
 			substrate,
@@ -360,7 +363,7 @@ impl Component {
 							}}
 						}}
 
-						let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation();
+						let mut acc = <Self as {#root}::ContentParent<'r, {#(substrate)}>>::start_accumulation({#(body_size_hint)});
 						{#(render_proc)}
 						<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)
 					}
@@ -371,8 +374,8 @@ impl Component {
 					type RenderAccumulator = <{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault;
 
 					#[inline(always)]
-					fn start_accumulation() -> Self::RenderAccumulator {
-						<{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::default_start_accumulation()
+					fn start_accumulation(size_hint: {#root}::SizeHint) -> Self::RenderAccumulator {
+						<{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::default_start_accumulation(size_hint)
 					}
 
 					#[inline(always)]

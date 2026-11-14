@@ -23,7 +23,7 @@ pub use std::{
 	derive, format_args,
 	mem::forget,
 	ops::Drop,
-	option::Option,
+	option::Option::{self, Some},
 	pin::Pin,
 	result::Result::{self, Err, Ok},
 };
@@ -40,7 +40,7 @@ pub use asteracea_proc_macro_definitions::components;
 
 pub use super::{
 	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,
-	DefaultAccumulationSubstrate, Init, Render, Substrate,
+	DefaultAccumulationSubstrate, Init, Render, SizeHint, Substrate,
 };
 
 /// Only implemented for functions that have a signature ABI-compatible with `fn(*const R, T)`!
