@@ -2,7 +2,11 @@ use loess::{
 	grammar, quote_into_mixed_site,
 	scaffold::{Parentheses, SquareBrackets},
 };
-use loess_rust::{attributes::OuterAttribute, ident::Identifier, lex::token::delim::CurlyBraces};
+use loess_rust::{
+	attributes::OuterAttribute,
+	ident::Identifier,
+	lex::token::{delim::CurlyBraces, punct::Colon},
+};
 use proc_macro2::TokenStream;
 
 use crate::components::component::statements::StatementImpl;
@@ -35,7 +39,7 @@ impl StatementImpl for ParenBrace {
 		substrate: &proc_macro2::Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -60,7 +64,7 @@ impl StatementImpl for ParenBrace {
 		_substrate: &proc_macro2::Group,
 		_content_parent: &TokenStream,
 		_additional_field_attrs: &[&OuterAttribute],
-		_fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		_fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		_init_guards: &mut Vec<Identifier>,
@@ -108,7 +112,7 @@ impl StatementImpl for BracketBrace {
 		substrate: &proc_macro2::Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -133,7 +137,7 @@ impl StatementImpl for BracketBrace {
 		substrate: &proc_macro2::Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,

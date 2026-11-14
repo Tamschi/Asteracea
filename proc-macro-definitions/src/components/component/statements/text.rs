@@ -4,7 +4,7 @@ use loess_rust::{
 	ident::Identifier,
 	lex::token::{
 		literal::{AnyStringLiteral, RawStringLiteral, StringLiteral},
-		punct::Semi,
+		punct::{Colon, Semi},
 	},
 };
 use proc_macro2::{Group, TokenStream};
@@ -46,7 +46,7 @@ impl StatementImpl for Text {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -71,7 +71,7 @@ impl StatementImpl for Text {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		_additional_field_attrs: &[&OuterAttribute],
-		_fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		_fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		_init_proc: &mut TokenStream,
 		_init_guards: &mut Vec<Identifier>,

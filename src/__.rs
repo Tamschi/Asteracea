@@ -5,12 +5,15 @@ use rhizome::sync::{DynValue, NodeHandle};
 use std::{
 	any::TypeId,
 	fmt::{self, Formatter},
-	mem::{DropGuard, ManuallyDrop},
+	mem::DropGuard,
+	ops::DerefMut,
 	ptr::drop_in_place,
 	rc::Rc,
 	sync::Arc,
 };
 use try_lazy_init::Lazy;
+
+pub mod let_macros;
 
 pub type DepsNodeHandle = NodeHandle<TypeId, TypeId, DynValue>;
 pub use core::{concat, stringify};
@@ -21,7 +24,7 @@ pub use std::{
 	clone::Clone,
 	default::Default,
 	derive, format_args,
-	mem::forget,
+	mem::{forget, ManuallyDrop},
 	ops::Drop,
 	option::Option::{self, Some},
 	pin::Pin,
@@ -40,7 +43,7 @@ pub use asteracea_proc_macro_definitions::components;
 
 pub use super::{
 	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,
-	DefaultAccumulationSubstrate, Init, Render, SizeHint, Substrate,
+	DefaultAccumulationSubstrate, Init, Render, SignalSubstrate, SizeHint, Substrate,
 };
 
 /// Only implemented for functions that have a signature ABI-compatible with `fn(*const R, T)`!
@@ -161,11 +164,12 @@ impl<T: ?Sized> UnBorrow for Arc<T> {
 	}
 }
 
-pub fn pinned_init_and_guard<'a, 'i, T: 'a, E>(
+pub unsafe fn pinned_init_and_guard<'a, 'i, T: 'a, E>(
 	init: impl 'i + PinInit<T, E>,
-	place: *mut T,
-) -> Result<impl 'a + Drop, E> {
+	place: *mut ManuallyDrop<T>,
+) -> Result<impl 'a + DerefMut<Target = *mut T>, E> {
 	Ok(unsafe {
+		let place = place.cast::<T>();
 		init.__pinned_init(place)?;
 		DropGuard::new(place, |place| drop_in_place(place))
 	})

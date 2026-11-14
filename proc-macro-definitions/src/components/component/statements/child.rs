@@ -9,7 +9,7 @@ use loess_rust::{
 	ident::Identifier,
 	lex::{
 		keywords::Await,
-		token::punct::{Dot, Semi},
+		token::punct::{Colon, Dot, Semi},
 	},
 };
 use loess_rust_opaque::Type;
@@ -62,7 +62,7 @@ impl StatementImpl for Child {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -87,7 +87,7 @@ impl StatementImpl for Child {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -127,13 +127,14 @@ impl StatementImpl for Child {
 			)
 		})();
 
-		let field_name = proc_macro2::Ident::new(
+		let field_name = Ident::new(
 			&format!("__Asteracea__child_{}", fields.len()),
 			span.resolved_at(Span::mixed_site()),
 		);
 		fields.push((
 			attrs.to_owned(),
 			Identifier(field_name.clone()),
+			Colon::default(),
 			r#type.clone(),
 		));
 
@@ -155,7 +156,7 @@ impl StatementImpl for Child {
 		let as_render = as_render;
 		quote_into_mixed_site!(span, root, init_proc, {
 			let {#({
-				let guard = Identifier(Ident::new( &format!("init_guard_{}", init_guards.len()), span.resolved_at(Span::mixed_site())));
+				let guard = Identifier(Ident::new(&format!("init_guard_{}", init_guards.len()), span.resolved_at(Span::mixed_site())));
 				init_guards.push(guard.clone());
 				guard
 			})} = {

@@ -1,5 +1,9 @@
 use loess::{grammar, quote_into_mixed_site, scaffold::SquareBrackets};
-use loess_rust::{attributes::OuterAttribute, ident::Identifier, lex::keywords::While};
+use loess_rust::{
+	attributes::OuterAttribute,
+	ident::Identifier,
+	lex::{keywords::While, token::punct::Colon},
+};
 use loess_rust_opaque::ExpressionExceptStructExpression;
 use proc_macro2::{Group, TokenStream};
 
@@ -31,7 +35,7 @@ impl StatementImpl for BracketWhile {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -56,7 +60,7 @@ impl StatementImpl for BracketWhile {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,

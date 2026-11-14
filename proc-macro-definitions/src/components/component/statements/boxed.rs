@@ -1,23 +1,25 @@
 use loess::grammar;
+use loess_rust::{attributes::OuterAttribute, ident::Identifier, lex::token::punct::Colon};
+use proc_macro2::{Group, TokenStream};
 
 use crate::components::component::statements::{StatementImpl, Storage};
 
 grammar! {
-		pub struct Box: PeekFrom, PopFrom {
-			pub r#box: loess_rust_lex::lex::keywords::Box,
-			pub storage: Option<Storage>,
-			pub statement: std::boxed::Box<dyn StatementImpl>,
-		}
+	pub struct Box: PeekFrom, PopFrom {
+		pub r#box: loess_rust_lex::lex::keywords::Box,
+		pub storage: Option<Storage>,
+		pub statement: std::boxed::Box<dyn StatementImpl>,
+	}
 }
 
 impl StatementImpl for Box {
 	fn hint_size(
 		&self,
-		root: &proc_macro2::TokenStream,
-		substrate: &proc_macro2::Group,
-		content_parent: &proc_macro2::TokenStream,
-		attrs: &[loess_rust::attributes::OuterAttribute],
-		tokens: &mut proc_macro2::TokenStream,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		attrs: &[OuterAttribute],
+		tokens: &mut TokenStream,
 	) {
 		self.statement
 			.hint_size(root, substrate, content_parent, attrs, tokens);
@@ -25,19 +27,15 @@ impl StatementImpl for Box {
 
 	fn boxed_emit(
 		self: std::boxed::Box<Self>,
-		root: &proc_macro2::TokenStream,
-		substrate: &proc_macro2::Group,
-		content_parent: &proc_macro2::TokenStream,
-		additional_field_attrs: &[&loess_rust::attributes::OuterAttribute],
-		fields: &mut Vec<(
-			Vec<loess_rust::attributes::OuterAttribute>,
-			loess_rust::ident::Identifier,
-			proc_macro2::TokenStream,
-		)>,
-		attrs: &[loess_rust::attributes::OuterAttribute],
-		init_proc: &mut proc_macro2::TokenStream,
-		init_guards: &mut Vec<loess_rust::ident::Identifier>,
-		render_proc: &mut proc_macro2::TokenStream,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
 	) {
 		self.emit(
 			root,
@@ -54,19 +52,15 @@ impl StatementImpl for Box {
 
 	fn emit(
 		self,
-		root: &proc_macro2::TokenStream,
-		substrate: &proc_macro2::Group,
-		content_parent: &proc_macro2::TokenStream,
-		additional_field_attrs: &[&loess_rust::attributes::OuterAttribute],
-		fields: &mut Vec<(
-			Vec<loess_rust::attributes::OuterAttribute>,
-			loess_rust::ident::Identifier,
-			proc_macro2::TokenStream,
-		)>,
-		attrs: &[loess_rust::attributes::OuterAttribute],
-		init_proc: &mut proc_macro2::TokenStream,
-		init_guards: &mut Vec<loess_rust::ident::Identifier>,
-		render_proc: &mut proc_macro2::TokenStream,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
 	) {
 		todo!("Box emit")
 	}

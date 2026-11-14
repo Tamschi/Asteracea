@@ -2,7 +2,7 @@ use std::{any::TypeId, future::Future, pin::Pin};
 
 use eros::{ErrorUnion, TypeSet};
 use pinned_init::PinInit;
-use rhizome::sync::{DynValue, Node, NodeHandle};
+use rhizome::sync::{DynValue, NodeHandle};
 
 use crate::SizeHint;
 
@@ -13,6 +13,11 @@ pub trait Substrate {
 	type RenderContext<'r>;
 	type RenderTDefault<'r>;
 	type RenderESetDefault<'r>: TypeSet;
+}
+
+pub trait SignalSubstrate: Substrate {
+	type SignalArcDyn<T>;
+	type SignalArcDynCell<T>;
 }
 
 pub trait DefaultAccumulationSubstrate<'r>: Substrate {

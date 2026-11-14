@@ -73,6 +73,7 @@ inherent-associated-types = "0.1.0"
 [dev-dependencies]
 debugless-unwrap = "1.0.0"
 ergo-pin = "0.1.0"
+flourish = "0.2.0"
 git_info = "0.1.2"
 lignin-html = { git = "https://github.com/Tamschi/lignin-html.git", branch = "develop" }
 tap = "1.0.1"

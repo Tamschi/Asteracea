@@ -1,9 +1,9 @@
 use asteracea::components;
-use asteracea_epaint::EpaintSubstrate;
+use asteracea_epaint::Epaint;
 
 //TODO: Also support e.g. `for<S: Substrate>` (or any subtrait).
 components!(
-	#![substrate = EpaintSubstrate]
+	#![substrate = Epaint]
 
 	pub RectShapeParent => {
 		rect[size?, color?];

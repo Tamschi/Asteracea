@@ -7,7 +7,7 @@ use loess_rust::{
 	ident::Identifier,
 	lex::{
 		keywords::{If, Match},
-		token::punct::{Comma, FatArrow},
+		token::punct::{Colon, Comma, FatArrow},
 	},
 };
 use loess_rust_opaque::{Expression, ExpressionExceptStructExpression, Pattern};
@@ -50,7 +50,7 @@ impl StatementImpl for BracketMatch {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -75,7 +75,7 @@ impl StatementImpl for BracketMatch {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,

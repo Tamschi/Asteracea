@@ -23,7 +23,7 @@ mod boxed;
 mod child;
 mod r#for;
 mod r#if;
-mod let_field;
+mod r#let;
 mod r#match;
 mod rust_blocks;
 mod semi;
@@ -51,7 +51,7 @@ grammar! {
 		Semi(semi::Semi),
 		Text(text::Text),
 		Transclusion(transclusion::Transclusion),
-		LetField(let_field::LetField),
+		LetField(r#let::Let),
 		Child(Optimistic<child::Child>),
 	} else "Expected Asteracea statement.";
 }
@@ -72,7 +72,7 @@ trait StatementImpl {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -85,7 +85,7 @@ trait StatementImpl {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -169,7 +169,7 @@ impl Statement {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
 		render_proc: &mut TokenStream,

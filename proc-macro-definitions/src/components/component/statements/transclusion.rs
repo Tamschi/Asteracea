@@ -2,7 +2,7 @@ use loess::grammar;
 use loess_rust::{
 	attributes::OuterAttribute,
 	ident::Identifier,
-	lex::token::punct::{DotDot, Semi},
+	lex::token::punct::{Colon, DotDot, Semi},
 };
 use loess_rust_opaque::Expression;
 use proc_macro2::{Group, TokenStream};
@@ -35,7 +35,7 @@ impl StatementImpl for Transclusion {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -60,7 +60,7 @@ impl StatementImpl for Transclusion {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,

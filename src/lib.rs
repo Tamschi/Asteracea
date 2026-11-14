@@ -51,7 +51,7 @@ mod traits;
 //TODO: Reorganise some of these into a module.
 pub use traits::{
 	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,
-	DefaultAccumulationSubstrate, Init, Render, Substrate,
+	DefaultAccumulationSubstrate, Init, Render, SignalSubstrate, Substrate,
 };
 
 #[cfg(doctest)]
@@ -126,4 +126,83 @@ impl BitOr for SizeHint {
 	fn bitor(self, rhs: Self) -> Self::Output {
 		Self(self.0.min(rhs.0), self.1.zip(rhs.1).map(|(a, b)| a.max(b)))
 	}
+}
+
+#[doc(inline)]
+/// Macros that represent the modalities of Asteracea `let` statements,
+/// which persist values in [`Init::init`] or [`AsyncInit::init`] for
+/// use also in [`Render::render`].
+///
+/// Depending on the macro used, the value is accessible in different ways:
+///
+/// ```rust
+/// # use std::marker::PhantomPinned;
+/// #
+/// # struct Pinned {
+/// # 	_phantom: PhantomPinned
+/// # }
+/// #
+/// # impl Pinned {
+/// # 	fn new() -> Self {
+/// # 		Self { _phantom: PhantomPinned }
+/// # 	}
+/// #
+/// # 	fn when_pinned(self: Pin<&Self>) {
+/// # 		let _ = self;
+/// # 	}
+/// #
+/// # 	fn when_pinned_mut(self: Pin<&mut Self>) {
+/// # 	}
+/// # }
+/// #
+/// asteracea::components! {
+/// 	#![substrate = Sub]
+///
+/// 	Test => {
+/// 		let a = pin!(Pinned::new());
+/// 		let mut b = pin!(Pinned::new());
+///
+/// 		({
+/// 			// In `init`.
+/// 			a.when_pinned();
+/// 			b.when_pinned();
+/// 			b.as_mut().when_pinned_mut();
+/// 		})
+/// 		[{
+/// 			// In `render`.
+/// 			a.when_pinned();
+/// 			b.when_pinned();
+/// 			b.as_mut().when_pinned_mut();
+/// 		}]
+/// 	}
+/// }
+/// ```
+///
+/// To create plain bindings and variables in `init` or `render`,
+/// instead use `(let) …;` or `[let] …;` statements, respectively,
+/// with usual Rust syntax.
+pub use __::let_macros::value as persisted_let;
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __pin_type {
+	($type:ty) => {
+		$type
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __pin_value {
+	($value:expr) => {
+		$value
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __pin_access {
+	($ptr:expr) => {
+		unsafe { Pin::new_unchecked(&mut *$ptr) }
+	};
 }

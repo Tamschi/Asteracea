@@ -7,7 +7,7 @@ use loess_rust::{
 	ident::Identifier,
 	lex::{
 		keywords::{Async, Const},
-		token::punct::FatArrow,
+		token::punct::{Colon, FatArrow},
 	},
 	vis::Visibility,
 };
@@ -54,7 +54,7 @@ impl Component {
 		let init = Ident::new("init", name.span());
 		let render = Ident::new("render", name.span());
 
-		let mut fields: Vec<(Vec<OuterAttribute>, Identifier, TokenStream)> = vec![];
+		let mut fields: Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)> = vec![];
 		let mut init_proc = TokenStream::new();
 		let mut init_guards: Vec<Identifier> = vec![];
 		let mut body_size_hint = TokenStream::new();
@@ -191,19 +191,24 @@ impl Component {
 		quote_into_with_exact_span!(name.span(), root, tokens, {
 			{#(attributes)}
 			{#(&visibility)} struct {#(&name)} {
-				{#for (attrs, ident, r#type) in fields.into_iter().rev() {
+				// According to <https://stackoverflow.com/questions/51933660/xeon-cpu-e5-2603-backward-memory-prefetch>,
+				// some CPUs (at least sometimes) perform much better when reading memory forwards. As such, the fields
+				// are stored in order here, and only dropping is reversed.
+				{#for (attrs, ident, colon, r#type) in fields.iter() {
 					{#(attrs)}
-					{#(ident)}: {#(r#type)},
+					{#(ident, colon)} {#root}::ManuallyDrop<{#(r#type)}>,
 				}}
 			}
 
 			impl {#root}::Drop for {#(&name)} {
 				fn drop(&mut self) {
-					// Intentionally left empty. Rust will afterwards drop fields in declaration order,
-					// i.e. in reverse of what's in the macro input.
-
-					//TODO: Document this and check whether manual arrangement of fields improves performance.
-					//TODO: In theory that's quite possible, as it could make access linear through nested components.
+					unsafe {
+						// Drop in reverse:
+						{#for (attrs, ident, _, _) in fields.into_iter().rev() {
+							{#(attrs)}
+								{#root}::ManuallyDrop::<_>::drop(&mut self.{#(ident)});
+						}}
+					}
 				}
 			}
 
@@ -338,7 +343,7 @@ impl Component {
 					type RenderESet = <{#(substrate)} as {#root}::Substrate>::RenderESetDefault<'r>;
 
 					fn {#(render)}(
-						mut self: {#root}::Pin<&'r mut Self>,
+						self: {#root}::Pin<&'r mut Self>,
 						ctx: <{#(substrate)} as {#root}::Substrate>::RenderContext<'r>,
 						args: <Self as {#root}::Render<'r, {#(substrate)}>>::RenderArgs,
 						content: <Self as {#root}::Render<'r, {#(substrate)}>>::RenderContent,
@@ -346,6 +351,7 @@ impl Component {
 						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderT,
 						{#root}::ErrorUnion<<Self as {#root}::Render<'r, {#(substrate)}>>::RenderESet>,
 					> {
+						let this = unsafe { &raw mut *{#root}::Pin::into_inner_unchecked(self) };
 						{#if let Some(SquareBrackets { span, contents }) = render_args {
 							{#located_at(span.join()) {
 								let {#(name_render_args_type)} {

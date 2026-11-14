@@ -2,7 +2,7 @@ use loess::{
 	grammar, quote_into_mixed_site,
 	scaffold::{CurlyBraces, Optimistic},
 };
-use loess_rust::{attributes::OuterAttribute, ident::Identifier};
+use loess_rust::{attributes::OuterAttribute, ident::Identifier, lex::token::punct::Colon};
 use proc_macro2::{Group, Ident, Span, TokenStream};
 
 use crate::components::component::statements::{Statement, StatementImpl};
@@ -51,7 +51,7 @@ impl StatementImpl for Block {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -76,7 +76,7 @@ impl StatementImpl for Block {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,

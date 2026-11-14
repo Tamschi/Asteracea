@@ -45,6 +45,7 @@ dependencies = [
  "debugless-unwrap 1.0.0",
  "ergo-pin",
  "eros",
+ "flourish",
  "futures-core",
  "git_info",
  "inherent-associated-types",
@@ -72,6 +73,7 @@ dependencies = [
  "bon",
  "epaint",
  "eros",
+ "flourish",
  "inherent-associated-types",
  "pinned-init",
  "rhizome",
@@ -376,6 +378,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c66915cc5391097de7a2b0b972e8505aa33c0df401fd3a6811dbdb32881ba48"
 
 [[package]]
+name = "flourish"
+version = "0.2.0+0.1-compatible"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07ab27e3bc8d0c4d7a24db648da47ddd580988c96378ed5b1fefeeef52247c11"
+dependencies = [
+ "futures-channel",
+ "futures-lite",
+ "isoprenoid",
+ "pin-project",
+ "tap",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -430,10 +445,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures-channel"
+version = "0.3.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1f9e3d69d39e4862ffed03ed071a76f9a13ba1d9109d355b0f0aa6b15e393c4"
+dependencies = [
+ "futures-core",
+]
+
+[[package]]
 name = "futures-core"
 version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92d699e522242e69e3003b94ecc1f960f3a5e015aa7c5d7486e65ad01dd94f5e"
+
+[[package]]
+name = "futures-lite"
+version = "2.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f78e10609fe0e0b3f4157ffab1876319b5b0db102a2c60dc4626306dc46b44ad"
+dependencies = [
+ "futures-core",
+ "pin-project-lite",
+]
 
 [[package]]
 name = "futures-task"
@@ -676,6 +710,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0242819d153cba4b4b05a5a8f2a7e9bbf97b6055b2a002b395c96b5ff3c0222"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "isoprenoid"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81008ddd280691d22285ea97336359c60feade1c6e9745e74fe7420e7cecb14d"
+dependencies = [
+ "futures-lite",
 ]
 
 [[package]]

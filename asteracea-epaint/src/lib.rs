@@ -7,9 +7,9 @@ use epaint::{Brush, Color32, CornerRadius, Pos2, Rect, Shape, Stroke, StrokeKind
 use eros::AnyError;
 use inherent_associated_types::associate;
 
-pub enum EpaintSubstrate {}
+pub enum Epaint {}
 
-impl Substrate for EpaintSubstrate {
+impl Substrate for Epaint {
 	type InitContext<'i> = ();
 	type InitESetDefault<'i> = AnyError;
 	type RenderContext<'r> = &'r Style<'r>;
@@ -17,7 +17,7 @@ impl Substrate for EpaintSubstrate {
 	type RenderESetDefault<'r> = AnyError;
 }
 
-impl<'r> DefaultAccumulationSubstrate<'r> for EpaintSubstrate {
+impl<'r> DefaultAccumulationSubstrate<'r> for Epaint {
 	type RenderAccumulatorDefault = Vec<Shape>;
 
 	fn default_start_accumulation(size_hint: SizeHint) -> Self::RenderAccumulatorDefault {
@@ -37,7 +37,7 @@ impl<'r>
 		'r,
 		<Self as DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault,
 		<Self as Substrate>::RenderTDefault<'r>,
-	> for EpaintSubstrate
+	> for Epaint
 {
 	#[inline(always)]
 	fn on_rendered(
@@ -51,7 +51,7 @@ impl<'r>
 
 /// Built-in components:
 #[associate]
-impl EpaintSubstrate {
+impl Epaint {
 	pub type circle = CircleShape;
 	pub type rect = RectShape;
 }
@@ -88,7 +88,7 @@ impl<T> From<T> for StyleDerivationValue<T> {
 }
 
 components! {
-	#![substrate = EpaintSubstrate]
+	#![substrate = Epaint]
 
 	pub CircleShape[
 		center as Pos2 { x, y }: Pos2, //TODO: Infer type from pattern.

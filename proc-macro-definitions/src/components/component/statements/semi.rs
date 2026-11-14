@@ -1,5 +1,5 @@
 use loess::grammar;
-use loess_rust::{attributes::OuterAttribute, ident::Identifier};
+use loess_rust::{attributes::OuterAttribute, ident::Identifier, lex::token::punct::Colon};
 use proc_macro2::{Group, TokenStream};
 
 use crate::components::component::statements::StatementImpl;
@@ -28,7 +28,7 @@ impl StatementImpl for Semi {
 		substrate: &Group,
 		content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
-		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
 		init_proc: &mut TokenStream,
 		init_guards: &mut Vec<Identifier>,
@@ -53,7 +53,7 @@ impl StatementImpl for Semi {
 		_substrate: &Group,
 		_content_parent: &TokenStream,
 		_additional_field_attrs: &[&OuterAttribute],
-		_fields: &mut Vec<(Vec<OuterAttribute>, Identifier, TokenStream)>,
+		_fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		_attrs: &[OuterAttribute],
 		_init_proc: &mut TokenStream,
 		_init_guards: &mut Vec<Identifier>,
