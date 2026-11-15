@@ -1,11 +1,13 @@
 use std::fmt;
 
 use asteracea::{
-	components, ContentParentSubstrate, DefaultAccumulationSubstrate, SignalSubstrate, SizeHint,
-	Substrate,
+	components, ContentParentSubstrate, DefaultAccumulationSubstrate, SignalSubstrate,
+	SignalSubstrateComputed, SizeHint, Substrate,
 };
 use eros::AnyError;
-use flourish::{GlobalSignalsRuntime, SignalArcDyn, SignalArcDynCell};
+use flourish::{
+	GlobalSignalsRuntime, Signal, SignalArcDyn, SignalArcDynCell, SignalDyn, SignalDynCell,
+};
 use inherent_associated_types::associate;
 
 pub struct Sub;
@@ -95,6 +97,23 @@ impl<'r>
 		_rendered: fmt::Arguments<'r>,
 	) {
 		// Do nothing.
+	}
+}
+
+impl<T: 'static + Send> SignalSubstrate<T> for Sub {
+	type SignalDyn = SignalDyn<'static, T, GlobalSignalsRuntime>;
+	type SignalDynCell = SignalDynCell<'static, T, GlobalSignalsRuntime>;
+	type SignalArcDyn = SignalArcDyn<'static, T, GlobalSignalsRuntime>;
+	type SignalArcDynCell = SignalArcDynCell<'static, T, GlobalSignalsRuntime>;
+
+	fn cell(initial_value: T) -> Self::SignalArcDynCell {
+		Signal::cell(initial_value).into_dyn_cell()
+	}
+}
+
+impl<T: 'static + Send, F: 'static + Send + FnMut() -> T> SignalSubstrateComputed<T, F> for Sub {
+	fn computed(fn_pin: F) -> Self::SignalArcDyn {
+		Signal::computed(fn_pin).into_dyn()
 	}
 }
 

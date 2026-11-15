@@ -15,9 +15,17 @@ pub trait Substrate {
 	type RenderESetDefault<'r>: TypeSet;
 }
 
-pub trait SignalSubstrate: Substrate {
-	type SignalArcDyn<T>;
-	type SignalArcDynCell<T>;
+pub trait SignalSubstrate<T>: Substrate {
+	type SignalDyn: ?Sized;
+	type SignalDynCell: ?Sized;
+	type SignalArcDyn;
+	type SignalArcDynCell;
+
+	fn cell(initial_value: T) -> Self::SignalArcDynCell;
+}
+
+pub trait SignalSubstrateComputed<T, F>: SignalSubstrate<T> {
+	fn computed(fn_pin: F) -> Self::SignalArcDyn;
 }
 
 pub trait DefaultAccumulationSubstrate<'r>: Substrate {

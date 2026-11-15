@@ -109,7 +109,7 @@ impl StatementImpl for BracketFor {
 
 		quote_into_mixed_site!(span.join(), root, render_proc, {
 			{#for attr in attrs { {#(attr)} }}
-			<{#(content_parent)} as {#root}::ContentParentOf<'r, {#(substrate)}, _>>::on_rendered(
+			<{#(content_parent)} as {#root}::ContentParentOf<'_, {#(substrate)}, _>>::on_rendered(
 				&mut acc,
 				ctx,
 				{

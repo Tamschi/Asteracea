@@ -99,11 +99,14 @@ impl StatementImpl for Let {
 		fields.push((attrs.to_owned(), Identifier(field_name.clone()), colon, {
 			let mut tokens = TokenStream::new();
 			quote_into_mixed_site!((r#let.span()), root, &mut tokens, {
-				{#root}::let_macros::r#type::{#(&r#macro, &not)}({#({
-					let mut tokens = TokenStream::new();
-					r#type.clone().into_tokens(root, &mut tokens);
-					tokens
-				})})
+				{#root}::let_macros::r#type::{#(&r#macro, &not)}(
+					{#({
+						let mut tokens = TokenStream::new();
+						r#type.clone().into_tokens(root, &mut tokens);
+						tokens
+					})},
+					{#(substrate)},
+				)
 			});
 			tokens
 		}));
@@ -115,14 +118,23 @@ impl StatementImpl for Let {
 		init_guards.push(guard.clone());
 		quote_into_mixed_site!((r#let.span()), root, init_proc, {
 			let mut {#(&guard)} = {
-				let value {#(&eq)} {#root}::let_macros::value::{#(&r#macro, &not)}{#located_at(span.join()) { ({#(contents)}) }};
+				let value {#(&eq)} {#root}::let_macros::value::{#(&r#macro, &not)}{#located_at(span.join()) { (
+					{#(contents)},
+					{#(substrate)},
+				) }};
 				unsafe { {#root}::pinned_init_and_guard(value, &raw mut (*this).{#(&field_name)})? }
 			};
-			{#(&r#let, &r#mut, &name, &eq)} {#root}::let_macros::access::{#(&r#macro, &not)}(*{#(guard)}){#(&semi)}
+			{#(&r#let, &r#mut, &name, &eq)} {#root}::let_macros::access::{#(&r#macro, &not)}(
+				*{#(guard)},
+				{#(substrate)},
+			){#(&semi)}
 		});
 
 		quote_into_mixed_site!((r#let.span()), root, render_proc, {
-			{#(r#let, r#mut, name, eq)} {#root}::let_macros::access::{#(r#macro, not)}((*this).{#(field_name)}){#(semi)}
+			{#(r#let, r#mut, name, eq)} {#root}::let_macros::access::{#(r#macro, not)}(
+				(*this).{#(field_name)},
+				{#(substrate)},
+			){#(semi)}
 		});
 	}
 }

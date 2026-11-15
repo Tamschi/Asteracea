@@ -27,11 +27,15 @@ asteracea::components! {
 		let a: Pinned = pin!(Pinned::new());
 		let mut b: Pinned = pin!(Pinned::new());
 
+		let cell: i32 = cell!(0);
+
 		({
 			// In `init`.
 			a.as_ref().when_pinned();
 			b.as_ref().when_pinned();
 			b.as_mut().when_pinned_mut();
+
+			cell.set_if_distinct(1);
 		})
 		[{
 			// In `render`.
@@ -39,5 +43,6 @@ asteracea::components! {
 			b.as_ref().when_pinned();
 			b.as_mut().when_pinned_mut();
 		}]
+		"{}"[cell.get()];
 	}
 }

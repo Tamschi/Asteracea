@@ -48,10 +48,11 @@ pub use lignin;
 pub use try_lazy_init;
 
 mod traits;
-//TODO: Reorganise some of these into a module.
+//TODO: Reorganise some of these (component-traits, substrate-traits) into a module.
 pub use traits::{
 	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,
-	DefaultAccumulationSubstrate, Init, Render, SignalSubstrate, Substrate,
+	DefaultAccumulationSubstrate, Init, Render, SignalSubstrate, SignalSubstrateComputed,
+	Substrate,
 };
 
 #[cfg(doctest)]
@@ -186,15 +187,16 @@ pub use __::let_macros::value as persisted_let;
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __pin_type {
-	($type:ty) => {
+	($type:ty, $substrate:ty,) => {
 		$type
 	};
 }
 
 #[doc(hidden)]
 #[macro_export]
+/// Stored verbatim. Access through <code>[Pin](`std::pin::Pin`)&lt;&mut T></code>.
 macro_rules! __pin_value {
-	($value:expr) => {
+	($value:expr, $substrate:ty,) => {
 		$value
 	};
 }
@@ -202,7 +204,32 @@ macro_rules! __pin_value {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __pin_access {
-	($ptr:expr) => {
-		unsafe { Pin::new_unchecked(&mut *$ptr) }
+	($ptr:expr, $substrate:ty,) => {
+		unsafe { $crate::__::Pin::new_unchecked(&mut *$ptr) }
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __cell_type {
+	($type:ty, $substrate:ty,) => {
+		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDynCell
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+/// Calls [`SignalSubstrate::cell`]. Access through <code>[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDynCell](`SignalSubstrate::SignalDynCell`)&lt;'_></code>.
+macro_rules! __cell_value {
+	($value:expr, $substrate:ty,) => {
+		<$substrate as $crate::SignalSubstrate<_>>::cell($value)
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __cell_access {
+	($ptr:expr, $substrate:ty,) => {
+		unsafe { &**$ptr }
 	};
 }
