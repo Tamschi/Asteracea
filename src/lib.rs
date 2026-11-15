@@ -51,8 +51,8 @@ mod traits;
 //TODO: Reorganise some of these (component-traits, substrate-traits) into a module.
 pub use traits::{
 	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,
-	DefaultAccumulationSubstrate, Init, Render, SignalSubstrate, SignalSubstrateComputed,
-	Substrate,
+	DefaultAccumulationSubstrate, Init, Render, SignalSubstrate, SignalSubstrateCellCyclic,
+	SignalSubstrateComputed, SignalSubstrateDistinct, Substrate,
 };
 
 #[cfg(doctest)]
@@ -240,6 +240,32 @@ macro_rules! __cell_access {
 
 #[doc(hidden)]
 #[macro_export]
+macro_rules! __cell_cyclic_type {
+	($type:ty, $substrate:ty,) => {
+		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDynCell
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+/// Wrapped with [`SignalSubstrate::cell_cyclic`].\
+/// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDynCell](`SignalSubstrate::SignalDynCell`)</code>.
+macro_rules! __cell_cyclic_value {
+	(($($value:tt)*), $substrate:ty,) => {
+		<$substrate as $crate::SignalSubstrateCellCyclic<_, _>>::cell_cyclic($($value)*)
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __cell_cyclic_access {
+	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
+		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
 macro_rules! __computed_type {
 	($type:ty, $substrate:ty,) => {
 		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDyn
@@ -261,6 +287,34 @@ macro_rules! __computed_value {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __computed_access {
+	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
+		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __distinct_type {
+	($type:ty, $substrate:ty,) => {
+		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDyn
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+/// Wrapped with [`SignalSubstrateDistinct::distinct`].\
+/// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
+macro_rules! __distinct_value {
+	(($($value:tt)*), $substrate:ty,) => {
+		<$substrate as $crate::SignalSubstrateDistinct<_, _>>::distinct(
+			$crate::__extract_dot_use!($($value)*)
+		)
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __distinct_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
 		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
 	};

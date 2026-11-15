@@ -24,8 +24,16 @@ pub trait SignalSubstrate<T>: Substrate {
 	fn cell(initial_value: T) -> Self::SignalArcDynCell;
 }
 
+pub trait SignalSubstrateCellCyclic<T, F>: SignalSubstrate<T> {
+	fn cell_cyclic(fn_pin: F) -> Self::SignalArcDynCell;
+}
+
 pub trait SignalSubstrateComputed<T, F>: SignalSubstrate<T> {
 	fn computed(fn_pin: F) -> Self::SignalArcDyn;
+}
+
+pub trait SignalSubstrateDistinct<T, F>: SignalSubstrate<T> {
+	fn distinct(fn_pin: F) -> Self::SignalArcDyn;
 }
 
 pub trait DefaultAccumulationSubstrate<'r>: Substrate {

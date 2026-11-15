@@ -28,7 +28,10 @@ asteracea::components! {
 		let mut b: Pinned = pin!(Pinned::new());
 
 		let cell: i32 = cell!(0);
+		(let) cell_ = cell.clone(); //FIXME: Relax `cell_cyclic` bound in `flourish` to allow a simple borrow here.
+		let cyclic: i32 = cell_cyclic!(move |_weak| cell_.get());
 		let computed: i32 = computed!(|| cell.use.get());
+		let distinct: i32 = distinct!(|| cell.use.get());
 
 		({
 			// In `init`.
@@ -37,7 +40,7 @@ asteracea::components! {
 			b.as_mut().when_pinned_mut();
 
 			cell.set_if_distinct(1);
-			let _ = computed;
+			let _ = (cyclic, computed, distinct);
 		})
 		[{
 			// In `render`.
@@ -45,6 +48,6 @@ asteracea::components! {
 			b.as_ref().when_pinned();
 			b.as_mut().when_pinned_mut();
 		}]
-		"{}, {}"[cell.get(), computed.get()];
+		"{}, {}, {}, {}, {}"[cell.get(), computed.get(), distinct.get(), cyclic.get(), uncached.get()];
 	}
 }

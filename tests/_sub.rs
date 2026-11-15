@@ -2,11 +2,13 @@ use std::fmt;
 
 use asteracea::{
 	components, ContentParentSubstrate, DefaultAccumulationSubstrate, SignalSubstrate,
-	SignalSubstrateComputed, SizeHint, Substrate,
+	SignalSubstrateCellCyclic, SignalSubstrateComputed, SignalSubstrateDistinct, SizeHint,
+	Substrate,
 };
 use eros::AnyError;
 use flourish::{
 	GlobalSignalsRuntime, Signal, SignalArcDyn, SignalArcDynCell, SignalDyn, SignalDynCell,
+	SignalWeakDynCell,
 };
 use inherent_associated_types::associate;
 
@@ -111,8 +113,23 @@ impl<T: 'static + Send> SignalSubstrate<T> for Sub {
 	}
 }
 
+//FIXME: Fix flourish to relax the `'static` bound on `F`.
+impl<T: 'static + Send, F: 'static + FnOnce(&SignalWeakDynCell<T, GlobalSignalsRuntime>) -> T>
+	SignalSubstrateCellCyclic<T, F> for Sub
+{
+	fn cell_cyclic(fn_pin: F) -> Self::SignalArcDynCell {
+		Signal::cell_cyclic(fn_pin).into_dyn_cell()
+	}
+}
+
 impl<T: 'static + Send, F: 'static + Send + FnMut() -> T> SignalSubstrateComputed<T, F> for Sub {
 	fn computed(fn_pin: F) -> Self::SignalArcDyn {
+		Signal::computed(fn_pin).into_dyn()
+	}
+}
+
+impl<T: 'static + Send, F: 'static + Send + FnMut() -> T> SignalSubstrateDistinct<T, F> for Sub {
+	fn distinct(fn_pin: F) -> Self::SignalArcDyn {
 		Signal::computed(fn_pin).into_dyn()
 	}
 }
