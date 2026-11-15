@@ -219,7 +219,8 @@ macro_rules! __cell_type {
 
 #[doc(hidden)]
 #[macro_export]
-/// Calls [`SignalSubstrate::cell`]. Access through <code>[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDynCell](`SignalSubstrate::SignalDynCell`)&lt;'_></code>.
+/// Calls [`SignalSubstrate::cell`].\
+/// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDynCell](`SignalSubstrate::SignalDynCell`)</code>.
 macro_rules! __cell_value {
 	($value:expr, $substrate:ty,) => {
 		<$substrate as $crate::SignalSubstrate<_>>::cell($value)
@@ -229,6 +230,32 @@ macro_rules! __cell_value {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __cell_access {
+	($ptr:expr, $substrate:ty,) => {
+		unsafe { &**$ptr }
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __computed_type {
+	($type:ty, $substrate:ty,) => {
+		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDyn
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+/// Calls [`SignalSubstrateComputed::computed`].\
+/// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
+macro_rules! __computed_value {
+	($value:expr, $substrate:ty,) => {
+		<$substrate as $crate::SignalSubstrateComputed<_, _>>::computed($value)
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __computed_access {
 	($ptr:expr, $substrate:ty,) => {
 		unsafe { &**$ptr }
 	};
