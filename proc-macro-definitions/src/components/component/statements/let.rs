@@ -125,15 +125,18 @@ impl StatementImpl for Let {
 				unsafe { {#root}::pinned_init_and_guard(value, &raw mut (*this).{#(&field_name)})? }
 			};
 			{#(&r#let, &r#mut, &name, &eq)} {#root}::let_macros::access::{#(&r#macro, &not)}(
-				*{#(guard)},
+				*{#(&guard)},
 				{#(substrate)},
+				&{#(guard)},
 			){#(&semi)}
 		});
 
 		quote_into_mixed_site!((r#let.span()), root, render_proc, {
+			let let_borrow_guard = ();
 			{#(r#let, r#mut, name, eq)} {#root}::let_macros::access::{#(r#macro, not)}(
-				(*this).{#(field_name)},
+				&raw mut *(&mut *this).{#(field_name)},
 				{#(substrate)},
+				&let_borrow_guard,
 			){#(semi)}
 		});
 	}

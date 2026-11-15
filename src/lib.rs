@@ -204,8 +204,8 @@ macro_rules! __pin_value {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __pin_access {
-	($ptr:expr, $substrate:ty,) => {
-		unsafe { $crate::__::Pin::new_unchecked(&mut *$ptr) }
+	($ptr:expr, $substrate:ty, $guarding_borrow:expr,) => {
+		unsafe { $crate::__::Pin::new_unchecked($crate::__::co_borrow_mut($guarding_borrow, $ptr)) }
 	};
 }
 
@@ -230,8 +230,8 @@ macro_rules! __cell_value {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __cell_access {
-	($ptr:expr, $substrate:ty,) => {
-		unsafe { &**$ptr }
+	($ptr:expr, $substrate:ty, $guarding_borrow:expr,) => {
+		unsafe { $crate::__::co_borrow_mut($guarding_borrow, $ptr) }
 	};
 }
 
@@ -256,7 +256,7 @@ macro_rules! __computed_value {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __computed_access {
-	($ptr:expr, $substrate:ty,) => {
-		unsafe { &**$ptr }
+	($ptr:expr, $substrate:ty, $guarding_borrow:expr,) => {
+		unsafe { $crate::__::co_borrow_mut($guarding_borrow, $ptr) }
 	};
 }

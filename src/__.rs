@@ -192,3 +192,11 @@ impl Default for NoContentBuilder {
 		NoContent::builder()
 	}
 }
+
+pub unsafe fn co_borrow_mut<'a, T, U>(_: &'a U, ptr: *mut T) -> &'a mut T {
+	unsafe { &mut *ptr }
+}
+
+pub unsafe fn co_borrow<'a, T, U>(_: &'a U, ptr: *const T) -> &'a T {
+	unsafe { &*ptr }
+}

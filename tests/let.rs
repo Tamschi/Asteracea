@@ -28,7 +28,7 @@ asteracea::components! {
 		let mut b: Pinned = pin!(Pinned::new());
 
 		let cell: i32 = cell!(0);
-		let computed: i32 = computed!(|| cell.get()); //FIXME: This should not work!
+		let computed: i32 = computed!(|| cell.get());
 
 		({
 			// In `init`.
@@ -44,6 +44,6 @@ asteracea::components! {
 			b.as_ref().when_pinned();
 			b.as_mut().when_pinned_mut();
 		}]
-		"{}, {}"[cell.get(), computed.get()];
+		"{}"[cell.get()];
 	}
 }
