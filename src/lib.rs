@@ -196,8 +196,8 @@ macro_rules! __pin_type {
 #[macro_export]
 /// Stored verbatim. Access through <code>[Pin](`std::pin::Pin`)&lt;&T></code> or <code>[Pin](`std::pin::Pin`)&lt;&mut T></code>.
 macro_rules! __pin_value {
-	($value:expr, $substrate:ty,) => {
-		$value
+	(($($value:tt)*), $substrate:ty,) => {
+		$($value)*
 	};
 }
 
@@ -225,8 +225,8 @@ macro_rules! __cell_type {
 /// Wrapped with [`SignalSubstrate::cell`].\
 /// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDynCell](`SignalSubstrate::SignalDynCell`)</code>.
 macro_rules! __cell_value {
-	($value:expr, $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrate<_>>::cell($value)
+	(($($value:tt)*), $substrate:ty,) => {
+		<$substrate as $crate::SignalSubstrate<_>>::cell($($value)*)
 	};
 }
 
@@ -251,8 +251,10 @@ macro_rules! __computed_type {
 /// Wrapped with [`SignalSubstrateComputed::computed`].\
 /// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
 macro_rules! __computed_value {
-	($value:expr, $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrateComputed<_, _>>::computed($value)
+	(($($value:tt)*), $substrate:ty,) => {
+		<$substrate as $crate::SignalSubstrateComputed<_, _>>::computed(
+			$crate::__extract_dot_use!($($value)*)
+		)
 	};
 }
 
@@ -261,5 +263,14 @@ macro_rules! __computed_value {
 macro_rules! __computed_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
 		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
+	};
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __extract_dot_use {
+	// Pass `$crate` to the procedural macro in a way that doesn't require parsing it.
+	($($tt:tt)*) => {
+		$crate::__::extract_dot_use!([$crate::__] $($tt)*)
 	};
 }

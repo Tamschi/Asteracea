@@ -21,6 +21,7 @@ pub use eros::ErrorUnion;
 pub use inherent_associated_types::Associated;
 pub use pinned_init::PinInit;
 pub use std::{
+	borrow::ToOwned,
 	clone::Clone,
 	default::Default,
 	derive, format_args,
@@ -39,7 +40,7 @@ pub use rhizome;
 pub use static_assertions;
 pub use try_lazy_init;
 
-pub use asteracea_proc_macro_definitions::components;
+pub use asteracea_proc_macro_definitions::{components, extract_dot_use};
 
 pub use super::{
 	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,

@@ -28,8 +28,7 @@ asteracea::components! {
 		let mut b: Pinned = pin!(Pinned::new());
 
 		let cell: i32 = cell!(0);
-		(let) cell_ = cell.to_owned();
-		let computed: i32 = computed!(move || cell_.get());
+		let computed: i32 = computed!(|| cell.use.get());
 
 		({
 			// In `init`.

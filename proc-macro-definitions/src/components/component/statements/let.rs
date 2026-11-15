@@ -195,7 +195,7 @@ impl StatementImpl for Let {
 		quote_into_mixed_site!((r#let.span()), root, init_proc, {
 			let mut {#(&guard)} = {
 				let value {#(&eq)} {#root}::let_macros::value::{#(&r#macro, &not)}{#located_at(span.join()) { (
-					{#(contents)},
+					({#(contents)}),
 					{#(substrate)},
 				) }};
 				unsafe { {#root}::pinned_init_and_guard(value, &raw mut (*this).{#(&field_name)})? }
