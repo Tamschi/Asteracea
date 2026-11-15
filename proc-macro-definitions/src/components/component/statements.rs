@@ -52,6 +52,7 @@ grammar! {
 		Text(text::Text),
 		Transclusion(transclusion::Transclusion),
 		LetField(r#let::Let),
+		ParenLet(r#let::ParenLet),
 		Child(Optimistic<child::Child>),
 	} else "Expected Asteracea statement.";
 }
@@ -145,6 +146,7 @@ impl PopParsedFrom for Box<dyn StatementImpl> {
 				Statement_::Text(stmt) => Box::new(stmt),
 				Statement_::Transclusion(stmt) => Box::new(stmt),
 				Statement_::LetField(stmt) => Box::new(stmt),
+				Statement_::ParenLet(stmt) => Box::new(stmt),
 				Statement_::Child(stmt) => Box::new(stmt),
 			}),
 		)

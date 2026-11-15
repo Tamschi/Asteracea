@@ -1,21 +1,28 @@
-use loess::{IntoTokens, SimpleSpanned, grammar, quote_into_mixed_site};
+use loess::{IntoTokens, SimpleSpanned, grammar, quote_into_mixed_site, scaffold::Parentheses};
 use loess_rust::{
 	attributes::OuterAttribute,
+	expr::block::BlockExpression,
 	ident::Identifier,
 	lex::{
-		keywords::{Dyn, Mut},
-		token::{
-			delim::Parentheses,
-			punct::{Colon, Eq, Not, Semi},
-		},
+		keywords::{Dyn, Else, Mut},
+		token::punct::{Colon, Eq, Not, Semi},
 	},
 };
-use loess_rust_opaque::Type;
+use loess_rust_opaque::{Expression, Type};
 use proc_macro2::{Group, Ident, Span, TokenStream};
 
 use crate::components::component::statements::StatementImpl;
 
 grammar! {
+	pub struct ParenLet: PeekFrom, PopFrom {
+		r#let: Parentheses<loess_rust_lex::lex::keywords::Let>,
+		pat: (Option<Mut>, Identifier), //TODO: Allow pattern.
+		r#type: Option<(Colon, Type)>,
+		eq: Eq,
+		rhs: (Expression, Option<(Else, BlockExpression)>),
+		semi: Semi,
+	}
+
 	pub struct Let: PeekFrom, PopFrom {
 		r#let: loess_rust_lex::lex::keywords::Let,
 		r#mut: Option<Mut>,
@@ -31,6 +38,75 @@ grammar! {
 		Dyn(Dyn),
 		None,
 	} else unreachable!() as &str;
+}
+
+impl StatementImpl for ParenLet {
+	fn hint_size(
+		&self,
+		root: &TokenStream,
+		_substrate: &Group,
+		_content_parent: &TokenStream,
+		_attrs: &[OuterAttribute],
+		tokens: &mut TokenStream,
+	) {
+		<dyn StatementImpl>::hint_size_zero(self.r#let.span.join(), root, tokens);
+	}
+
+	fn boxed_emit(
+		self: Box<Self>,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		self.emit(
+			root,
+			substrate,
+			content_parent,
+			additional_field_attrs,
+			fields,
+			attrs,
+			init_proc,
+			init_guards,
+			render_proc,
+		);
+	}
+
+	fn emit(
+		self,
+		root: &TokenStream,
+		substrate: &Group,
+		content_parent: &TokenStream,
+		additional_field_attrs: &[&OuterAttribute],
+		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
+		attrs: &[OuterAttribute],
+		init_proc: &mut TokenStream,
+		init_guards: &mut Vec<Identifier>,
+		render_proc: &mut TokenStream,
+	) {
+		let ParenLet {
+			r#let: Parentheses {
+				span,
+				contents: r#let,
+			},
+			pat,
+			r#type,
+			eq,
+			rhs,
+			semi,
+		} = self;
+
+		// No fields.
+		quote_into_mixed_site!(span.join(), root, init_proc, {
+			{#(r#let, pat, r#type, eq, rhs, semi)}
+		});
+		// Not rendered.
+	}
 }
 
 impl StatementImpl for Let {

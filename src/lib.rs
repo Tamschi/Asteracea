@@ -231,7 +231,7 @@ macro_rules! __cell_value {
 #[macro_export]
 macro_rules! __cell_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,) => {
-		unsafe { $crate::__::co_borrow_mut($guarding_borrow, $ptr) }
+		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
 	};
 }
 
@@ -257,6 +257,6 @@ macro_rules! __computed_value {
 #[macro_export]
 macro_rules! __computed_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,) => {
-		unsafe { $crate::__::co_borrow_mut($guarding_borrow, $ptr) }
+		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
 	};
 }

@@ -28,7 +28,8 @@ asteracea::components! {
 		let mut b: Pinned = pin!(Pinned::new());
 
 		let cell: i32 = cell!(0);
-		let computed: i32 = computed!(|| cell.get());
+		(let) cell_ = cell.to_owned();
+		let computed: i32 = computed!(move || cell_.get());
 
 		({
 			// In `init`.
@@ -37,6 +38,7 @@ asteracea::components! {
 			b.as_mut().when_pinned_mut();
 
 			cell.set_if_distinct(1);
+			let _ = computed;
 		})
 		[{
 			// In `render`.
@@ -44,6 +46,6 @@ asteracea::components! {
 			b.as_ref().when_pinned();
 			b.as_mut().when_pinned_mut();
 		}]
-		"{}"[cell.get()];
+		"{}, {}"[cell.get(), computed.get()];
 	}
 }
