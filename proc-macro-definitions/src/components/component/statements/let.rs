@@ -204,15 +204,17 @@ impl StatementImpl for Let {
 				*{#(&guard)},
 				{#(substrate)},
 				&{#(guard)},
+				{#(&r#mut)},
 			){#(&semi)}
 		});
 
 		quote_into_mixed_site!((r#let.span()), root, render_proc, {
 			let let_borrow_guard = ();
-			{#(r#let, r#mut, name, eq)} {#root}::let_macros::access::{#(r#macro, not)}(
+			{#(r#let, &r#mut, name, eq)} {#root}::let_macros::access::{#(r#macro, not)}(
 				&raw mut *(&mut *this).{#(field_name)},
 				{#(substrate)},
 				&let_borrow_guard,
+				{#(r#mut)},
 			){#(semi)}
 		});
 	}

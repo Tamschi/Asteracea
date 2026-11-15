@@ -33,7 +33,7 @@ asteracea::components! {
 
 		({
 			// In `init`.
-			a.as_ref().when_pinned();
+			a.when_pinned();
 			b.as_ref().when_pinned();
 			b.as_mut().when_pinned_mut();
 
@@ -42,7 +42,7 @@ asteracea::components! {
 		})
 		[{
 			// In `render`.
-			a.as_ref().when_pinned();
+			a.when_pinned();
 			b.as_ref().when_pinned();
 			b.as_mut().when_pinned_mut();
 		}]

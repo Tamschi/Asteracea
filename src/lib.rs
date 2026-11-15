@@ -194,7 +194,7 @@ macro_rules! __pin_type {
 
 #[doc(hidden)]
 #[macro_export]
-/// Stored verbatim. Access through <code>[Pin](`std::pin::Pin`)&lt;&mut T></code>.
+/// Stored verbatim. Access through <code>[Pin](`std::pin::Pin`)&lt;&T></code> or <code>[Pin](`std::pin::Pin`)&lt;&mut T></code>.
 macro_rules! __pin_value {
 	($value:expr, $substrate:ty,) => {
 		$value
@@ -204,7 +204,10 @@ macro_rules! __pin_value {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __pin_access {
-	($ptr:expr, $substrate:ty, $guarding_borrow:expr,) => {
+	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
+		unsafe { $crate::__::Pin::new_unchecked($crate::__::co_borrow($guarding_borrow, $ptr)) }
+	};
+	($ptr:expr, $substrate:ty, $guarding_borrow:expr, mut,) => {
 		unsafe { $crate::__::Pin::new_unchecked($crate::__::co_borrow_mut($guarding_borrow, $ptr)) }
 	};
 }
@@ -219,7 +222,7 @@ macro_rules! __cell_type {
 
 #[doc(hidden)]
 #[macro_export]
-/// Calls [`SignalSubstrate::cell`].\
+/// Wrapped with [`SignalSubstrate::cell`].\
 /// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDynCell](`SignalSubstrate::SignalDynCell`)</code>.
 macro_rules! __cell_value {
 	($value:expr, $substrate:ty,) => {
@@ -230,7 +233,7 @@ macro_rules! __cell_value {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __cell_access {
-	($ptr:expr, $substrate:ty, $guarding_borrow:expr,) => {
+	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
 		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
 	};
 }
@@ -245,7 +248,7 @@ macro_rules! __computed_type {
 
 #[doc(hidden)]
 #[macro_export]
-/// Calls [`SignalSubstrateComputed::computed`].\
+/// Wrapped with [`SignalSubstrateComputed::computed`].\
 /// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
 macro_rules! __computed_value {
 	($value:expr, $substrate:ty,) => {
@@ -256,7 +259,7 @@ macro_rules! __computed_value {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __computed_access {
-	($ptr:expr, $substrate:ty, $guarding_borrow:expr,) => {
+	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
 		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
 	};
 }
