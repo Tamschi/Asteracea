@@ -32,6 +32,8 @@ asteracea::components! {
 		let cyclic: i32 = cell_cyclic!(move |_weak| cell_.get());
 		let computed: i32 = computed!(|| cell.use.get());
 		let distinct: i32 = distinct!(|| cell.use.get());
+		let uncached: i32 = computed_uncached!(|| distinct.use.get());
+		let _uncached_mut: i32 = computed_uncached_mut!(|| uncached.use.get());
 
 		({
 			// In `init`.
