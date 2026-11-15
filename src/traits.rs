@@ -1,4 +1,4 @@
-use std::{any::TypeId, future::Future, pin::Pin};
+use std::{any::TypeId, future::Future, ops::Deref, pin::Pin};
 
 use eros::{ErrorUnion, TypeSet};
 use pinned_init::PinInit;
@@ -18,8 +18,8 @@ pub trait Substrate {
 pub trait SignalSubstrate<T>: Substrate {
 	type SignalDyn: ?Sized;
 	type SignalDynCell: ?Sized;
-	type SignalArcDyn;
-	type SignalArcDynCell;
+	type SignalArcDyn: Deref<Target = Self::SignalDyn>;
+	type SignalArcDynCell: Deref<Target = Self::SignalDynCell>;
 
 	fn cell(initial_value: T) -> Self::SignalArcDynCell;
 }
