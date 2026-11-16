@@ -15,7 +15,9 @@ use proc_macro2::{Group, Ident, TokenStream, TokenTree};
 use quote::ToTokens;
 use statements::Statement;
 
-use crate::components::component::args::{InitArg, InitArgs, RenderArg, RenderArgs, SlotArgs};
+use crate::components::component::args::{
+	InitArg, InitArgs, InitDep, RenderArg, RenderArgs, SlotArgs,
+};
 
 pub mod args;
 pub mod statements;
@@ -80,7 +82,9 @@ impl Component {
 			&mut render_proc,
 		);
 
-		let (name_init_args_type, name_init_args_builder_type) = if init_args.is_some() {
+		let (name_init_args_type, name_init_args_builder_type) = if let Some(init_args) = &init_args
+			&& init_args.contents.args.pairs().next().is_some()
+		{
 			(
 				[TokenTree::Ident(Ident::new(
 					&format!("{}InitArgs", name.0.to_string().trim_start_matches("r#")),
@@ -222,13 +226,14 @@ impl Component {
 			}}
 
 			{#mixed_site {
-				{#if let Some(Parentheses { span, contents }) = init_args {
+				{#if let Some(Parentheses { span, contents }) = &init_args
+					&& contents.args.pairs().next().is_some() {
 					{#located_at(span.join()) {
+						#[automatically_derived]
 						#[{#root}::derive({#root}::bon::Builder)]
 						#[builder(crate = {#root}::bon)]
 						{#(&visibility)} struct {#(&name_init_args_type)} {
-							{#for (InitArg{ attrs, vis: _, r#dyn, r#mut: _, identifier, expansion, question, r#type, default }, comma) in contents.pairs() {
-								{#if r#dyn.is_some() { {#continue;} }}
+							{#for (InitArg{ attrs, vis: _, r#mut: _, identifier, expansion, question, r#type, default }, comma) in contents.args.pairs() {
 								{#for attr in attrs { {#(attr)} }}
 								{#if let Some((eq, default)) = default {
 									#[builder(default {#(eq, default)})]
@@ -256,6 +261,7 @@ impl Component {
 							}}
 						}
 
+						#[automatically_derived]
 						impl {#root}::Default for {#(&name_init_args_builder_type)} {
 							fn default() -> Self {
 								{#(&name_init_args_type)}::builder()
@@ -269,6 +275,7 @@ impl Component {
 						#error("TODO: async components")
 					}}
 				} else {
+					// No `#[automatically_derived]` because warnings should be shown here for unused code.
 					/// Synchronously initialised.
 					impl<
 						'i,
@@ -276,22 +283,70 @@ impl Component {
 						{#if substrate_where.is_some() { {#(substrate)}, }}
 					> {#root}::Init<'i, 'r, {#(substrate)}> for {#(&name)} {#(substrate_where)} {
 						type InitArgsBuilder = {#(name_init_args_builder_type)};
-						type InitArgs = {#(name_init_args_type)};
-						type InitESet = <{#(substrate)} as {#root}::Substrate>::InitESetDefault<'r>;
+						type InitArgs = {#(&name_init_args_type)};
+						type Error = <{#(substrate)} as {#root}::Substrate>::InitErrorDefault<'i>;
 
 						fn {#(init)}(
-							deps: &'i mut {#root}::DepsNodeHandle,
+							deps: &'i mut {#root}::Waypoint<'i>,
 							ctx: <{#(substrate)} as {#root}::Substrate>::InitContext<'i>,
 							args: <Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitArgs,
 						) -> impl 'i + {#root}::PinInit<
 							Self,
-							{#root}::ErrorUnion<<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitESet>,
+							<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::Error,
 						> {#located_at(fat_arrow.eq.span().join(fat_arrow.gt.span()).unwrap_or_else(|| fat_arrow.eq.span())){
 							{
 								let init = move |this: *mut Self| -> {#root}::core::result::Result<
 									(),
-									{#root}::ErrorUnion<<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitESet>,
+									<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::Error,
 								> {
+									{#if let Some(Parentheses{span, contents}) = init_args {
+										{#if contents.args.pairs().next().is_some() {
+											{#located_at(span.join()) {
+												let {#(name_init_args_type)} {
+													{#for (InitArg { r#mut, identifier, expansion, .. }, comma) in contents.args.pairs() {
+														{#(r#mut, identifier)}
+														{#if let Some((r#as, pattern)) = expansion {
+															{#located_at(r#as.span()) {
+																:
+															}}
+															{#(pattern)}
+														}}
+														{#(comma)}
+													}}
+												} = args;
+
+											}}
+										}}
+
+										{#for (i, (InitDep { attrs, vis, r#dyn, r#mut, pattern, question, colon, r#type, default }, comma)) in contents.deps.pairs().enumerate() {
+											{#located_at(r#dyn.span()) {
+												{#if r#dyn.is_parenthesized() {
+													{#(attrs)}
+													let {#(r#mut, pattern)} = deps.extract::<{#(r#type)}>()
+														{#if let Some(question) = question {
+															{#located_at(question.question.span()) {
+																.ok()
+															}}
+														}}
+														{#if let Some((eq, expr)) = default {
+															{#located_at(eq.eq.span()) {
+																.unwrap_or_else(|| {#(expr)})
+															}}
+														} else if question.is_none() {
+															?
+														}}
+														;
+												} else {
+													//TODO
+
+												}}
+
+											}}
+
+										}}
+
+									}}
+
 									{#(init_proc)}
 									{#root}::Ok({#root}::forget((
 										{#for init_guard in init_guards.into_iter().rev() {
@@ -356,7 +411,7 @@ impl Component {
 					type RenderContentBuilder = {#(name_render_content_builder_type)};
 					type RenderContent = {#(name_render_content_type)};
 					type RenderT = <{#(substrate)} as {#root}::Substrate>::RenderTDefault<'r>;
-					type RenderESet = <{#(substrate)} as {#root}::Substrate>::RenderESetDefault<'r>;
+					type Error = <{#(substrate)} as {#root}::Substrate>::RenderErrorDefault<'r>;
 
 					fn {#(render)}(
 						self: {#root}::Pin<&'r mut Self>,
@@ -365,7 +420,7 @@ impl Component {
 						content: <Self as {#root}::Render<'r, {#(substrate)}>>::RenderContent,
 					) -> {#root}::Result<
 						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderT,
-						{#root}::ErrorUnion<<Self as {#root}::Render<'r, {#(substrate)}>>::RenderESet>,
+						<Self as {#root}::Render<'r, {#(substrate)}>>::Error,
 					> {
 						let this = unsafe { &raw mut *{#root}::Pin::into_inner_unchecked(self) };
 						{#if let Some(SquareBrackets { span, contents }) = render_args {
@@ -409,7 +464,7 @@ impl Component {
 						ctx: <{#(substrate)} as {#root}::Substrate>::RenderContext<'r>,
 					) -> {#root}::Result<
 						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderT,
-						{#root}::ErrorUnion<<Self as {#root}::Render<'r, {#(substrate)}>>::RenderESet>,
+						<Self as {#root}::Render<'r, {#(substrate)}>>::Error,
 					> {
 						<{#(substrate)} as {#root}::Accumulation<'r>>::default_finalize_accumulation(acc, ctx)
 					}

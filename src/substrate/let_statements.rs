@@ -3,13 +3,13 @@ use std::borrow::Borrow;
 use crate::substrate::Substrate;
 
 /// Provides signal types.
-pub trait SignalTypes<T>: Substrate {
+pub trait SignalTypes<T> {
 	type SignalDyn: ?Sized;
 	type SignalArcDyn: Borrow<Self::SignalDyn>;
 }
 
 /// Provides signal cell types.
-pub trait SignalCellTypes<T>: Substrate {
+pub trait SignalCellTypes<T> {
 	type SignalDynCell: ?Sized;
 	type SignalArcDynCell: Borrow<Self::SignalDynCell>;
 }

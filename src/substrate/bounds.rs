@@ -1,6 +1,6 @@
 //! Bound for use with substrate-generic [`components!`](`crate::components!`) invocations.
 
-use crate::substrate::{SubstrateOnRender, Accumulation};
+use crate::substrate::{Accumulation, SubstrateOnRender};
 
 /// Accepts (view) children for the specified type.
 ///
@@ -22,20 +22,20 @@ use crate::substrate::{SubstrateOnRender, Accumulation};
 /// may support additional ones by implementing [`ContentParentOf`](`crate::component::ContentParentOf`).
 pub trait Projects<T>:
 	for<'r> Accumulation<'r>
-	+ for<'r> SubstrateOnRender<
-		'r,
-		<Self as Accumulation<'r>>::RenderAccumulatorDefault,
-		T,
-	>
+	+ for<'r> SubstrateOnRender<'r, <Self as Accumulation<'r>>::RenderAccumulatorDefault, T>
 {
 }
 
-impl<S, T> Projects<T> for S where
+impl<S: ?Sized, T> Projects<T> for S where
 	S: for<'r> Accumulation<'r>
-		+ for<'r> SubstrateOnRender<
-			'r,
-			<Self as Accumulation<'r>>::RenderAccumulatorDefault,
-			T,
-		>
+		+ for<'r> SubstrateOnRender<'r, <Self as Accumulation<'r>>::RenderAccumulatorDefault, T>
 {
 }
+
+pub trait Raises<T>: for<'i> IsSubstrate<InitErrorDefault<'i>: From<T>> {}
+
+impl<T, S> Raises<T> for S where S: for<'i> IsSubstrate<InitErrorDefault<'i>: From<T>> {}
+
+pub trait IsSubstrate: for<'r> Accumulation<'r> {}
+
+impl<S: ?Sized> IsSubstrate for S where S: for<'r> Accumulation<'r> {}

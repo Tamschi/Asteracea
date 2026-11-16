@@ -5,17 +5,16 @@ use asteracea::{
 	substrate::{Accumulation, Substrate, SubstrateOnRender},
 };
 use epaint::{Brush, Color32, CornerRadius, Pos2, Rect, Shape, Stroke, StrokeKind};
-use eros::AnyError;
 use inherent_associated_types::associate;
 
 pub enum Epaint {}
 
 impl Substrate for Epaint {
 	type InitContext<'i> = ();
-	type InitESetDefault<'i> = AnyError;
+	type InitErrorDefault<'i> = !;
 	type RenderContext<'r> = &'r Style<'r>;
 	type RenderTDefault<'r> = Shape;
-	type RenderESetDefault<'r> = AnyError;
+	type RenderErrorDefault<'r> = !;
 }
 
 impl<'r> Accumulation<'r> for Epaint {
@@ -28,7 +27,7 @@ impl<'r> Accumulation<'r> for Epaint {
 	fn default_finalize_accumulation(
 		acc: Self::RenderAccumulatorDefault,
 		_ctx: Self::RenderContext<'r>,
-	) -> eros::Result<Self::RenderTDefault<'r>, Self::RenderESetDefault<'r>> {
+	) -> Result<Self::RenderTDefault<'r>, Self::RenderErrorDefault<'r>> {
 		Ok(Shape::Vec(acc))
 	}
 }

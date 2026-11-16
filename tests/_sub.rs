@@ -11,7 +11,6 @@ use asteracea::{
 	},
 	SizeHint,
 };
-use eros::AnyError;
 use flourish::{
 	GlobalSignalsRuntime, Signal, SignalArcDyn, SignalArcDynCell, SignalDyn, SignalDynCell,
 	SignalWeakDynCell,
@@ -22,10 +21,10 @@ pub struct Sub;
 
 impl Substrate for Sub {
 	type InitContext<'i> = ();
-	type InitESetDefault<'i> = AnyError;
+	type InitErrorDefault<'i> = ();
 	type RenderContext<'r> = ();
 	type RenderTDefault<'r> = ();
-	type RenderESetDefault<'r> = AnyError;
+	type RenderErrorDefault<'r> = ();
 }
 
 impl<'r> Accumulation<'r> for Sub {
@@ -38,7 +37,7 @@ impl<'r> Accumulation<'r> for Sub {
 	fn default_finalize_accumulation(
 		_acc: Self::RenderAccumulatorDefault,
 		_ctx: Self::RenderContext<'r>,
-	) -> eros::Result<Self::RenderTDefault<'r>, Self::RenderESetDefault<'r>> {
+	) -> Result<Self::RenderTDefault<'r>, Self::RenderErrorDefault<'r>> {
 		// Do nothing.
 		Ok(())
 	}

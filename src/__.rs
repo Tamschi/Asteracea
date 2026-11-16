@@ -1,9 +1,7 @@
 use bon::Builder;
 use core::fmt::Debug;
 use lignin::CallbackRegistration;
-use rhizome::sync::{DynValue, NodeHandle};
 use std::{
-	any::TypeId,
 	borrow::{Borrow, BorrowMut},
 	fmt::{self, Formatter},
 	mem::DropGuard,
@@ -16,11 +14,10 @@ use try_lazy_init::Lazy;
 
 pub mod let_macros;
 
-pub type DepsNodeHandle = NodeHandle<TypeId, TypeId, DynValue>;
 pub use core::{concat, stringify};
-pub use eros::ErrorUnion;
 pub use inherent_associated_types::Associated;
 pub use pinned_init::PinInit;
+pub use rhizome::{Injectable, Tag, Waypoint};
 pub use std::{
 	borrow::ToOwned,
 	clone::Clone,

@@ -1,11 +1,10 @@
 //! Component traits, plus modules that explain features.\
 //! [`components!`](`crate::components!`) implements and uses these for you.
 
-use std::{any::TypeId, future::Future, pin::Pin};
+use std::{future::Future, pin::Pin};
 
-use eros::{ErrorUnion, TypeSet};
 use pinned_init::PinInit;
-use rhizome::sync::{DynValue, NodeHandle};
+use rhizome::Waypoint;
 
 use crate::{substrate::Substrate, SizeHint};
 
@@ -67,25 +66,25 @@ pub use crate::__::let_macros::value as let_statements;
 pub trait Init<'i, 'r, S: Substrate>: Render<'r, S> {
 	type InitArgsBuilder: Default;
 	type InitArgs;
-	type InitESet: TypeSet;
+	type Error;
 
 	fn init(
-		deps: &'i mut NodeHandle<TypeId, TypeId, DynValue>,
+		deps: &'i mut Waypoint<'i>,
 		ctx: S::InitContext<'i>,
 		args: Self::InitArgs,
-	) -> impl 'i + PinInit<Self, ErrorUnion<Self::InitESet>>;
+	) -> impl 'i + PinInit<Self, <Self as Init<'i, 'r, S>>::Error>;
 }
 
 pub trait InitAsync<'i, 'r, S: Substrate>: Render<'r, S> {
 	type InitArgsBuilder: Default;
 	type InitArgs;
-	type InitESet: TypeSet;
+	type Error;
 
 	fn init_async(
-		deps: &'i mut NodeHandle<TypeId, TypeId, DynValue>,
+		deps: &'i mut Waypoint<'i>,
 		ctx: S::InitContext<'i>,
 		args: Self::InitArgs,
-	) -> impl Future<Output = impl 'i + PinInit<Self, ErrorUnion<Self::InitESet>>>;
+	) -> impl 'i + Future<Output = impl 'i + PinInit<Self, <Self as InitAsync<'i, 'r, S>>::Error>>;
 }
 
 pub trait Render<'r, S: Substrate> {
@@ -94,14 +93,14 @@ pub trait Render<'r, S: Substrate> {
 	type RenderContentBuilder: Default;
 	type RenderContent;
 	type RenderT;
-	type RenderESet: TypeSet;
+	type Error;
 
 	fn render(
 		self: Pin<&'r mut Self>,
 		ctx: S::RenderContext<'r>,
 		args: Self::RenderArgs,
 		content: Self::RenderContent,
-	) -> eros::Result<Self::RenderT, Self::RenderESet>;
+	) -> Result<Self::RenderT, Self::Error>;
 }
 
 //TODO: Hide this somewhere.
@@ -112,7 +111,7 @@ pub trait ContentParent<'r, S: Substrate>: Render<'r, S> {
 	fn finalize_accumulation(
 		acc: Self::RenderAccumulator,
 		ctx: S::RenderContext<'r>,
-	) -> eros::Result<Self::RenderT, Self::RenderESet>;
+	) -> Result<Self::RenderT, Self::Error>;
 }
 
 pub trait ContentParentOf<'r, S: Substrate, T>: ContentParent<'r, S> {
