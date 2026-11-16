@@ -5,10 +5,13 @@ use std::{
 
 use component::Component;
 use loess::{
-	Error, ErrorPriority, Errors, HandledPanic, Input, IntoTokens, PopFrom, parse_once,
-	scaffold::SquareBrackets,
+	Error, ErrorPriority, Errors, HandledPanic, Input, IntoTokens, PopFrom, grammar, parse_once,
+	scaffold::{SquareBrackets, UpTo},
 };
-use loess_rust::lex::token::punct::{Eq, Not, Pound};
+use loess_rust::lex::{
+	keywords::Where,
+	token::punct::{Eq, Not, Pound},
+};
 use proc_macro2::{Group, Span, TokenStream};
 
 use crate::lex::Substrate;
@@ -26,21 +29,38 @@ pub fn components(input: TokenStream) -> TokenStream {
 		return errors.collect_tokens(&TokenStream::new());
 	};
 
-	let substrate = if let Continue(Some((
-		Pound { .. },
-		Not { .. },
-		SquareBrackets {
-			contents: (Substrate(kw), Eq { .. }, substrate),
-			..
-		},
-	))) = parse_once(&mut input, &mut errors)
-	{
-		// Wrapping this here *might* result in better errors somewhere.
-		let mut group = Group::new(proc_macro2::Delimiter::None, substrate);
-		group.set_span(kw.span());
-		group
-	} else {
-		return errors.collect_tokens(&TokenStream::new());
+	let (substrate, substrate_where) = {
+		grammar! {
+			struct Substrate_: PopFrom {
+				substrate: UpTo<Where>,
+				where_clause: Option<(Where, TokenStream)>,
+			}
+		}
+
+		if let Continue(Some((
+			Pound { .. },
+			Not { .. },
+			SquareBrackets {
+				contents:
+					(
+						Substrate(kw),
+						Eq { .. },
+						Substrate_ {
+							substrate,
+							where_clause,
+						},
+					),
+				..
+			},
+		))) = parse_once(&mut input, &mut errors)
+		{
+			// Wrapping this here *might* result in better errors somewhere.
+			let mut group = Group::new(proc_macro2::Delimiter::None, substrate);
+			group.set_span(kw.span());
+			(group, where_clause)
+		} else {
+			return errors.collect_tokens(&TokenStream::new());
+		}
 	};
 
 	let mut components: Vec<Component> = vec![];
@@ -87,7 +107,7 @@ pub fn components(input: TokenStream) -> TokenStream {
 
 	let mut output = errors.collect_tokens(&root);
 	for component in components {
-		component.emit(&root, &mut output, &substrate);
+		component.emit(&root, &mut output, &substrate, &substrate_where);
 	}
 	output
 }

@@ -6,7 +6,7 @@ use loess_rust::{
 	attributes::OuterAttribute,
 	ident::Identifier,
 	lex::{
-		keywords::{Async, Const},
+		keywords::{Async, Const, Where},
 		token::punct::{Colon, FatArrow},
 	},
 	vis::Visibility,
@@ -36,7 +36,13 @@ grammar! {
 }
 
 impl Component {
-	pub fn emit(self, root: &TokenStream, tokens: &mut impl Extend<TokenTree>, substrate: &Group) {
+	pub fn emit(
+		self,
+		root: &TokenStream,
+		tokens: &mut impl Extend<TokenTree>,
+		substrate: &Group,
+		substrate_where: &Option<(Where, TokenStream)>,
+	) {
 		let Self {
 			attributes,
 			visibility,
@@ -261,7 +267,11 @@ impl Component {
 					}}
 				} else {
 					/// Synchronously initialised.
-					impl<'i, 'r> {#root}::Init<'i, 'r, {#(substrate)}> for {#(&name)} {
+					impl<
+						'i,
+						'r,
+						{#if substrate_where.is_some() { {#(substrate)}, }}
+					> {#root}::Init<'i, 'r, {#(substrate)}> for {#(&name)} {#(substrate_where)} {
 						type InitArgsBuilder = {#(name_init_args_builder_type)};
 						type InitArgs = {#(name_init_args_type)};
 						type InitESet = <{#(substrate)} as {#root}::Substrate>::InitESetDefault<'r>;
@@ -334,7 +344,10 @@ impl Component {
 					}}
 				}}
 
-				impl<'r> {#root}::Render<'r, {#(substrate)}> for {#(&name)} {
+				impl<
+					'r,
+					{#if substrate_where.is_some() { {#(substrate)}, }}
+				> {#root}::Render<'r, {#(substrate)}> for {#(&name)} {#(substrate_where)} {
 					type RenderArgsBuilder = {#(name_render_args_builder_type)};
 					type RenderArgs = {#(&name_render_args_type)};
 					type RenderContentBuilder = {#(name_render_content_builder_type)};
@@ -376,7 +389,10 @@ impl Component {
 				}
 
 				#[doc(hidden)]
-				impl<'r> {#root}::ContentParent<'r, {#(substrate)}> for {#(&name)} {
+				impl<
+					'r,
+					{#if substrate_where.is_some() { {#(substrate)}, }}
+				> {#root}::ContentParent<'r, {#(substrate)}> for {#(&name)} {#(substrate_where)} {
 					type RenderAccumulator = <{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault;
 
 					#[inline(always)]
@@ -397,9 +413,14 @@ impl Component {
 				}
 
 				#[doc = {#root}::concat!("[`", {#root}::stringify!({#(&name)}), "`] inherits accepted content from [`", {#root}::stringify!({#(substrate)}), "`].")]
-				impl<'r, T> {#root}::ContentParentOf<'r, {#(substrate)}, T> for {#(name)}
+				impl<
+					'r,
+					T,
+					{#if substrate_where.is_some() { {#(substrate)}, }}
+				> {#root}::ContentParentOf<'r, {#(substrate)}, T> for {#(name)}
 				where
 					{#(substrate)}: {#root}::ContentParentSubstrate<'r, <Self as {#root}::ContentParent<'r, {#(substrate)}>>::RenderAccumulator, T>,
+					{#(substrate_where.as_ref().map(|sw| &sw.1))}
 				{
 					#[inline(always)]
 					fn on_rendered(

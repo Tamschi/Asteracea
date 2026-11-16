@@ -45,7 +45,7 @@ grammar! {
 	pub struct SlotArg: PopFrom {
 		pub r#async: Option<Async>,
 		pub label: Lifetime,
-		pub args: Option<SquareBrackets<Optimistic<Separated<RenderArg, Comma>>>>,
+		pub render_args: Option<SquareBrackets<Optimistic<Separated<RenderArg, Comma>>>>,
 	}
 
 	pub struct NotComma: PeekFrom, PopFrom {
