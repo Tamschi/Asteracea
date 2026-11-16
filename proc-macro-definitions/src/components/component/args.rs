@@ -1,6 +1,6 @@
 use loess::{
 	grammar,
-	scaffold::{Greedy, Optimistic, Separated, SquareBrackets},
+	scaffold::{Greedy, Optimistic, Parentheses, Separated, SquareBrackets, UpTo},
 };
 use loess_rust::{
 	attributes::OuterAttribute,
@@ -17,15 +17,19 @@ use loess_rust::{
 use loess_rust_opaque::{Expression, Pattern, Type};
 use proc_macro2::{TokenStream, TokenTree};
 
-pub type InitArgs = Separated<InitArg, Comma>;
 pub type RenderArgs = Separated<RenderArg, Comma>;
 pub type SlotArgs = Separated<SlotArg, Comma>;
 
 grammar! {
+	pub struct InitArgs: PopFrom {
+		//TODO: Better lookahead to allow attributes and visibility.
+		pub args: UpTo<Dyn, Separated<InitArg, Comma>>,
+		pub deps: Separated<InitDep, Comma>,
+	}
+
 	pub struct InitArg: PopFrom {
 		pub attrs: Greedy<Vec<OuterAttribute>>,
 		pub vis: Option<Visibility>,
-		pub r#dyn: Option<Dyn>,
 		pub r#mut: Option<Mut>,
 		pub identifier: Identifier,
 		pub question: Option<Question>,
@@ -33,6 +37,22 @@ grammar! {
 		pub r#type: Option<(Colon, Type)>,
 		pub default: Option<(Eq, Expression)>,
 	}
+	pub struct InitDep: PopFrom {
+		pub attrs: Greedy<Vec<OuterAttribute>>,
+		pub vis: Option<Visibility>,
+		pub r#dyn: DynOrParenDyn,
+		pub r#mut: Option<Mut>,
+		pub pattern: Pattern,
+		pub question: Option<Question>,
+		pub expansion: Option<(As, Pattern)>,
+		pub r#type: Option<(Colon, Type)>,
+		pub default: Option<(Eq, Expression)>,
+	}
+	pub enum DynOrParenDyn: PopFrom {
+		Dyn(Dyn),
+		ParenDyn(Parentheses<Dyn>),
+	} else "Expected `dyn` or `(dyn)`.";
+
 	pub struct RenderArg: PopFrom {
 		pub attrs: Greedy<Vec<OuterAttribute>>,
 		pub r#mut: Option<Mut>,

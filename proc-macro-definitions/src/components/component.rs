@@ -219,13 +219,12 @@ impl Component {
 			}
 
 			{#mixed_site {
-				{#if let Some(Parentheses { span, contents }) = init_args {
+				{#if let Some(Parentheses { span, contents }) = &init_args {
 					{#located_at(span.join()) {
 						#[{#root}::derive({#root}::bon::Builder)]
 						#[builder(crate = {#root}::bon)]
 						{#(&visibility)} struct {#(&name_init_args_type)} {
-							{#for (InitArg{ attrs, vis: _, r#dyn, r#mut: _, identifier, expansion, question, r#type, default }, comma) in contents.pairs() {
-								{#if r#dyn.is_some() { {#continue;} }}
+							{#for (InitArg{ attrs, vis: _, r#mut: _, identifier, expansion, question, r#type, default }, comma) in contents.args.pairs() {
 								{#for attr in attrs { {#(attr)} }}
 								{#if let Some((eq, default)) = default {
 									#[builder(default {#(eq, default)})]
@@ -273,7 +272,7 @@ impl Component {
 						{#if substrate_where.is_some() { {#(substrate)}, }}
 					> {#root}::Init<'i, 'r, {#(substrate)}> for {#(&name)} {#(substrate_where)} {
 						type InitArgsBuilder = {#(name_init_args_builder_type)};
-						type InitArgs = {#(name_init_args_type)};
+						type InitArgs = {#(&name_init_args_type)};
 						type InitESet = <{#(substrate)} as {#root}::Substrate>::InitESetDefault<'r>;
 
 						fn {#(init)}(
@@ -289,6 +288,24 @@ impl Component {
 									(),
 									{#root}::ErrorUnion<<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitESet>,
 								> {
+									{#if let Some(Parentheses{span, contents}) = init_args {
+										{#located_at(span.join()) {
+											let {#(name_init_args_type)} {
+												{#for (InitArg { r#mut, identifier, expansion, .. }, comma) in contents.args.pairs() {
+													{#(r#mut, identifier)}
+													{#if let Some((r#as, pattern)) = expansion {
+														{#located_at(r#as.span()) {
+															:
+														}}
+														{#(pattern)}
+													}}
+													{#(comma)}
+												}}
+											} = args;
+
+										}}
+									}}
+
 									{#(init_proc)}
 									{#root}::Ok({#root}::forget((
 										{#for init_guard in init_guards.into_iter().rev() {

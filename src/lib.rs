@@ -175,7 +175,12 @@ macro_rules! __cell_value {
 #[macro_export]
 macro_rules! __cell_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalCellTypes<_>>::SignalDynCell, _>($guarding_borrow, $ptr) }
+		unsafe {
+			$crate::__::co_borrow::<<$substrate as $crate::__::SignalCellTypes<_>>::SignalDynCell, _>(
+				$guarding_borrow,
+				$ptr,
+			)
+		}
 	};
 }
 
@@ -201,7 +206,12 @@ macro_rules! __cell_cyclic_value {
 #[macro_export]
 macro_rules! __cell_cyclic_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalCellTypes<_>>::SignalDynCell, _>($guarding_borrow, $ptr) }
+		unsafe {
+			$crate::__::co_borrow::<<$substrate as $crate::__::SignalCellTypes<_>>::SignalDynCell, _>(
+				$guarding_borrow,
+				$ptr,
+			)
+		}
 	};
 }
 
@@ -229,7 +239,12 @@ macro_rules! __computed_value {
 #[macro_export]
 macro_rules! __computed_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>($guarding_borrow, $ptr) }
+		unsafe {
+			$crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>(
+				$guarding_borrow,
+				$ptr,
+			)
+		}
 	};
 }
 
@@ -257,7 +272,12 @@ macro_rules! __computed_uncached_value {
 #[macro_export]
 macro_rules! __computed_uncached_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>($guarding_borrow, $ptr) }
+		unsafe {
+			$crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>(
+				$guarding_borrow,
+				$ptr,
+			)
+		}
 	};
 }
 
@@ -285,7 +305,12 @@ macro_rules! __computed_uncached_mut_value {
 #[macro_export]
 macro_rules! __computed_uncached_mut_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>($guarding_borrow, $ptr) }
+		unsafe {
+			$crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>(
+				$guarding_borrow,
+				$ptr,
+			)
+		}
 	};
 }
 
@@ -313,7 +338,12 @@ macro_rules! __distinct_value {
 #[macro_export]
 macro_rules! __distinct_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>($guarding_borrow, $ptr) }
+		unsafe {
+			$crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>(
+				$guarding_borrow,
+				$ptr,
+			)
+		}
 	};
 }
 
