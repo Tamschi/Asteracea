@@ -140,10 +140,10 @@ impl StatementImpl for Child {
 
 		let mut content_guards: Vec<Identifier> = vec![];
 
-		let mut as_init = TokenStream::new();
+		let mut as_init: TokenStream = TokenStream::new();
 		quote_into_mixed_site!(span, root, &mut as_init, {
 			<{#(&r#type)} as {#root}::{#if dot_await.is_some() {
-				AsyncInit
+				InitAsync
 			} else {
 				Init
 			}}<'_, 'r, {#(substrate)}>>

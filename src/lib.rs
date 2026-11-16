@@ -87,7 +87,7 @@ impl<'a> ConditionalAttributeValue<'a> for Option<&'a str> {
 #[doc(hidden)]
 pub mod __;
 
-/// Provided to [`ContentParent::start_accumulation`] (and [`DefaultAccumulationSubstrate::default_start_accumulation`])
+/// Provided to [`ContentParent::start_accumulation`] (and [`Accumulation::default_start_accumulation`])
 /// with the semantics of [`Iterator::size_hint`].
 ///
 /// This struct implements operators to make macro code more manageable.
@@ -124,61 +124,6 @@ impl BitOr for SizeHint {
 	}
 }
 
-#[doc(inline)]
-/// Macros that represent the modalities of Asteracea `let` statements,
-/// which persist values in [`Init::init`] or [`AsyncInit::init`] for
-/// use also in [`Render::render`].
-///
-/// Depending on the macro used, the value is accessible in different ways:
-///
-/// ```rust
-/// # use std::marker::PhantomPinned;
-/// #
-/// # struct Pinned {
-/// # 	_phantom: PhantomPinned
-/// # }
-/// #
-/// # impl Pinned {
-/// # 	fn new() -> Self {
-/// # 		Self { _phantom: PhantomPinned }
-/// # 	}
-/// #
-/// # 	fn when_pinned(self: Pin<&Self>) {
-/// # 		let _ = self;
-/// # 	}
-/// #
-/// # 	fn when_pinned_mut(self: Pin<&mut Self>) {
-/// # 	}
-/// # }
-/// #
-/// asteracea::components! {
-/// 	#![substrate = Sub]
-///
-/// 	Test => {
-/// 		let a = pin!(Pinned::new());
-/// 		let mut b = pin!(Pinned::new());
-///
-/// 		({
-/// 			// In `init`.
-/// 			a.when_pinned();
-/// 			b.when_pinned();
-/// 			b.as_mut().when_pinned_mut();
-/// 		})
-/// 		[{
-/// 			// In `render`.
-/// 			a.when_pinned();
-/// 			b.when_pinned();
-/// 			b.as_mut().when_pinned_mut();
-/// 		}]
-/// 	}
-/// }
-/// ```
-///
-/// To create plain bindings and variables in `init` or `render`,
-/// instead use `(let) …;` or `[let] …;` statements, respectively,
-/// with usual Rust syntax.
-pub use __::let_macros::value as persisted_let;
-
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __pin_type {
@@ -189,7 +134,8 @@ macro_rules! __pin_type {
 
 #[doc(hidden)]
 #[macro_export]
-/// Stored verbatim. Access through <code>[Pin](`std::pin::Pin`)&lt;&T></code> or <code>[Pin](`std::pin::Pin`)&lt;&mut T></code>.
+/// `mut`<sup>?</sup>,
+/// <code>[Pin](`std::pin::Pin`)&lt;&T></code> or <code>[Pin](`std::pin::Pin`)&lt;&mut T></code>.
 macro_rules! __pin_value {
 	(($($value:tt)*), $substrate:ty,) => {
 		$($value)*
@@ -211,17 +157,17 @@ macro_rules! __pin_access {
 #[macro_export]
 macro_rules! __cell_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDynCell
+		<$substrate as $crate::__::SignalCellTypes<$type>>::SignalArcDynCell
 	};
 }
 
 #[doc(hidden)]
 #[macro_export]
-/// Calls [`SignalSubstrate::cell`] once.\
-/// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDynCell](`SignalSubstrate::SignalDynCell`)</code>.
+/// <code>&[SignalCellTypes](`substrate::let_statements::SignalCellTypes`)&lt;T>::[SignalDynCell](`substrate::let_statements::SignalCellTypes::SignalDynCell`)</code>
+/// via [`cell`](`crate::substrate::let_statements::Cell::cell`).
 macro_rules! __cell_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrate<_>>::cell($($value)*)
+		<$substrate as $crate::__::Cell<_>>::cell($($value)*)
 	};
 }
 
@@ -229,7 +175,7 @@ macro_rules! __cell_value {
 #[macro_export]
 macro_rules! __cell_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
+		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalCellTypes<_>>::SignalDynCell, _>($guarding_borrow, $ptr) }
 	};
 }
 
@@ -237,17 +183,17 @@ macro_rules! __cell_access {
 #[macro_export]
 macro_rules! __cell_cyclic_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDynCell
+		<$substrate as $crate::__::SignalCellTypes<$type>>::SignalArcDynCell
 	};
 }
 
 #[doc(hidden)]
 #[macro_export]
-/// Calls [`SignalSubstrateCellCyclic::cell_cyclic`] once.\
-/// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDynCell](`SignalSubstrate::SignalDynCell`)</code>.
+/// <code>&[SignalCellTypes](`substrate::let_statements::SignalCellTypes`)&lt;T>::[SignalDynCell](`substrate::let_statements::SignalCellTypes::SignalDynCell`)</code>
+/// via [`cell_cyclic`](`crate::substrate::let_statements::CellCyclic::cell_cyclic`).
 macro_rules! __cell_cyclic_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrateCellCyclic<_, _>>::cell_cyclic($($value)*)
+		<$substrate as $crate::__::CellCyclic<_, _>>::cell_cyclic($($value)*)
 	};
 }
 
@@ -255,7 +201,7 @@ macro_rules! __cell_cyclic_value {
 #[macro_export]
 macro_rules! __cell_cyclic_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
+		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalCellTypes<_>>::SignalDynCell, _>($guarding_borrow, $ptr) }
 	};
 }
 
@@ -263,17 +209,17 @@ macro_rules! __cell_cyclic_access {
 #[macro_export]
 macro_rules! __computed_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDyn
+		<$substrate as $crate::__::SignalTypes<$type>>::SignalArcDyn
 	};
 }
 
 #[doc(hidden)]
 #[macro_export]
-/// Calls [`SignalSubstrateComputed::computed`] once.\
-/// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
+/// <code>&[SignalTypes](`substrate::let_statements::SignalTypes`)&lt;T>::[SignalDyn](`substrate::let_statements::SignalTypes::SignalDyn`)</code>
+/// via [`computed`](`crate::substrate::let_statements::Computed::computed`).
 macro_rules! __computed_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrateComputed<_, _>>::computed(
+		<$substrate as $crate::__::Computed<_, _>>::computed(
 			$crate::__extract_dot_use!($($value)*)
 		)
 	};
@@ -283,7 +229,7 @@ macro_rules! __computed_value {
 #[macro_export]
 macro_rules! __computed_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
+		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>($guarding_borrow, $ptr) }
 	};
 }
 
@@ -291,17 +237,17 @@ macro_rules! __computed_access {
 #[macro_export]
 macro_rules! __computed_uncached_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDyn
+		<$substrate as $crate::__::SignalTypes<$type>>::SignalArcDyn
 	};
 }
 
 #[doc(hidden)]
 #[macro_export]
-/// Calls [`SignalSubstrateComputedUncached::computed_uncached`] once.\
-/// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
+/// <code>&[SignalTypes](`substrate::let_statements::SignalTypes`)&lt;T>::[SignalDyn](`substrate::let_statements::SignalTypes::SignalDyn`)</code>
+/// via [`computed_uncached`](`crate::substrate::let_statements::ComputedUncached::computed_uncached`).
 macro_rules! __computed_uncached_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrateComputedUncached<_, _>>::computed_uncached(
+		<$substrate as $crate::__::ComputedUncached<_, _>>::computed_uncached(
 			$crate::__extract_dot_use!($($value)*)
 		)
 	};
@@ -311,7 +257,7 @@ macro_rules! __computed_uncached_value {
 #[macro_export]
 macro_rules! __computed_uncached_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
+		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>($guarding_borrow, $ptr) }
 	};
 }
 
@@ -319,17 +265,17 @@ macro_rules! __computed_uncached_access {
 #[macro_export]
 macro_rules! __computed_uncached_mut_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDyn
+		<$substrate as $crate::__::SignalTypes<$type>>::SignalArcDyn
 	};
 }
 
 #[doc(hidden)]
 #[macro_export]
-/// Calls [`SignalSubstrateComputedUncachedMut::computed_uncached_mut`] once.\
-/// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
+/// <code>&[SignalTypes](`substrate::let_statements::SignalTypes`)&lt;T>::[SignalDyn](`substrate::let_statements::SignalTypes::SignalDyn`)</code>
+/// via [`computed_uncached_mut`](`crate::substrate::let_statements::ComputedUncachedMut::computed_uncached_mut`).
 macro_rules! __computed_uncached_mut_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrateComputedUncachedMut<_, _>>::computed_uncached_mut(
+		<$substrate as $crate::__::ComputedUncachedMut<_, _>>::computed_uncached_mut(
 			$crate::__extract_dot_use!($($value)*)
 		)
 	};
@@ -339,7 +285,7 @@ macro_rules! __computed_uncached_mut_value {
 #[macro_export]
 macro_rules! __computed_uncached_mut_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
+		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>($guarding_borrow, $ptr) }
 	};
 }
 
@@ -347,17 +293,17 @@ macro_rules! __computed_uncached_mut_access {
 #[macro_export]
 macro_rules! __distinct_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDyn
+		<$substrate as $crate::__::SignalTypes<$type>>::SignalArcDyn
 	};
 }
 
 #[doc(hidden)]
 #[macro_export]
-/// Calls [`SignalSubstrateDistinct::distinct`] once.\
-/// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
+/// <code>&[SignalTypes](`substrate::let_statements::SignalTypes`)&lt;T>::[SignalDyn](`substrate::let_statements::SignalTypes::SignalDyn`)</code>
+/// via [`distinct`](`crate::substrate::let_statements::Distinct::distinct`).
 macro_rules! __distinct_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::substrate::SignalSubstrateDistinct<_, _>>::distinct(
+		<$substrate as $crate::__::Distinct<_, _>>::distinct(
 			$crate::__extract_dot_use!($($value)*)
 		)
 	};
@@ -367,7 +313,7 @@ macro_rules! __distinct_value {
 #[macro_export]
 macro_rules! __distinct_access {
 	($ptr:expr, $substrate:ty, $guarding_borrow:expr,,) => {
-		unsafe { $crate::__::co_borrow($guarding_borrow, $ptr) }
+		unsafe { $crate::__::co_borrow::<<$substrate as $crate::__::SignalTypes<_>>::SignalDyn, _>($guarding_borrow, $ptr) }
 	};
 }
 

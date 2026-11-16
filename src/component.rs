@@ -1,5 +1,5 @@
-//! Component traits.\
-//! [`components!`](`crate::components!`) implements these for you.
+//! Component traits, plus modules that explain features.\
+//! [`components!`](`crate::components!`) implements and uses these for you.
 
 use std::{any::TypeId, future::Future, pin::Pin};
 
@@ -8,6 +8,61 @@ use pinned_init::PinInit;
 use rhizome::sync::{DynValue, NodeHandle};
 
 use crate::{substrate::Substrate, SizeHint};
+
+#[doc(inline)]
+/// `let pattern: Type = @mode!(…);` statements.
+///
+/// These statements persist values in some shape or form
+/// (depending on the chosen `mode` macro below) and bind it in
+/// [`Init::init`]/[`InitAsync::init_async`] and/or [`Render::render`].
+///
+/// ```rust
+/// # use std::marker::PhantomPinned;
+/// #
+/// # struct Pinned {
+/// # 	_phantom: PhantomPinned
+/// # }
+/// #
+/// # impl Pinned {
+/// # 	fn new() -> Self {
+/// # 		Self { _phantom: PhantomPinned }
+/// # 	}
+/// #
+/// # 	fn when_pinned(self: Pin<&Self>) {
+/// # 		let _ = self;
+/// # 	}
+/// #
+/// # 	fn when_pinned_mut(self: Pin<&mut Self>) {
+/// # 	}
+/// # }
+/// #
+/// asteracea::components! {
+/// 	#![substrate = Sub]
+///
+/// 	Test => {
+/// 		let a = @pin!(Pinned::new());
+/// 		let mut b = @pin!(Pinned::new());
+///
+/// 		({
+/// 			// In `init`.
+/// 			a.when_pinned();
+/// 			b.when_pinned();
+/// 			b.as_mut().when_pinned_mut();
+/// 		})
+/// 		[{
+/// 			// In `render`.
+/// 			a.when_pinned();
+/// 			b.when_pinned();
+/// 			b.as_mut().when_pinned_mut();
+/// 		}]
+/// 	}
+/// }
+/// ```
+///
+/// To create plain bindings and variables in `init` or `render`,
+/// instead use `(let) …;` or `[let] …;` statements, respectively,
+/// with usual Rust syntax.
+pub use crate::__::let_macros::value as let_statements;
 
 pub trait Init<'i, 'r, S: Substrate>: Render<'r, S> {
 	type InitArgsBuilder: Default;
@@ -21,12 +76,12 @@ pub trait Init<'i, 'r, S: Substrate>: Render<'r, S> {
 	) -> impl 'i + PinInit<Self, ErrorUnion<Self::InitESet>>;
 }
 
-pub trait AsyncInit<'i, 'r, S: Substrate>: Render<'r, S> {
+pub trait InitAsync<'i, 'r, S: Substrate>: Render<'r, S> {
 	type InitArgsBuilder: Default;
 	type InitArgs;
 	type InitESet: TypeSet;
 
-	fn init(
+	fn init_async(
 		deps: &'i mut NodeHandle<TypeId, TypeId, DynValue>,
 		ctx: S::InitContext<'i>,
 		args: Self::InitArgs,

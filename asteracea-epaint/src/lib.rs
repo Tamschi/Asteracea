@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use asteracea::{
-	ContentParentSubstrate, DefaultAccumulationSubstrate, SizeHint, Substrate, components,
+	SizeHint, components,
+	substrate::{Accumulation, Substrate, SubstrateOnRender},
 };
 use epaint::{Brush, Color32, CornerRadius, Pos2, Rect, Shape, Stroke, StrokeKind};
 use eros::AnyError;
@@ -17,7 +18,7 @@ impl Substrate for Epaint {
 	type RenderESetDefault<'r> = AnyError;
 }
 
-impl<'r> DefaultAccumulationSubstrate<'r> for Epaint {
+impl<'r> Accumulation<'r> for Epaint {
 	type RenderAccumulatorDefault = Vec<Shape>;
 
 	fn default_start_accumulation(size_hint: SizeHint) -> Self::RenderAccumulatorDefault {
@@ -33,15 +34,15 @@ impl<'r> DefaultAccumulationSubstrate<'r> for Epaint {
 }
 
 impl<'r>
-	ContentParentSubstrate<
+	SubstrateOnRender<
 		'r,
-		<Self as DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault,
+		<Self as Accumulation<'r>>::RenderAccumulatorDefault,
 		<Self as Substrate>::RenderTDefault<'r>,
 	> for Epaint
 {
 	#[inline(always)]
 	fn on_rendered(
-		acc: &mut <Self as DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault,
+		acc: &mut <Self as Accumulation<'r>>::RenderAccumulatorDefault,
 		_ctx: Self::RenderContext<'_>,
 		rendered: <Self as Substrate>::RenderTDefault<'r>,
 	) {

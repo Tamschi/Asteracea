@@ -393,11 +393,11 @@ impl Component {
 					'r,
 					{#if substrate_where.is_some() { {#(substrate)}, }}
 				> {#root}::ContentParent<'r, {#(substrate)}> for {#(&name)} {#(substrate_where)} {
-					type RenderAccumulator = <{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::RenderAccumulatorDefault;
+					type RenderAccumulator = <{#(substrate)} as {#root}::Accumulation<'r>>::RenderAccumulatorDefault;
 
 					#[inline(always)]
 					fn start_accumulation(size_hint: {#root}::SizeHint) -> Self::RenderAccumulator {
-						<{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::default_start_accumulation(size_hint)
+						<{#(substrate)} as {#root}::Accumulation<'r>>::default_start_accumulation(size_hint)
 					}
 
 					#[inline(always)]
@@ -408,7 +408,7 @@ impl Component {
 						<Self as {#root}::Render<'r, {#(substrate)}>>::RenderT,
 						{#root}::ErrorUnion<<Self as {#root}::Render<'r, {#(substrate)}>>::RenderESet>,
 					> {
-						<{#(substrate)} as {#root}::DefaultAccumulationSubstrate<'r>>::default_finalize_accumulation(acc, ctx)
+						<{#(substrate)} as {#root}::Accumulation<'r>>::default_finalize_accumulation(acc, ctx)
 					}
 				}
 
@@ -419,7 +419,7 @@ impl Component {
 					{#if substrate_where.is_some() { {#(substrate)}, }}
 				> {#root}::ContentParentOf<'r, {#(substrate)}, T> for {#(name)}
 				where
-					{#(substrate)}: {#root}::ContentParentSubstrate<'r, <Self as {#root}::ContentParent<'r, {#(substrate)}>>::RenderAccumulator, T>,
+					{#(substrate)}: {#root}::SubstrateOnRender<'r, <Self as {#root}::ContentParent<'r, {#(substrate)}>>::RenderAccumulator, T>,
 					{#(substrate_where.as_ref().map(|sw| &sw.1))}
 				{
 					#[inline(always)]
@@ -428,7 +428,7 @@ impl Component {
 						ctx: <{#(substrate)} as {#root}::Substrate>::RenderContext<'r>,
 						rendered: T,
 					) {
-						<{#(substrate)} as {#root}::ContentParentSubstrate<'r, <Self as {#root}::ContentParent<'r, {#(substrate)}>>::RenderAccumulator, T>>::on_rendered(acc, ctx, rendered)
+						<{#(substrate)} as {#root}::SubstrateOnRender<'r, <Self as {#root}::ContentParent<'r, {#(substrate)}>>::RenderAccumulator, T>>::on_rendered(acc, ctx, rendered)
 					}
 				}
 			}}

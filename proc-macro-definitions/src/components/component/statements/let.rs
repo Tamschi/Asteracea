@@ -5,7 +5,7 @@ use loess_rust::{
 	ident::Identifier,
 	lex::{
 		keywords::{Dyn, Else, Mut},
-		token::punct::{Colon, Eq, Not, Semi},
+		token::punct::{At, Colon, Eq, Not, Semi},
 	},
 };
 use loess_rust_opaque::{Expression, Type};
@@ -26,9 +26,10 @@ grammar! {
 	pub struct Let: PeekFrom, PopFrom {
 		r#let: loess_rust_lex::lex::keywords::Let,
 		r#mut: Option<Mut>,
-		name: Identifier,
+		name: Identifier, //TODO: Allow patterns.
 		r#type: (Colon, Type), //TODO: (Try to) infer from expression if not given.
 		eq: Eq,
+		at: At,
 		rhs: (Ident, Not, Parentheses),
 		semi: Semi,
 	}
@@ -164,6 +165,7 @@ impl StatementImpl for Let {
 			name,
 			r#type: (colon, r#type),
 			eq,
+			at,
 			rhs: (r#macro, not, Parentheses { span, contents }),
 			semi,
 		} = self;
@@ -174,7 +176,7 @@ impl StatementImpl for Let {
 		);
 		fields.push((attrs.to_owned(), Identifier(field_name.clone()), colon, {
 			let mut tokens = TokenStream::new();
-			quote_into_mixed_site!((r#let.span()), root, &mut tokens, {
+			quote_into_mixed_site!(at.at.span(), root, &mut tokens, {
 				{#root}::let_macros::r#type::{#(&r#macro, &not)}(
 					{#({
 						let mut tokens = TokenStream::new();
@@ -192,7 +194,7 @@ impl StatementImpl for Let {
 			r#let.span().resolved_at(Span::mixed_site()),
 		));
 		init_guards.push(guard.clone());
-		quote_into_mixed_site!((r#let.span()), root, init_proc, {
+		quote_into_mixed_site!(at.at.span(), root, init_proc, {
 			let mut {#(&guard)} = {
 				let value {#(&eq)} {#root}::let_macros::value::{#(&r#macro, &not)}{#located_at(span.join()) { (
 					({#(contents)}),
@@ -208,7 +210,7 @@ impl StatementImpl for Let {
 			){#(&semi)}
 		});
 
-		quote_into_mixed_site!((r#let.span()), root, render_proc, {
+		quote_into_mixed_site!(at.at.span(), root, render_proc, {
 			let let_borrow_guard = ();
 			{#(r#let, &r#mut, name, eq)} {#root}::let_macros::access::{#(r#macro, not)}(
 				&raw mut *(&mut *this).{#(field_name)},

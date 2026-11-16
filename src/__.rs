@@ -4,6 +4,7 @@ use lignin::CallbackRegistration;
 use rhizome::sync::{DynValue, NodeHandle};
 use std::{
 	any::TypeId,
+	borrow::{Borrow, BorrowMut},
 	fmt::{self, Formatter},
 	mem::DropGuard,
 	ops::DerefMut,
@@ -43,8 +44,14 @@ pub use try_lazy_init;
 pub use asteracea_proc_macro_definitions::{components, extract_dot_use};
 
 pub use crate::{
-	component::{AsyncInit, ContentParent, ContentParentOf, Init, Render},
-	substrate::{ContentParentSubstrate, DefaultAccumulationSubstrate, SignalSubstrate, Substrate},
+	component::{ContentParent, ContentParentOf, Init, InitAsync, Render},
+	substrate::{
+		let_statements::{
+			Cell, CellCyclic, Computed, ComputedUncached, ComputedUncachedMut, Distinct,
+			SignalCellTypes, SignalTypes,
+		},
+		Accumulation, Substrate, SubstrateOnRender,
+	},
 	SizeHint,
 };
 
@@ -195,10 +202,13 @@ impl Default for NoContentBuilder {
 	}
 }
 
-pub unsafe fn co_borrow_mut<'a, T, U>(_: &'a U, ptr: *mut T) -> &'a mut T {
-	unsafe { &mut *ptr }
+pub unsafe fn co_borrow_mut<'a, T: ?Sized, U>(
+	_: &'a U,
+	ptr: *mut (impl 'a + BorrowMut<T>),
+) -> &'a mut T {
+	unsafe { (&mut *ptr).borrow_mut() }
 }
 
-pub unsafe fn co_borrow<'a, T, U>(_: &'a U, ptr: *const T) -> &'a T {
-	unsafe { &*ptr }
+pub unsafe fn co_borrow<'a, T: ?Sized, U>(_: &'a U, ptr: *const (impl 'a + Borrow<T>)) -> &'a T {
+	unsafe { (&*ptr).borrow() }
 }

@@ -24,16 +24,16 @@ asteracea::components! {
 	#![substrate = _sub::Sub]
 
 	pub Test => {
-		let a: Pinned = pin!(Pinned::new());
-		let mut b: Pinned = pin!(Pinned::new());
+		let a: Pinned = @pin!(Pinned::new());
+		let mut b: Pinned = @pin!(Pinned::new());
 
-		let cell: i32 = cell!(0);
-		(let) cell_ = cell.clone(); //FIXME: Relax `cell_cyclic` bound in `flourish` to allow a simple borrow here.
-		let cyclic: i32 = cell_cyclic!(move |_weak| cell_.get());
-		let computed: i32 = computed!(|| cell.use.get());
-		let distinct: i32 = distinct!(|| cell.use.get());
-		let uncached: i32 = computed_uncached!(|| distinct.use.get());
-		let _uncached_mut: i32 = computed_uncached_mut!(|| uncached.use.get());
+		let cell: i32 = @cell!(0);
+		(let) cell_ = cell.to_owned(); //FIXME: Relax `cell_cyclic` bound in `flourish` to allow a simple borrow here.
+		let cyclic: i32 = @cell_cyclic!(move |_weak| cell_.get());
+		let computed: i32 = @computed!(|| cell.use.get());
+		let distinct: i32 = @distinct!(|| cell.use.get());
+		let uncached: i32 = @computed_uncached!(|| distinct.use.get());
+		let _uncached_mut: i32 = @computed_uncached_mut!(|| uncached.use.get());
 
 		({
 			// In `init`.
