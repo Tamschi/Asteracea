@@ -7,10 +7,10 @@ use rhizome::sync::{DynValue, NodeHandle};
 use crate::SizeHint;
 
 pub trait Substrate {
-	type InitContext<'i>;
+	type InitContext<'i>: Copy; //TODO: `Context: Copy` trait
 	type InitESetDefault<'i>: TypeSet;
 
-	type RenderContext<'r>;
+	type RenderContext<'r>: Copy; //TODO: `Context: Copy` trait
 	type RenderTDefault<'r>;
 	type RenderESetDefault<'r>: TypeSet;
 }
