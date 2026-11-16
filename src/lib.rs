@@ -53,7 +53,7 @@ pub use traits::{
 	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,
 	DefaultAccumulationSubstrate, Init, Render, SignalSubstrate, SignalSubstrateCellCyclic,
 	SignalSubstrateComputed, SignalSubstrateComputedUncached, SignalSubstrateComputedUncachedMut,
-	SignalSubstrateDistinct, Substrate,
+	SignalSubstrateDistinct, SimpleContentSubstrate, Substrate,
 };
 
 #[cfg(doctest)]

@@ -97,6 +97,17 @@ pub trait ContentParentSubstrate<'r, RenderAccumulator, T>: Substrate {
 	fn on_rendered(acc: &'_ mut RenderAccumulator, ctx: Self::RenderContext<'r>, rendered: T);
 }
 
+pub trait SimpleContentSubstrate<'r, T>:
+	DefaultAccumulationSubstrate<'r> + ContentParentSubstrate<'r, Self::RenderAccumulatorDefault, T>
+{
+}
+
+impl<'r, S, T> SimpleContentSubstrate<'r, T> for S where
+	S: DefaultAccumulationSubstrate<'r>
+		+ ContentParentSubstrate<'r, Self::RenderAccumulatorDefault, T>
+{
+}
+
 //TODO: Hide this somewhere.
 pub trait ContentParent<'r, S: Substrate>: Render<'r, S> {
 	type RenderAccumulator;

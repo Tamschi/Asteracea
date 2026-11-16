@@ -1,10 +1,8 @@
-use asteracea::{components, ContentParentSubstrate, DefaultAccumulationSubstrate, Substrate};
+use asteracea::{components, SimpleContentSubstrate};
 
 components! {
-	#![substrate = S where S: Substrate
-		+ DefaultAccumulationSubstrate<'r>
-		+ ContentParentSubstrate<'r, S::RenderAccumulatorDefault, &'static str>
+	#![substrate = S where S: SimpleContentSubstrate<'r, &'static str>
 	]
 
-	pub Empty => "Hello!";
+	pub Hello => "Hello, world!";
 }
