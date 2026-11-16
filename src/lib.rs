@@ -47,14 +47,8 @@ pub use bumpalo;
 pub use lignin;
 pub use try_lazy_init;
 
-mod traits;
-//TODO: Reorganise some of these (component-traits, substrate-traits) into a module.
-pub use traits::{
-	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,
-	DefaultAccumulationSubstrate, Init, Render, SignalSubstrate, SignalSubstrateCellCyclic,
-	SignalSubstrateComputed, SignalSubstrateComputedUncached, SignalSubstrateComputedUncachedMut,
-	SignalSubstrateDistinct, SimpleContentSubstrate, Substrate,
-};
+pub mod component;
+pub mod substrate;
 
 #[cfg(doctest)]
 #[doc = include_str!("../README.md")]
@@ -217,7 +211,7 @@ macro_rules! __pin_access {
 #[macro_export]
 macro_rules! __cell_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDynCell
+		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDynCell
 	};
 }
 
@@ -227,7 +221,7 @@ macro_rules! __cell_type {
 /// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDynCell](`SignalSubstrate::SignalDynCell`)</code>.
 macro_rules! __cell_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrate<_>>::cell($($value)*)
+		<$substrate as $crate::substrate::SignalSubstrate<_>>::cell($($value)*)
 	};
 }
 
@@ -243,7 +237,7 @@ macro_rules! __cell_access {
 #[macro_export]
 macro_rules! __cell_cyclic_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDynCell
+		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDynCell
 	};
 }
 
@@ -253,7 +247,7 @@ macro_rules! __cell_cyclic_type {
 /// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDynCell](`SignalSubstrate::SignalDynCell`)</code>.
 macro_rules! __cell_cyclic_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrateCellCyclic<_, _>>::cell_cyclic($($value)*)
+		<$substrate as $crate::substrate::SignalSubstrateCellCyclic<_, _>>::cell_cyclic($($value)*)
 	};
 }
 
@@ -269,7 +263,7 @@ macro_rules! __cell_cyclic_access {
 #[macro_export]
 macro_rules! __computed_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDyn
+		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDyn
 	};
 }
 
@@ -279,7 +273,7 @@ macro_rules! __computed_type {
 /// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
 macro_rules! __computed_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrateComputed<_, _>>::computed(
+		<$substrate as $crate::substrate::SignalSubstrateComputed<_, _>>::computed(
 			$crate::__extract_dot_use!($($value)*)
 		)
 	};
@@ -297,7 +291,7 @@ macro_rules! __computed_access {
 #[macro_export]
 macro_rules! __computed_uncached_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDyn
+		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDyn
 	};
 }
 
@@ -307,7 +301,7 @@ macro_rules! __computed_uncached_type {
 /// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
 macro_rules! __computed_uncached_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrateComputedUncached<_, _>>::computed_uncached(
+		<$substrate as $crate::substrate::SignalSubstrateComputedUncached<_, _>>::computed_uncached(
 			$crate::__extract_dot_use!($($value)*)
 		)
 	};
@@ -325,7 +319,7 @@ macro_rules! __computed_uncached_access {
 #[macro_export]
 macro_rules! __computed_uncached_mut_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDyn
+		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDyn
 	};
 }
 
@@ -335,7 +329,7 @@ macro_rules! __computed_uncached_mut_type {
 /// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
 macro_rules! __computed_uncached_mut_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrateComputedUncachedMut<_, _>>::computed_uncached_mut(
+		<$substrate as $crate::substrate::SignalSubstrateComputedUncachedMut<_, _>>::computed_uncached_mut(
 			$crate::__extract_dot_use!($($value)*)
 		)
 	};
@@ -353,7 +347,7 @@ macro_rules! __computed_uncached_mut_access {
 #[macro_export]
 macro_rules! __distinct_type {
 	($type:ty, $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrate<$type>>::SignalArcDyn
+		<$substrate as $crate::substrate::SignalSubstrate<$type>>::SignalArcDyn
 	};
 }
 
@@ -363,7 +357,7 @@ macro_rules! __distinct_type {
 /// Access through <code>&[SignalSubstrate](`SignalSubstrate`)&lt;T>::[SignalDyn](`SignalSubstrate::SignalDyn`)</code>.
 macro_rules! __distinct_value {
 	(($($value:tt)*), $substrate:ty,) => {
-		<$substrate as $crate::SignalSubstrateDistinct<_, _>>::distinct(
+		<$substrate as $crate::substrate::SignalSubstrateDistinct<_, _>>::distinct(
 			$crate::__extract_dot_use!($($value)*)
 		)
 	};

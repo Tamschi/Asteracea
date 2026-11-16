@@ -1,10 +1,13 @@
-use std::{any::TypeId, future::Future, ops::Deref, pin::Pin};
+//! Substrate traits.\
+//! These provide capabilities to [`components!`](`crate::components!`).
 
-use eros::{ErrorUnion, TypeSet};
-use pinned_init::PinInit;
-use rhizome::sync::{DynValue, NodeHandle};
+use std::ops::Deref;
+
+use eros::TypeSet;
 
 use crate::SizeHint;
+
+pub mod bounds;
 
 pub trait Substrate {
 	type InitContext<'i>: Copy; //TODO: `Context: Copy` trait
@@ -52,75 +55,8 @@ pub trait DefaultAccumulationSubstrate<'r>: Substrate {
 		ctx: Self::RenderContext<'r>,
 	) -> eros::Result<Self::RenderTDefault<'r>, Self::RenderESetDefault<'r>>;
 }
-
-pub trait Init<'i, 'r, S: Substrate>: Render<'r, S> {
-	type InitArgsBuilder: Default;
-	type InitArgs;
-	type InitESet: TypeSet;
-
-	fn init(
-		deps: &'i mut NodeHandle<TypeId, TypeId, DynValue>,
-		ctx: S::InitContext<'i>,
-		args: Self::InitArgs,
-	) -> impl 'i + PinInit<Self, ErrorUnion<Self::InitESet>>;
-}
-
-pub trait AsyncInit<'i, 'r, S: Substrate>: Render<'r, S> {
-	type InitArgsBuilder: Default;
-	type InitArgs;
-	type InitESet: TypeSet;
-
-	fn init(
-		deps: &'i mut NodeHandle<TypeId, TypeId, DynValue>,
-		ctx: S::InitContext<'i>,
-		args: Self::InitArgs,
-	) -> impl Future<Output = impl 'i + PinInit<Self, ErrorUnion<Self::InitESet>>>;
-}
-
-pub trait Render<'r, S: Substrate> {
-	type RenderArgsBuilder: Default;
-	type RenderArgs;
-	type RenderContentBuilder: Default;
-	type RenderContent;
-	type RenderT;
-	type RenderESet: TypeSet;
-
-	fn render(
-		self: Pin<&'r mut Self>,
-		ctx: S::RenderContext<'r>,
-		args: Self::RenderArgs,
-		content: Self::RenderContent,
-	) -> eros::Result<Self::RenderT, Self::RenderESet>;
-}
-
 pub trait ContentParentSubstrate<'r, RenderAccumulator, T>: Substrate {
 	fn on_rendered(acc: &'_ mut RenderAccumulator, ctx: Self::RenderContext<'r>, rendered: T);
-}
-
-pub trait SimpleContentSubstrate<'r, T>:
-	DefaultAccumulationSubstrate<'r> + ContentParentSubstrate<'r, Self::RenderAccumulatorDefault, T>
-{
-}
-
-impl<'r, S, T> SimpleContentSubstrate<'r, T> for S where
-	S: DefaultAccumulationSubstrate<'r>
-		+ ContentParentSubstrate<'r, Self::RenderAccumulatorDefault, T>
-{
-}
-
-//TODO: Hide this somewhere.
-pub trait ContentParent<'r, S: Substrate>: Render<'r, S> {
-	type RenderAccumulator;
-
-	fn start_accumulation(size_hint: SizeHint) -> Self::RenderAccumulator;
-	fn finalize_accumulation(
-		acc: Self::RenderAccumulator,
-		ctx: S::RenderContext<'r>,
-	) -> eros::Result<Self::RenderT, Self::RenderESet>;
-}
-
-pub trait ContentParentOf<'r, S: Substrate, T>: ContentParent<'r, S> {
-	fn on_rendered(acc: &'_ mut Self::RenderAccumulator, ctx: S::RenderContext<'r>, rendered: T);
 }
 
 // /// Units are always supported, strictly via no-op accumulation.

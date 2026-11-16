@@ -42,9 +42,10 @@ pub use try_lazy_init;
 
 pub use asteracea_proc_macro_definitions::{components, extract_dot_use};
 
-pub use super::{
-	AsyncInit, ContentParent, ContentParentOf, ContentParentSubstrate,
-	DefaultAccumulationSubstrate, Init, Render, SignalSubstrate, SizeHint, Substrate,
+pub use crate::{
+	component::{AsyncInit, ContentParent, ContentParentOf, Init, Render},
+	substrate::{ContentParentSubstrate, DefaultAccumulationSubstrate, SignalSubstrate, Substrate},
+	SizeHint,
 };
 
 /// Only implemented for functions that have a signature ABI-compatible with `fn(*const R, T)`!

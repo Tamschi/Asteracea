@@ -1,9 +1,13 @@
 use std::fmt;
 
 use asteracea::{
-	components, ContentParentSubstrate, DefaultAccumulationSubstrate, SignalSubstrate,
-	SignalSubstrateCellCyclic, SignalSubstrateComputed, SignalSubstrateComputedUncached,
-	SignalSubstrateComputedUncachedMut, SignalSubstrateDistinct, SizeHint, Substrate,
+	components,
+	substrate::{
+		ContentParentSubstrate, DefaultAccumulationSubstrate, SignalSubstrate,
+		SignalSubstrateCellCyclic, SignalSubstrateComputed, SignalSubstrateComputedUncached,
+		SignalSubstrateComputedUncachedMut, SignalSubstrateDistinct, Substrate,
+	},
+	SizeHint,
 };
 use eros::AnyError;
 use flourish::{
