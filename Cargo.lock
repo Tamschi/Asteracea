@@ -1110,7 +1110,7 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 [[package]]
 name = "rhizome"
 version = "0.0.1"
-source = "git+https://github.com/Tamschi/rhizome.git?branch=dev#0e6c39d0884b84dd49e046f4d583bafd817721ae"
+source = "git+https://github.com/Tamschi/rhizome.git?branch=dev#167653450d560a976f0c426d29bf2f90ecc8df1d"
 
 [[package]]
 name = "rustc_version"

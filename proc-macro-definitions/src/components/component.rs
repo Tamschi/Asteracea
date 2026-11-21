@@ -322,7 +322,9 @@ impl Component {
 
 										{#for (i, (InitDep { attrs, vis, r#dyn, r#mut, pattern, question, colon, r#type, default }, comma)) in contents.deps.pairs().enumerate() {
 											{#located_at(r#dyn.span()) {
-												{#if r#dyn.is_parenthesized() {
+												{#if r#dyn.is_bracketed() {
+													//TODO
+												} else {
 													{#(attrs)}
 													let {#(r#mut, pattern)} = deps.extract::<{#(r#type)}>()
 														{#if let Some(question) = question {
@@ -343,15 +345,9 @@ impl Component {
 																?
 															}}
 														}}
-
 														;
-												} else {
-													//TODO
-
 												}}
-
 											}}
-
 										}}
 
 										let deps = &mut deps.new::<Self, _>((

@@ -56,8 +56,8 @@ components! {
 
 	pub Test(
 		s: Struct,
-		(dyn) _t?: dyn Trait,
-		(dyn) Struct { a, b }: Struct = s,
+		dyn _t?: dyn Trait,
+		dyn Struct { a, b }: Struct = s,
 	) => {
 
 	}

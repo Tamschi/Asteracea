@@ -23,7 +23,7 @@ pub type SlotArgs = Separated<SlotArg, Comma>;
 grammar! {
 	pub struct InitArgs: PopFrom {
 		//TODO: Better lookahead to allow attributes and visibility.
-		pub args: UpTo<DynOrParenDyn, Separated<InitArg, Comma>>,
+		pub args: UpTo<DynOrBracketedDyn, Separated<InitArg, Comma>>,
 		pub deps: Separated<InitDep, Comma>,
 	}
 
@@ -41,7 +41,7 @@ grammar! {
 	pub struct InitDep: PopFrom {
 		pub attrs: Greedy<Vec<OuterAttribute>>,
 		pub vis: Option<Visibility>,
-		pub r#dyn: DynOrParenDyn,
+		pub r#dyn: DynOrBracketedDyn,
 		pub r#mut: Option<Mut>, //TODO: Can this be part of `pattern`?
 		pub pattern: Pattern,
 		pub question: Option<Question>,
@@ -50,10 +50,13 @@ grammar! {
 		pub default: Option<(Eq, Expression)>,
 	}
 
-	pub enum DynOrParenDyn: PeekFrom, PopFrom {
+	pub enum DynOrBracketedDyn: PeekFrom, PopFrom {
+		/// `init`-only
 		Dyn(Dyn),
-		ParenDyn(Parentheses<Dyn>),
-	} else "Expected `dyn` or `(dyn)`.";
+		/// Persisted, and bound only in `render`.
+		BracketedDyn(SquareBrackets<Dyn>),
+		//TODO: Variant for both? `{dyn}`?
+	} else "Expected `dyn` or `[dyn]`.";
 
 	pub struct RenderArg: PopFrom {
 		pub attrs: Greedy<Vec<OuterAttribute>>,
@@ -75,16 +78,16 @@ grammar! {
 	}
 }
 
-impl DynOrParenDyn {
+impl DynOrBracketedDyn {
 	pub fn span(&self) -> Span {
 		match self {
-			DynOrParenDyn::Dyn(r#dyn) => r#dyn.span(),
-			DynOrParenDyn::ParenDyn(paren) => paren.span.join(),
+			DynOrBracketedDyn::Dyn(r#dyn) => r#dyn.span(),
+			DynOrBracketedDyn::BracketedDyn(paren) => paren.span.join(),
 		}
 	}
 
-	pub fn is_parenthesized(&self) -> bool {
-		matches!(self, Self::ParenDyn(_))
+	pub fn is_bracketed(&self) -> bool {
+		matches!(self, Self::BracketedDyn(_))
 	}
 }
 
