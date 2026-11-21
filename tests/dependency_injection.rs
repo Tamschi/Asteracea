@@ -3,7 +3,7 @@ mod _sub;
 use std::{any::TypeId, pin::Pin, sync::Arc};
 
 use asteracea::{components, substrate::bounds::Raises};
-use rhizome::Injectable;
+use rhizome::{Injectable, Repository};
 
 impl Injectable for dyn Trait {
 	const PROVISION_AT: &'static [TypeId] = &[];
@@ -13,7 +13,7 @@ impl Injectable for dyn Trait {
 	type Error = ();
 
 	fn provision(
-		_at: &mut rhizome::Waypoint<'_>,
+		_at: &mut rhizome::Waypoint<'_, impl ?Sized + Repository>,
 		_matched_tag: Option<TypeId>,
 	) -> Result<Pin<Arc<Self>>, Self::Error> {
 		Err(())
@@ -32,7 +32,7 @@ impl Injectable for Struct {
 	type Error = !;
 
 	fn provision(
-		_at: &mut rhizome::Waypoint<'_>,
+		_at: &mut rhizome::Waypoint<'_, impl ?Sized + Repository>,
 		_matched_tag: Option<TypeId>,
 	) -> Result<Pin<Arc<Self>>, Self::Error> {
 		Ok(Arc::pin(Struct { a: (), b: () }))
@@ -46,18 +46,18 @@ impl Injectable for Struct {
 trait Trait: Send + Sync {}
 
 #[derive(Clone, Copy)]
-struct Struct {
+pub struct Struct {
 	a: (),
 	b: (),
 }
 
 components! {
-	#![substrate = S where S: Raises<()> + Raises<!>]
+	#![substrate = S where S: 'static + Raises<()> + Raises<!>]
 
 	pub Test(
-		_u: usize,
-		(dyn) _t: dyn Trait,
-		(dyn) Struct { a, b }: Struct,
+		s: Struct,
+		(dyn) _t?: dyn Trait,
+		(dyn) Struct { a, b }: Struct = s,
 	) => {
 
 	}

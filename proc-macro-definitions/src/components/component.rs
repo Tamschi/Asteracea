@@ -270,6 +270,8 @@ impl Component {
 					}}
 				}}
 
+				impl {#root}::Tag for {#(&name)} {}
+
 				{#if let Some(r#async) = r#async {
 					{#located_at(r#async.span()) {
 						#error("TODO: async components")
@@ -287,7 +289,7 @@ impl Component {
 						type Error = <{#(substrate)} as {#root}::Substrate>::InitErrorDefault<'i>;
 
 						fn {#(init)}(
-							deps: &'i mut {#root}::Waypoint<'i>,
+							deps: &'i mut {#root}::Waypoint<'i, dyn {#root}::Repository>,
 							ctx: <{#(substrate)} as {#root}::Substrate>::InitContext<'i>,
 							args: <Self as {#root}::Init<'i, 'r, {#(substrate)}>>::InitArgs,
 						) -> impl 'i + {#root}::PinInit<
@@ -327,14 +329,21 @@ impl Component {
 															{#located_at(question.question.span()) {
 																.ok()
 															}}
-														}}
-														{#if let Some((eq, expr)) = default {
-															{#located_at(eq.eq.span()) {
-																.unwrap_or_else(|| {#(expr)})
+															{#if let Some((eq, expr)) = default {
+																{#located_at(eq.eq.span()) {
+																	.unwrap_or_else(|| {#(expr)})
+																}}
 															}}
-														} else if question.is_none() {
-															?
+														} else {
+															{#if let Some((eq, expr)) = default {
+																{#located_at(eq.eq.span()) {
+																	.unwrap_or_else(|_| {#(expr)})
+																}}
+															} else if question.is_none() {
+																?
+															}}
 														}}
+
 														;
 												} else {
 													//TODO
@@ -345,6 +354,9 @@ impl Component {
 
 										}}
 
+										let deps = &mut deps.new::<Self, _>((
+											//TODO: Provide injectables.
+										));
 									}}
 
 									{#(init_proc)}

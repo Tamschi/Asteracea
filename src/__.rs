@@ -17,7 +17,7 @@ pub mod let_macros;
 pub use core::{concat, stringify};
 pub use inherent_associated_types::Associated;
 pub use pinned_init::PinInit;
-pub use rhizome::{Injectable, Tag, Waypoint};
+pub use rhizome::{Injectable, Repository, Tag, Waypoint};
 pub use std::{
 	borrow::ToOwned,
 	clone::Clone,

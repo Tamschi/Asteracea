@@ -4,7 +4,7 @@
 use std::{future::Future, pin::Pin};
 
 use pinned_init::PinInit;
-use rhizome::Waypoint;
+use rhizome::{Repository, Waypoint};
 
 use crate::{substrate::Substrate, SizeHint};
 
@@ -69,7 +69,7 @@ pub trait Init<'i, 'r, S: Substrate>: Render<'r, S> {
 	type Error;
 
 	fn init(
-		deps: &'i mut Waypoint<'i>,
+		deps: &'i mut Waypoint<'i, dyn Repository>,
 		ctx: S::InitContext<'i>,
 		args: Self::InitArgs,
 	) -> impl 'i + PinInit<Self, <Self as Init<'i, 'r, S>>::Error>;
@@ -81,7 +81,7 @@ pub trait InitAsync<'i, 'r, S: Substrate>: Render<'r, S> {
 	type Error;
 
 	fn init_async(
-		deps: &'i mut Waypoint<'i>,
+		deps: &'i mut Waypoint<'i, dyn Repository>,
 		ctx: S::InitContext<'i>,
 		args: Self::InitArgs,
 	) -> impl 'i + Future<Output = impl 'i + PinInit<Self, <Self as InitAsync<'i, 'r, S>>::Error>>;
