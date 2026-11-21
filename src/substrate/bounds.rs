@@ -8,7 +8,7 @@ use crate::substrate::{Accumulation, SubstrateOnRender};
 ///
 /// - `()`: Unit-typed `[{…}]` Rust blocks.
 /// - <code>&'static [`str`]</code>: Literal text.
-/// - <code>(fmt::Arguments)[`core::fmt::Arguments`]&lt;'r></code>: Formatted text.
+/// - <code>[fmt::Arguments](`core::fmt::Arguments`)&lt;'r></code>: Formatted text.
 /// - (generally) <code>[Substrate::RenderTDefault](`crate::substrate::Substrate::RenderTDefault`)&lt;'r></code>: Child components.
 ///
 /// Certain (not [`components!`](`crate::components!`)-generated) components may
