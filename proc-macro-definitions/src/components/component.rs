@@ -210,19 +210,21 @@ impl Component {
 				}}
 			}
 
-			{#mixed_site {
-				#[automatically_derived]
-				impl {#root}::Drop for {#(&name)} {
-					fn drop(&mut self) {
-						unsafe {
-							// Drop in reverse:
-							{#for (attrs, ident, _, _) in fields.into_iter().rev() {
-								{#(attrs)}
-									{#root}::ManuallyDrop::<_>::drop(&mut self.{#(ident)});
-							}}
+			{#if !fields.is_empty() {
+				{#mixed_site {
+					#[automatically_derived]
+					impl {#root}::Drop for {#(&name)} {
+						fn drop(&mut self) {
+							unsafe {
+								// Drop in reverse:
+								{#for (attrs, ident, _, _) in fields.into_iter().rev() {
+									{#(attrs)}
+										{#root}::ManuallyDrop::<_>::drop(&mut self.{#(ident)});
+								}}
+							}
 						}
 					}
-				}
+				}}
 			}}
 
 			{#mixed_site {
