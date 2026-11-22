@@ -104,7 +104,7 @@ impl StatementImpl for Let {
 		self,
 		root: &TokenStream,
 		substrate: &Group,
-		content_parent: &TokenStream,
+		_content_parent: &TokenStream,
 		additional_field_attrs: &[&OuterAttribute],
 		fields: &mut Vec<(Vec<OuterAttribute>, Identifier, Colon, TokenStream)>,
 		attrs: &[OuterAttribute],
@@ -123,9 +123,15 @@ impl StatementImpl for Let {
 			semi,
 		} = self;
 
+		#[expect(unused_parens)]
+		let is_bracketed = matches!((r#let), Keyword::BracketedLet(_));
+
 		match (r#let, r#type, complex_macro) {
 			(
-				Keyword::Let(r#let),
+				Keyword::Let(r#let)
+				| Keyword::BracketedLet(SquareBrackets {
+					contents: r#let, ..
+				}),
 				Some((colon, r#type)),
 				Some((at, r#macro, not, Parentheses { span, contents })),
 			) => {
@@ -161,12 +167,14 @@ impl StatementImpl for Let {
 						) }}{#(rhs_rest)};
 						unsafe { {#root}::pinned_init_and_guard(value, &raw mut (*this).{#(&field_name)})? }
 					};
-					{#(&r#let, &r#mut, &pattern, &eq)} {#root}::let_macros::access::{#(&r#macro, &not)}(
-						*{#(&guard)},
-						{#(substrate)},
-						&{#(guard)},
-						{#(&r#mut)},
-					){#(&semi)}
+					{#if !is_bracketed {
+						{#(&r#let, &r#mut, &pattern, &eq)} {#root}::let_macros::access::{#(&r#macro, &not)}(
+							*{#(&guard)},
+							{#(substrate)},
+							&{#(guard)},
+							{#(&r#mut)},
+						){#(&semi)}
+					}}
 				});
 
 				quote_into_mixed_site!(at.at.span(), root, render_proc, {
@@ -178,6 +186,38 @@ impl StatementImpl for Let {
 						{#(r#mut)},
 					){#(semi)}
 				});
+			}
+			(
+				Keyword::ParenLet(Parentheses {
+					span: paren_span,
+					contents: r#let,
+				}),
+				r#type,
+				Some((at, r#macro, not, Parentheses { span, contents })),
+			) => {
+				quote_into_mixed_site!(paren_span.join(), root, init_proc, {
+					{#(r#let, r#mut, pattern)}
+					{#if let Some((colon, r#type)) = r#type {
+						{#(colon)} &{#root}::let_macros::r#type::{#(&r#macro, &not)}(
+							{#({
+								let mut tokens = TokenStream::new();
+								r#type.clone().into_tokens(root, &mut tokens);
+								tokens
+							})},
+							{#(substrate)},
+						)
+					}}
+					{#(eq)}
+					&{#located_at(at.at.span()) {
+						{#root}::let_macros::value::{#(&r#macro, &not)}{#located_at(span.join()) { (
+							({#(contents)}),
+							{#(substrate)},
+						) }}
+					}}
+					{#(rhs_rest, semi)}
+				});
+
+				// Not rendered.
 			}
 			(
 				Keyword::ParenLet(Parentheses {

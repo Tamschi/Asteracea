@@ -19,12 +19,26 @@ use inherent_associated_types::associate;
 
 pub struct Sub;
 
+pub struct ErrorDefault;
+
 impl Substrate for Sub {
 	type InitContext<'i> = ();
-	type InitErrorDefault<'i> = ();
+	type InitErrorDefault<'i> = ErrorDefault;
 	type RenderContext<'r> = ();
 	type RenderTDefault<'r> = ();
 	type RenderErrorDefault<'r> = ();
+}
+
+impl From<()> for ErrorDefault {
+	fn from((): ()) -> Self {
+		ErrorDefault
+	}
+}
+
+impl From<!> for ErrorDefault {
+	fn from(value: !) -> Self {
+		value
+	}
 }
 
 impl<'r> Accumulation<'r> for Sub {
