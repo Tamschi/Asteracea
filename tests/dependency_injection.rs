@@ -2,7 +2,7 @@ mod _sub;
 
 use std::{any::TypeId, pin::Pin, sync::Arc};
 
-use asteracea::{components, substrate::bounds::Raises};
+use asteracea::{components, substrate::bounds::{Projects, Raises}};
 use rhizome::{Injectable, Repository};
 
 impl Injectable for dyn Trait {
@@ -39,26 +39,35 @@ impl Injectable for Struct {
 	}
 
 	fn provide(self: &Pin<Arc<Self>>) -> Self::Provided {
-		**self
+		(**self).clone()
 	}
 }
 
 trait Trait: Send + Sync {}
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Struct {
 	a: (),
 	b: (),
 }
 
 components! {
-	#![substrate = S where S: 'static + Raises<()> + Raises<!>]
+	#![substrate = S where S: 'static + Raises<()> + Raises<!> + Projects<()>]
 
-	pub Test(
-		s: Struct,
-		dyn _t?: dyn Trait,
-		dyn Struct { a, b }: Struct = s,
+	pub Test1(
+		dyn t: dyn Trait,
+		[dyn] Struct { a, b }: Struct,
 	) => {
+		({ let _ = t; })
+		[{ let _ = (a, b); }]
+	}
 
+	pub Test2(
+		s: Struct,
+		dyn t: dyn Trait,
+		[dyn] Struct { a, b }: Struct = s,
+	) => {
+		({ let _ = t; })
+		[{ let _ = (a, b); }]
 	}
 }

@@ -11,7 +11,7 @@ use loess_rust::{
 	},
 	vis::Visibility,
 };
-use proc_macro2::{Group, Ident, TokenStream, TokenTree};
+use proc_macro2::{Group, Ident, Span, TokenStream, TokenTree};
 use quote::ToTokens;
 use statements::Statement;
 
@@ -67,6 +67,53 @@ impl Component {
 		let mut init_guards: Vec<Identifier> = vec![];
 		let mut body_size_hint = TokenStream::new();
 		let mut render_proc = TokenStream::new();
+
+		let dep_field_names = if let Some(init_args) = &init_args {
+			let mut dep_field_names: Vec<Identifier> = vec![];
+			for (
+				i,
+				(
+					InitDep {
+						attrs,
+						vis,
+						r#dyn,
+						r#mut,
+						pattern,
+						question,
+						colon,
+						r#type,
+						default,
+					},
+					_comma,
+				),
+			) in init_args.contents.deps.pairs().enumerate()
+			{
+				if !r#dyn.is_bracketed() {
+					continue;
+				}
+				let field_name = Identifier(Ident::new(
+					&format!("__Asteracea__dep_{}", fields.len()),
+					r#dyn.span().resolved_at(Span::mixed_site()),
+				));
+				fields.push((attrs.to_owned(), field_name.clone(), colon.clone(), {
+					let mut tokens = TokenStream::new();
+					quote_into_mixed_site!(r#dyn.span(), root, &mut tokens, {
+						{#if question.is_some() && default.is_none() {
+							{#root}::Option<
+						}}
+						<{#(r#type)} as {#root}::Injectable>::Provided
+						{#if question.is_some() && default.is_none() {
+							>
+						}}
+					});
+					tokens
+				}));
+				dep_field_names.push(field_name);
+			}
+			dep_field_names
+		} else {
+			vec![]
+		};
 
 		let content_parent = Ident::new("Self", name.span()).into_token_stream();
 
@@ -303,7 +350,7 @@ impl Component {
 									(),
 									<Self as {#root}::Init<'i, 'r, {#(substrate)}>>::Error,
 								> {
-									{#if let Some(Parentheses{span, contents}) = init_args {
+									{#if let Some(Parentheses{span, contents}) = &init_args {
 										{#if contents.args.pairs().next().is_some() {
 											{#located_at(span.join()) {
 												let {#(name_init_args_type)} {
@@ -322,10 +369,42 @@ impl Component {
 											}}
 										}}
 
-										{#for (i, (InitDep { attrs, vis, r#dyn, r#mut, pattern, question, colon, r#type, default }, comma)) in contents.deps.pairs().enumerate() {
+										{#let mut dep_field_names = dep_field_names.iter();}
+										{#for (InitDep { attrs, vis, r#dyn, r#mut, pattern, question, colon, r#type, default }, comma) in contents.deps.pairs() {
 											{#located_at(r#dyn.span()) {
 												{#if r#dyn.is_bracketed() {
-													//TODO
+													{#let Some(field_name) = dep_field_names.next() else { unreachable!() };}
+													{#(attrs)}
+													let {#(&field_name)} = {
+														let value = deps.extract::<{#(r#type)}>()
+															{#if let Some(question) = question {
+																{#located_at(question.question.span()) {
+																	.ok()
+																}}
+																{#if let Some((eq, expr)) = default {
+																	{#located_at(eq.eq.span()) {
+																		.unwrap_or_else(|| {#(expr)})
+																	}}
+																}}
+															} else {
+																{#if let Some((eq, expr)) = default {
+																	{#located_at(eq.eq.span()) {
+																		.unwrap_or_else(|_| {#(expr)})
+																	}}
+																} else if question.is_none() {
+																	?
+																}}
+															}};
+														unsafe { {#root}::pinned_init_and_guard(value, &raw mut (*this).{#(&field_name)})? }
+													};
+													#[allow(unused_variables)]
+													let {#(pattern)} = unsafe {
+														let ptr = *{#(&field_name)};
+														{#root}::{#if r#mut.is_some() { co_borrow_mut } else { co_borrow }}(
+															&{#(r#mut, &field_name)},
+															ptr,
+														)
+													};
 												} else {
 													{#(attrs)}
 													let {#(r#mut, pattern)} = deps.extract::<{#(r#type)}>()
@@ -351,6 +430,7 @@ impl Component {
 												}}
 											}}
 										}}
+										{#let _ = assert_eq!(dep_field_names.count(), 0);}
 
 										let deps = &mut deps.new::<Self, _>((
 											//TODO: Provide injectables.
@@ -433,6 +513,29 @@ impl Component {
 						<Self as {#root}::Render<'r, {#(substrate)}>>::Error,
 					> {
 						let this = unsafe { &raw mut *{#root}::Pin::into_inner_unchecked(self) };
+
+						{#if let Some(Parentheses{span, contents}) = init_args {
+							{#let mut dep_field_names = dep_field_names.into_iter();}
+							{#for (InitDep { attrs, vis, r#dyn, r#mut, pattern, question, colon, r#type, default }, comma) in contents.deps.pairs() {
+								{#if r#dyn.is_bracketed() {
+									{#located_at(r#dyn.span()) {
+										{#let Some(field_name) = dep_field_names.next() else { unreachable!() };}
+										{#(attrs)}
+										let {#(&field_name)} = {#root}::GuardToken;
+										#[allow(unused_variables)]
+										let {#(pattern)} = &{#(r#mut)} **unsafe {
+											let ptr = &raw {#if let Some(r#mut) = r#mut { {#(r#mut)} } else { const }} (*this).{#(&field_name)};
+											{#root}::{#if r#mut.is_some() { co_borrow_mut } else { co_borrow }}(
+												&{#(&field_name)},
+												ptr,
+											)
+										};
+									}}
+								}}
+							}}
+							{#let _ = assert_eq!(dep_field_names.count(), 0);}
+						}}
+
 						{#if let Some(SquareBrackets { span, contents }) = render_args {
 							{#located_at(span.join()) {
 								let {#(name_render_args_type)} {

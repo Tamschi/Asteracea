@@ -1,6 +1,6 @@
 use loess::{
 	SimpleSpanned, grammar,
-	scaffold::{Greedy, Optimistic, Parentheses, Separated, SquareBrackets, UpTo},
+	scaffold::{Greedy, Optimistic, Separated, SquareBrackets, UpTo},
 };
 use loess_rust::{
 	attributes::OuterAttribute,

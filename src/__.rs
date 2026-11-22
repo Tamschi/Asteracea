@@ -209,3 +209,5 @@ pub unsafe fn co_borrow_mut<'a, T: ?Sized, U>(
 pub unsafe fn co_borrow<'a, T: ?Sized, U>(_: &'a U, ptr: *const (impl 'a + Borrow<T>)) -> &'a T {
 	unsafe { (&*ptr).borrow() }
 }
+
+pub struct GuardToken;
