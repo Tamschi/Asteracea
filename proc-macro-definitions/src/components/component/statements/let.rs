@@ -195,6 +195,7 @@ impl StatementImpl for Let {
 				r#type,
 				Some((at, r#macro, not, Parentheses { span, contents })),
 			) => {
+				//TODO: Redo this to `access`` the value off the stack (for consistent typing).
 				quote_into_mixed_site!(paren_span.join(), root, init_proc, {
 					{#(r#let, r#mut, pattern)}
 					{#if let Some((colon, r#type)) = r#type {

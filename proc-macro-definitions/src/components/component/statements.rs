@@ -52,6 +52,7 @@ grammar! {
 		Text(text::Text),
 		Transclusion(transclusion::Transclusion),
 		Let(r#let::Let),
+		//TODO: Custom-elements, e.g. `this-is-a-test;`.
 		Child(Optimistic<child::Child>),
 	} else "Expected Asteracea statement.";
 }

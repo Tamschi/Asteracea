@@ -5,6 +5,8 @@ use loess::{
 };
 use proc_macro2::{Group, Ident, Punct, Span, TokenStream, TokenTree};
 
+//TODO: Support more prefixes here, to support `(&value).use` in particular.
+//      (Or alternatively find a way to specialise the call.)
 pub fn extract_dot_use(input: TokenStream) -> TokenStream {
 	let mut input = Input {
 		tokens: input.into_iter().collect(),
