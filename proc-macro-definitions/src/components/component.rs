@@ -88,7 +88,7 @@ impl Component {
 				),
 			) in init_args.contents.deps.pairs().enumerate()
 			{
-				if !r#dyn.is_bracketed() {
+				if !(r#dyn.is_bracketed() || r#dyn.is_braced()) {
 					continue;
 				}
 				let field_name = Identifier(Ident::new(
@@ -372,7 +372,7 @@ impl Component {
 										{#let mut dep_field_names = dep_field_names.iter();}
 										{#for (InitDep { attrs, vis, r#dyn, r#mut, pattern, question, colon, r#type, default }, comma) in contents.deps.pairs() {
 											{#located_at(r#dyn.span()) {
-												{#if r#dyn.is_bracketed() {
+												{#if r#dyn.is_bracketed() || r#dyn.is_braced() {
 													{#let Some(field_name) = dep_field_names.next() else { unreachable!() };}
 													{#(attrs)}
 													let {#(&field_name)} = {
@@ -397,14 +397,15 @@ impl Component {
 															}};
 														unsafe { {#root}::pinned_init_and_guard(value, &raw mut (*this).{#(&field_name)})? }
 													};
-													#[allow(unused_variables)]
-													let {#(pattern)} = unsafe {
-														let ptr = *{#(&field_name)};
-														{#root}::{#if r#mut.is_some() { co_borrow_mut } else { co_borrow }}(
-															&{#(r#mut, &field_name)},
-															ptr,
-														)
-													};
+													{#if r#dyn.is_braced() {
+														let {#(pattern)} = unsafe {
+															let ptr = *{#(&field_name)};
+															{#root}::{#if r#mut.is_some() { co_borrow_mut } else { co_borrow }}(
+																&{#(r#mut, &field_name)},
+																ptr,
+															)
+														};
+													}}
 												} else {
 													{#(attrs)}
 													let {#(r#mut, pattern)} = deps.extract::<{#(r#type)}>()
@@ -514,15 +515,14 @@ impl Component {
 					> {
 						let this = unsafe { &raw mut *{#root}::Pin::into_inner_unchecked(self) };
 
-						{#if let Some(Parentheses{span, contents}) = init_args {
+						{#if let Some(Parentheses { span: _ , contents }) = init_args {
 							{#let mut dep_field_names = dep_field_names.into_iter();}
 							{#for (InitDep { attrs, vis, r#dyn, r#mut, pattern, question, colon, r#type, default }, comma) in contents.deps.pairs() {
-								{#if r#dyn.is_bracketed() {
+								{#if r#dyn.is_bracketed() || r#dyn.is_braced() {
 									{#located_at(r#dyn.span()) {
 										{#let Some(field_name) = dep_field_names.next() else { unreachable!() };}
 										{#(attrs)}
 										let {#(&field_name)} = {#root}::GuardToken;
-										#[allow(unused_variables)]
 										let {#(pattern)} = &{#(r#mut)} **unsafe {
 											let ptr = &raw {#if let Some(r#mut) = r#mut { {#(r#mut)} } else { const }} (*this).{#(&field_name)};
 											{#root}::{#if r#mut.is_some() { co_borrow_mut } else { co_borrow }}(

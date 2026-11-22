@@ -2,7 +2,10 @@ mod _sub;
 
 use std::{any::TypeId, pin::Pin, sync::Arc};
 
-use asteracea::{components, substrate::bounds::{Projects, Raises}};
+use asteracea::{
+	components,
+	substrate::bounds::{Projects, Raises},
+};
 use rhizome::{Injectable, Repository};
 
 impl Injectable for dyn Trait {
@@ -57,17 +60,20 @@ components! {
 	pub Test1(
 		dyn t: dyn Trait,
 		[dyn] Struct { a, b }: Struct,
+		{dyn} t2: dyn Trait,
 	) => {
-		({ let _ = t; })
-		[{ let _ = (a, b); }]
+		({ let _ = (t, t2); })
+		[{ let _ = (a, b, t2); }]
 	}
 
 	pub Test2(
 		s: Struct,
-		dyn t: dyn Trait,
-		[dyn] Struct { a, b }: Struct = s,
+		dyn t?: dyn Trait,
+		//TODO: Ensure `dyn` has proper semantic highlights here.
+		[dyn] Struct { a, b }?: Struct = s,
+		{dyn} t2?: dyn Trait,
 	) => {
-		({ let _ = t; })
-		[{ let _ = (a, b); }]
+		({ let _ = (t, t2); })
+		[{ let _ = (a, b, t2); }]
 	}
 }

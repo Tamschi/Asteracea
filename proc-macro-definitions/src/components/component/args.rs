@@ -1,6 +1,6 @@
 use loess::{
 	SimpleSpanned, grammar,
-	scaffold::{Greedy, Optimistic, Separated, SquareBrackets, UpTo},
+	scaffold::{CurlyBraces, Greedy, Optimistic, Separated, SquareBrackets, UpTo},
 };
 use loess_rust::{
 	attributes::OuterAttribute,
@@ -55,8 +55,9 @@ grammar! {
 		Dyn(Dyn),
 		/// Persisted, and bound only in `render`.
 		BracketedDyn(SquareBrackets<Dyn>),
-		//TODO: Variant for both? `{dyn}`?
-	} else "Expected `dyn` or `[dyn]`.";
+		/// Persisted, bound in both.
+		BracedDyn(CurlyBraces<Dyn>),
+	} else "Expected `dyn`, `[dyn]` or  `{dyn}`.";
 
 	pub struct RenderArg: PopFrom {
 		pub attrs: Greedy<Vec<OuterAttribute>>,
@@ -82,12 +83,17 @@ impl DynOrBracketedDyn {
 	pub fn span(&self) -> Span {
 		match self {
 			DynOrBracketedDyn::Dyn(r#dyn) => r#dyn.span(),
-			DynOrBracketedDyn::BracketedDyn(paren) => paren.span.join(),
+			DynOrBracketedDyn::BracketedDyn(paren) => paren.contents.span(),
+			DynOrBracketedDyn::BracedDyn(braces) => braces.contents.span(),
 		}
 	}
 
 	pub fn is_bracketed(&self) -> bool {
 		matches!(self, Self::BracketedDyn(_))
+	}
+
+	pub fn is_braced(&self) -> bool {
+		matches!(self, Self::BracedDyn(_))
 	}
 }
 
