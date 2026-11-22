@@ -5,7 +5,8 @@ use asteracea::{components, substrate::bounds::Projects};
 components! {
 	#![substrate = S
 		//TODO: Should this require `IsSubstrate`?
-		where S: Projects<&'static str>
+		where S: 'static
+			+ Projects<&'static str>
 			+ Projects<Arguments<'r>>
 	]
 
