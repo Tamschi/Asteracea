@@ -62,8 +62,8 @@ components! {
 		[dyn] Struct { a, b }: Struct,
 		{dyn} t2: dyn Trait,
 	) => {
-		({ let _ = (t, t2); })
-		[{ let _ = (a, b, t2); }]
+		(let) _ = (t, t2);
+		[let] _ = (a, b, t2);
 	}
 
 	pub Test2(
@@ -73,7 +73,7 @@ components! {
 		[dyn] Struct { a, b }?: Struct = s,
 		{dyn} t2?: dyn Trait,
 	) => {
-		({ let _ = (t, t2); })
-		[{ let _ = (a, b, t2); }]
+		(let) _ = (t, t2);
+		[let] _ = (a, b, t2);
 	}
 }

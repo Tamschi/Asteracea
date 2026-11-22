@@ -42,8 +42,8 @@ asteracea::components! {
 			b.as_mut().when_pinned_mut();
 
 			cell.set_if_distinct(1);
-			let _ = (cyclic, computed, distinct);
 		})
+		(let) _ = (cyclic, computed, distinct);
 		[{
 			// In `render`.
 			a.when_pinned();
