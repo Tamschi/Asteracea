@@ -64,6 +64,19 @@ impl<'r> SubstrateOnRender<'r, <Self as Accumulation<'r>>::RenderAccumulatorDefa
 	}
 }
 
+impl<'r> SubstrateOnRender<'r, <Self as Accumulation<'r>>::RenderAccumulatorDefault, &'_ str>
+	for Html
+{
+	#[inline(always)]
+	fn on_rendered(
+		_acc: &mut <Self as Accumulation<'r>>::RenderAccumulatorDefault,
+		ctx: Self::RenderContext<'_>,
+		rendered: &'_ str,
+	) -> Result<(), fmt::Error> {
+		write!(ctx, "{}", rendered)
+	}
+}
+
 /// Built-in components:
 #[associate]
 impl Html {
