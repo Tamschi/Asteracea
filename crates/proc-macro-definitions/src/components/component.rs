@@ -12,7 +12,6 @@ use loess_rust::{
 	vis::Visibility,
 };
 use proc_macro2::{Group, Ident, Span, TokenStream, TokenTree};
-use quote::ToTokens;
 use statements::Statement;
 
 use crate::components::component::args::{
@@ -115,7 +114,9 @@ impl Component {
 			vec![]
 		};
 
-		let content_parent = Ident::new("Self", name.span()).into_token_stream();
+		let content_parent = [TokenTree::Ident(Ident::new("Self", name.span()))]
+			.into_iter()
+			.collect();
 
 		body.hint_size(root, substrate, &content_parent, &mut body_size_hint);
 		body.emit(

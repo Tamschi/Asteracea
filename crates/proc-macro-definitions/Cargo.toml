@@ -27,7 +27,6 @@ publish = false
 proc-macro = true
 
 [dependencies]
-quote = "1.0.10"
 proc-macro2 = "1.0.34"
 loess = { git = "https://github.com/Tamschi/loess.git" }
 loess-rust-opaque = { git = "https://github.com/Tamschi/loess.git" }
