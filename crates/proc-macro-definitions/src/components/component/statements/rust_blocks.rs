@@ -164,7 +164,7 @@ impl StatementImpl for BracketBrace {
 				{#located_at(inner_span.join()) {
 					{ {#(contents)} }
 				}}
-			);
+			)?;
 		})
 	}
 }

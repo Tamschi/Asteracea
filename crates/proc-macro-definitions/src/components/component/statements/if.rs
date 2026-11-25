@@ -149,7 +149,7 @@ impl StatementImpl for BracketIf {
 					}}
 					<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)?
 				}
-			);
+			)?;
 		});
 	}
 }

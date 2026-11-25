@@ -598,7 +598,7 @@ impl Component {
 						acc: &'_ mut <Self as {#root}::ContentParent<'r, {#(substrate)}>>::RenderAccumulator,
 						ctx: <{#(substrate)} as {#root}::Substrate>::RenderContext<'r>,
 						rendered: T,
-					) {
+					) -> {#root}::Result<(), <Self as {#root}::Render<'r, {#(substrate)}>>::Error> {
 						<{#(substrate)} as {#root}::SubstrateOnRender<'r, <Self as {#root}::ContentParent<'r, {#(substrate)}>>::RenderAccumulator, T>>::on_rendered(acc, ctx, rendered)
 					}
 				}

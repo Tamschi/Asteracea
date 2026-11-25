@@ -199,7 +199,7 @@ impl StatementImpl for Child {
 						//TODO
 						.build(),
 				)?
-			);
+			)?;
 			//TODO
 		});
 	}

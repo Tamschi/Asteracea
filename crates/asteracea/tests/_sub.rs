@@ -17,7 +17,7 @@ use flourish::{
 };
 use inherent_associated_types::associate;
 
-pub struct Sub;
+pub struct Sub(!);
 
 pub struct ErrorDefault;
 
@@ -26,7 +26,7 @@ impl Substrate for Sub {
 	type InitErrorDefault<'i> = ErrorDefault;
 	type RenderContext<'r> = ();
 	type RenderTDefault<'r> = ();
-	type RenderErrorDefault<'r> = ();
+	type RenderErrorDefault<'r> = ErrorDefault;
 }
 
 impl From<()> for ErrorDefault {
@@ -62,8 +62,8 @@ impl<'r> SubstrateOnRender<'r, <Self as Accumulation<'r>>::RenderAccumulatorDefa
 		_acc: &'_ mut <Self as Accumulation<'r>>::RenderAccumulatorDefault,
 		_ctx: Self::RenderContext<'r>,
 		_rendered: (),
-	) {
-		// Do nothing.
+	) -> Result<(), ErrorDefault> {
+		Ok(())
 	}
 }
 
@@ -72,8 +72,8 @@ impl<'r> SubstrateOnRender<'r, <Self as Accumulation<'r>>::RenderAccumulatorDefa
 		_acc: &'_ mut <Self as Accumulation<'r>>::RenderAccumulatorDefault,
 		_ctx: Self::RenderContext<'r>,
 		_rendered: !,
-	) {
-		// Do nothing.
+	) -> Result<(), ErrorDefault> {
+		Ok(())
 	}
 }
 
@@ -84,8 +84,8 @@ impl<'r> SubstrateOnRender<'r, <Self as Accumulation<'r>>::RenderAccumulatorDefa
 		_acc: &'_ mut <Self as Accumulation<'r>>::RenderAccumulatorDefault,
 		_ctx: Self::RenderContext<'r>,
 		_rendered: &'static str,
-	) {
-		// Do nothing.
+	) -> Result<(), ErrorDefault> {
+		Ok(())
 	}
 }
 
@@ -97,8 +97,8 @@ impl<'r>
 		_acc: &'_ mut <Self as Accumulation<'r>>::RenderAccumulatorDefault,
 		_ctx: Self::RenderContext<'r>,
 		_rendered: fmt::Arguments<'r>,
-	) {
-		// Do nothing.
+	) -> Result<(), ErrorDefault> {
+		Ok(())
 	}
 }
 

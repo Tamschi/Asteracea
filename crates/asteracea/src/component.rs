@@ -115,5 +115,9 @@ pub trait ContentParent<'r, S: Substrate>: Render<'r, S> {
 }
 
 pub trait ContentParentOf<'r, S: Substrate, T>: ContentParent<'r, S> {
-	fn on_rendered(acc: &'_ mut Self::RenderAccumulator, ctx: S::RenderContext<'r>, rendered: T);
+	fn on_rendered(
+		acc: &'_ mut Self::RenderAccumulator,
+		ctx: S::RenderContext<'r>,
+		rendered: T,
+	) -> Result<(), Self::Error>;
 }

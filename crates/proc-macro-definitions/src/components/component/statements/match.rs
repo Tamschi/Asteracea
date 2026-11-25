@@ -145,7 +145,7 @@ impl StatementImpl for BracketMatch {
 					}}}
 					<Self as {#root}::ContentParent<'r, {#(substrate)}>>::finalize_accumulation(acc, ctx)?
 				}
-			);
+			)?;
 		});
 	}
 }

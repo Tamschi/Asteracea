@@ -7,10 +7,10 @@ pub mod bounds;
 
 /// Required for all substrates. Informs signatures.
 pub trait Substrate {
-	type InitContext<'i>: Copy; //TODO: `Context: Copy` trait
+	type InitContext<'i>; //TODO: `Context` trait
 	type InitErrorDefault<'i>;
 
-	type RenderContext<'r>: Copy; //TODO: `Context: Copy` trait
+	type RenderContext<'r>; //TODO: `Context` trait
 	type RenderTDefault<'r>;
 	type RenderErrorDefault<'r>;
 }
@@ -27,7 +27,11 @@ pub trait Accumulation<'r>: Substrate {
 }
 
 pub trait SubstrateOnRender<'r, RenderAccumulator, T>: Substrate {
-	fn on_rendered(acc: &'_ mut RenderAccumulator, ctx: Self::RenderContext<'r>, rendered: T);
+	fn on_rendered(
+		acc: &'_ mut RenderAccumulator,
+		ctx: Self::RenderContext<'r>,
+		rendered: T,
+	) -> Result<(), Self::RenderErrorDefault<'r>>;
 }
 
 // /// Units are always supported, strictly via no-op accumulation.

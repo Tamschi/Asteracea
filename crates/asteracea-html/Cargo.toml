@@ -1,12 +1,12 @@
 [package]
-name = "asteracea-epaint"
+name = "asteracea-html"
 version = "0.1.0"
 edition = "2024"
+publish = false
 
 [dependencies]
 asteracea = { version = "0.0.2", path = "../asteracea" }
 bon = "3.10.2"
-epaint = "0.36.2"
 flourish = "0.2.0"
 inherent-associated-types = "0.1.0"
 pinned-init = { version = "0.0.10", default-features = false, features = ["std"] }

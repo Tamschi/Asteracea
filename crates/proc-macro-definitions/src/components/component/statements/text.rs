@@ -102,7 +102,7 @@ impl StatementImpl for Text {
 				} else {
 					{#(literal)}
 				}}
-			){#(semi)}
+			)?{#(semi)}
 		});
 	}
 }
